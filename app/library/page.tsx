@@ -30,6 +30,7 @@ import {
 } from '@/state/audio-atoms'
 import { toast } from 'sonner'
 import { Loading } from '@/components/loading'
+import { AuthGuard } from '@/components/auth-guard'
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes'
@@ -114,13 +115,15 @@ export default function LibraryPage() {
 
   if (libraryLoading) {
     return (
-      <main className="container mx-auto px-4 py-8 pb-24 max-w-6xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Library</h1>
-          <p className="text-muted-foreground">Your saved audio tracks</p>
-        </div>
-        <Loading text="Loading library..." className="py-12" />
-      </main>
+      <AuthGuard>
+        <main className="container mx-auto px-4 py-8 pb-24 max-w-6xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Library</h1>
+            <p className="text-muted-foreground">Your saved audio tracks</p>
+          </div>
+          <Loading text="Loading library..." className="py-12" />
+        </main>
+      </AuthGuard>
     )
   }
 
@@ -128,11 +131,12 @@ export default function LibraryPage() {
   const uniqueLibraryTracks = Array.from(new Map(libraryTracks.map(t => [t.id, t])).values())
 
   return (
-    <main className="container mx-auto px-4 py-8 pb-24 max-w-6xl">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Library</h1>
-        <p className="text-muted-foreground">Your saved audio tracks</p>
-      </div>
+    <AuthGuard>
+      <main className="container mx-auto px-4 py-8 pb-24 max-w-6xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">Library</h1>
+          <p className="text-muted-foreground">Your saved audio tracks</p>
+        </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -275,6 +279,7 @@ export default function LibraryPage() {
           ))}
         </div>
       )}
-    </main>
+      </main>
+    </AuthGuard>
   )
 } 

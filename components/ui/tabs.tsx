@@ -6,6 +6,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { ModeToggle } from "@/components/theme-toggle"
+import { UserProfile } from "@/components/user-profile"
 
 function Tabs({
   className,
@@ -78,7 +79,10 @@ function PillsNav() {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <ModeToggle />
+      <div className="flex items-center gap-2">
+        <UserProfile />
+        <ModeToggle />
+      </div>
     </nav>
   )
 }
