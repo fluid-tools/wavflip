@@ -33,7 +33,7 @@ export default function SignIn() {
         });
         
         if (error) {
-          toast.error(error.message);
+          toast.error(error.message || 'An error occurred');
         } else {
           toast.success("Account created successfully!");
           router.push("/library");
@@ -46,11 +46,11 @@ export default function SignIn() {
         
         if (error) {
           // Check if it's an email verification error (403 status)
-          if (error.status === 403 || error.message.toLowerCase().includes('verify')) {
+          if (error.status === 403 || error.message?.toLowerCase().includes('verify')) {
             setShowVerificationError(true);
             toast.error("Please verify your email address to continue");
           } else {
-            toast.error(error.message);
+            toast.error(error.message || 'An error occurred');
           }
         } else {
           toast.success("Signed in successfully!");
@@ -148,7 +148,7 @@ export default function SignIn() {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Email Verification Required</AlertTitle>
               <AlertDescription>
-                We've sent a verification email to <strong>{email}</strong>. Please check your inbox and click the verification link to continue.
+                We&apos;ve sent a verification email to <strong>{email}</strong>. Please check your inbox and click the verification link to continue.
                 <br />
                 <Button 
                   variant="link" 

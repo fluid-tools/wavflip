@@ -98,7 +98,7 @@ export default function PlayerDock() {
       wavesurfer.destroy()
       wavesurferRef.current = null
     }
-  }, [currentTrack, dispatchPlayerAction])
+  }, [currentTrack, dispatchPlayerAction, muted, volume])
 
   // Sync volume changes
   useEffect(() => {
