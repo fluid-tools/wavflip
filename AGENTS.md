@@ -30,3 +30,7 @@
 - **State**: Jotai, TanStack Query
 - **Storage**: Vercel Blob for cloud storage, SQLite + Drizzle ORM for local-first data
 - **Auth**: Better Auth for authentication
+
+## important
+
+never ever modify the `/components/ui` directory. it's for shadcn/ui components.

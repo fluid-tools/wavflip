@@ -17,7 +17,7 @@ export async function sendVerificationEmail({
   try {
     console.log('Attempting to send verification email to:', user.email);
     
-    const emailHtml = render(
+    const emailHtml = await render(
       reactVerificationEmail({
         username: user.name || user.email,
         verificationLink: url,
@@ -49,7 +49,7 @@ export async function sendPasswordResetEmail({
   try {
     console.log('Attempting to send password reset email to:', user.email);
     
-    const emailHtml = render(
+    const emailHtml = await render(
       reactPasswordResetEmail({
         username: user.name || user.email,
         resetLink: url,

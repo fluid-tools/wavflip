@@ -15,7 +15,6 @@ import {
   Mic, 
   Calendar,
   Clock,
-  FileAudio,
   Tag,
   Info
 } from 'lucide-react'
@@ -75,13 +74,7 @@ export function SoundDetailDialog({ track, children, onDelete }: SoundDetailDial
     }
   }
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+
 
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -148,13 +141,13 @@ export function SoundDetailDialog({ track, children, onDelete }: SoundDetailDial
                     </div>
                   </div>
 
-                  {track.metadata?.duration && (
+                  {track.duration && (
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">Duration</p>
                         <p className="text-sm text-muted-foreground">
-                          {formatDuration(track.metadata.duration)}
+                          {formatDuration(track.duration)}
                         </p>
                       </div>
                     </div>
@@ -174,17 +167,7 @@ export function SoundDetailDialog({ track, children, onDelete }: SoundDetailDial
                     </div>
                   )}
 
-                  {track.metadata?.fileSize && (
-                    <div className="flex items-center gap-2">
-                      <FileAudio className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">File Size</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatFileSize(track.metadata.fileSize)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               </div>
             </CardContent>
@@ -207,25 +190,15 @@ export function SoundDetailDialog({ track, children, onDelete }: SoundDetailDial
           )}
 
           {/* Additional Metadata */}
-          {(track.metadata?.voice || track.metadata?.settings) && (
+          {track.metadata?.voice && (
             <Card>
               <CardContent className="p-4">
                 <h3 className="font-semibold mb-3">Generation Settings</h3>
                 <div className="space-y-2">
-                  {track.metadata.voice && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Voice:</span>
-                      <span className="text-sm font-medium">{track.metadata.voice}</span>
-                    </div>
-                  )}
-                  {track.metadata.settings && Object.entries(track.metadata.settings).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-sm text-muted-foreground capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}:
-                      </span>
-                      <span className="text-sm font-medium">{String(value)}</span>
-                    </div>
-                  ))}
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Voice:</span>
+                    <span className="text-sm font-medium">{track.metadata.voice}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
