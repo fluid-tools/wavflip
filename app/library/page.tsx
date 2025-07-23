@@ -116,7 +116,7 @@ export default function LibraryPage() {
   if (libraryLoading) {
     return (
       <AuthGuard>
-        <main className="container mx-auto px-4 py-8 pb-24 max-w-6xl">
+        <main className="container mx-auto px-4 py-6 pb-24 max-w-7xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">Library</h1>
             <p className="text-muted-foreground">Your saved audio tracks</p>
@@ -132,57 +132,57 @@ export default function LibraryPage() {
 
   return (
     <AuthGuard>
-      <main className="container mx-auto px-4 py-8 pb-24 max-w-6xl">
+      <main className="container mx-auto px-4 py-6 pb-24 max-w-7xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Library</h1>
           <p className="text-muted-foreground">Your saved audio tracks</p>
         </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Music className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-bold">{stats.totalTracks}</p>
-                <p className="text-xs text-muted-foreground">Total Tracks</p>
+              <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold">{stats.totalTracks}</p>
+                <p className="text-xs text-muted-foreground truncate">Total Tracks</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-bold">{formatFileSize(stats.totalSize)}</p>
-                <p className="text-xs text-muted-foreground">Storage Used</p>
+              <HardDrive className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold truncate">{formatFileSize(stats.totalSize)}</p>
+                <p className="text-xs text-muted-foreground truncate">Storage Used</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Music className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-bold">{stats.generatedTracks}</p>
-                <p className="text-xs text-muted-foreground">Generated</p>
+              <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold">{stats.generatedTracks}</p>
+                <p className="text-xs text-muted-foreground truncate">Generated</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2">
-              <Mic className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-bold">{stats.uploadedTracks}</p>
-                <p className="text-xs text-muted-foreground">Uploaded</p>
+              <Mic className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-bold">{stats.uploadedTracks}</p>
+                <p className="text-xs text-muted-foreground truncate">Uploaded</p>
               </div>
             </div>
           </CardContent>
@@ -213,20 +213,22 @@ export default function LibraryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {uniqueLibraryTracks.map((track) => (
-            <Card key={`library-${track.id}`} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
+            <Card key={`library-${track.id}`} className="hover:shadow-md transition-shadow flex flex-col h-full">
+              <CardHeader className="pb-3 flex-shrink-0">
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <CardTitle className="text-sm truncate">{track.title}</CardTitle>
+                    <CardTitle className="text-sm font-medium leading-tight line-clamp-2 mb-1">
+                      {track.title}
+                    </CardTitle>
                     {track.metadata?.prompt && (
-                      <CardDescription className="text-xs mt-1 line-clamp-2">
+                      <CardDescription className="text-xs mt-1 line-clamp-2 leading-relaxed">
                         &ldquo;{track.metadata.prompt}&rdquo;
                       </CardDescription>
                     )}
                   </div>
-                  <div className="ml-2 flex-shrink-0">
+                  <div className="flex-shrink-0">
                     {track.type === 'generated' ? (
                       <Music className="h-4 w-4 text-muted-foreground" />
                     ) : (
@@ -236,23 +238,23 @@ export default function LibraryPage() {
                 </div>
               </CardHeader>
               
-              <CardContent className="pt-0">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
+              <CardContent className="pt-0 flex-1 flex flex-col justify-between">
+                <div className="mb-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <Badge variant="outline" className="text-xs truncate max-w-[120px]">
                       {track.metadata?.model?.replace('elevenlabs-', '') || 'Unknown'}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(track.createdAt).toLocaleDateString()}
-                    </span>
                   </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(track.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <Button
                     size="sm"
                     onClick={() => handlePlayTrack(track)}
-                    className="flex-1"
+                    className="flex-1 text-xs px-2"
                   >
                     <Play className="h-3 w-3 mr-1" />
                     Play
@@ -262,6 +264,7 @@ export default function LibraryPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDownloadTrack(track)}
+                    className="px-2"
                   >
                     <Download className="h-3 w-3" />
                   </Button>
@@ -270,6 +273,7 @@ export default function LibraryPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDeleteTrack(track.id)}
+                    className="px-2"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

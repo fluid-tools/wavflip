@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Loader2, Wand2, Mic, Play, Download } from 'lucide-react'
 import { generateSoundEffect, generateTextToSpeech } from '@/actions/generate-sound'
 import { 
@@ -258,8 +259,8 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
 
       {/* Generated Sounds List */}
       {generatedSounds.length > 0 && (
-        <Card>
-          <CardHeader>
+        <Card className="flex flex-col">
+          <CardHeader className="flex-shrink-0">
             <CardTitle className="flex items-center justify-between">
               <span>Generated Sounds</span>
               <Badge variant="secondary">{generatedSounds.length}</Badge>
@@ -268,48 +269,52 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
               Your recently generated audio files
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {generatedSounds.slice(0, 5).map((sound) => (
-                <div 
-                  key={`generated-${sound.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-medium text-sm truncate">{sound.title}</h4>
-                    <p className="text-xs text-muted-foreground truncate mt-1">
-                      {sound.metadata?.prompt}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {sound.metadata?.model?.replace('elevenlabs-', '')}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(sound.createdAt).toLocaleTimeString()}
-                      </span>
+          <CardContent className="flex-1 p-0">
+            <ScrollArea className="h-[400px] px-6 pb-6">
+              <div className="space-y-3">
+                {generatedSounds.map((sound) => (
+                  <div 
+                    key={`generated-${sound.id}`}
+                    className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-sm line-clamp-1 mb-1">{sound.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2">
+                        {sound.metadata?.prompt}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {sound.metadata?.model?.replace('elevenlabs-', '')}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(sound.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePlaySound(sound)}
+                        className="px-2"
+                      >
+                        <Play className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        asChild
+                        className="px-2"
+                      >
+                        <a href={sound.url} download>
+                          <Download className="h-3 w-3" />
+                        </a>
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handlePlaySound(sound)}
-                    >
-                      <Play className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      asChild
-                    >
-                      <a href={sound.url} download>
-                        <Download className="h-3 w-3" />
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       )}
