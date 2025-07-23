@@ -137,13 +137,6 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
 
   return (
     <div className={cn("space-y-6", className)}>
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">AI Sound Generator</h1>
-        <p className="text-muted-foreground">
-          Create custom sounds and speech using AI
-        </p>
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="sound-effects" className="flex items-center gap-2">
