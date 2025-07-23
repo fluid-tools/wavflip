@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { signIn, signUp } from "@/lib/auth-client";
+import { signIn, signUp, sendVerificationEmail } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -16,6 +18,8 @@ export default function SignIn() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [showVerificationError, setShowVerificationError] = useState(false);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
   const router = useRouter();
 
   const handleEmailPasswordAuth = async () => {
@@ -41,7 +45,13 @@ export default function SignIn() {
         });
         
         if (error) {
-          toast.error(error.message);
+          // Check if it's an email verification error (403 status)
+          if (error.status === 403 || error.message.toLowerCase().includes('verify')) {
+            setShowVerificationError(true);
+            toast.error("Please verify your email address to continue");
+          } else {
+            toast.error(error.message);
+          }
         } else {
           toast.success("Signed in successfully!");
           router.push("/library");
@@ -66,6 +76,27 @@ export default function SignIn() {
     } catch {
       toast.error("Failed to sign in with Google");
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    
+    setIsResendingVerification(true);
+    try {
+      await sendVerificationEmail({
+        email: email,
+        callbackURL: window.location.origin + "/library"
+      });
+      toast.success("Verification email sent! Check your inbox.");
+    } catch (error) {
+      console.error("Failed to send verification email:", error);
+      toast.error("Failed to send verification email. Please try again.");
+    } finally {
+      setIsResendingVerification(false);
     }
   };
 
@@ -110,6 +141,25 @@ export default function SignIn() {
               </span>
             </div>
           </div>
+
+          {/* Email Verification Error Alert */}
+          {showVerificationError && (
+            <Alert variant="warning">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Email Verification Required</AlertTitle>
+              <AlertDescription>
+                Your email address is not verified. Please check your inbox for a verification email or request a new one.
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto font-normal text-yellow-600 dark:text-yellow-400 ml-1"
+                  onClick={handleResendVerification}
+                  disabled={isResendingVerification || !email}
+                >
+                  {isResendingVerification ? "Sending..." : "Resend verification email"}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Email/Password Form */}
           <div className="grid gap-3">
@@ -171,7 +221,10 @@ export default function SignIn() {
             <button
               type="button"
               className="underline underline-offset-4 hover:text-primary"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setShowVerificationError(false);
+              }}
             >
               {isSignUp ? "Sign in" : "Sign up"}
             </button>

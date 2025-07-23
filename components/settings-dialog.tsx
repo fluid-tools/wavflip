@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 import { Badge } from "./ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
-import { useSession, signOut } from "@/lib/auth-client"
+import { useSession, signOut, sendVerificationEmail } from "@/lib/auth-client"
 import { User, Mail, Shield, AlertTriangle, LogOut, Camera } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -23,6 +23,7 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
   const { data: session } = useSession()
   const router = useRouter()
   const [open, setOpen] = React.useState(false)
+  const [isResending, setIsResending] = React.useState(false)
 
   const handleSignOut = async () => {
     try {
@@ -32,6 +33,24 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
       router.push("/sign-in")
     } catch {
       toast.error("Failed to sign out")
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!session?.user.email) return
+    
+    setIsResending(true)
+    try {
+      await sendVerificationEmail({
+        email: session.user.email,
+        callbackURL: window.location.origin
+      })
+      toast.success("Verification email sent! Check your inbox.")
+    } catch (error) {
+      console.error("Failed to send verification email:", error)
+      toast.error("Failed to send verification email. Please try again.")
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -141,8 +160,13 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
                 <AlertTitle>Email Verification Required</AlertTitle>
                 <AlertDescription>
                   Your email address is not verified. Some features may be limited until you verify your email.
-                  <Button variant="link" className="p-0 h-auto font-normal text-yellow-600 dark:text-yellow-400">
-                    Resend verification email
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-normal text-yellow-600 dark:text-yellow-400"
+                    onClick={handleResendVerification}
+                    disabled={isResending}
+                  >
+                    {isResending ? "Sending..." : "Resend verification email"}
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -166,6 +190,17 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
                       <p className="text-sm text-muted-foreground">
                         {isEmailVerified ? "Your email is verified" : "Email verification pending"}
                       </p>
+                      {!isEmailVerified && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-2"
+                          onClick={handleResendVerification}
+                          disabled={isResending}
+                        >
+                          {isResending ? "Sending..." : "Send Verification Email"}
+                        </Button>
+                      )}
                     </div>
                     {isEmailVerified ? (
                       <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-950">
