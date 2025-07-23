@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import StateProviders from "@/state/providers";
-import { PillsNav } from "@/components/ui/tabs"
-import dynamic from "next/dynamic"
-
-const PlayerDock = dynamic(() => import("@/components/player-dock"))
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,11 +55,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <StateProviders>
-          <PillsNav />
+       
           {children}
-          <PlayerDock />
-        </StateProviders>
       </body>
     </html>
   );
