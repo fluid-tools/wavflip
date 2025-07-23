@@ -26,15 +26,4 @@ export function Loading({ className, size = 'md', text }: LoadingProps) {
   )
 }
 
-export function LoadingCard({ className, text = "Loading..." }: { className?: string; text?: string }) {
-  return (
-    <div className={cn(
-      "flex items-center justify-center p-8 rounded-lg border-2 border-dashed border-muted-foreground/25",
-      className
-    )}>
-      <Loading text={text} />
-    </div>
-  )
-}
-
 export default Loading

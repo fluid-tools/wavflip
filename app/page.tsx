@@ -1,4 +1,4 @@
-import SoundGenerator from '@/components/sound-generator'
+import SoundGenerator from '@/components/gen-ai/sound-gen'
 
 export default function HomePage() {
   return (
