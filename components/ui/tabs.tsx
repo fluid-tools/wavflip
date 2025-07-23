@@ -4,9 +4,6 @@ import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
 import { cn } from "@/lib/utils"
-import Link from "next/link"
-import { ModeToggle } from "@/components/theme-toggle"
-import { UserProfile } from "@/components/user-profile"
 
 function Tabs({
   className,
@@ -66,25 +63,5 @@ function TabsContent({
   )
 }
 
-function PillsNav() {
-  return (
-    <nav className="w-full flex items-center justify-between py-2 px-4 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-      <Tabs defaultValue="studio" className="flex-1">
-        <TabsList className="gap-2">
-          <TabsTrigger asChild value="studio">
-            <Link href="/">Home</Link>
-          </TabsTrigger>
-          <TabsTrigger asChild value="library">
-            <Link href="/library">Library</Link> 
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-      <div className="flex items-center gap-2">
-        <UserProfile />
-        <ModeToggle />
-      </div>
-    </nav>
-  )
-}
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, PillsNav }
+export { Tabs, TabsList, TabsTrigger, TabsContent }

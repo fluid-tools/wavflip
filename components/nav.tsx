@@ -1,0 +1,25 @@
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserProfile } from "./user-profile";
+import Link from "next/link";
+import { ThemeToggle } from "./theme-toggle";
+
+export function PillsNav() {
+    return (
+        <nav className="w-full flex items-center justify-between py-2 px-4 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
+            <Tabs defaultValue="studio" className="flex-1">
+                <TabsList className="gap-2">
+                    <TabsTrigger asChild value="studio">
+                        <Link href="/">Home</Link>
+                    </TabsTrigger>
+                    <TabsTrigger asChild value="library">
+                        <Link href="/library">Library</Link>
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
+            <div className="flex items-center gap-2">
+                <UserProfile />
+                <ThemeToggle />
+            </div>
+        </nav>
+    )
+}
