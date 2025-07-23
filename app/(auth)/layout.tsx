@@ -1,15 +1,16 @@
-import { AuthGuard } from "@/components/auth-guard";
+import { requireNoAuth } from "@/lib/auth-server";
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Server-side check - will redirect if already authenticated
+  await requireNoAuth();
+
   return (
-    <AuthGuard requireAuth={false}>
-      <div className="min-h-screen flex items-center justify-center p-4">
-        {children}
-      </div>
-    </AuthGuard>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      {children}
+    </div>
   );
 }
