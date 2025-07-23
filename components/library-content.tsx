@@ -21,7 +21,7 @@ import {
   getLibraryStats,
   createBlobUrlFromAudioData,
   type LibraryTrack 
-} from '@/lib/library-storage'
+} from '@/lib/storage/library-storage'
 import { 
   libraryTracksAtom, 
   playerControlsAtom 

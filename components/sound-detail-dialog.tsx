@@ -24,7 +24,7 @@ import {
   createBlobUrlFromAudioData, 
   revokeBlobUrl,
   type LibraryTrack 
-} from '@/lib/library-storage'
+} from '@/lib/storage/library-storage'
 
 interface SoundDetailDialogProps {
   track: LibraryTrack

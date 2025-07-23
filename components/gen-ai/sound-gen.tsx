@@ -17,7 +17,7 @@ import {
   generatedSoundsAtom 
 } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
-import { downloadAndStoreAudio } from '@/lib/library-storage'
+import { downloadAndStoreAudio } from '@/lib/storage/library-storage'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 

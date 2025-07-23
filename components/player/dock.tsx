@@ -19,7 +19,7 @@ import {
   mutedAtom,
   playerControlsAtom
 } from '@/state/audio-atoms'
-import { downloadAndStoreAudio } from '@/lib/library-storage'
+import { downloadAndStoreAudio } from '@/lib/storage/library-storage'
 import { toast } from 'sonner'
 
 function formatTime(seconds: number): string {

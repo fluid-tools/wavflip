@@ -1,7 +1,7 @@
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 import type { AudioTrack, PlayerState, GeneratedSound } from '@/types/audio'
-import type { LibraryTrack } from '@/lib/library-storage'
+import type { LibraryTrack } from '@/lib/storage/library-storage'
 
 // Current playing track
 export const currentTrackAtom = atom<AudioTrack | null>(null)
