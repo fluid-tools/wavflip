@@ -130,23 +130,31 @@ export function revokeBlobUrl(url: string): void {
   URL.revokeObjectURL(url)
 }
 
-// Get library stats
-export async function getLibraryStats(): Promise<{
+export interface LibraryStats {
   totalTracks: number
   totalSize: number
+  totalDuration: number
   generatedTracks: number
   uploadedTracks: number
-}> {
+}
+
+// Get library stats
+export async function getLibraryStats(): Promise<LibraryStats> {
   try {
     const tracks = await getLibraryTracks()
     
     let totalSize = 0
+    let totalDuration = 0
     let generatedTracks = 0
     let uploadedTracks = 0
     
     for (const track of tracks) {
       if (track.audioData) {
         totalSize += track.audioData.byteLength
+      }
+      
+      if (track.duration) {
+        totalDuration += track.duration
       }
       
       if (track.type === 'generated') {
@@ -159,6 +167,7 @@ export async function getLibraryStats(): Promise<{
     return {
       totalTracks: tracks.length,
       totalSize,
+      totalDuration,
       generatedTracks,
       uploadedTracks
     }
@@ -167,6 +176,7 @@ export async function getLibraryStats(): Promise<{
     return {
       totalTracks: 0,
       totalSize: 0,
+      totalDuration: 0,
       generatedTracks: 0,
       uploadedTracks: 0
     }

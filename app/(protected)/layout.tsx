@@ -17,6 +17,7 @@ export default async function ProtectedLayout({
     await requireAuth();
 
     return (
+        
         <AppProviders>
             <PillsNav />
             {children}

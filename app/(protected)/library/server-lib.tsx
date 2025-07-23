@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAtom } from 'jotai'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,15 +36,26 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-export function LibraryContent() {
+interface LibraryContentProps {
+  initialTracks: LibraryTrack[]
+  initialStats: {
+    totalTracks: number
+    totalSize: number
+    generatedTracks: number
+    uploadedTracks: number
+  }
+}
+
+export function LibraryContent({ initialTracks, initialStats }: LibraryContentProps) {
+  // Initialize with server data - no flash!
   const [libraryTracks, setLibraryTracks] = useAtom(libraryTracksAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
-  const [stats, setStats] = useState({
-    totalTracks: 0,
-    totalSize: 0,
-    generatedTracks: 0,
-    uploadedTracks: 0
-  })
+  const [stats, setStats] = useState(initialStats)
+
+  // Initialize atom with server data if it's empty
+  if (libraryTracks.length === 0 && initialTracks.length > 0) {
+    setLibraryTracks(initialTracks)
+  }
 
   const loadLibrary = async () => {
     try {
@@ -57,10 +68,6 @@ export function LibraryContent() {
       toast.error('Failed to load library')
     }
   }
-
-  useEffect(() => {
-    loadLibrary()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePlayTrack = (track: LibraryTrack) => {
     let playableTrack = track
@@ -87,8 +94,9 @@ export function LibraryContent() {
     }
   }
 
-  // Dedupe tracks by id before rendering
-  const uniqueLibraryTracks = Array.from(new Map(libraryTracks.map(t => [t.id, t])).values())
+  // Use current tracks (either from atom or initial data)
+  const currentTracks = libraryTracks.length > 0 ? libraryTracks : initialTracks
+  const uniqueLibraryTracks = Array.from(new Map(currentTracks.map(t => [t.id, t])).values())
 
   return (
     <>
@@ -153,7 +161,7 @@ export function LibraryContent() {
       </div>
 
       {/* Tracks list */}
-      {libraryTracks.length === 0 ? (
+      {uniqueLibraryTracks.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -162,7 +170,7 @@ export function LibraryContent() {
               Generate some sounds to start building your library!
             </p>
             <Button asChild>
-              <Link href="/">Generate Sounds</Link>
+              <Link href="/studio">Generate Sounds</Link>
             </Button>
           </CardContent>
         </Card>

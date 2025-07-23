@@ -1,7 +1,6 @@
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 import type { AudioTrack, PlayerState, GeneratedSound } from '@/types/audio'
-import type { LibraryTrack } from '@/lib/storage/library-storage'
 
 // Current playing track
 export const currentTrackAtom = atom<AudioTrack | null>(null)
@@ -30,12 +29,6 @@ export const generatedSoundsAtom = atom<GeneratedSound[]>((get) => {
   const playlist = get(playlistAtom)
   return playlist.filter((track): track is GeneratedSound => track.type === 'generated')
 })
-
-// Library tracks (stored locally)
-export const libraryTracksAtom = atom<LibraryTrack[]>([])
-
-// Library loading state
-export const libraryLoadingAtom = atom<boolean>(false)
 
 // Currently generating sound
 export const isGeneratingAtom = atom<boolean>(false)
@@ -107,7 +100,7 @@ export const playerControlsAtom = atom(
         set(generationProgressAtom, action.payload)
         break
         
-        case 'FINISH_GENERATION':
+      case 'FINISH_GENERATION':
         set(isGeneratingAtom, false)
         set(generationProgressAtom, 0)
         if (action.payload) {
@@ -115,22 +108,6 @@ export const playerControlsAtom = atom(
         }
         break
         
-      case 'LOAD_LIBRARY':
-        set(libraryLoadingAtom, true)
-        break
-        
-      case 'SET_LIBRARY_TRACKS':
-        set(libraryTracksAtom, action.payload)
-        set(libraryLoadingAtom, false)
-        break
-        
-      case 'ADD_TO_LIBRARY':
-        set(libraryTracksAtom, (prev) => [action.payload, ...prev])
-        break
-        
-      case 'REMOVE_FROM_LIBRARY':
-        set(libraryTracksAtom, (prev) => prev.filter(track => track.id !== action.payload))
-        break        
       case 'ERROR':
         set(playerStateAtom, 'error')
         set(isGeneratingAtom, false)
