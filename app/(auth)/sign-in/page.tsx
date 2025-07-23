@@ -148,14 +148,15 @@ export default function SignIn() {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Email Verification Required</AlertTitle>
               <AlertDescription>
-                Your email address is not verified. Please check your inbox for a verification email or request a new one.
+                We've sent a verification email to <strong>{email}</strong>. Please check your inbox and click the verification link to continue.
+                <br />
                 <Button 
                   variant="link" 
-                  className="p-0 h-auto font-normal text-yellow-600 dark:text-yellow-400 ml-1"
+                  className="p-0 h-auto font-normal text-yellow-600 dark:text-yellow-400"
                   onClick={handleResendVerification}
                   disabled={isResendingVerification || !email}
                 >
-                  {isResendingVerification ? "Sending..." : "Resend verification email"}
+                  {isResendingVerification ? "Sending..." : "Didn't receive it? Resend email"}
                 </Button>
               </AlertDescription>
             </Alert>
