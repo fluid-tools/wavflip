@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Virtuoso } from 'react-virtuoso'
+import { VirtuosoGrid } from 'react-virtuoso'
 import { RefreshCw, Music } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -119,16 +119,15 @@ export function LibraryContent() {
         </div>
       ) : (
         <div className="h-[600px]">
-          <Virtuoso
+          <VirtuosoGrid
             totalCount={tracks.length}
-            itemContent={(index) => (
-              <div className="pb-4">
-                <TrackCard
-                  track={tracks[index]}
-                  onDelete={() => deleteTrack(tracks[index].id)}
-                />
-              </div>
+            itemContent={(index: number) => (
+              <TrackCard
+                track={tracks[index]}
+                onDelete={() => deleteTrack(tracks[index].id)}
+              />
             )}
+            listClassName="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-4"
             style={{ height: '100%' }}
           />
         </div>

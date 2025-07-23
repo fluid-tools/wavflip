@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Play, Download, Music, Mic, MoreHorizontal } from 'lucide-react'
 import { SoundDetailDialog } from '@/app/(protected)/components/sound-detail-dialog'
@@ -47,69 +47,57 @@ export function TrackCard({ track, onDelete }: TrackCardProps) {
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow flex flex-col h-full group">
+    <Card className="group hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-card/50 backdrop-blur-sm border-border/40">
       <SoundDetailDialog track={track} onDelete={handleDelete}>
         <div className="cursor-pointer">
-          <CardHeader className="pb-3 flex-shrink-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <CardTitle className="text-sm font-medium leading-tight line-clamp-2 mb-1">
-                  {track.title}
-                </CardTitle>
-                {track.metadata?.prompt && (
-                  <CardDescription className="text-xs mt-1 line-clamp-2 leading-relaxed">
-                    &ldquo;{track.metadata.prompt}&rdquo;
-                  </CardDescription>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                {track.type === 'generated' ? (
-                  <Music className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Mic className="h-4 w-4 text-muted-foreground" />
-                )}
-                <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
+          <CardContent className="p-4">
+            {/* Audio Icon/Thumbnail Area */}
+            <div className="aspect-square bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+              {track.type === 'generated' ? (
+                <Music className="h-8 w-8 text-primary/70" />
+              ) : (
+                <Mic className="h-8 w-8 text-primary/70" />
+              )}
+              
+              {/* Hover Play Button */}
+              <Button
+                size="sm"
+                onClick={handlePlayTrack}
+                className="absolute inset-0 m-auto w-10 h-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-primary/90 hover:bg-primary backdrop-blur-sm"
+              >
+                <Play className="h-4 w-4 text-primary-foreground" />
+              </Button>
             </div>
-          </CardHeader>
-          
-          <CardContent className="pt-0 flex-1 flex flex-col justify-between">
-            <div className="mb-3">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <Badge variant="outline" className="text-xs truncate max-w-[120px]">
+
+            {/* Track Info */}
+            <div className="space-y-2">
+              <h3 className="font-medium text-sm leading-tight line-clamp-2 min-h-[2.5rem]">
+                {track.title}
+              </h3>
+              
+              <div className="flex items-center justify-between">
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 truncate max-w-[80px]">
                   {track.metadata?.model?.replace('elevenlabs-', '') || 'Unknown'}
                 </Badge>
+                
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleDownloadTrack}
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Download className="h-3 w-3" />
+                </Button>
               </div>
-              <span className="text-xs text-muted-foreground">
+              
+              <p className="text-xs text-muted-foreground">
                 {new Date(track.createdAt).toLocaleDateString()}
-              </span>
+              </p>
             </div>
           </CardContent>
         </div>
       </SoundDetailDialog>
-      
-      {/* Quick Actions */}
-      <CardContent className="pt-0 pb-4">
-        <div className="flex items-center gap-1.5">
-          <Button
-            size="sm"
-            onClick={handlePlayTrack}
-            className="flex-1 text-xs px-2"
-          >
-            <Play className="h-3 w-3 mr-1" />
-            Play
-          </Button>
-          
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleDownloadTrack}
-            className="px-2"
-          >
-            <Download className="h-3 w-3" />
-          </Button>
-        </div>
-      </CardContent>
     </Card>
   )
 } 
