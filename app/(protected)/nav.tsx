@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserProfile } from "../../components/user-profile";
+import { UserProfile } from "./components/user-profile";
 import Link from "next/link";
 import { ThemeToggle } from "../../components/theme-toggle";
 

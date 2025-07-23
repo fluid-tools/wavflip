@@ -1,7 +1,7 @@
 'use server'
 
-import { getElevenLabsClient } from '@/lib/elevenlabs'
-import { uploadAudioToBlob, generateAudioFilename } from '@/lib/blob-storage'
+import { getElevenLabsClient } from '@/lib/gen-ai/elevenlabs'
+import { uploadAudioToBlob, generateAudioFilename } from '@/lib/storage/blob-storage'
 import type { GeneratedSound } from '@/types/audio'
 import type { GenerationError } from '@/types/elevenlabs'
 
