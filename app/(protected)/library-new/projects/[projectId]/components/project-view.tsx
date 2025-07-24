@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAtom } from 'jotai'
 import { Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,6 +28,11 @@ export function ProjectView({ projectId, initialProject }: ProjectViewProps) {
   
   // Use query data or fallback to initial data
   const project = queryProject || initialProject
+  
+  // Debug: Log when project data changes
+  useEffect(() => {
+    console.log('🎵 ProjectView project updated:', project.tracks.length, 'tracks')
+  }, [project.tracks.length])
   
   const [isDragOver, setIsDragOver] = useState(false)
   const dropZoneRef = useRef<HTMLDivElement>(null)

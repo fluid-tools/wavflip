@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useAtom } from 'jotai'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   ColumnDef,
   flexRender,
@@ -38,8 +39,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useActionState } from 'react'
-import { deleteTrackAction, renameTrackAction } from '../actions'
 import { toast } from 'sonner'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
 import type { ProjectWithTracks } from '@/db/schema/library'
@@ -64,14 +63,117 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [isPlaying] = useAtom(isPlayingAtom)
 
-  const [deleteState, deleteAction, isDeleting] = useActionState(deleteTrackAction, {
-    success: false,
-    error: null,
+  const queryClient = useQueryClient()
+  const queryKey = ['project', projectId]
+
+  // Delete track mutation with optimistic updates
+  const deleteTrackMutation = useMutation({
+    mutationFn: async (trackId: string) => {
+      const formData = new FormData()
+      formData.append('trackId', trackId)
+      formData.append('projectId', projectId)
+
+      const response = await fetch('/api/tracks', {
+        method: 'DELETE',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error)
+      }
+
+      return response.json()
+    },
+    onMutate: async (trackId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey })
+
+      // Snapshot previous value
+      const previousProject = queryClient.getQueryData<ProjectWithTracks>(queryKey)
+      console.log('🗑️ DELETE onMutate - before:', previousProject?.tracks.length, 'tracks')
+
+      // Optimistically remove the track
+      if (previousProject) {
+        const updatedTracks = previousProject.tracks.filter(track => track.id !== trackId)
+        console.log('🗑️ DELETE onMutate - after filter:', updatedTracks.length, 'tracks')
+        queryClient.setQueryData<ProjectWithTracks>(queryKey, {
+          ...previousProject,
+          tracks: updatedTracks
+        })
+        console.log('🗑️ DELETE onMutate - cache updated')
+      }
+
+      return { previousProject, trackId }
+    },
+    onError: (error, trackId, context) => {
+      // Rollback on error
+      if (context?.previousProject) {
+        queryClient.setQueryData(queryKey, context.previousProject)
+      }
+      toast.error(`Failed to delete track: ${error.message}`)
+    },
+    onSuccess: () => {
+      toast.success('Track deleted successfully')
+      // Invalidate to ensure we have the latest server state
+      queryClient.invalidateQueries({ queryKey })
+    },
   })
 
-  const [renameState, renameAction, isRenaming] = useActionState(renameTrackAction, {
-    success: false,
-    error: null,
+  // Rename track mutation with optimistic updates
+  const renameTrackMutation = useMutation({
+    mutationFn: async ({ trackId, newName }: { trackId: string; newName: string }) => {
+      const formData = new FormData()
+      formData.append('trackId', trackId)
+      formData.append('name', newName)
+      formData.append('projectId', projectId)
+
+      const response = await fetch('/api/tracks', {
+        method: 'PATCH',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error)
+      }
+
+      return response.json()
+    },
+    onMutate: async ({ trackId, newName }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey })
+
+      // Snapshot previous value
+      const previousProject = queryClient.getQueryData<ProjectWithTracks>(queryKey)
+
+      // Optimistically update the track name
+      if (previousProject) {
+        const updatedTracks = previousProject.tracks.map(track => 
+          track.id === trackId 
+            ? { ...track, name: newName.trim(), updatedAt: new Date() }
+            : track
+        )
+        queryClient.setQueryData<ProjectWithTracks>(queryKey, {
+          ...previousProject,
+          tracks: updatedTracks
+        })
+      }
+
+      return { previousProject, trackId }
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousProject) {
+        queryClient.setQueryData(queryKey, context.previousProject)
+      }
+      toast.error(`Failed to rename track: ${error.message}`)
+    },
+    onSuccess: () => {
+      toast.success('Track renamed successfully')
+      // Invalidate to ensure we have the latest server state
+      queryClient.invalidateQueries({ queryKey })
+    },
   })
 
   const handlePlayTrack = (track: TrackFromProject) => {
@@ -93,18 +195,32 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
     dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
   }
 
-  const handleRename = async (formData: FormData) => {
-    if (!selectedTrack) return
-    formData.append('trackId', selectedTrack.id)
-    formData.append('projectId', projectId)
-    renameAction(formData)
+  const handleRename = async () => {
+    if (!selectedTrack || !newName.trim()) return
+
+    try {
+      await renameTrackMutation.mutateAsync({ 
+        trackId: selectedTrack.id, 
+        newName: newName.trim() 
+      })
+      setShowRenameDialog(false)
+      setSelectedTrack(null)
+      setNewName('')
+    } catch (error) {
+      // Error handled by mutation
+    }
   }
 
-  const handleDelete = async (formData: FormData) => {
+  const handleDelete = async () => {
     if (!selectedTrack) return
-    formData.append('trackId', selectedTrack.id)
-    formData.append('projectId', projectId)
-    deleteAction(formData)
+
+    try {
+      await deleteTrackMutation.mutateAsync(selectedTrack.id)
+      setShowDeleteDialog(false)
+      setSelectedTrack(null)
+    } catch (error) {
+      // Error handled by mutation
+    }
   }
 
   const formatDuration = (seconds: number) => {
@@ -337,7 +453,7 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
   ]
 
   const table = useReactTable({
-    data: tracks,
+    data: [...tracks], // Force new reference for React Table
     columns,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -347,47 +463,25 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
     },
   })
 
-  // Memoize the sorted rows for performance
-  const sortedRows = useMemo(() => table.getRowModel().rows, [table])
-
-  // Handle success/error states
+  // Debug: Log when tracks prop changes
   useEffect(() => {
-    if (renameState.success && showRenameDialog) {
-      toast.success('Track renamed successfully')
-      setShowRenameDialog(false)
-      setSelectedTrack(null)
-    }
-
-    if (renameState.error) {
-      toast.error(renameState.error)
-    }
-
-    if (deleteState.success && showDeleteDialog) {
-      toast.success('Track deleted successfully')
-      setShowDeleteDialog(false)
-      setSelectedTrack(null)
-    }
-
-    if (deleteState.error) {
-      toast.error(deleteState.error)
-    }
-  }, [renameState.success, renameState.error, deleteState.success, deleteState.error, showRenameDialog, showDeleteDialog])
+    console.log('📊 TracksDataTable tracks updated:', tracks.length, 'tracks')
+  }, [tracks])
 
   return (
     <>
       <div className="rounded-md border">
         <TableVirtuoso
           style={{ height: '400px' }}
-          data={sortedRows}
+          totalCount={table.getRowModel().rows.length}
           components={{
             Table: ({ style, ...props }) => (
               <Table {...props} style={{ ...style, width: '100%' }} />
             ),
             TableHead: TableHeader,
-            TableRow: ({ item: row, ...props }) => (
+            TableRow: ({ ...props }) => (
               <TableRow
                 {...props}
-                data-state={row?.getIsSelected() && 'selected'}
                 className="group hover:bg-muted/50"
               />
             ),
@@ -416,21 +510,26 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
               ))}
             </>
           )}
-          itemContent={(index, row) => (
-            <>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell 
-                  key={cell.id}
-                  style={{ width: cell.column.getSize() }}
-                >
-                  {flexRender(
-                    cell.column.columnDef.cell,
-                    cell.getContext()
-                  )}
-                </TableCell>
-              ))}
-            </>
-          )}
+          itemContent={(index) => {
+            const row = table.getRowModel().rows[index]
+            if (!row) return null
+            
+            return (
+              <>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell 
+                    key={cell.id}
+                    style={{ width: cell.column.getSize() }}
+                  >
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
+                  </TableCell>
+                ))}
+              </>
+            )
+          }}
         />
         {tracks.length === 0 && (
           <div className="h-24 flex items-center justify-center text-center text-muted-foreground">
@@ -442,74 +541,73 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
       {/* Rename Dialog */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <DialogContent className="sm:max-w-[425px]">
-          <form action={handleRename}>
-            <DialogHeader>
-              <DialogTitle>Rename Track</DialogTitle>
-              <DialogDescription>
-                Enter a new name for this track.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="col-span-3"
-                  autoFocus
-                  required
-                />
-              </div>
+          <DialogHeader>
+            <DialogTitle>Rename Track</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this track.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="col-span-3"
+                autoFocus
+                required
+              />
             </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowRenameDialog(false)}
-                disabled={isRenaming}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isRenaming || !newName.trim()}>
-                {isRenaming ? 'Renaming...' : 'Rename'}
-              </Button>
-            </DialogFooter>
-          </form>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowRenameDialog(false)}
+              disabled={renameTrackMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRename} 
+              disabled={renameTrackMutation.isPending || !newName.trim()}
+            >
+              {renameTrackMutation.isPending ? 'Renaming...' : 'Rename'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="sm:max-w-[425px]">
-          <form action={handleDelete}>
-            <DialogHeader>
-              <DialogTitle>Delete Track</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete "{selectedTrack?.name}"? This will also delete all versions. This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowDeleteDialog(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                variant="destructive" 
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </Button>
-            </DialogFooter>
-          </form>
+          <DialogHeader>
+            <DialogTitle>Delete Track</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{selectedTrack?.name}"? This will also delete all versions. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleteTrackMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleDelete}
+              variant="destructive" 
+              disabled={deleteTrackMutation.isPending}
+            >
+              {deleteTrackMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

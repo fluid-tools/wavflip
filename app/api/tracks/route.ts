@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { createTrack, createTrackVersion } from '@/lib/library-db'
+import { createTrack, createTrackVersion, deleteTrack, renameTrack } from '@/lib/library-db'
 import { revalidatePath } from 'next/cache'
 
 export async function POST(request: NextRequest) {
@@ -44,6 +44,65 @@ export async function POST(request: NextRequest) {
     console.error('Failed to create track:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to create track' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await requireAuth()
+    const formData = await request.formData()
+    const trackId = formData.get('trackId') as string
+    const projectId = formData.get('projectId') as string
+
+    if (!trackId) {
+      return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
+    }
+
+    await deleteTrack(trackId, session.user.id)
+
+    if (projectId) {
+      revalidatePath(`/library-new/projects/${projectId}`)
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Failed to delete track:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to delete track' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await requireAuth()
+    const formData = await request.formData()
+    const trackId = formData.get('trackId') as string
+    const name = formData.get('name') as string
+    const projectId = formData.get('projectId') as string
+
+    if (!trackId) {
+      return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
+    }
+
+    if (!name || name.trim().length === 0) {
+      return NextResponse.json({ error: 'Track name is required' }, { status: 400 })
+    }
+
+    await renameTrack(trackId, name.trim(), session.user.id)
+
+    if (projectId) {
+      revalidatePath(`/library-new/projects/${projectId}`)
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Failed to rename track:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to rename track' },
       { status: 500 }
     )
   }
