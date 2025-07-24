@@ -4,7 +4,6 @@ import { Music, Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/library'
 import { CreateProjectDialog } from '../../../components/create-project-dialog'
-import { CreateFolderDialog } from '../../../components/create-folder-dialog'
 import { FolderCard } from '../../../components/folder-card'
 import { ProjectCard } from '../../../components/project-card'
 
@@ -16,19 +15,11 @@ export function FolderView({ folder }: FolderViewProps) {
   return (
     <div className="p-6 space-y-6">
       {/* Folder Info */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">{folder.name}</h1>
-          <p className="text-muted-foreground">
-            {folder.subFolders?.length || 0} {(folder.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folder.projects.length} {folder.projects.length === 1 ? 'project' : 'projects'}
-          </p>
-        </div>
-        
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <CreateFolderDialog parentFolderId={folder.id} triggerText="New Folder" />
-          <CreateProjectDialog folderId={folder.id} triggerText="New Project" />
-        </div>
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold">{folder.name}</h1>
+        <p className="text-muted-foreground">
+          {folder.subFolders?.length || 0} {(folder.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folder.projects.length} {folder.projects.length === 1 ? 'project' : 'projects'}
+        </p>
       </div>
 
       {/* Folders and Projects Grid */}
@@ -62,10 +53,7 @@ export function FolderView({ folder }: FolderViewProps) {
                 <p className="text-sm text-muted-foreground mb-4">
                   Create folders or projects to organize your content
                 </p>
-                <div className="flex gap-2">
-                  <CreateFolderDialog parentFolderId={folder.id} triggerText="Create Folder" />
-                  <CreateProjectDialog folderId={folder.id} triggerText="Create Project" />
-                </div>
+                <CreateProjectDialog folderId={folder.id} triggerText="Create Project" />
               </CardContent>
             </Card>
           </div>

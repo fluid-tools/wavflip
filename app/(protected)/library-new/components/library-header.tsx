@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { CreateProjectDialog } from './create-project-dialog'
+import { CreateFolderDialog } from './create-folder-dialog'
 
 interface FolderPathItem {
   id: string
@@ -107,7 +108,12 @@ export function LibraryHeader() {
             </div>
           </div>
           
-          {folderId && <CreateProjectDialog folderId={folderId} />}
+          {folderId && (
+            <div className="flex gap-2">
+              <CreateFolderDialog parentFolderId={folderId} triggerText="New Folder" />
+              <CreateProjectDialog folderId={folderId} triggerText="New Project" />
+            </div>
+          )}
         </div>
       </div>
     )
