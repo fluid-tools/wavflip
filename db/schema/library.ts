@@ -122,7 +122,13 @@ export type NewTrackVersion = typeof trackVersion.$inferInsert;
 // Extended types with relationships
 export type FolderWithProjects = Folder & {
   projects: (Project & { trackCount: number })[];
-  subFolders?: Folder[];
+  subFolders?: (Folder & { 
+    projects: never[];
+    subFolderCount?: number;
+    projectCount?: number;
+  })[];
+  subFolderCount?: number;
+  projectCount?: number;
 };
 
 export type NestedFolderStructure = Folder & {

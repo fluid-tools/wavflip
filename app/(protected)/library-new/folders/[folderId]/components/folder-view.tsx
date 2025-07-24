@@ -1,6 +1,6 @@
 'use client'
 
-import { Music, Folder } from 'lucide-react'
+import {  Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/library'
 import { CreateProjectDialog } from '../../../components/create-project-dialog'

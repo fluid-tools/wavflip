@@ -77,6 +77,24 @@ export function FolderCard({ folder, showProjectCount = true }: FolderCardProps)
     toast.error(deleteState.error)
   }
 
+  // Calculate folder contents description
+  const getContentDescription = () => {
+    if (showProjectCount) {
+      // For root folders, show project count
+      return `${folder.projects?.length || 0} projects`
+    } else {
+      // For nested folders, show combined count from subfolder counts
+      const subFolderCount = (folder as any).subFolderCount || 0
+      const projectCount = (folder as any).projectCount || 0
+      const total = subFolderCount + projectCount
+      
+      if (total === 0) return 'Empty'
+      if (subFolderCount === 0) return `${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
+      if (projectCount === 0) return `${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}`
+      return `${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}, ${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
+    }
+  }
+
   return (
     <>
       <ContextMenu>
@@ -91,7 +109,7 @@ export function FolderCard({ folder, showProjectCount = true }: FolderCardProps)
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-sm truncate">{folder.name}</CardTitle>
                     <CardDescription className="text-xs">
-                      {showProjectCount ? `${folder.projects?.length || 0} projects` : 'Folder'}
+                      {getContentDescription()}
                     </CardDescription>
                   </div>
                 </div>

@@ -25,26 +25,35 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
 
   const foldersWithProjects = await Promise.all(
     folders.map(async (f) => {
-      const projects = await db
-        .select({
-          id: project.id,
-          name: project.name,
-          folderId: project.folderId,
-          userId: project.userId,
-          accessType: project.accessType,
-          order: project.order,
-          createdAt: project.createdAt,
-          updatedAt: project.updatedAt,
-          metadata: project.metadata,
-          trackCount: count(track.id)
-        })
-        .from(project)
-        .leftJoin(track, eq(track.projectId, project.id))
-        .where(eq(project.folderId, f.id))
-        .groupBy(project.id)
-        .orderBy(project.order, project.createdAt)
+      const [projects, subFolderCount] = await Promise.all([
+        db
+          .select({
+            id: project.id,
+            name: project.name,
+            folderId: project.folderId,
+            userId: project.userId,
+            accessType: project.accessType,
+            order: project.order,
+            createdAt: project.createdAt,
+            updatedAt: project.updatedAt,
+            metadata: project.metadata,
+            trackCount: count(track.id)
+          })
+          .from(project)
+          .leftJoin(track, eq(track.projectId, project.id))
+          .where(eq(project.folderId, f.id))
+          .groupBy(project.id)
+          .orderBy(project.order, project.createdAt),
+        db.select({ count: count() }).from(folder)
+          .where(and(eq(folder.parentFolderId, f.id), eq(folder.userId, userId)))
+      ])
       
-      return { ...f, projects }
+      return { 
+        ...f, 
+        projects,
+        subFolderCount: subFolderCount[0]?.count || 0,
+        projectCount: projects.length
+      }
     })
   )
 
@@ -65,12 +74,31 @@ export async function getFolderWithContents(folderId: string, userId: string): P
 
   const currentFolder = folderData[0]
 
-  // Get subfolders
-  const subFolders = await db
+  // Get subfolders with their subfolder and project counts
+  const subFoldersData = await db
     .select()
     .from(folder)
     .where(and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId)))
     .orderBy(folder.order, folder.createdAt)
+
+  // For each subfolder, get the count of its contents
+  const subFoldersWithCounts = await Promise.all(
+    subFoldersData.map(async (subFolder) => {
+      const [subFolderCount, projectCount] = await Promise.all([
+        db.select({ count: count() }).from(folder)
+          .where(and(eq(folder.parentFolderId, subFolder.id), eq(folder.userId, userId))),
+        db.select({ count: count() }).from(project)
+          .where(eq(project.folderId, subFolder.id))
+      ])
+      
+      return {
+        ...subFolder,
+        projects: [],
+        subFolderCount: subFolderCount[0]?.count || 0,
+        projectCount: projectCount[0]?.count || 0
+      }
+    })
+  )
 
   // Get projects in this folder
   const projects = await db
@@ -95,7 +123,7 @@ export async function getFolderWithContents(folderId: string, userId: string): P
   return { 
     ...currentFolder, 
     projects,
-    subFolders 
+    subFolders: subFoldersWithCounts 
   }
 }
 
@@ -111,10 +139,43 @@ export async function createFolder(data: Omit<NewFolder, 'id' | 'createdAt' | 'u
   return inserted
 }
 
-export async function deleteFolder(folderId: string, userId: string): Promise<void> {
-  await db
-    .delete(folder)
+export async function deleteFolder(folderId: string, userId: string): Promise<{ parentFolderId: string | null }> {
+  // First get the folder to know its parent for revalidation
+  const folderData = await db
+    .select({ parentFolderId: folder.parentFolderId })
+    .from(folder)
     .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
+    .limit(1)
+
+  if (folderData.length === 0) {
+    throw new Error('Folder not found')
+  }
+
+  const parentFolderId = folderData[0].parentFolderId
+
+  // Recursively delete all subfolders and their contents
+  const deleteNestedFolders = async (currentFolderId: string) => {
+    // Get all subfolders
+    const subFolders = await db
+      .select()
+      .from(folder)
+      .where(and(eq(folder.parentFolderId, currentFolderId), eq(folder.userId, userId)))
+
+    // Recursively delete each subfolder
+    for (const subFolder of subFolders) {
+      await deleteNestedFolders(subFolder.id)
+    }
+
+    // Delete the current folder (this will cascade delete projects, tracks, and versions via DB constraints)
+    await db
+      .delete(folder)
+      .where(and(eq(folder.id, currentFolderId), eq(folder.userId, userId)))
+  }
+
+  // Start the recursive deletion from the target folder
+  await deleteNestedFolders(folderId)
+
+  return { parentFolderId }
 }
 
 export async function renameFolder(folderId: string, name: string, userId: string): Promise<void> {

@@ -234,9 +234,15 @@ export async function deleteFolderAction(prevState: DeleteActionState, formData:
       return { success: false, error: 'Folder ID is required' }
     }
 
-    await deleteFolder(folderId, session.user.id)
+    const { parentFolderId } = await deleteFolder(folderId, session.user.id)
 
-    revalidatePath('/library-new')
+    // Revalidate the correct parent path
+    if (parentFolderId) {
+      revalidatePath(`/library-new/folders/${parentFolderId}`)
+    } else {
+      revalidatePath('/library-new')
+    }
+
     return { success: true, error: null }
   } catch (error) {
     console.error('Failed to delete folder:', error)
