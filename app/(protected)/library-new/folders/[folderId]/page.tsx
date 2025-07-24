@@ -28,9 +28,5 @@ export default async function FolderPage({ params }: FolderPageProps) {
     notFound()
   }
 
-  return (
-    <div className="flex flex-col h-full">
-      <FolderView folder={folder} />
-    </div>
-  )
+  return <FolderView folder={folder} />
 } 

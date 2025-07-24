@@ -2,13 +2,13 @@
 
 import { useState, useRef } from 'react'
 import { useAtom } from 'jotai'
-import { ArrowLeft, ChevronRight, Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
+import { Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
-import Link from 'next/link'
+
 import { UploadTrackDialog } from '../../../components/upload-track-dialog'
 import { TracksDataTable } from '../../../components/tracks-data-table'
 import { playerControlsAtom } from '@/state/audio-atoms'
@@ -120,34 +120,7 @@ export function ProjectView({ projectId, initialProject }: ProjectViewProps) {
         </div>
       )}
 
-      {/* Header */}
-      <div className="p-6 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center gap-4 mb-4">
-          <Link href={project.folderId ? `/library-new/folders/${project.folderId}` : '/library-new'}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {project.folderId ? 'Back to Folder' : 'Library'}
-            </Button>
-          </Link>
-          
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/library-new" className="hover:text-foreground">
-              Library
-            </Link>
-            {project.folderId && (
-              <>
-                <ChevronRight className="h-3 w-3" />
-                <Link href={`/library-new/folders/${project.folderId}`} className="hover:text-foreground">
-                  Folder
-                </Link>
-              </>
-            )}
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground font-medium">{project.name}</span>
-          </div>
-        </div>
-      </div>
+
 
       {/* Project Hero Section */}
       <div className="p-6">

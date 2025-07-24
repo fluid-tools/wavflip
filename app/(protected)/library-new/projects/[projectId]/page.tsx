@@ -27,9 +27,5 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     notFound()
   }
 
-  return (
-    <div className="flex flex-col h-full">
-      <ProjectView projectId={projectId} initialProject={project} />
-    </div>
-  )
+  return <ProjectView projectId={projectId} initialProject={project} />
 } 

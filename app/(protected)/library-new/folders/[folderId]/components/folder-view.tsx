@@ -1,10 +1,8 @@
 'use client'
 
-import { ArrowLeft, Music, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Music } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/library'
-import Link from 'next/link'
 import { CreateProjectDialog } from '../../../components/create-project-dialog'
 import { ProjectCard } from '../../../components/project-card'
 
@@ -15,29 +13,6 @@ interface FolderViewProps {
 export function FolderView({ folder }: FolderViewProps) {
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/library-new">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Library
-            </Button>
-          </Link>
-          
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/library-new" className="hover:text-foreground">
-              Library
-            </Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-foreground font-medium">{folder.name}</span>
-          </div>
-        </div>
-        
-        <CreateProjectDialog folderId={folder.id} />
-      </div>
-
       {/* Folder Info */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold">{folder.name}</h1>
