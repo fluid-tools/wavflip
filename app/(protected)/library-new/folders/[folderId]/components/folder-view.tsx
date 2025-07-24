@@ -2,11 +2,11 @@
 
 import { ArrowLeft, Music, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
 import { CreateProjectDialog } from '../../../components/create-project-dialog'
+import { ProjectCard } from '../../../components/project-card'
 
 interface FolderViewProps {
   folder: FolderWithProjects
@@ -49,32 +49,12 @@ export function FolderView({ folder }: FolderViewProps) {
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {folder.projects.map((project) => (
-          <Link 
+          <ProjectCard 
             key={project.id} 
-            href={`/library-new/projects/${project.id}`}
-            className="block"
-          >
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                    <Music className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm truncate">{project.name}</CardTitle>
-                    <CardDescription className="text-xs">
-                      Project
-                    </CardDescription>
-                  </div>
-                  {project.accessType !== 'private' && (
-                    <Badge variant="secondary" className="text-xs">
-                      {project.accessType}
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-            </Card>
-          </Link>
+            project={project} 
+            folderId={folder.id}
+            trackCount={project.trackCount}
+          />
         ))}
 
         {/* Empty state */}

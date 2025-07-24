@@ -2,7 +2,7 @@
 
 import { db } from '@/db'
 import { folder, project, track, trackVersion } from '@/db/schema/library'
-import { eq, and, isNull, desc } from 'drizzle-orm'
+import { eq, and, isNull, desc, count } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { 
   Folder, NewFolder, 
@@ -10,7 +10,8 @@ import type {
   Track, NewTrack,
   TrackVersion, NewTrackVersion,
   FolderWithProjects,
-  ProjectWithTracks 
+  ProjectWithTracks,
+  ProjectWithTrackCount
 } from '@/db/schema/library'
 
 // FOLDER OPERATIONS
@@ -24,9 +25,22 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
   const foldersWithProjects = await Promise.all(
     folders.map(async (f) => {
       const projects = await db
-        .select()
+        .select({
+          id: project.id,
+          name: project.name,
+          folderId: project.folderId,
+          userId: project.userId,
+          accessType: project.accessType,
+          order: project.order,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          metadata: project.metadata,
+          trackCount: count(track.id)
+        })
         .from(project)
+        .leftJoin(track, eq(track.projectId, project.id))
         .where(eq(project.folderId, f.id))
+        .groupBy(project.id)
         .orderBy(project.order, project.createdAt)
       
       return { ...f, projects }
@@ -54,12 +68,35 @@ export async function deleteFolder(folderId: string, userId: string): Promise<vo
     .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
 }
 
+export async function renameFolder(folderId: string, name: string, userId: string): Promise<void> {
+  await db
+    .update(folder)
+    .set({ 
+      name: name.trim(), 
+      updatedAt: new Date() 
+    })
+    .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
+}
+
 // PROJECT OPERATIONS  
-export async function getVaultProjects(userId: string): Promise<Project[]> {
+export async function getVaultProjects(userId: string): Promise<ProjectWithTrackCount[]> {
   return await db
-    .select()
+    .select({
+      id: project.id,
+      name: project.name,
+      folderId: project.folderId,
+      userId: project.userId,
+      accessType: project.accessType,
+      order: project.order,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      metadata: project.metadata,
+      trackCount: count(track.id)
+    })
     .from(project)
+    .leftJoin(track, eq(track.projectId, project.id))
     .where(and(eq(project.userId, userId), isNull(project.folderId)))
+    .groupBy(project.id)
     .orderBy(project.order, project.createdAt)
 }
 
@@ -108,6 +145,22 @@ export async function createProject(data: Omit<NewProject, 'id' | 'createdAt' | 
   return inserted
 }
 
+export async function deleteProject(projectId: string, userId: string): Promise<void> {
+  await db
+    .delete(project)
+    .where(and(eq(project.id, projectId), eq(project.userId, userId)))
+}
+
+export async function renameProject(projectId: string, name: string, userId: string): Promise<void> {
+  await db
+    .update(project)
+    .set({ 
+      name: name.trim(), 
+      updatedAt: new Date() 
+    })
+    .where(and(eq(project.id, projectId), eq(project.userId, userId)))
+}
+
 export async function moveProject(projectId: string, folderId: string | null, userId: string): Promise<void> {
   await db
     .update(project)
@@ -126,6 +179,22 @@ export async function createTrack(data: Omit<NewTrack, 'id' | 'createdAt' | 'upd
 
   const [inserted] = await db.insert(track).values(newTrack).returning()
   return inserted
+}
+
+export async function deleteTrack(trackId: string, userId: string): Promise<void> {
+  await db
+    .delete(track)
+    .where(and(eq(track.id, trackId), eq(track.userId, userId)))
+}
+
+export async function renameTrack(trackId: string, name: string, userId: string): Promise<void> {
+  await db
+    .update(track)
+    .set({ 
+      name: name.trim(), 
+      updatedAt: new Date() 
+    })
+    .where(and(eq(track.id, trackId), eq(track.userId, userId)))
 }
 
 export async function moveTrack(trackId: string, projectId: string, userId: string): Promise<void> {

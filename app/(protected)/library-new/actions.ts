@@ -1,9 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createFolder, createProject } from '@/lib/library-db'
+import { 
+  createFolder, createProject, createTrack, createTrackVersion,
+  deleteFolder, deleteProject, deleteTrack,
+  renameFolder, renameProject, renameTrack,
+  moveProject
+} from '@/lib/library-db'
+import { uploadAudioToBlob } from '@/lib/storage/blob-storage'
 import { requireAuth } from '@/lib/auth-server'
-import type { Folder, Project } from '@/db/schema/library'
+import type { Folder, Project, Track, TrackVersion } from '@/db/schema/library'
 
 type FolderActionState = {
   success: boolean
@@ -15,6 +21,27 @@ type ProjectActionState = {
   success: boolean
   error: string | null
   project?: Project
+}
+
+type TrackActionState = {
+  success: boolean
+  error: string | null
+  track?: Track
+}
+
+type DeleteActionState = {
+  success: boolean
+  error: string | null
+}
+
+type RenameActionState = {
+  success: boolean
+  error: string | null
+}
+
+type MoveActionState = {
+  success: boolean
+  error: string | null
 }
 
 export async function createFolderAction(prevState: FolderActionState, formData: FormData): Promise<FolderActionState> {
@@ -74,6 +101,262 @@ export async function createProjectAction(prevState: ProjectActionState, formDat
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create project' 
+    }
+  }
+}
+
+export async function createTrackAction(prevState: TrackActionState, formData: FormData): Promise<TrackActionState> {
+  try {
+    const session = await requireAuth()
+    const name = formData.get('name') as string
+    const projectId = formData.get('projectId') as string
+    const fileUrl = formData.get('fileUrl') as string
+    const fileSize = formData.get('fileSize') as string
+    const mimeType = formData.get('mimeType') as string
+
+    if (!name || name.trim().length === 0) {
+      return { success: false, error: 'Track name is required' }
+    }
+
+    if (!projectId) {
+      return { success: false, error: 'Project ID is required' }
+    }
+
+    if (!fileUrl) {
+      return { success: false, error: 'File URL is required' }
+    }
+
+    // Create track
+    const track = await createTrack({
+      name: name.trim(),
+      projectId,
+      userId: session.user.id,
+      order: 0,
+    })
+
+    // Create first version with the uploaded file
+    await createTrackVersion({
+      trackId: track.id,
+      fileUrl,
+      size: parseInt(fileSize) || 0,
+      duration: 0, // Will be determined client-side when played
+      mimeType: mimeType || 'audio/mpeg',
+    })
+
+    revalidatePath(`/library-new/projects/${projectId}`)
+    return { success: true, track, error: null }
+  } catch (error) {
+    console.error('Failed to create track:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to create track' 
+    }
+  }
+}
+
+// Basic audio duration extraction (placeholder - would need proper audio processing library)
+async function getAudioDuration(audioBuffer: ArrayBuffer, mimeType: string): Promise<number> {
+  try {
+    // This is a simplified approach - in production, you'd want to use a proper audio library
+    // For now, return 0 and let the client-side player determine duration
+    return 0
+  } catch (error) {
+    console.warn('Could not extract audio duration:', error)
+    return 0
+  }
+}
+
+export async function deleteFolderAction(prevState: DeleteActionState, formData: FormData): Promise<DeleteActionState> {
+  try {
+    const session = await requireAuth()
+    const folderId = formData.get('folderId') as string
+
+    if (!folderId) {
+      return { success: false, error: 'Folder ID is required' }
+    }
+
+    await deleteFolder(folderId, session.user.id)
+
+    revalidatePath('/library-new')
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to delete folder:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to delete folder' 
+    }
+  }
+}
+
+export async function deleteProjectAction(prevState: DeleteActionState, formData: FormData): Promise<DeleteActionState> {
+  try {
+    const session = await requireAuth()
+    const projectId = formData.get('projectId') as string
+    const folderId = formData.get('folderId') as string | null
+
+    if (!projectId) {
+      return { success: false, error: 'Project ID is required' }
+    }
+
+    await deleteProject(projectId, session.user.id)
+
+    // Revalidate appropriate path
+    if (folderId) {
+      revalidatePath(`/library-new/folders/${folderId}`)
+    } else {
+      revalidatePath('/library-new')
+    }
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to delete project:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to delete project' 
+    }
+  }
+}
+
+export async function deleteTrackAction(prevState: DeleteActionState, formData: FormData): Promise<DeleteActionState> {
+  try {
+    const session = await requireAuth()
+    const trackId = formData.get('trackId') as string
+    const projectId = formData.get('projectId') as string
+
+    if (!trackId) {
+      return { success: false, error: 'Track ID is required' }
+    }
+
+    await deleteTrack(trackId, session.user.id)
+
+    if (projectId) {
+      revalidatePath(`/library-new/projects/${projectId}`)
+    }
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to delete track:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to delete track' 
+    }
+  }
+}
+
+export async function renameFolderAction(prevState: RenameActionState, formData: FormData): Promise<RenameActionState> {
+  try {
+    const session = await requireAuth()
+    const folderId = formData.get('folderId') as string
+    const name = formData.get('name') as string
+
+    if (!folderId || !name?.trim()) {
+      return { success: false, error: 'Folder ID and name are required' }
+    }
+
+    await renameFolder(folderId, name, session.user.id)
+
+    revalidatePath('/library-new')
+    revalidatePath(`/library-new/folders/${folderId}`)
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to rename folder:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to rename folder' 
+    }
+  }
+}
+
+export async function renameProjectAction(prevState: RenameActionState, formData: FormData): Promise<RenameActionState> {
+  try {
+    const session = await requireAuth()
+    const projectId = formData.get('projectId') as string
+    const name = formData.get('name') as string
+    const folderId = formData.get('folderId') as string | null
+
+    if (!projectId || !name?.trim()) {
+      return { success: false, error: 'Project ID and name are required' }
+    }
+
+    await renameProject(projectId, name, session.user.id)
+
+    // Revalidate appropriate paths
+    if (folderId) {
+      revalidatePath(`/library-new/folders/${folderId}`)
+    } else {
+      revalidatePath('/library-new')
+    }
+    revalidatePath(`/library-new/projects/${projectId}`)
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to rename project:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to rename project' 
+    }
+  }
+}
+
+export async function renameTrackAction(prevState: RenameActionState, formData: FormData): Promise<RenameActionState> {
+  try {
+    const session = await requireAuth()
+    const trackId = formData.get('trackId') as string
+    const name = formData.get('name') as string
+    const projectId = formData.get('projectId') as string
+
+    if (!trackId || !name?.trim()) {
+      return { success: false, error: 'Track ID and name are required' }
+    }
+
+    await renameTrack(trackId, name, session.user.id)
+
+    if (projectId) {
+      revalidatePath(`/library-new/projects/${projectId}`)
+    }
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to rename track:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to rename track' 
+    }
+  }
+}
+
+export async function moveProjectAction(prevState: MoveActionState, formData: FormData): Promise<MoveActionState> {
+  try {
+    const session = await requireAuth()
+    const projectId = formData.get('projectId') as string
+    const folderId = formData.get('folderId') as string | null
+    const sourceFolderId = formData.get('sourceFolderId') as string | null
+
+    if (!projectId) {
+      return { success: false, error: 'Project ID is required' }
+    }
+
+    await moveProject(projectId, folderId, session.user.id)
+
+    // Revalidate source and destination paths
+    if (sourceFolderId) {
+      revalidatePath(`/library-new/folders/${sourceFolderId}`)
+    } else {
+      revalidatePath('/library-new')
+    }
+    
+    if (folderId) {
+      revalidatePath(`/library-new/folders/${folderId}`)
+    } else {
+      revalidatePath('/library-new')
+    }
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to move project:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to move project' 
     }
   }
 } 

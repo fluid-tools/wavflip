@@ -121,7 +121,7 @@ export type NewTrackVersion = typeof trackVersion.$inferInsert;
 
 // Extended types with relationships
 export type FolderWithProjects = Folder & {
-  projects: Project[];
+  projects: (Project & { trackCount: number })[];
 };
 
 export type ProjectWithTracks = Project & {
@@ -135,4 +135,8 @@ export type TrackWithVersions = Track & {
   activeVersion?: TrackVersion;
   versions: TrackVersion[];
   project: Project;
+};
+
+export type ProjectWithTrackCount = Project & {
+  trackCount: number;
 }; 

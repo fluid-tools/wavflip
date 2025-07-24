@@ -1,89 +1,38 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ArrowLeft, Plus, Music, ChevronRight, Play, Clock, HardDrive, MoreHorizontal } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { useAtom } from 'jotai'
+import { ArrowLeft, ChevronRight, Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { getProjectWithTracks } from '@/lib/library-db'
 import type { ProjectWithTracks } from '@/db/schema/library'
+import type { AudioTrack } from '@/types/audio'
 import Link from 'next/link'
+import { UploadTrackDialog } from '../../../components/upload-track-dialog'
+import { TracksDataTable } from '../../../components/tracks-data-table'
+import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
+import { toast } from 'sonner'
+import { upload } from '@vercel/blob/client'
+import { createTrackAction } from '../../../actions'
+import { useActionState } from 'react'
 
 interface ProjectViewProps {
-  projectId: string
-  userId: string
+  project: ProjectWithTracks
 }
 
-export function ProjectView({ projectId, userId }: ProjectViewProps) {
-  const [project, setProject] = useState<ProjectWithTracks | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export function ProjectView({ project }: ProjectViewProps) {
+  const [isDragOver, setIsDragOver] = useState(false)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
+  
+  const [currentTrack] = useAtom(currentTrackAtom)
+  const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
+  const [isPlaying] = useAtom(isPlayingAtom)
 
-  useEffect(() => {
-    async function loadProject() {
-      try {
-        const projectData = await getProjectWithTracks(projectId, userId)
-        setProject(projectData)
-      } catch (error) {
-        console.error('Failed to load project:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadProject()
-  }, [projectId, userId])
-
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="h-8 w-8 bg-muted animate-pulse rounded" />
-          <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-3">
-                <div className="h-4 bg-muted rounded w-20" />
-                <div className="h-3 bg-muted rounded w-16" />
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (!project) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Link href="/library-new">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Library
-            </Button>
-          </Link>
-        </div>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <h3 className="font-semibold mb-2">Project not found</h3>
-            <p className="text-sm text-muted-foreground">
-              This project may have been deleted or you don&apos;t have access to it.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+  const [uploadState, uploadAction, isUploading] = useActionState(createTrackAction, {
+    success: false,
+    error: null,
+  })
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -91,11 +40,117 @@ export function ProjectView({ projectId, userId }: ProjectViewProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const totalDuration = project.tracks.reduce((sum, track) => {
+    return sum + (track.activeVersion?.duration || 0)
+  }, 0)
+
+  const formatTotalDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const mins = Math.floor((seconds % 3600) / 60)
+    const secs = Math.floor(seconds % 60)
+    
+    if (hours > 0) {
+      return `${hours}h ${mins}m ${secs}s`
+    }
+    return `${mins}m ${secs}s`
+  }
+
+  const handlePlayAll = () => {
+    if (project.tracks.length === 0) return
+    
+    const firstTrack = project.tracks[0]
+    if (!firstTrack.activeVersion) {
+      toast.error('No audio available')
+      return
+    }
+
+    const audioTrack: AudioTrack = {
+      id: firstTrack.id,
+      title: firstTrack.name,
+      url: firstTrack.activeVersion.fileUrl,
+      duration: firstTrack.activeVersion.duration || undefined,
+      createdAt: firstTrack.createdAt,
+      type: 'uploaded'
+    }
+
+    dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
+  }
+
+  const handleFileDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('audio/')
+    )
+
+    if (files.length === 0) {
+      toast.error('Please drop audio files only')
+      return
+    }
+
+    // Handle multiple files
+    for (const file of files) {
+      try {
+        toast.info(`Uploading ${file.name}...`)
+        
+        // Client-side upload to Vercel Blob
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload',
+        })
+
+        // Create form data with the blob URL
+        const formData = new FormData()
+        const fileName = file.name.replace(/\.[^/.]+$/, "")
+        formData.append('name', fileName)
+        formData.append('projectId', project.id)
+        formData.append('fileUrl', blob.url)
+        formData.append('fileSize', file.size.toString())
+        formData.append('mimeType', file.type)
+
+        // Call server action to create track record
+        await uploadAction(formData)
+        
+      } catch (error) {
+        console.error('Upload failed:', error)
+        toast.error(`Failed to upload ${file.name}`)
+      }
+    }
+  }
+
   return (
-    <div className="p-6 space-y-6">
+    <div 
+      ref={dropZoneRef}
+      className={`min-h-screen bg-gradient-to-b from-background to-muted/20 transition-colors ${
+        isDragOver ? 'bg-primary/5 border-primary' : ''
+      }`}
+      onDrop={handleFileDrop}
+      onDragOver={(e) => {
+        e.preventDefault()
+        setIsDragOver(true)
+      }}
+      onDragLeave={(e) => {
+        // Only hide drag over if we're leaving the main container
+        if (!dropZoneRef.current?.contains(e.relatedTarget as Node)) {
+          setIsDragOver(false)
+        }
+      }}
+    >
+      {/* Drag Overlay */}
+      {isDragOver && (
+        <div className="fixed inset-0 z-50 bg-primary/10 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-background p-8 rounded-lg border-2 border-dashed border-primary text-center">
+            <Upload className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Drop audio files here</h3>
+            <p className="text-muted-foreground">Files will be added to {project.name}</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="p-6 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="flex items-center gap-4 mb-4">
           <Link href={project.folderId ? `/library-new/folders/${project.folderId}` : '/library-new'}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -120,94 +175,96 @@ export function ProjectView({ projectId, userId }: ProjectViewProps) {
             <span className="text-foreground font-medium">{project.name}</span>
           </div>
         </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Track
+      </div>
+
+      {/* Project Hero Section */}
+      <div className="p-6">
+        <div className="flex gap-6 mb-8">
+          {/* Album Art */}
+          <div className="w-64 h-64 bg-gradient-to-br from-red-900 via-red-800 to-red-900 rounded-lg shadow-2xl flex items-center justify-center relative overflow-hidden">
+            {/* Placeholder abstract design */}
+            <div className="absolute inset-0 opacity-20">
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                <path
+                  d="M20,180 Q50,20 100,100 T180,80 L180,180 Z"
+                  fill="currentColor"
+                  className="text-yellow-400"
+                />
+                <path
+                  d="M0,160 Q40,40 80,120 T160,100 L160,200 Z"
+                  fill="currentColor"
+                  className="text-orange-400"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Project Info */}
+          <div className="flex-1 flex flex-col justify-end">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">PROJECT</p>
+              <h1 className="text-4xl font-bold">{project.name}</h1>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span>arth</span>
+                <span>•</span>
+                <span>{project.tracks.length} tracks</span>
+                <span>•</span>
+                <span>{formatTotalDuration(totalDuration)}</span>
+                {project.accessType !== 'private' && (
+                  <>
+                    <span>•</span>
+                    <Badge variant="secondary">{project.accessType}</Badge>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-4 mb-8">
+          <Button 
+            size="lg" 
+            className="rounded-full px-8"
+            onClick={handlePlayAll}
+            disabled={project.tracks.length === 0}
+          >
+            <Play className="h-5 w-5 mr-2" />
+            Play
+          </Button>
+          <Button variant="ghost" size="lg" className="rounded-full">
+            <Shuffle className="h-5 w-5" />
+          </Button>
+          <UploadTrackDialog projectId={project.id} />
+          <Button variant="ghost" size="sm">
+            <Share className="h-4 w-4 mr-2" />
+            Share
           </Button>
           <Button variant="ghost" size="sm">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
-      </div>
 
-      {/* Project Info */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">{project.name}</h1>
-          {project.accessType !== 'private' && (
-            <Badge variant="secondary">{project.accessType}</Badge>
-          )}
-        </div>
-        <p className="text-muted-foreground">
-          {project.tracks.length} {project.tracks.length === 1 ? 'track' : 'tracks'}
-        </p>
+        {/* Track List - Proper Data Table */}
+        {project.tracks.length > 0 ? (
+          <div className="space-y-4">
+            <TracksDataTable tracks={project.tracks} projectId={project.id} />
+          </div>
+        ) : (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center mb-4">
+                <Play className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="font-semibold mb-2">No tracks yet</h3>
+              <p className="text-sm text-muted-foreground mb-4 max-w-sm text-center">
+                Upload your first track to get started with this project. You can drag & drop files here or use the upload button.
+              </p>
+              <UploadTrackDialog projectId={project.id} triggerText="Upload Track" />
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-      {/* Tracks List */}
-      {project.tracks.length > 0 ? (
-        <div className="space-y-4">
-          {project.tracks.map((track) => (
-            <Card key={track.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
-                    <Play className="h-4 w-4" />
-                  </Button>
-                  
-                  <div className="h-10 w-16 bg-muted rounded flex items-center justify-center">
-                    <Music className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium truncate">{track.name}</h3>
-                      <span className="text-xs text-muted-foreground">v{track.activeVersion?.version || 1}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDuration(track.activeVersion?.duration || 0)}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <HardDrive className="h-3 w-3" />
-                        {formatBytes(track.activeVersion?.size || 0)}
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {track.activeVersion?.mimeType?.split('/')[1]?.toUpperCase() || 'Unknown'}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Play className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Music className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold mb-2">No tracks yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Upload your first track to get started
-            </p>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Track
-            </Button>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 } 

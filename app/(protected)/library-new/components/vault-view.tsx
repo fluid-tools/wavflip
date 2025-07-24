@@ -2,11 +2,11 @@
 
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import type { FolderWithProjects, Project } from '@/db/schema/library'
-import Link from 'next/link'
+import type { FolderWithProjects, ProjectWithTrackCount } from '@/db/schema/library'
 import { CreateFolderDialog } from './create-folder-dialog'
 import { CreateProjectDialog } from './create-project-dialog'
+import { FolderCard } from './folder-card'
+import { ProjectCard } from './project-card'
 
 interface LibraryStats {
   totalFolders: number
@@ -19,7 +19,7 @@ interface LibraryStats {
 
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
-  initialProjects: Project[]
+  initialProjects: ProjectWithTrackCount[]
   initialStats: LibraryStats
 }
 
@@ -102,57 +102,16 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {/* Folders */}
           {initialFolders.map((folder) => (
-            <Link 
-              key={folder.id} 
-              href={`/library-new/folders/${folder.id}`}
-              className="block"
-            >
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                      <Folder className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-sm truncate">{folder.name}</CardTitle>
-                      <CardDescription className="text-xs">
-                        {folder.projects.length} projects
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
+            <FolderCard key={folder.id} folder={folder} />
           ))}
 
           {/* Vault Projects */}
           {initialProjects.map((project) => (
-            <Link 
+            <ProjectCard 
               key={project.id} 
-              href={`/library-new/projects/${project.id}`}
-              className="block"
-            >
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                      <Music className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-sm truncate">{project.name}</CardTitle>
-                      <CardDescription className="text-xs">
-                        Project
-                      </CardDescription>
-                    </div>
-                    {project.accessType !== 'private' && (
-                      <Badge variant="secondary" className="text-xs">
-                        {project.accessType}
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
+              project={project} 
+              trackCount={project.trackCount}
+            />
           ))}
 
           {/* Empty state */}
