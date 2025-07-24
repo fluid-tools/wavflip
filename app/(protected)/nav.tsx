@@ -20,9 +20,9 @@ export function PillsNav() {
                     <TabsTrigger asChild value="library">
                         <Link href="/library">Library</Link>
                     </TabsTrigger>
-                    <TabsTrigger asChild value="daw">
+                    {/* <TabsTrigger asChild value="daw">
                         <Link href="/daw">DAW</Link>
-                    </TabsTrigger>
+                    </TabsTrigger> */}
                 </TabsList>
             </Tabs>
             <div className="flex items-center gap-2">
