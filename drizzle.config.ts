@@ -9,7 +9,7 @@ const dbUrl = new URL(process.env.DATABASE_URL as string);
 // }
 
 export default defineConfig({
-  schema: './db/schema.ts',
+  schema: './db/schema',
   out: './db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
