@@ -79,20 +79,18 @@ export function FolderCard({ folder, showProjectCount = true }: FolderCardProps)
 
   // Calculate folder contents description
   const getContentDescription = () => {
-    if (showProjectCount) {
-      // For root folders, show project count
-      return `${folder.projects?.length || 0} projects`
-    } else {
-      // For nested folders, show combined count from subfolder counts
-      const subFolderCount = (folder as any).subFolderCount || 0
-      const projectCount = (folder as any).projectCount || 0
-      const total = subFolderCount + projectCount
-      
-      if (total === 0) return 'Empty'
-      if (subFolderCount === 0) return `${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
+    const subFolderCount = (folder as any).subFolderCount || 0
+    const projectCount = showProjectCount ? (folder.projects?.length || 0) : ((folder as any).projectCount || 0)
+    
+    // If folder has subfolders, show combined count regardless of showProjectCount
+    if (subFolderCount > 0) {
       if (projectCount === 0) return `${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}`
       return `${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}, ${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
     }
+    
+    // If no subfolders, show project count or empty state
+    if (projectCount === 0) return showProjectCount ? '0 projects' : 'Empty'
+    return `${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
   }
 
   return (
