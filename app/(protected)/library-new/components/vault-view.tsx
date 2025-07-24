@@ -1,7 +1,7 @@
 'use client'
 
 import { Folder, Music } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTrackCount } from '@/db/schema/library'
 import { CreateFolderDialog } from './create-folder-dialog'
 import { CreateProjectDialog } from './create-project-dialog'
