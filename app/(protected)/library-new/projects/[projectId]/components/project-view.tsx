@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAtom } from 'jotai'
 import { ArrowLeft, ChevronRight, Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,7 @@ const getAudioDuration = (file: File): Promise<number> => {
 }
 
 export function ProjectView({ project }: ProjectViewProps) {
+  const router = useRouter()
   const [isDragOver, setIsDragOver] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const dropZoneRef = useRef<HTMLDivElement>(null)
@@ -149,7 +151,8 @@ export function ProjectView({ project }: ProjectViewProps) {
     }
 
     setIsUploading(false)
-    // No need to reload - revalidatePath in API handles cache invalidation
+    // Refresh server-side data to show new tracks immediately
+    router.refresh()
   }
 
   return (

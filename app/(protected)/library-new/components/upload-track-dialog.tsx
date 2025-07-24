@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Plus, Upload, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,6 +31,7 @@ interface UploadProgress {
 }
 
 export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: UploadTrackDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -173,7 +175,8 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
         toast.success('Track uploaded successfully')
         setOpen(false)
         resetForm()
-        // No need to reload - revalidatePath in API handles cache invalidation
+        // Refresh server-side data to show new track immediately
+        router.refresh()
       } else {
         const error = await response.text()
         toast.error(`Failed to create track: ${error}`)
