@@ -10,8 +10,11 @@ interface ProjectPageProps {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-  const session = await requireAuth()
-  const { projectId } = await params
+  // Parallelize auth check and params extraction
+  const [session, { projectId }] = await Promise.all([
+    requireAuth(),
+    params
+  ])
 
   if (!projectId) {
     notFound()
@@ -26,7 +29,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <ProjectView project={project} />
+      <ProjectView projectId={projectId} initialProject={project} />
     </div>
   )
 } 

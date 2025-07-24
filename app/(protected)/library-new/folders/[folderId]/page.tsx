@@ -10,8 +10,11 @@ interface FolderPageProps {
 }
 
 export default async function FolderPage({ params }: FolderPageProps) {
-  const session = await requireAuth()
-  const { folderId } = await params
+  // Parallelize auth check and params extraction
+  const [session, { folderId }] = await Promise.all([
+    requireAuth(),
+    params
+  ])
 
   if (!folderId) {
     notFound()

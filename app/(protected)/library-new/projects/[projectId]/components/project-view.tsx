@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAtom } from 'jotai'
 import { ArrowLeft, ChevronRight, Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,51 +11,30 @@ import type { AudioTrack } from '@/types/audio'
 import Link from 'next/link'
 import { UploadTrackDialog } from '../../../components/upload-track-dialog'
 import { TracksDataTable } from '../../../components/tracks-data-table'
-import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
+import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
-import { upload } from '@vercel/blob/client'
+import { useProject } from '../hooks/use-project'
 
 interface ProjectViewProps {
-  project: ProjectWithTracks
+  projectId: string
+  initialProject: ProjectWithTracks
 }
 
-// Helper function to extract audio duration from file
-const getAudioDuration = (file: File): Promise<number> => {
-  return new Promise((resolve) => {
-    const audio = document.createElement('audio')
-    const url = URL.createObjectURL(file)
-    
-    audio.addEventListener('loadedmetadata', () => {
-      URL.revokeObjectURL(url)
-      resolve(audio.duration || 0)
-    })
-    
-    audio.addEventListener('error', () => {
-      URL.revokeObjectURL(url)
-      resolve(0) // Return 0 if we can't determine duration
-    })
-    
-    audio.src = url
+export function ProjectView({ projectId, initialProject }: ProjectViewProps) {
+  const { project: queryProject, uploadTracks, isUploading } = useProject({ 
+    projectId, 
+    initialData: initialProject 
   })
-}
-
-export function ProjectView({ project }: ProjectViewProps) {
-  const router = useRouter()
+  
+  // Use query data or fallback to initial data
+  const project = queryProject || initialProject
+  
   const [isDragOver, setIsDragOver] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
   const dropZoneRef = useRef<HTMLDivElement>(null)
   
-  const [currentTrack] = useAtom(currentTrackAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
-  const [isPlaying] = useAtom(isPlayingAtom)
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const totalDuration = project.tracks.reduce((sum, track) => {
+  const totalDuration = project.tracks.reduce((sum: number, track: any) => {
     return sum + (track.activeVersion?.duration || 0)
   }, 0)
 
@@ -105,54 +83,8 @@ export function ProjectView({ project }: ProjectViewProps) {
       return
     }
 
-    setIsUploading(true)
-
-    // Handle multiple files sequentially to avoid overwhelming the server
-    for (const file of files) {
-      try {
-        const toastId = toast.loading(`Uploading ${file.name}...`)
-        
-        // Extract duration from audio file
-        const duration = await getAudioDuration(file)
-        
-        // Client-side upload to Vercel Blob
-        const blob = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/upload',
-        } as any)
-
-        // Call server API directly instead of using action hook
-        const response = await fetch('/api/tracks', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: file.name.replace(/\.[^/.]+$/, ""),
-            projectId: project.id,
-            fileUrl: blob.url,
-            fileSize: file.size,
-            mimeType: file.type,
-            duration: duration
-          })
-        })
-
-        if (response.ok) {
-          toast.success(`${file.name} uploaded successfully`, { id: toastId })
-        } else {
-          const error = await response.text()
-          toast.error(`Failed to upload ${file.name}: ${error}`, { id: toastId })
-        }
-        
-      } catch (error) {
-        console.error('Upload failed:', error)
-        toast.error(`Failed to upload ${file.name}`)
-      }
-    }
-
-    setIsUploading(false)
-    // Refresh server-side data to show new tracks immediately
-    router.refresh()
+    // Use optimistic uploads from the hook
+    await uploadTracks(files)
   }
 
   return (
@@ -275,7 +207,7 @@ export function ProjectView({ project }: ProjectViewProps) {
           <Button variant="ghost" size="lg" className="rounded-full" disabled={isUploading}>
             <Shuffle className="h-5 w-5" />
           </Button>
-          <UploadTrackDialog projectId={project.id} />
+          <UploadTrackDialog projectId={projectId} />
           <Button variant="ghost" size="sm" disabled={isUploading}>
             <Share className="h-4 w-4 mr-2" />
             Share
@@ -286,9 +218,9 @@ export function ProjectView({ project }: ProjectViewProps) {
         </div>
 
         {/* Track List - Proper Data Table */}
-        {project.tracks.length > 0 ? (
+        {project?.tracks && project.tracks.length > 0 ? (
           <div className="space-y-4">
-            <TracksDataTable tracks={project.tracks} projectId={project.id} />
+            <TracksDataTable tracks={project.tracks} projectId={projectId} />
           </div>
         ) : (
           <Card className="border-dashed">
@@ -300,7 +232,7 @@ export function ProjectView({ project }: ProjectViewProps) {
               <p className="text-sm text-muted-foreground mb-4 max-w-sm text-center">
                 Upload your first track to get started with this project. You can drag & drop files here or use the upload button.
               </p>
-              <UploadTrackDialog projectId={project.id} triggerText="Upload Track" />
+              <UploadTrackDialog projectId={projectId} triggerText="Upload Track" />
             </CardContent>
           </Card>
         )}

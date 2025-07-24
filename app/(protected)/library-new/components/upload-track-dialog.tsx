@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Plus, Upload, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
 import { upload } from '@vercel/blob/client'
+import { useProject } from '../projects/[projectId]/hooks/use-project'
 
 interface UploadTrackDialogProps {
   projectId: string
@@ -31,12 +31,11 @@ interface UploadProgress {
 }
 
 export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: UploadTrackDialogProps) {
-  const router = useRouter()
+  const { uploadTrack, isUploading } = useProject({ projectId })
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ loaded: 0, total: 0, percentage: 0 })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -110,7 +109,6 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
   const resetForm = () => {
     setName('')
     setSelectedFile(null)
-    setIsUploading(false)
     setUploadProgress({ loaded: 0, total: 0, percentage: 0 })
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -122,7 +120,6 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
     if (open) {
       setName('')
       setSelectedFile(null)
-      setIsUploading(false)
       setUploadProgress({ loaded: 0, total: 0, percentage: 0 })
     }
   }, [open])
@@ -134,59 +131,23 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
       toast.error('Please provide a track name and select a file')
       return
     }
-
-    setIsUploading(true)
     
     try {
       // Extract duration from audio file
       const duration = await getAudioDuration(selectedFile)
       
-      // Client-side upload to Vercel Blob
-      const blob = await upload(selectedFile.name, selectedFile, {
-        access: 'public',
-        handleUploadUrl: '/api/upload',
-        onUploadProgress: (progress: { loaded: number; total: number }) => {
-          const percentage = Math.round((progress.loaded / progress.total) * 100)
-          setUploadProgress({
-            loaded: progress.loaded,
-            total: progress.total,
-            percentage
-          })
-        }
-      } as any)
-
-      // Call server API directly
-      const response = await fetch('/api/tracks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          projectId: projectId,
-          fileUrl: blob.url,
-          fileSize: selectedFile.size,
-          mimeType: selectedFile.type,
-          duration: duration
-        })
+      // Use optimistic upload from hook
+      await uploadTrack({
+        name: name.trim(),
+        file: selectedFile,
+        duration
       })
-
-      if (response.ok) {
-        toast.success('Track uploaded successfully')
-        setOpen(false)
-        resetForm()
-        // Refresh server-side data to show new track immediately
-        router.refresh()
-      } else {
-        const error = await response.text()
-        toast.error(`Failed to create track: ${error}`)
-        setIsUploading(false)
-      }
       
+      setOpen(false)
+      resetForm()
     } catch (error) {
       console.error('Upload failed:', error)
-      toast.error('Failed to upload file')
-      setIsUploading(false)
+      // Error handling is done in the hook
     }
   }
 

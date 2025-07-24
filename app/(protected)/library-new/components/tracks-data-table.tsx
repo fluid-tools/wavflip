@@ -112,12 +112,21 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return '--'
+    
+    const dateObj = date instanceof Date ? date : new Date(date)
+    
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) {
+      return '--'
+    }
+    
     return new Intl.DateTimeFormat('en-US', { 
       month: 'short', 
       day: 'numeric',
       year: 'numeric'
-    }).format(date)
+    }).format(dateObj)
   }
 
   const getFileTypeDisplay = (mimeType: string): string => {
