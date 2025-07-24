@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useSession, signOut, sendVerificationEmail } from "@/lib/auth-client"
+import { useSession, signOut, sendVerificationEmail, requestPasswordReset } from "@/lib/auth-client"
 import { User, Mail, Shield, AlertTriangle, LogOut, Camera } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -24,6 +24,7 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
   const router = useRouter()
   const [open, setOpen] = React.useState(false)
   const [isResending, setIsResending] = React.useState(false)
+  const [isRequestingPasswordReset, setIsRequestingPasswordReset] = React.useState(false)
 
   const handleSignOut = async () => {
     try {
@@ -51,6 +52,24 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
       toast.error("Failed to send verification email. Please try again.")
     } finally {
       setIsResending(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!session?.user.email) return
+    
+    setIsRequestingPasswordReset(true)
+    try {
+      await requestPasswordReset({
+        email: session.user.email,
+        redirectTo: window.location.origin + "/reset-password"
+      })
+      toast.success("Password reset email sent! Check your inbox to change your password.")
+    } catch (error) {
+      console.error("Failed to send password reset email:", error)
+      toast.error("Failed to send password reset email. Please try again.")
+    } finally {
+      setIsRequestingPasswordReset(false)
     }
   }
 
@@ -246,8 +265,16 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-medium mb-2">Password</h4>
-                    <Button variant="outline" size="sm">
-                      Change Password
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Change your account password by requesting a reset email.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleChangePassword}
+                      disabled={isRequestingPasswordReset}
+                    >
+                      {isRequestingPasswordReset ? "Sending..." : "Change Password"}
                     </Button>
                   </div>
                   

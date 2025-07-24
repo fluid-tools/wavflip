@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import { signIn, signUp, sendVerificationEmail } from "@/lib/auth-client";
+import { signIn, signUp, sendVerificationEmail, requestPasswordReset } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,6 +20,7 @@ export default function SignIn() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showVerificationError, setShowVerificationError] = useState(false);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [isRequestingReset, setIsRequestingReset] = useState(false);
   const router = useRouter();
 
   const handleEmailPasswordAuth = async () => {
@@ -97,6 +98,27 @@ export default function SignIn() {
       toast.error("Failed to send verification email. Please try again.");
     } finally {
       setIsResendingVerification(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+    
+    setIsRequestingReset(true);
+    try {
+      await requestPasswordReset({
+        email: email,
+        redirectTo: window.location.origin + "/reset-password"
+      });
+      toast.success("Password reset email sent! Check your inbox.");
+    } catch (error) {
+      console.error("Failed to send password reset email:", error);
+      toast.error("Failed to send password reset email. Please try again.");
+    } finally {
+      setIsRequestingReset(false);
     }
   };
 
@@ -191,7 +213,20 @@ export default function SignIn() {
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {!isSignUp && (
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto text-xs text-muted-foreground hover:text-primary"
+                    onClick={handleForgotPassword}
+                    disabled={isRequestingReset || !email}
+                    type="button"
+                  >
+                    {isRequestingReset ? "Sending..." : "Forgot password?"}
+                  </Button>
+                )}
+              </div>
               <Input
                 id="password"
                 type="password"

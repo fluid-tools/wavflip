@@ -23,7 +23,7 @@ import {
   type LibraryTrack 
 } from '@/lib/storage/library-storage'
 import { 
-  libraryTracksAtom, 
+  playlistAtom, 
   playerControlsAtom 
 } from '@/state/audio-atoms'
 import { toast } from 'sonner'
@@ -48,7 +48,7 @@ interface LibraryContentProps {
 
 export function LibraryContent({ initialTracks, initialStats }: LibraryContentProps) {
   // Initialize with server data - no flash!
-  const [libraryTracks, setLibraryTracks] = useAtom(libraryTracksAtom)
+  const [libraryTracks, setLibraryTracks] = useAtom(playlistAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [stats, setStats] = useState(initialStats)
 

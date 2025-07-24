@@ -25,7 +25,7 @@ export async function sendVerificationEmail({
     );
 
     const result = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
+      from: `WAVFLIP Team <${process.env.RESEND_FROM_EMAIL as string}>`,
       to: user.email,
       subject: 'Verify your email address',
       html: emailHtml,
@@ -57,7 +57,7 @@ export async function sendPasswordResetEmail({
     );
 
     const result = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
+      from: `WAVFLIP Team <${process.env.RESEND_FROM_EMAIL as string}>`,
       to: user.email,
       subject: 'Reset your password',
       html: emailHtml,
