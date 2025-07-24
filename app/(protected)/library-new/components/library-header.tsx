@@ -7,6 +7,12 @@ import { ArrowLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { CreateProjectDialog } from './create-project-dialog'
 
+interface FolderPathItem {
+  id: string
+  name: string
+  parentFolderId: string | null
+}
+
 export function LibraryHeader() {
   const pathname = usePathname()
   
@@ -19,13 +25,13 @@ export function LibraryHeader() {
   const folderId = isFolder ? pathname.split('/')[3] : null
   const projectId = isProject ? pathname.split('/')[3] : null
 
-  // Fetch folder data for breadcrumbs
-  const { data: folderData } = useQuery({
-    queryKey: ['folder-name', folderId],
+  // Fetch folder path for breadcrumbs (including parent folders)
+  const { data: folderPathData } = useQuery({
+    queryKey: ['folder-path', folderId],
     queryFn: async () => {
       if (!folderId) return null
-      const response = await fetch(`/api/folders/${folderId}`)
-      if (!response.ok) throw new Error('Failed to fetch folder')
+      const response = await fetch(`/api/folders/${folderId}/path`)
+      if (!response.ok) throw new Error('Failed to fetch folder path')
       return response.json()
     },
     enabled: !!folderId,
@@ -59,16 +65,23 @@ export function LibraryHeader() {
   }
 
   if (isFolder) {
-    const folderName = folderData?.name || 'Folder'
+    const folderPath = folderPathData?.path || []
+    const currentFolder = folderPath[folderPath.length - 1]
+    const folderName = currentFolder?.name || 'Folder'
+    
+    // Determine back navigation
+    const parentFolder = folderPath[folderPath.length - 2]
+    const backHref = parentFolder ? `/library-new/folders/${parentFolder.id}` : '/library-new'
+    const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Library'
     
     return (
       <div className="p-6 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/library-new">
+            <Link href={backHref}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Library
+                {backText}
               </Button>
             </Link>
             
@@ -76,8 +89,21 @@ export function LibraryHeader() {
               <Link href="/library-new" className="hover:text-foreground">
                 Library
               </Link>
-              <ChevronRight className="h-3 w-3" />
-              <span className="text-foreground font-medium">{folderName}</span>
+                             {folderPath.map((folder: FolderPathItem, index: number) => (
+                <div key={folder.id} className="flex items-center gap-2">
+                  <ChevronRight className="h-3 w-3" />
+                  {index === folderPath.length - 1 ? (
+                    <span className="text-foreground font-medium">{folder.name}</span>
+                  ) : (
+                    <Link 
+                      href={`/library-new/folders/${folder.id}`} 
+                      className="hover:text-foreground"
+                    >
+                      {folder.name}
+                    </Link>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
           

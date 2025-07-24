@@ -5,7 +5,7 @@ import {
   createFolder, createProject, createTrack, createTrackVersion,
   deleteFolder, deleteProject, deleteTrack,
   renameFolder, renameProject, renameTrack,
-  moveProject, getUserFolders, getVaultProjects
+  moveProject, getUserFolders, getVaultProjects, getFolderWithContents
 } from '@/lib/library-db'
 import { uploadAudioToBlob } from '@/lib/storage/blob-storage'
 import { requireAuth } from '@/lib/auth-server'
@@ -48,14 +48,24 @@ export async function createFolderAction(prevState: FolderActionState, formData:
   try {
     const session = await requireAuth()
     const name = formData.get('name') as string
+    const parentFolderId = formData.get('parentFolderId') as string | null
 
     if (!name || name.trim().length === 0) {
       return { success: false, error: 'Folder name is required' }
     }
 
     // Handle duplicate names by adding suffix
-    const folders = await getUserFolders(session.user.id)
-    const existingNames = new Set(folders.map((f: any) => f.name))
+    let existingFolders
+    if (parentFolderId) {
+      // Get sibling folders (same parent)
+      const parentFolder = await getFolderWithContents(parentFolderId, session.user.id)
+      existingFolders = parentFolder?.subFolders || []
+    } else {
+      // Get root level folders
+      existingFolders = await getUserFolders(session.user.id)
+    }
+    
+    const existingNames = new Set(existingFolders.map((f: any) => f.name))
     
     let folderName = name.trim()
     if (existingNames.has(folderName)) {
@@ -72,11 +82,18 @@ export async function createFolderAction(prevState: FolderActionState, formData:
 
     const folder = await createFolder({
       name: folderName,
+      parentFolderId: parentFolderId || null,
       userId: session.user.id,
       order: 0,
     })
 
-    revalidatePath('/library-new')
+    // Revalidate appropriate path
+    if (parentFolderId) {
+      revalidatePath(`/library-new/folders/${parentFolderId}`)
+    } else {
+      revalidatePath('/library-new')
+    }
+    
     return { success: true, folder, error: null }
   } catch (error) {
     console.error('Failed to create folder:', error)

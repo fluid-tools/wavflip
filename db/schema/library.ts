@@ -8,6 +8,7 @@ import {
   json,
   pgEnum,
   unique,
+  foreignKey,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -18,10 +19,11 @@ export const accessTypeEnum = pgEnum("access_type", [
   "invite-only"
 ]);
 
-// Folders table - contains projects
+// Folders table - contains projects and other folders (nested)
 export const folder = pgTable("folder", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  parentFolderId: text("parent_folder_id"), // nullable - null means root level folder
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -32,7 +34,14 @@ export const folder = pgTable("folder", {
   updatedAt: timestamp("updated_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+}, (table) => ({
+  // Self-referencing foreign key for nested folders
+  parentFolderRef: foreignKey({
+    columns: [table.parentFolderId],
+    foreignColumns: [table.id],
+    name: "folder_parent_fk"
+  }),
+}));
 
 // Projects table - contains tracks, can be in folders or vault root
 export const project = pgTable("project", {
@@ -113,6 +122,12 @@ export type NewTrackVersion = typeof trackVersion.$inferInsert;
 // Extended types with relationships
 export type FolderWithProjects = Folder & {
   projects: (Project & { trackCount: number })[];
+  subFolders?: Folder[];
+};
+
+export type NestedFolderStructure = Folder & {
+  projects: (Project & { trackCount: number })[];
+  subFolders: NestedFolderStructure[];
 };
 
 export type ProjectWithTracks = Project & {

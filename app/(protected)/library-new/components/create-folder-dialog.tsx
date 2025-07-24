@@ -25,54 +25,63 @@ type ActionState = {
   folder?: Folder
 }
 
-export function CreateFolderDialog() {
+interface CreateFolderDialogProps {
+  parentFolderId?: string | null
+  triggerText?: string
+}
+
+export function CreateFolderDialog({ parentFolderId = null, triggerText = "New Folder" }: CreateFolderDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [actionKey, setActionKey] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const [state, formAction, isPending] = useActionState(
+  const [state, formAction] = useActionState(
     createFolderAction, 
-    { success: false, error: null } as ActionState,
-    `folder-${actionKey}` // Key to reset state
+    { success: false, error: null } as ActionState
   )
 
+  // Handle success/error from action
   useEffect(() => {
-    if (state.success) {
+    if (state.success && isSubmitting) {
       toast.success('Folder created successfully')
       setOpen(false)
       setName('')
+      setIsSubmitting(false)
     }
-  }, [state.success])
-
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen)
-    if (newOpen) {
-      setActionKey(prev => prev + 1)
-    }
-  }
+  }, [state.success, isSubmitting])
 
   useEffect(() => {
-    if (state.error) {
+    if (state.error && isSubmitting) {
       toast.error(state.error)
+      setIsSubmitting(false)
     }
-  }, [state.error])
+  }, [state.error, isSubmitting])
+
+  const handleSubmit = async (formData: FormData) => {
+    if (parentFolderId) {
+      formData.append('parentFolderId', parentFolderId)
+    }
+    setIsSubmitting(true)
+    formAction(formData)
+  }
 
 
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Plus className="h-4 w-4 mr-2" />
-          New Folder
+          {triggerText}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <form action={formAction}>
+        <form action={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
             <DialogDescription>
-              Create a new folder to organize your projects.
+              Create a new folder to organize your {parentFolderId ? 'content' : 'projects'}.
+              {parentFolderId && " This folder will be created inside the current folder."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -97,12 +106,12 @@ export function CreateFolderDialog() {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={isPending}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || !name.trim()}>
-              {isPending ? 'Creating...' : 'Create Folder'}
+            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+              {isSubmitting ? 'Creating...' : 'Create Folder'}
             </Button>
           </DialogFooter>
         </form>

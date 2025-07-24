@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
-import { getUserFolders } from '@/lib/library-db'
+import { getFolderWithContents } from '@/lib/library-db'
 import { FolderView } from './components/folder-view'
 
 interface FolderPageProps {
@@ -20,9 +20,8 @@ export default async function FolderPage({ params }: FolderPageProps) {
     notFound()
   }
 
-  // Fetch folder data server-side
-  const folders = await getUserFolders(session.user.id)
-  const folder = folders.find(f => f.id === folderId)
+  // Fetch folder data server-side with subfolders and projects
+  const folder = await getFolderWithContents(folderId, session.user.id)
 
   if (!folder) {
     notFound()

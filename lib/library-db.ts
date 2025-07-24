@@ -16,10 +16,11 @@ import type {
 
 // FOLDER OPERATIONS
 export async function getUserFolders(userId: string): Promise<FolderWithProjects[]> {
+  // Only get root-level folders (parentFolderId is null)
   const folders = await db
     .select()
     .from(folder)
-    .where(eq(folder.userId, userId))
+    .where(and(eq(folder.userId, userId), isNull(folder.parentFolderId)))
     .orderBy(folder.order, folder.createdAt)
 
   const foldersWithProjects = await Promise.all(
@@ -48,6 +49,54 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
   )
 
   return foldersWithProjects
+}
+
+export async function getFolderWithContents(folderId: string, userId: string): Promise<FolderWithProjects | null> {
+  // Get the specific folder
+  const folderData = await db
+    .select()
+    .from(folder)
+    .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
+    .limit(1)
+
+  if (folderData.length === 0) {
+    return null
+  }
+
+  const currentFolder = folderData[0]
+
+  // Get subfolders
+  const subFolders = await db
+    .select()
+    .from(folder)
+    .where(and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId)))
+    .orderBy(folder.order, folder.createdAt)
+
+  // Get projects in this folder
+  const projects = await db
+    .select({
+      id: project.id,
+      name: project.name,
+      folderId: project.folderId,
+      userId: project.userId,
+      accessType: project.accessType,
+      order: project.order,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      metadata: project.metadata,
+      trackCount: count(track.id)
+    })
+    .from(project)
+    .leftJoin(track, eq(track.projectId, project.id))
+    .where(eq(project.folderId, folderId))
+    .groupBy(project.id)
+    .orderBy(project.order, project.createdAt)
+  
+  return { 
+    ...currentFolder, 
+    projects,
+    subFolders 
+  }
 }
 
 export async function createFolder(data: Omit<NewFolder, 'id' | 'createdAt' | 'updatedAt'>): Promise<Folder> {

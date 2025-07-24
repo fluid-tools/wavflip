@@ -33,34 +33,29 @@ type ActionState = {
 export function CreateProjectDialog({ folderId = null, triggerText = "New Project" }: CreateProjectDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [actionKey, setActionKey] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const [state, formAction, isPending] = useActionState(
+  const [state, formAction] = useActionState(
     createProjectAction, 
-    { success: false, error: null } as ActionState,
-    `project-${actionKey}` // Key to reset state
+    { success: false, error: null } as ActionState
   )
 
+  // Handle success/error from action  
   useEffect(() => {
-    if (state.success) {
+    if (state.success && isSubmitting) {
       toast.success('Project created successfully')
       setOpen(false)
       setName('')
+      setIsSubmitting(false)
     }
-  }, [state.success])
-
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen)
-    if (newOpen) {
-      setActionKey(prev => prev + 1)
-    }
-  }
+  }, [state.success, isSubmitting])
 
   useEffect(() => {
-    if (state.error) {
+    if (state.error && isSubmitting) {
       toast.error(state.error)
+      setIsSubmitting(false)
     }
-  }, [state.error])
+  }, [state.error, isSubmitting])
 
 
 
@@ -68,11 +63,12 @@ export function CreateProjectDialog({ folderId = null, triggerText = "New Projec
     if (folderId) {
       formData.append('folderId', folderId)
     }
+    setIsSubmitting(true)
     formAction(formData)
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Plus className="h-4 w-4 mr-2" />
@@ -110,12 +106,12 @@ export function CreateProjectDialog({ folderId = null, triggerText = "New Projec
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={isPending}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || !name.trim()}>
-              {isPending ? 'Creating...' : 'Create Project'}
+            <Button type="submit" disabled={isSubmitting || !name.trim()}>
+              {isSubmitting ? 'Creating...' : 'Create Project'}
             </Button>
           </DialogFooter>
         </form>

@@ -8,6 +8,10 @@ Building a new hierarchical library system with drag-and-drop functionality, ver
 ```
 Vault (Root)
 ├── Folders
+│   ├── Sub-folders (nested folders)
+│   │   ├── Projects
+│   │   │   └── Tracks (with versions)
+│   │   └── More sub-folders...
 │   └── Projects
 │       └── Tracks (with versions)
 └── Projects (can exist directly in vault)
@@ -16,11 +20,11 @@ Vault (Root)
 
 ### Rules
 - **Vault**: Contains folders and projects
-- **Folders**: Can only contain projects (no nested folders)
+- **Folders**: Can contain projects AND other folders (unlimited nesting)
 - **Projects**: Can only contain tracks
 - **Tracks**: Have multiple versions, one active version
-- **Empty folders**: Can exist, show "Add Project" placeholder
-- **Auto-deletion**: Empty folders without projects get deleted
+- **Empty folders**: Can exist, show "Add Folder/Project" placeholders
+- **Auto-deletion**: Empty folders without content get deleted
 - **Auto-creation**: Dragging track to folder creates new project named after track
 
 ## Database Schema

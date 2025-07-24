@@ -29,9 +29,10 @@ import Link from 'next/link'
 
 interface FolderCardProps {
   folder: FolderWithProjects
+  showProjectCount?: boolean
 }
 
-export function FolderCard({ folder }: FolderCardProps) {
+export function FolderCard({ folder, showProjectCount = true }: FolderCardProps) {
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [newName, setNewName] = useState(folder.name)
@@ -90,7 +91,7 @@ export function FolderCard({ folder }: FolderCardProps) {
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-sm truncate">{folder.name}</CardTitle>
                     <CardDescription className="text-xs">
-                      {folder.projects.length} projects
+                      {showProjectCount ? `${folder.projects?.length || 0} projects` : 'Folder'}
                     </CardDescription>
                   </div>
                 </div>
