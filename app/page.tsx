@@ -21,27 +21,16 @@ export default async function HomePage() {
         </div>
 
         <div className="flex gap-4 justify-center">
-          {session ? (
-            // Authenticated user - show app links
-            <>
-              <Button asChild size="lg">
-                <Link href="/studio">Generate Sounds</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/library">My Library</Link>
-              </Button>
-            </>
-          ) : (
-            // Unauthenticated user - show auth links
-            <>
-              <Button asChild size="lg">
-                <Link href="/sign-in">Get Started</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/sign-in">Sign In</Link>
-              </Button>
-            </>
-          )}
+          <Button asChild size="lg">
+            <Link href={session ? "/studio" : "/sign-in"}>
+              {session ? "Generate Sounds" : "Get Started"}
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href={session ? "/library" : "/sign-in"}>
+              {session ? "My Library" : "Sign In"}
+            </Link>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
