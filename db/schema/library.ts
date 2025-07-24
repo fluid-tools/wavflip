@@ -32,10 +32,7 @@ export const folder = pgTable("folder", {
   updatedAt: timestamp("updated_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
-}, (table) => ({
-  // Unique folder names per user
-  uniqueFolderPerUser: unique().on(table.userId, table.name),
-}));
+});
 
 // Projects table - contains tracks, can be in folders or vault root
 export const project = pgTable("project", {
@@ -56,10 +53,7 @@ export const project = pgTable("project", {
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
   metadata: json("metadata"),
-}, (table) => ({
-  // Unique project names per folder/vault (when folderId is null)
-  uniqueProjectPerFolder: unique().on(table.userId, table.folderId, table.name),
-}));
+});
 
 // Tracks table - metadata only, actual audio data in track_versions
 export const track = pgTable("track", {

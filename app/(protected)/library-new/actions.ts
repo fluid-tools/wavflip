@@ -5,7 +5,7 @@ import {
   createFolder, createProject, createTrack, createTrackVersion,
   deleteFolder, deleteProject, deleteTrack,
   renameFolder, renameProject, renameTrack,
-  moveProject
+  moveProject, getUserFolders, getVaultProjects
 } from '@/lib/library-db'
 import { uploadAudioToBlob } from '@/lib/storage/blob-storage'
 import { requireAuth } from '@/lib/auth-server'
@@ -53,8 +53,25 @@ export async function createFolderAction(prevState: FolderActionState, formData:
       return { success: false, error: 'Folder name is required' }
     }
 
+    // Handle duplicate names by adding suffix
+    const folders = await getUserFolders(session.user.id)
+    const existingNames = new Set(folders.map((f: any) => f.name))
+    
+    let folderName = name.trim()
+    if (existingNames.has(folderName)) {
+      let counter = 1
+      let newName = `${folderName} (${counter})`
+      
+      while (existingNames.has(newName)) {
+        counter++
+        newName = `${folderName} (${counter})`
+      }
+      
+      folderName = newName
+    }
+
     const folder = await createFolder({
-      name: name.trim(),
+      name: folderName,
       userId: session.user.id,
       order: 0,
     })
@@ -80,8 +97,33 @@ export async function createProjectAction(prevState: ProjectActionState, formDat
       return { success: false, error: 'Project name is required' }
     }
 
+    // Handle duplicate names by adding suffix
+    let existingProjects
+    if (folderId) {
+      const folders = await getUserFolders(session.user.id)
+      const folder = folders.find((f: any) => f.id === folderId)
+      existingProjects = folder?.projects || []
+    } else {
+      existingProjects = await getVaultProjects(session.user.id)
+    }
+    
+    const existingNames = new Set(existingProjects.map((p: any) => p.name))
+    
+    let projectName = name.trim()
+    if (existingNames.has(projectName)) {
+      let counter = 1
+      let newName = `${projectName} (${counter})`
+      
+      while (existingNames.has(newName)) {
+        counter++
+        newName = `${projectName} (${counter})`
+      }
+      
+      projectName = newName
+    }
+
     const project = await createProject({
-      name: name.trim(),
+      name: projectName,
       folderId: folderId || null,
       userId: session.user.id,
       accessType: 'private',

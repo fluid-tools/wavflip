@@ -28,26 +28,39 @@ type ActionState = {
 export function CreateFolderDialog() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
+  const [actionKey, setActionKey] = useState(0)
   
   const [state, formAction, isPending] = useActionState(
     createFolderAction, 
-    { success: false, error: null } as ActionState
+    { success: false, error: null } as ActionState,
+    `folder-${actionKey}` // Key to reset state
   )
 
   useEffect(() => {
-    if (state.success && open) {
+    if (state.success) {
       toast.success('Folder created successfully')
       setOpen(false)
       setName('')
     }
-    
+  }, [state.success])
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+    if (newOpen) {
+      setActionKey(prev => prev + 1)
+    }
+  }
+
+  useEffect(() => {
     if (state.error) {
       toast.error(state.error)
     }
-  }, [state.success, state.error, open])
+  }, [state.error])
+
+
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Plus className="h-4 w-4 mr-2" />
