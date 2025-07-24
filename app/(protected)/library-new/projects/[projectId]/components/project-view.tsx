@@ -14,25 +14,39 @@ import { TracksDataTable } from '../../../components/tracks-data-table'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
 import { upload } from '@vercel/blob/client'
-import { createTrackAction } from '../../../actions'
-import { useActionState } from 'react'
 
 interface ProjectViewProps {
   project: ProjectWithTracks
 }
 
+// Helper function to extract audio duration from file
+const getAudioDuration = (file: File): Promise<number> => {
+  return new Promise((resolve) => {
+    const audio = document.createElement('audio')
+    const url = URL.createObjectURL(file)
+    
+    audio.addEventListener('loadedmetadata', () => {
+      URL.revokeObjectURL(url)
+      resolve(audio.duration || 0)
+    })
+    
+    audio.addEventListener('error', () => {
+      URL.revokeObjectURL(url)
+      resolve(0) // Return 0 if we can't determine duration
+    })
+    
+    audio.src = url
+  })
+}
+
 export function ProjectView({ project }: ProjectViewProps) {
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const dropZoneRef = useRef<HTMLDivElement>(null)
   
   const [currentTrack] = useAtom(currentTrackAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [isPlaying] = useAtom(isPlayingAtom)
-
-  const [uploadState, uploadAction, isUploading] = useActionState(createTrackAction, {
-    success: false,
-    error: null,
-  })
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -89,34 +103,53 @@ export function ProjectView({ project }: ProjectViewProps) {
       return
     }
 
-    // Handle multiple files
+    setIsUploading(true)
+
+    // Handle multiple files sequentially to avoid overwhelming the server
     for (const file of files) {
       try {
-        toast.info(`Uploading ${file.name}...`)
+        const toastId = toast.loading(`Uploading ${file.name}...`)
+        
+        // Extract duration from audio file
+        const duration = await getAudioDuration(file)
         
         // Client-side upload to Vercel Blob
         const blob = await upload(file.name, file, {
           access: 'public',
           handleUploadUrl: '/api/upload',
+        } as any)
+
+        // Call server API directly instead of using action hook
+        const response = await fetch('/api/tracks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: file.name.replace(/\.[^/.]+$/, ""),
+            projectId: project.id,
+            fileUrl: blob.url,
+            fileSize: file.size,
+            mimeType: file.type,
+            duration: duration
+          })
         })
 
-        // Create form data with the blob URL
-        const formData = new FormData()
-        const fileName = file.name.replace(/\.[^/.]+$/, "")
-        formData.append('name', fileName)
-        formData.append('projectId', project.id)
-        formData.append('fileUrl', blob.url)
-        formData.append('fileSize', file.size.toString())
-        formData.append('mimeType', file.type)
-
-        // Call server action to create track record
-        await uploadAction(formData)
+        if (response.ok) {
+          toast.success(`${file.name} uploaded successfully`, { id: toastId })
+        } else {
+          const error = await response.text()
+          toast.error(`Failed to upload ${file.name}: ${error}`, { id: toastId })
+        }
         
       } catch (error) {
         console.error('Upload failed:', error)
         toast.error(`Failed to upload ${file.name}`)
       }
     }
+
+    setIsUploading(false)
+    // No need to reload - revalidatePath in API handles cache invalidation
   }
 
   return (
@@ -124,11 +157,11 @@ export function ProjectView({ project }: ProjectViewProps) {
       ref={dropZoneRef}
       className={`min-h-screen bg-gradient-to-b from-background to-muted/20 transition-colors ${
         isDragOver ? 'bg-primary/5 border-primary' : ''
-      }`}
+      } ${isUploading ? 'pointer-events-none' : ''}`}
       onDrop={handleFileDrop}
       onDragOver={(e) => {
         e.preventDefault()
-        setIsDragOver(true)
+        if (!isUploading) setIsDragOver(true)
       }}
       onDragLeave={(e) => {
         // Only hide drag over if we're leaving the main container
@@ -138,12 +171,16 @@ export function ProjectView({ project }: ProjectViewProps) {
       }}
     >
       {/* Drag Overlay */}
-      {isDragOver && (
+      {(isDragOver || isUploading) && (
         <div className="fixed inset-0 z-50 bg-primary/10 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-background p-8 rounded-lg border-2 border-dashed border-primary text-center">
             <Upload className="h-12 w-12 mx-auto mb-4 text-primary" />
-            <h3 className="text-lg font-semibold mb-2">Drop audio files here</h3>
-            <p className="text-muted-foreground">Files will be added to {project.name}</p>
+            <h3 className="text-lg font-semibold mb-2">
+              {isUploading ? 'Uploading files...' : 'Drop audio files here'}
+            </h3>
+            <p className="text-muted-foreground">
+              {isUploading ? 'Please wait while files are being processed' : `Files will be added to ${project.name}`}
+            </p>
           </div>
         </div>
       )}
@@ -227,20 +264,20 @@ export function ProjectView({ project }: ProjectViewProps) {
             size="lg" 
             className="rounded-full px-8"
             onClick={handlePlayAll}
-            disabled={project.tracks.length === 0}
+            disabled={project.tracks.length === 0 || isUploading}
           >
             <Play className="h-5 w-5 mr-2" />
             Play
           </Button>
-          <Button variant="ghost" size="lg" className="rounded-full">
+          <Button variant="ghost" size="lg" className="rounded-full" disabled={isUploading}>
             <Shuffle className="h-5 w-5" />
           </Button>
           <UploadTrackDialog projectId={project.id} />
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" disabled={isUploading}>
             <Share className="h-4 w-4 mr-2" />
             Share
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" disabled={isUploading}>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>

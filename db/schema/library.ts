@@ -81,10 +81,7 @@ export const track = pgTable("track", {
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
   metadata: json("metadata"),
-}, (table) => ({
-  // Unique track names per project
-  uniqueTrackPerProject: unique().on(table.projectId, table.name),
-}));
+});
 
 // Track versions table - actual file data and version history
 export const trackVersion = pgTable("track_version", {

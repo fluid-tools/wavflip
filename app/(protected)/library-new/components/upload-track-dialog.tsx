@@ -17,8 +17,6 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
 import { upload } from '@vercel/blob/client'
-import { createTrackAction } from '../actions'
-import { useActionState } from 'react'
 
 interface UploadTrackDialogProps {
   projectId: string
@@ -38,13 +36,7 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
   const [isDragOver, setIsDragOver] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ loaded: 0, total: 0, percentage: 0 })
-  const [hasShownToast, setHasShownToast] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const [state, formAction, isPending] = useActionState(createTrackAction, {
-    success: false,
-    error: null,
-  })
 
   const getFileTypeDisplay = (file: File): string => {
     const mimeType = file.type
@@ -68,6 +60,26 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
     }
     
     return typeMap[mimeType] || extension || 'Audio'
+  }
+
+  // Helper function to extract audio duration from file
+  const getAudioDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      const audio = document.createElement('audio')
+      const url = URL.createObjectURL(file)
+      
+      audio.addEventListener('loadedmetadata', () => {
+        URL.revokeObjectURL(url)
+        resolve(audio.duration || 0)
+      })
+      
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(url)
+        resolve(0) // Return 0 if we can't determine duration
+      })
+      
+      audio.src = url
+    })
   }
 
   const handleFileSelect = (file: File) => {
@@ -96,13 +108,22 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
   const resetForm = () => {
     setName('')
     setSelectedFile(null)
-    setHasShownToast(false)
     setIsUploading(false)
     setUploadProgress({ loaded: 0, total: 0, percentage: 0 })
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      setName('')
+      setSelectedFile(null)
+      setIsUploading(false)
+      setUploadProgress({ loaded: 0, total: 0, percentage: 0 })
+    }
+  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,11 +136,14 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
     setIsUploading(true)
     
     try {
+      // Extract duration from audio file
+      const duration = await getAudioDuration(selectedFile)
+      
       // Client-side upload to Vercel Blob
       const blob = await upload(selectedFile.name, selectedFile, {
         access: 'public',
         handleUploadUrl: '/api/upload',
-        onUploadProgress: (progress) => {
+        onUploadProgress: (progress: { loaded: number; total: number }) => {
           const percentage = Math.round((progress.loaded / progress.total) * 100)
           setUploadProgress({
             loaded: progress.loaded,
@@ -127,18 +151,34 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
             percentage
           })
         }
+      } as any)
+
+      // Call server API directly
+      const response = await fetch('/api/tracks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          projectId: projectId,
+          fileUrl: blob.url,
+          fileSize: selectedFile.size,
+          mimeType: selectedFile.type,
+          duration: duration
+        })
       })
 
-      // Create form data with the blob URL
-      const formData = new FormData()
-      formData.append('name', name.trim())
-      formData.append('projectId', projectId)
-      formData.append('fileUrl', blob.url)
-      formData.append('fileSize', selectedFile.size.toString())
-      formData.append('mimeType', selectedFile.type)
-
-      // Call server action to create track record
-      formAction(formData)
+      if (response.ok) {
+        toast.success('Track uploaded successfully')
+        setOpen(false)
+        resetForm()
+        // No need to reload - revalidatePath in API handles cache invalidation
+      } else {
+        const error = await response.text()
+        toast.error(`Failed to create track: ${error}`)
+        setIsUploading(false)
+      }
       
     } catch (error) {
       console.error('Upload failed:', error)
@@ -147,28 +187,7 @@ export function UploadTrackDialog({ projectId, triggerText = "Add tracks" }: Upl
     }
   }
 
-  // Handle success/error states with proper deduplication
-  useEffect(() => {
-    if (state.success && open && !hasShownToast) {
-      toast.success('Track uploaded successfully')
-      setHasShownToast(true)
-      setOpen(false)
-      resetForm()
-    } else if (state.error && !hasShownToast) {
-      toast.error(state.error)
-      setHasShownToast(true)
-      setIsUploading(false)
-    }
-  }, [state.success, state.error, open, hasShownToast])
-
-  // Reset hasShownToast when dialog opens
-  useEffect(() => {
-    if (open) {
-      setHasShownToast(false)
-    }
-  }, [open])
-
-  const isLoading = isUploading || isPending
+  const isLoading = isUploading
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

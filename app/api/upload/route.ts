@@ -34,6 +34,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             'audio/3gpp',
             'audio/amr'
           ],
+          addRandomSuffix: true, // Prevent conflicts with existing files
           tokenPayload: JSON.stringify({
             userId: (await requireAuth()).user.id,
           }),

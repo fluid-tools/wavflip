@@ -170,9 +170,33 @@ export async function moveProject(projectId: string, folderId: string | null, us
 
 // TRACK OPERATIONS
 export async function createTrack(data: Omit<NewTrack, 'id' | 'createdAt' | 'updatedAt'>): Promise<Track> {
+  let trackName = data.name.trim()
+  
+  // Check for existing tracks with the same name in the project
+  const existingTracks = await db
+    .select({ name: track.name })
+    .from(track)
+    .where(and(eq(track.projectId, data.projectId), eq(track.userId, data.userId)))
+  
+  const existingNames = new Set(existingTracks.map(t => t.name))
+  
+  // If name exists, add incrementing suffix
+  if (existingNames.has(trackName)) {
+    let counter = 1
+    let newName = `${trackName} (${counter})`
+    
+    while (existingNames.has(newName)) {
+      counter++
+      newName = `${trackName} (${counter})`
+    }
+    
+    trackName = newName
+  }
+
   const newTrack: NewTrack = {
     id: nanoid(),
     ...data,
+    name: trackName,
     createdAt: new Date(),
     updatedAt: new Date(),
   }
