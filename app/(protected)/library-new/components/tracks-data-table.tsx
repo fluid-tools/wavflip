@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAtom } from 'jotai'
 import {
   ColumnDef,
@@ -44,6 +44,7 @@ import { toast } from 'sonner'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
 import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
+import { TableVirtuoso } from 'react-virtuoso'
 
 type TrackFromProject = ProjectWithTracks['tracks'][0]
 
@@ -346,6 +347,9 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
     },
   })
 
+  // Memoize the sorted rows for performance
+  const sortedRows = useMemo(() => table.getRowModel().rows, [table])
+
   // Handle success/error states
   useEffect(() => {
     if (renameState.success && showRenameDialog) {
@@ -372,12 +376,30 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
   return (
     <>
       <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
+        <TableVirtuoso
+          style={{ height: '400px' }}
+          data={sortedRows}
+          components={{
+            Table: ({ style, ...props }) => (
+              <Table {...props} style={{ ...style, width: '100%' }} />
+            ),
+            TableHead: TableHeader,
+            TableRow: ({ item: row, ...props }) => (
+              <TableRow
+                {...props}
+                data-state={row?.getIsSelected() && 'selected'}
+                className="group hover:bg-muted/50"
+              />
+            ),
+            TableBody: ({ style, ...props }) => (
+              <TableBody {...props} style={{ ...style }} />
+            ),
+          }}
+          fixedHeaderContent={() => (
+            <>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
                     <TableHead 
                       key={header.id}
                       style={{ width: header.getSize() }}
@@ -389,44 +411,32 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
                             header.getContext()
                           )}
                     </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className="group hover:bg-muted/50"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
+              ))}
+            </>
+          )}
+          itemContent={(index, row) => (
+            <>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell 
+                  key={cell.id}
+                  style={{ width: cell.column.getSize() }}
                 >
-                  No tracks found.
+                  {flexRender(
+                    cell.column.columnDef.cell,
+                    cell.getContext()
+                  )}
                 </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </>
+          )}
+        />
+        {tracks.length === 0 && (
+          <div className="h-24 flex items-center justify-center text-center text-muted-foreground">
+            No tracks found.
+          </div>
+        )}
       </div>
 
       {/* Rename Dialog */}

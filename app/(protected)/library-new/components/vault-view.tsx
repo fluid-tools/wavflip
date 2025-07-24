@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTrackCount } from '@/db/schema/library'
@@ -7,6 +8,7 @@ import { CreateFolderDialog } from './create-folder-dialog'
 import { CreateProjectDialog } from './create-project-dialog'
 import { FolderCard } from './folder-card'
 import { ProjectCard } from './project-card'
+import { Virtuoso } from 'react-virtuoso'
 
 interface LibraryStats {
   totalFolders: number
@@ -23,6 +25,10 @@ interface VaultViewProps {
   initialStats: LibraryStats
 }
 
+type LibraryItem = 
+  | { type: 'folder'; data: FolderWithProjects }
+  | { type: 'project'; data: ProjectWithTrackCount }
+
 export function VaultView({ initialFolders, initialProjects, initialStats }: VaultViewProps) {
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
@@ -36,6 +42,35 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Combine folders and projects into a single array for virtualization
+  const libraryItems = useMemo((): LibraryItem[] => {
+    const items: LibraryItem[] = [
+      ...initialFolders.map(folder => ({ type: 'folder' as const, data: folder })),
+      ...initialProjects.map(project => ({ type: 'project' as const, data: project }))
+    ]
+    return items
+  }, [initialFolders, initialProjects])
+
+  // Calculate grid columns based on screen size
+  const ITEMS_PER_ROW = 4
+
+  const renderItem = (index: number) => {
+    const item = libraryItems[index]
+    if (!item) return null
+
+    if (item.type === 'folder') {
+      return <FolderCard key={item.data.id} folder={item.data} />
+    } else {
+      return (
+        <ProjectCard 
+          key={item.data.id} 
+          project={item.data} 
+          trackCount={item.data.trackCount}
+        />
+      )
+    }
   }
 
   return (
@@ -99,40 +134,41 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {/* Folders */}
-          {initialFolders.map((folder) => (
-            <FolderCard key={folder.id} folder={folder} />
-          ))}
-
-          {/* Vault Projects */}
-          {initialProjects.map((project) => (
-            <ProjectCard 
-              key={project.id} 
-              project={project} 
-              trackCount={project.trackCount}
+        {libraryItems.length > 0 ? (
+          <div style={{ height: '600px' }}>
+            <Virtuoso
+              style={{ height: '100%' }}
+              totalCount={Math.ceil(libraryItems.length / ITEMS_PER_ROW)}
+              itemContent={(rowIndex) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+                  {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
+                    const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                    return itemIndex < libraryItems.length ? (
+                      <div key={itemIndex}>
+                        {renderItem(itemIndex)}
+                      </div>
+                    ) : null
+                  })}
+                </div>
+              )}
             />
-          ))}
-
-          {/* Empty state */}
-          {initialFolders.length === 0 && initialProjects.length === 0 && (
-            <div className="col-span-full">
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Folder className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="font-semibold mb-2">No folders or projects yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Start organizing your tracks by creating folders and projects
-                  </p>
-                  <div className="flex gap-2">
-                    <CreateFolderDialog />
-                    <CreateProjectDialog triggerText="Create Project" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* Empty state */
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Folder className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="font-semibold mb-2">No folders or projects yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Start organizing your tracks by creating folders and projects
+              </p>
+              <div className="flex gap-2">
+                <CreateFolderDialog />
+                <CreateProjectDialog triggerText="Create Project" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
