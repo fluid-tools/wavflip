@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { CreateProjectDialog } from './projects/create-project-dialog'
-import { CreateFolderDialog } from './folders/create-folder-dialog'
+import { CreateProjectDialog } from './projects/create-dialog'
+import { CreateFolderDialog } from './folders/create-dialog'
 
 interface FolderPathItem {
   id: string

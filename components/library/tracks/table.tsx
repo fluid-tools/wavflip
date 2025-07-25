@@ -32,7 +32,7 @@ import { toast } from 'sonner'
 import { TableVirtuoso } from 'react-virtuoso'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
 import type { AudioTrack } from '@/types/audio'
-import { createTracksTableColumns } from './tracks-table-columns'
+import { createTracksTableColumns } from './table-columns'
 import { useTracks, type TrackFromProject } from '../../../hooks/use-tracks'
 
 interface TracksTableProps {

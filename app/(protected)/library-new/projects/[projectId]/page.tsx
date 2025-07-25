@@ -2,8 +2,8 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
 import { getProjectWithTracks } from '@/lib/library-db'
-import { ProjectView } from '@/components/library/projects/project-view'
-import { TracksTableSkeleton } from '@/components/library/tracks/tracks-table-skeleton'
+import { ProjectView } from '@/components/library/projects/view'
+import { TracksTableSkeleton } from '@/components/library/tracks/table-skeleton'
 
 interface ProjectPageProps {
   params: Promise<{
