@@ -11,11 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 import type { PlayerAction } from '@/state/audio-atoms'
-
-type TrackFromProject = ProjectWithTracks['tracks'][0]
+import type { TrackFromProject } from '../../hooks/use-tracks'
 
 interface ColumnActionsProps {
   track: TrackFromProject

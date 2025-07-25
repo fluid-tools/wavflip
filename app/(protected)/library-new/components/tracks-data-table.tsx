@@ -42,11 +42,9 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
 import type { ProjectWithTracks } from '@/db/schema/library'
+import type { TrackFromProject } from '../projects/hooks/use-tracks'
 import type { AudioTrack } from '@/types/audio'
 import { TableVirtuoso } from 'react-virtuoso'
-import React from 'react'
-
-type TrackFromProject = ProjectWithTracks['tracks'][0]
 
 interface TracksDataTableProps {
   tracks: TrackFromProject[]

@@ -31,12 +31,9 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { TableVirtuoso } from 'react-virtuoso'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
-import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 import { createTracksTableColumns } from './tracks-table-columns'
-import { useTracks } from '../../hooks/use-tracks'
-
-type TrackFromProject = ProjectWithTracks['tracks'][0]
+import { useTracks, type TrackFromProject } from '../../hooks/use-tracks'
 
 interface TracksTableProps {
   tracks: TrackFromProject[]

@@ -8,15 +8,7 @@ interface UseTracksProps {
   projectId: string
 }
 
-interface TrackFromProject {
-  id: string
-  name: string
-  activeVersion?: {
-    fileUrl: string
-    duration?: number
-  } | null
-  createdAt: Date
-}
+export type TrackFromProject = ProjectWithTracks['tracks'][0]
 
 export function useTracks({ projectId }: UseTracksProps) {
   const queryClient = useQueryClient()
