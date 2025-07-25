@@ -4,9 +4,9 @@ import { useMemo } from 'react'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/library'
-import { CreateProjectDialog } from '../../../components/create-project-dialog'
-import { FolderCard } from '../../../components/folder-card'
-import { ProjectCard } from '../../../components/project-card'
+import { CreateProjectDialog } from '../../../../../components/library/dialogs/create-project-dialog'
+import { FolderCard } from '../../components/folder-card'
+import { ProjectCard } from '../../../../../components/library/project-card'
 import { Virtuoso } from 'react-virtuoso'
 
 interface FolderViewProps {

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 
-import { UploadTrackDialog } from '../../components/upload-track-dialog'
+import { UploadTrackDialog } from './upload-track-dialog'
 import { TracksTable } from './tracks/tracks-table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
