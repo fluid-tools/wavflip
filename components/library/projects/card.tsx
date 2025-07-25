@@ -51,9 +51,8 @@ export function ProjectCard({
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
-  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(folderId ?? null)
+  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
-  const [moveActionInProgress, setMoveActionInProgress] = useState(false)
 
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteProjectAction, {
     success: false,
@@ -72,17 +71,11 @@ export function ProjectCard({
 
   const handleRename = async (formData: FormData) => {
     formData.append('projectId', project.id)
-    if (folderId) {
-      formData.append('folderId', folderId)
-    }
     renameAction(formData)
   }
 
   const handleDelete = async (formData: FormData) => {
     formData.append('projectId', project.id)
-    if (folderId) {
-      formData.append('folderId', folderId)
-    }
     deleteAction(formData)
   }
 
@@ -90,52 +83,38 @@ export function ProjectCard({
     formData.append('projectId', project.id)
     formData.append('folderId', selectedDestinationId || '')
     formData.append('sourceFolderId', folderId || '')
-    setMoveActionInProgress(true) // Track that we just initiated an action
     moveAction(formData)
   }
 
-  // Handle success/error states with useEffect to prevent multiple toasts
+  // Clean state management - handle success/error in single effects
   useEffect(() => {
-    if (renameState.success && showRenameDialog) {
+    if (renameState.success) {
       toast.success('Project renamed successfully')
       setShowRenameDialog(false)
       setNewName(project.name)
-    }
-  }, [renameState.success, showRenameDialog, project.name])
-
-  useEffect(() => {
-    if (renameState.error) {
+    } else if (renameState.error) {
       toast.error(renameState.error)
     }
-  }, [renameState.error])
+  }, [renameState, project.name])
 
   useEffect(() => {
-    if (deleteState.success && showDeleteDialog) {
+    if (deleteState.success) {
       toast.success('Project deleted successfully')
       setShowDeleteDialog(false)
-    }
-  }, [deleteState.success, showDeleteDialog])
-
-  useEffect(() => {
-    if (deleteState.error) {
+    } else if (deleteState.error) {
       toast.error(deleteState.error)
     }
-  }, [deleteState.error])
+  }, [deleteState])
 
   useEffect(() => {
-    if (moveState.success && moveActionInProgress) {
+    if (moveState.success) {
       toast.success('Project moved successfully')
       setShowMoveDialog(false)
       setSelectedDestinationId(folderId ?? null)
-      setMoveActionInProgress(false)
-    }
-  }, [moveState.success, moveActionInProgress, folderId])
-
-  useEffect(() => {
-    if (moveState.error) {
+    } else if (moveState.error) {
       toast.error(moveState.error)
     }
-  }, [moveState.error])
+  }, [moveState, folderId])
 
   const cardContent = (
     <ContextMenu>
