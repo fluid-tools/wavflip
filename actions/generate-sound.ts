@@ -70,6 +70,15 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
     console.error('Sound generation failed:', error)
     
     const generationError = error as GenerationError
+    
+    // Handle rate limiting with user-friendly message
+    if (generationError.code === '429') {
+      return {
+        success: false,
+        error: 'Please try again in a few moments. WAVFLIP is experiencing heavy traffic right now.'
+      }
+    }
+
     return {
       success: false,
       error: generationError.message || 'Failed to generate sound. Please try again.'
