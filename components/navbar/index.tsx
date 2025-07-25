@@ -2,11 +2,11 @@
 
 import { usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserProfile } from "./components/user-profile";
+import { UserProfile } from "./user-profile";
 import Link from "next/link";
-import { ThemeToggle } from "../../components/theme-toggle";
+import { ThemeToggle } from "../theme-toggle";
 
-export function PillsNav() {
+export function Nav() {
     const pathname = usePathname()
     const currentTab = pathname.includes('/library') ? 'library' : 'studio'
 
