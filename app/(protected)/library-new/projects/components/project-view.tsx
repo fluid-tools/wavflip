@@ -9,8 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 
-import { UploadTrackDialog } from '../../../components/upload-track-dialog'
-import { TracksDataTable } from '../../../components/tracks-data-table'
+import { UploadTrackDialog } from '../../components/upload-track-dialog'
+import { TracksTable } from './tracks/tracks-table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
 import { useProject } from '../hooks/use-project'
@@ -195,10 +195,10 @@ export function ProjectView({ projectId, initialProject }: ProjectViewProps) {
           </Button>
         </div>
 
-        {/* Track List - Proper Data Table */}
+        {/* Track List - Refactored Table */}
         {project?.tracks && project.tracks.length > 0 ? (
           <div className="space-y-4">
-            <TracksDataTable tracks={project.tracks} projectId={projectId} />
+            <TracksTable tracks={project.tracks} projectId={projectId} />
           </div>
         ) : (
           <Card className="border-dashed">

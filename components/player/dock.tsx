@@ -125,7 +125,7 @@ export default function PlayerDock() {
     setIsSaving(true)
     try {
       await downloadAndStoreAudio(currentTrack)
-      dispatchPlayerAction({ type: 'ADD_TO_LIBRARY', payload: currentTrack })
+      dispatchPlayerAction({ type: 'ADD_TO_PLAYLIST', payload: currentTrack })
       toast.success('Track saved to library!')
     } catch (error) {
       console.error('Failed to save track:', error)
