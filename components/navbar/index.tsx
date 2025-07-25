@@ -2,11 +2,11 @@
 
 import { usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserProfile } from "./components/user-profile";
+import { UserProfile } from "./user-profile";
 import Link from "next/link";
-import { ThemeToggle } from "../../components/theme-toggle";
+import { ThemeToggle } from "../theme-toggle";
 
-export function PillsNav() {
+export function Nav() {
     const pathname = usePathname()
     const currentTab = pathname.includes('/library') ? 'library' : 'studio'
 
@@ -20,9 +20,9 @@ export function PillsNav() {
                     <TabsTrigger asChild value="library">
                         <Link href="/library">Library</Link>
                     </TabsTrigger>
-                    <TabsTrigger asChild value="daw">
+                    {/* <TabsTrigger asChild value="daw">
                         <Link href="/daw">DAW</Link>
-                    </TabsTrigger>
+                    </TabsTrigger> */}
                 </TabsList>
             </Tabs>
             <div className="flex items-center gap-2">

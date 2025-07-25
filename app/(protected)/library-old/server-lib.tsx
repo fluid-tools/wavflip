@@ -15,7 +15,7 @@ import {
   HardDrive,
   MoreHorizontal
 } from 'lucide-react'
-import { SoundDetailDialog } from '@/app/(protected)/components/sound-detail-dialog'
+import { SoundDetailDialog } from '@/components/library/old/sound-detail-dialog'
 import { 
   getLibraryTracks, 
   getLibraryStats,

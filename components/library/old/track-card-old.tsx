@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Play, Download, Music, Mic } from 'lucide-react'
-import { SoundDetailDialog } from '@/app/(protected)/components/sound-detail-dialog'
+import { SoundDetailDialog } from '@/components/library/old/sound-detail-dialog'
 import { createBlobUrlFromAudioData, type LibraryTrack } from '@/lib/storage/library-storage'
 import { playerControlsAtom } from '@/state/audio-atoms'
 

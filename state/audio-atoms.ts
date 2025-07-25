@@ -2,6 +2,25 @@ import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 import type { AudioTrack, PlayerState, GeneratedSound } from '@/types/audio'
 
+// Player action types
+export type PlayerAction = 
+  | { type: 'PLAY_TRACK'; payload: AudioTrack }
+  | { type: 'PLAY' }
+  | { type: 'PAUSE' }
+  | { type: 'STOP' }
+  | { type: 'SET_TIME'; payload: number }
+  | { type: 'SET_DURATION'; payload: number }
+  | { type: 'SET_VOLUME'; payload: number }
+  | { type: 'TOGGLE_MUTE' }
+  | { type: 'SET_PLAYBACK_RATE'; payload: number }
+  | { type: 'ADD_TO_PLAYLIST'; payload: AudioTrack }
+  | { type: 'REMOVE_FROM_PLAYLIST'; payload: string }
+  | { type: 'CLEAR_PLAYLIST' }
+  | { type: 'START_GENERATION' }
+  | { type: 'UPDATE_GENERATION_PROGRESS'; payload: number }
+  | { type: 'FINISH_GENERATION'; payload?: AudioTrack }
+  | { type: 'ERROR' }
+
 // Current playing track
 export const currentTrackAtom = atom<AudioTrack | null>(null)
 
@@ -39,7 +58,7 @@ export const generationProgressAtom = atom<number>(0)
 // Player controls actions
 export const playerControlsAtom = atom(
   null,
-  (get, set, action: { type: string; payload?: any }) => {
+  (get, set, action: PlayerAction) => {
     switch (action.type) {
       case 'PLAY_TRACK':
         set(currentTrackAtom, action.payload)
@@ -104,7 +123,8 @@ export const playerControlsAtom = atom(
         set(isGeneratingAtom, false)
         set(generationProgressAtom, 0)
         if (action.payload) {
-          set(playlistAtom, (prev) => [...prev, action.payload])
+          const track = action.payload
+          set(playlistAtom, (prev) => [...prev, track])
         }
         break
         

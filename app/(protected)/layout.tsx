@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/auth-server";
-import { PillsNav } from "./nav";
+import { Nav } from "@/components/navbar";
 import dynamic from "next/dynamic";
 import PlayerDockSkeleton from "@/components/player/dock-skeleton";
 import { AppProviders } from "@/state/providers";
@@ -19,7 +19,7 @@ export default async function ProtectedLayout({
     return (
         
         <AppProviders>
-            <PillsNav />
+            <Nav />
             {children}
             <PlayerDock />
         </AppProviders>

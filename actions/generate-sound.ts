@@ -70,6 +70,16 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
     console.error('Sound generation failed:', error)
     
     const generationError = error as GenerationError
+    
+    // Handle rate limiting with user-friendly message
+    if (generationError.code === 'system_busy' || 
+        generationError.message?.toLowerCase().includes('rate limit')) {
+      return {
+        success: false,
+        error: 'Please try again in a few moments. We are experiencing heavy traffic right now.'
+      }
+    }
+
     return {
       success: false,
       error: generationError.message || 'Failed to generate sound. Please try again.'
@@ -139,6 +149,16 @@ export async function generateTextToSpeech(
     console.error('Text-to-speech generation failed:', error)
     
     const generationError = error as GenerationError
+    
+    // Handle rate limiting with user-friendly message
+    if (generationError.code === 'system_busy' || 
+        generationError.message?.toLowerCase().includes('rate limit')) {
+      return {
+        success: false,
+        error: 'Please try again in a few moments. We are experiencing heavy traffic right now.'
+      }
+    }
+    
     return {
       success: false,
       error: generationError.message || 'Failed to generate speech. Please try again.'

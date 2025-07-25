@@ -63,7 +63,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
           // Auto-save to library
           try {
             await downloadAndStoreAudio(result.data)
-            dispatchPlayerAction({ type: 'ADD_TO_LIBRARY', payload: result.data })
+            // Note: No need to ADD_TO_PLAYLIST since FINISH_GENERATION already added it
           } catch (error) {
             console.error('Failed to save to library:', error)
             // Don't show error to user, just log it
@@ -110,7 +110,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
           // Auto-save to library
           try {
             await downloadAndStoreAudio(result.data)
-            dispatchPlayerAction({ type: 'ADD_TO_LIBRARY', payload: result.data })
+            // Note: No need to ADD_TO_PLAYLIST since FINISH_GENERATION already added it
           } catch (error) {
             console.error('Failed to save to library:', error)
             // Don't show error to user, just log it
