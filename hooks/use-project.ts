@@ -103,7 +103,7 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
         userId: '', // Will be filled by server
         activeVersionId: `temp-version-${nanoid()}`,
         accessType: 'private' as const,
-        order: previousProject?.tracks.length || 0,
+        order: previousProject?.tracks?.length ?? 0,
         createdAt: new Date(),
         updatedAt: new Date(),
         metadata: null,
@@ -136,7 +136,7 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       if (previousProject) {
         queryClient.setQueryData<ProjectWithTracks>(queryKey, {
           ...previousProject,
-          tracks: [...previousProject.tracks, optimisticTrack]
+          tracks: [...(previousProject.tracks ?? []), optimisticTrack]
         })
       }
 
