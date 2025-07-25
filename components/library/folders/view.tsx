@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, startTransition } from 'react'
+import { useActionState } from 'react'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/library'
@@ -8,16 +9,60 @@ import { CreateProjectDialog } from '../projects/create-dialog'
 import { FolderCard } from './card'
 import { ProjectCard } from '../projects/card'
 import { Virtuoso } from 'react-virtuoso'
+import { LibraryDndProvider } from '../dnd-context'
+import { DroppableWrapper } from '../droppable-wrapper'
+import { moveFolderAction, moveProjectAction } from '@/actions/library'
+import { toast } from 'sonner'
 
 interface FolderViewProps {
   folder: FolderWithProjects
+  allFolders?: FolderWithProjects[]
 }
 
 type FolderItem = 
   | { type: 'folder'; data: NonNullable<FolderWithProjects['subFolders']>[number] }
   | { type: 'project'; data: FolderWithProjects['projects'][number] }
 
-export function FolderView({ folder }: FolderViewProps) {
+export function FolderView({ folder, allFolders = [] }: FolderViewProps) {
+  const [moveFolderState, moveFolderActionState] = useActionState(moveFolderAction, {
+    success: false,
+    error: null,
+  })
+
+  const [moveProjectState, moveProjectActionState] = useActionState(moveProjectAction, {
+    success: false,
+    error: null,
+  })
+
+  const handleMoveFolder = async (
+    folderId: string, 
+    parentFolderId: string | null, 
+    sourceParentFolderId: string | null
+  ) => {
+    const formData = new FormData()
+    formData.append('folderId', folderId)
+    formData.append('parentFolderId', parentFolderId || '')
+    formData.append('sourceParentFolderId', sourceParentFolderId || '')
+    
+    startTransition(() => {
+      moveFolderActionState(formData)
+    })
+  }
+
+  const handleMoveProject = async (
+    projectId: string, 
+    folderId: string | null, 
+    sourceFolderId: string | null
+  ) => {
+    const formData = new FormData()
+    formData.append('projectId', projectId)
+    formData.append('folderId', folderId || '')
+    formData.append('sourceFolderId', sourceFolderId || '')
+    
+    startTransition(() => {
+      moveProjectActionState(formData)
+    })
+  }
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {
     const items: FolderItem[] = [
@@ -39,7 +84,10 @@ export function FolderView({ folder }: FolderViewProps) {
         <FolderCard 
           key={item.data.id} 
           folder={{ ...item.data, projects: [] }} 
-          showProjectCount={false} 
+          showProjectCount={false}
+          allFolders={allFolders}
+          parentFolderId={folder.id}
+          isDragAndDropEnabled={true}
         />
       )
     } else {
@@ -49,13 +97,23 @@ export function FolderView({ folder }: FolderViewProps) {
           project={item.data} 
           folderId={folder.id}
           trackCount={item.data.trackCount}
+          allFolders={allFolders}
+          isDragAndDropEnabled={true}
         />
       )
     }
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <LibraryDndProvider
+      onMoveFolder={handleMoveFolder}
+      onMoveProject={handleMoveProject}
+    >
+      <DroppableWrapper 
+        id={`folder-${folder.id}`} 
+        data={{ type: 'folder', id: folder.id }}
+        className="p-6 space-y-6"
+      >
       {/* Folder Info */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold">{folder.name}</h1>
@@ -97,6 +155,7 @@ export function FolderView({ folder }: FolderViewProps) {
           </CardContent>
         </Card>
       )}
-    </div>
+      </DroppableWrapper>
+    </LibraryDndProvider>
   )
 } 

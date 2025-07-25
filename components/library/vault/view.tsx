@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, startTransition } from 'react'
+import { useActionState } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTrackCount } from '@/db/schema/library'
@@ -9,6 +10,10 @@ import { CreateProjectDialog } from '../projects/create-dialog'
 import { FolderCard } from '../folders/card'
 import { ProjectCard } from '../projects/card'
 import { Virtuoso } from 'react-virtuoso'
+import { LibraryDndProvider } from '../dnd-context'
+import { DroppableWrapper } from '../droppable-wrapper'
+import { moveFolderAction, moveProjectAction } from '@/actions/library'
+import { toast } from 'sonner'
 
 interface LibraryStats {
   totalFolders: number
@@ -30,6 +35,45 @@ type LibraryItem =
   | { type: 'project'; data: ProjectWithTrackCount }
 
 export function VaultView({ initialFolders, initialProjects, initialStats }: VaultViewProps) {
+  const [moveFolderState, moveFolderActionState] = useActionState(moveFolderAction, {
+    success: false,
+    error: null,
+  })
+
+  const [moveProjectState, moveProjectActionState] = useActionState(moveProjectAction, {
+    success: false,
+    error: null,
+  })
+
+  const handleMoveFolder = async (
+    folderId: string, 
+    parentFolderId: string | null, 
+    sourceParentFolderId: string | null
+  ) => {
+    const formData = new FormData()
+    formData.append('folderId', folderId)
+    formData.append('parentFolderId', parentFolderId || '')
+    formData.append('sourceParentFolderId', sourceParentFolderId || '')
+    
+    startTransition(() => {
+      moveFolderActionState(formData)
+    })
+  }
+
+  const handleMoveProject = async (
+    projectId: string, 
+    folderId: string | null, 
+    sourceFolderId: string | null
+  ) => {
+    const formData = new FormData()
+    formData.append('projectId', projectId)
+    formData.append('folderId', folderId || '')
+    formData.append('sourceFolderId', sourceFolderId || '')
+    
+    startTransition(() => {
+      moveProjectActionState(formData)
+    })
+  }
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -61,20 +105,39 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
     if (!item) return null
 
     if (item.type === 'folder') {
-      return <FolderCard key={item.data.id} folder={item.data} />
+      return (
+        <FolderCard 
+          key={item.data.id} 
+          folder={item.data} 
+          allFolders={initialFolders}
+          parentFolderId={null}
+          isDragAndDropEnabled={true}
+        />
+      )
     } else {
       return (
         <ProjectCard 
           key={item.data.id} 
           project={item.data} 
+          folderId={null}
           trackCount={item.data.trackCount}
+          allFolders={initialFolders}
+          isDragAndDropEnabled={true}
         />
       )
     }
   }
 
   return (
-    <div className="space-y-6">
+    <LibraryDndProvider
+      onMoveFolder={handleMoveFolder}
+      onMoveProject={handleMoveProject}
+    >
+      <DroppableWrapper 
+        id="vault" 
+        data={{ type: 'vault' }}
+        className="space-y-6"
+      >
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -170,6 +233,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
           </Card>
         )}
       </div>
-    </div>
+      </DroppableWrapper>
+    </LibraryDndProvider>
   )
 } 

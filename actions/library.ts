@@ -5,7 +5,7 @@ import {
   createFolder, createProject, createTrack, createTrackVersion,
   deleteFolder, deleteProject, deleteTrack,
   renameFolder, renameProject, renameTrack,
-  moveProject, getUserFolders, getVaultProjects, getFolderWithContents
+  moveFolder, moveProject, moveTrack, getUserFolders, getVaultProjects, getFolderWithContents
 } from '@/lib/library-db'
 import { requireAuth } from '@/lib/auth-server'
 import type { Folder, Project, Track } from '@/db/schema/library'
@@ -377,6 +377,42 @@ export async function renameTrackAction(prevState: RenameActionState, formData: 
   }
 }
 
+export async function moveFolderAction(prevState: MoveActionState, formData: FormData): Promise<MoveActionState> {
+  try {
+    const session = await requireAuth()
+    const folderId = formData.get('folderId') as string
+    const parentFolderId = formData.get('parentFolderId') as string | null
+    const sourceParentFolderId = formData.get('sourceParentFolderId') as string | null
+
+    if (!folderId) {
+      return { success: false, error: 'Folder ID is required' }
+    }
+
+    await moveFolder(folderId, parentFolderId, session.user.id)
+
+    // Revalidate source and destination paths
+    if (sourceParentFolderId) {
+      revalidatePath(`/library/folders/${sourceParentFolderId}`)
+    } else {
+      revalidatePath('/library')
+    }
+    
+    if (parentFolderId) {
+      revalidatePath(`/library/folders/${parentFolderId}`)
+    } else {
+      revalidatePath('/library')
+    }
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to move folder:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to move folder' 
+    }
+  }
+}
+
 export async function moveProjectAction(prevState: MoveActionState, formData: FormData): Promise<MoveActionState> {
   try {
     const session = await requireAuth()
@@ -409,6 +445,35 @@ export async function moveProjectAction(prevState: MoveActionState, formData: Fo
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to move project' 
+    }
+  }
+}
+
+export async function moveTrackAction(prevState: MoveActionState, formData: FormData): Promise<MoveActionState> {
+  try {
+    const session = await requireAuth()
+    const trackId = formData.get('trackId') as string
+    const projectId = formData.get('projectId') as string
+    const sourceProjectId = formData.get('sourceProjectId') as string
+
+    if (!trackId || !projectId) {
+      return { success: false, error: 'Track ID and Project ID are required' }
+    }
+
+    await moveTrack(trackId, projectId, session.user.id)
+
+    // Revalidate source and destination project pages
+    if (sourceProjectId) {
+      revalidatePath(`/library/projects/${sourceProjectId}`)
+    }
+    revalidatePath(`/library/projects/${projectId}`)
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to move track:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to move track' 
     }
   }
 } 

@@ -137,10 +137,74 @@ export function useTracks({ projectId }: UseTracksProps) {
     }
   }
 
+  // Move track mutation with optimistic updates
+  const moveTrackMutation = useMutation({
+    mutationFn: async ({ trackId, destinationProjectId }: { trackId: string; destinationProjectId: string }) => {
+      const formData = new FormData()
+      formData.append('trackId', trackId)
+      formData.append('projectId', destinationProjectId)
+      formData.append('sourceProjectId', projectId)
+
+      const response = await fetch('/api/tracks/move', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error)
+      }
+
+      return response.json()
+    },
+    onMutate: async ({ trackId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey })
+
+      // Snapshot previous value
+      const previousProject = queryClient.getQueryData<ProjectWithTracks>(queryKey)
+
+      // Optimistically remove the track from current project
+      if (previousProject) {
+        const updatedTracks = previousProject.tracks.filter(track => track.id !== trackId)
+        queryClient.setQueryData<ProjectWithTracks>(queryKey, {
+          ...previousProject,
+          tracks: updatedTracks
+        })
+      }
+
+      return { previousProject, trackId }
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousProject) {
+        queryClient.setQueryData(queryKey, context.previousProject)
+      }
+      toast.error(`Failed to move track: ${error.message}`)
+    },
+    onSuccess: () => {
+      toast.success('Track moved successfully')
+      // Invalidate both source and destination projects
+      queryClient.invalidateQueries({ queryKey })
+      // We might want to invalidate all project queries to be safe
+      queryClient.invalidateQueries({ queryKey: ['project'] })
+    },
+  })
+
+  const moveTrack = async (trackId: string, destinationProjectId: string) => {
+    try {
+      await moveTrackMutation.mutateAsync({ trackId, destinationProjectId })
+    } catch {
+      // Error handled by mutation
+    }
+  }
+
   return {
     deleteTrack,
     renameTrack,
+    moveTrack,
     isDeleting: deleteTrackMutation.isPending,
     isRenaming: renameTrackMutation.isPending,
+    isMoving: moveTrackMutation.isPending,
   }
 } 

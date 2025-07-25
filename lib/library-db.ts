@@ -271,6 +271,13 @@ export async function renameProject(projectId: string, name: string, userId: str
     .where(and(eq(project.id, projectId), eq(project.userId, userId)))
 }
 
+export async function moveFolder(folderId: string, parentFolderId: string | null, userId: string): Promise<void> {
+  await db
+    .update(folder)
+    .set({ parentFolderId, updatedAt: new Date() })
+    .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
+}
+
 export async function moveProject(projectId: string, folderId: string | null, userId: string): Promise<void> {
   await db
     .update(project)

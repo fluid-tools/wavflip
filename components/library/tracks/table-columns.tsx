@@ -1,7 +1,7 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
-import { ArrowUpDown, Play, Pause, MoreHorizontal, Edit2, Trash2, Upload } from 'lucide-react'
+import { ArrowUpDown, Play, Pause, MoreHorizontal, Edit2, Trash2, Upload, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -22,6 +22,7 @@ interface ColumnActionsProps {
   onPlayTrack: (track: TrackFromProject) => void
   onRenameTrack: (track: TrackFromProject) => void
   onDeleteTrack: (track: TrackFromProject) => void
+  onMoveTrack: (track: TrackFromProject) => void
   dispatchPlayerAction: (action: PlayerAction) => void
 }
 
@@ -73,6 +74,7 @@ export function createTracksTableColumns({
   onPlayTrack,
   onRenameTrack,
   onDeleteTrack,
+  onMoveTrack,
   dispatchPlayerAction,
 }: Omit<ColumnActionsProps, 'track'>): ColumnDef<TrackFromProject>[] {
   return [
@@ -230,6 +232,10 @@ export function createTracksTableColumns({
               <DropdownMenuItem onClick={() => onRenameTrack(track)}>
                 <Edit2 className="h-4 w-4 mr-2" />
                 Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onMoveTrack(track)}>
+                <FolderOpen className="h-4 w-4 mr-2" />
+                Move to Project
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Upload className="h-4 w-4 mr-2" />

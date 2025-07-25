@@ -34,24 +34,29 @@ import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/aud
 import type { AudioTrack } from '@/types/audio'
 import { createTracksTableColumns } from './table-columns'
 import { useTracks, type TrackFromProject } from '../../../hooks/use-tracks'
+import { ProjectPicker } from '../project-picker'
+import type { ProjectWithTrackCount } from '@/db/schema/library'
 
 interface TracksTableProps {
   tracks: TrackFromProject[]
   projectId: string
+  availableProjects?: ProjectWithTrackCount[]
 }
 
-export function TracksTable({ tracks, projectId }: TracksTableProps) {
+export function TracksTable({ tracks, projectId, availableProjects = [] }: TracksTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [selectedTrack, setSelectedTrack] = useState<TrackFromProject | null>(null)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showMoveDialog, setShowMoveDialog] = useState(false)
+  const [selectedDestinationProjectId, setSelectedDestinationProjectId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
 
   const [currentTrack] = useAtom(currentTrackAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [isPlaying] = useAtom(isPlayingAtom)
 
-  const { deleteTrack, renameTrack, isDeleting, isRenaming } = useTracks({ projectId })
+  const { deleteTrack, renameTrack, moveTrack, isDeleting, isRenaming, isMoving } = useTracks({ projectId })
 
   // Memoize the tracks data to prevent unnecessary re-renders
   const memoizedTracks = useMemo(() => tracks, [tracks])
@@ -85,6 +90,12 @@ export function TracksTable({ tracks, projectId }: TracksTableProps) {
     setShowDeleteDialog(true)
   }
 
+  const handleMoveTrack = (track: TrackFromProject) => {
+    setSelectedTrack(track)
+    setSelectedDestinationProjectId(null)
+    setShowMoveDialog(true)
+  }
+
   const handleRename = async () => {
     if (!selectedTrack || !newName.trim()) return
 
@@ -102,12 +113,22 @@ export function TracksTable({ tracks, projectId }: TracksTableProps) {
     setSelectedTrack(null)
   }
 
+  const handleMove = async () => {
+    if (!selectedTrack || !selectedDestinationProjectId) return
+
+    await moveTrack(selectedTrack.id, selectedDestinationProjectId)
+    setShowMoveDialog(false)
+    setSelectedTrack(null)
+    setSelectedDestinationProjectId(null)
+  }
+
   const columns = createTracksTableColumns({
     currentTrack,
     isPlaying,
     onPlayTrack: handlePlayTrack,
     onRenameTrack: handleRenameTrack,
     onDeleteTrack: handleDeleteTrack,
+    onMoveTrack: handleMoveTrack,
     dispatchPlayerAction,
   })
 
@@ -287,6 +308,42 @@ export function TracksTable({ tracks, projectId }: TracksTableProps) {
               disabled={isDeleting}
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move Dialog */}
+      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Move Track</DialogTitle>
+            <DialogDescription>
+              Choose which project to move &quot;{selectedTrack?.name}&quot; to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <ProjectPicker
+              projects={availableProjects}
+              selectedProjectId={selectedDestinationProjectId}
+              onProjectSelect={setSelectedDestinationProjectId}
+              excludeProjectId={projectId}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowMoveDialog(false)}
+              disabled={isMoving}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleMove} 
+              disabled={isMoving || !selectedDestinationProjectId}
+            >
+              {isMoving ? 'Moving...' : 'Move'}
             </Button>
           </DialogFooter>
         </DialogContent>

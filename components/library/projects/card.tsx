@@ -23,23 +23,35 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useActionState } from 'react'
-import { deleteProjectAction, renameProjectAction } from '@/actions/library'
+import { deleteProjectAction, renameProjectAction, moveProjectAction } from '@/actions/library'
 import { toast } from 'sonner'
-import type { Project, ProjectWithTrackCount } from '@/db/schema/library'
+import type { Project, ProjectWithTrackCount, FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
+import { DraggableWrapper } from '../draggable-wrapper'
+import { DroppableWrapper } from '../droppable-wrapper'
+import { FolderPicker } from '../folder-picker'
 
 interface ProjectCardProps {
   project: Project | ProjectWithTrackCount
   folderId?: string | null
   trackCount?: number
+  allFolders?: FolderWithProjects[]
+  isDragAndDropEnabled?: boolean
 }
 
-export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps) {
+export function ProjectCard({ 
+  project, 
+  folderId, 
+  trackCount, 
+  allFolders = [], 
+  isDragAndDropEnabled = false 
+}: ProjectCardProps) {
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
   const displayTrackCount = trackCount ?? ('trackCount' in project ? project.trackCount : 0)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
+  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(folderId ?? null)
   const [newName, setNewName] = useState(project.name)
 
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteProjectAction, {
@@ -48,6 +60,11 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
   })
 
   const [renameState, renameAction, isRenaming] = useActionState(renameProjectAction, {
+    success: false,
+    error: null,
+  })
+
+  const [moveState, moveAction, isMoving] = useActionState(moveProjectAction, {
     success: false,
     error: null,
   })
@@ -66,6 +83,13 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
       formData.append('folderId', folderId)
     }
     deleteAction(formData)
+  }
+
+  const handleMove = async (formData: FormData) => {
+    formData.append('projectId', project.id)
+    formData.append('folderId', selectedDestinationId || '')
+    formData.append('sourceFolderId', folderId || '')
+    moveAction(formData)
   }
 
   // Handle success/error states
@@ -88,33 +112,42 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
     toast.error(deleteState.error)
   }
 
-  return (
-    <>
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <Link href={`/library/projects/${project.id}`} className="block">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                    <Music className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm truncate">{project.name}</CardTitle>
-                    <CardDescription className="text-xs">
-                      {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
-                    </CardDescription>
-                  </div>
-                  {project.accessType !== 'private' && (
-                    <Badge variant="secondary" className="text-xs">
-                      {project.accessType}
-                    </Badge>
-                  )}
+  if (moveState.success && showMoveDialog) {
+    toast.success('Project moved successfully')
+    setShowMoveDialog(false)
+    setSelectedDestinationId(folderId ?? null)
+  }
+
+  if (moveState.error) {
+    toast.error(moveState.error)
+  }
+
+  const cardContent = (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <Link href={`/library/projects/${project.id}`} className="block">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                  <Music className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
-              </CardHeader>
-            </Card>
-          </Link>
-        </ContextMenuTrigger>
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-sm truncate">{project.name}</CardTitle>
+                  <CardDescription className="text-xs">
+                    {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
+                  </CardDescription>
+                </div>
+                {project.accessType !== 'private' && (
+                  <Badge variant="secondary" className="text-xs">
+                    {project.accessType}
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+      </ContextMenuTrigger>
 
         <ContextMenuContent className="w-48">
           <ContextMenuItem
@@ -130,6 +163,7 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
           <ContextMenuItem
             onClick={(e) => {
               e.preventDefault()
+              setSelectedDestinationId(folderId ?? null)
               setShowMoveDialog(true)
             }}
           >
@@ -148,7 +182,25 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
             Delete
           </ContextMenuItem>
         </ContextMenuContent>
-      </ContextMenu>
+    </ContextMenu>
+  )
+
+  const dragData = {
+    type: 'project' as const,
+    id: project.id,
+    name: project.name,
+    sourceContainer: folderId || 'vault',
+  }
+
+  return (
+    <>
+      {isDragAndDropEnabled ? (
+        <DraggableWrapper id={`project-${project.id}`} data={dragData}>
+          {cardContent}
+        </DraggableWrapper>
+      ) : (
+        cardContent
+      )}
 
       {/* Rename Dialog */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
@@ -224,20 +276,38 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
         </DialogContent>
       </Dialog>
 
-      {/* Move Dialog - TODO: Implement move functionality */}
+      {/* Move Dialog */}
       <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Move Project</DialogTitle>
-            <DialogDescription>
-              Move functionality will be implemented with drag & drop system.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={() => setShowMoveDialog(false)}>
-              Close
-            </Button>
-          </DialogFooter>
+        <DialogContent className="sm:max-w-[500px]">
+          <form action={handleMove}>
+            <DialogHeader>
+              <DialogTitle>Move Project</DialogTitle>
+              <DialogDescription>
+                Choose where to move &quot;{project.name}&quot;.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <FolderPicker
+                folders={allFolders}
+                selectedFolderId={selectedDestinationId}
+                onFolderSelect={setSelectedDestinationId}
+                allowVaultSelection={true}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMoveDialog(false)}
+                disabled={isMoving}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isMoving}>
+                {isMoving ? 'Moving...' : 'Move'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </>
