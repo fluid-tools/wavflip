@@ -8,7 +8,7 @@ interface UseTracksProps {
   projectId: string
 }
 
-export type TrackFromProject = ProjectWithTracks['tracks'][0]
+export type TrackFromProject = NonNullable<ProjectWithTracks['tracks']>[number]
 
 export function useTracks({ projectId }: UseTracksProps) {
   const queryClient = useQueryClient()
@@ -42,7 +42,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       // Optimistically remove the track
       if (previousProject) {
-        const updatedTracks = previousProject.tracks.filter(track => track.id !== trackId)
+        const updatedTracks = (previousProject.tracks ?? []).filter(track => track.id !== trackId)
         queryClient.setQueryData<ProjectWithTracks>(queryKey, {
           ...previousProject,
           tracks: updatedTracks
@@ -94,7 +94,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       // Optimistically update the track name
       if (previousProject) {
-        const updatedTracks = previousProject.tracks.map(track => 
+        const updatedTracks = (previousProject.tracks ?? []).map(track => 
           track.id === trackId 
             ? { ...track, name: newName.trim(), updatedAt: new Date() }
             : track
@@ -166,7 +166,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       // Optimistically remove the track from current project
       if (previousProject) {
-        const updatedTracks = previousProject.tracks.filter(track => track.id !== trackId)
+        const updatedTracks = (previousProject.tracks ?? []).filter(track => track.id !== trackId)
         queryClient.setQueryData<ProjectWithTracks>(queryKey, {
           ...previousProject,
           tracks: updatedTracks
