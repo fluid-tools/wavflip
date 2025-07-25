@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { LibraryHeader } from '../../../components/library/library-header'
+import { LibraryHeader } from '@/components/library/header'
 
 interface LibraryLayoutProps {
   children: ReactNode
