@@ -10,7 +10,7 @@ import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 
 import { UploadTrackDialog } from './upload-track-dialog'
-import { TracksTable } from './tracks/tracks-table'
+import { TracksTable } from '../../../../../components/library/tracks/tracks-table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
 import { useProject } from '../hooks/use-project'
