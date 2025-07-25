@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAtom } from 'jotai'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
@@ -65,6 +65,9 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
 
   const queryClient = useQueryClient()
   const queryKey = ['project', projectId]
+
+  // Memoize the tracks data to prevent unnecessary re-renders and infinite loops
+  const memoizedTracks = useMemo(() => tracks, [tracks])
 
   // Delete track mutation with optimistic updates
   const deleteTrackMutation = useMutation({
@@ -453,7 +456,7 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
   ]
 
   const table = useReactTable({
-    data: [...tracks], // Force new reference for React Table
+    data: memoizedTracks,
     columns,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -471,67 +474,66 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
   return (
     <>
       <div className="rounded-md border">
-        <TableVirtuoso
-          style={{ height: '400px' }}
-          totalCount={table.getRowModel().rows.length}
-          components={{
-            Table: ({ style, ...props }) => (
-              <Table {...props} style={{ ...style, width: '100%' }} />
-            ),
-            TableHead: TableHeader,
-            TableRow: ({ ...props }) => (
-              <TableRow
-                {...props}
-                className="group hover:bg-muted/50"
-              />
-            ),
-            TableBody: ({ style, ...props }) => (
-              <TableBody {...props} style={{ ...style }} />
-            ),
-          }}
-          fixedHeaderContent={() => (
-            <>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead 
-                      key={header.id}
-                      style={{ width: header.getSize() }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </>
-          )}
-          itemContent={(index) => {
-            const row = table.getRowModel().rows[index]
-            if (!row) return null
-            
-            return (
+        {tracks.length > 0 ? (
+          <TableVirtuoso
+            style={{ height: '400px' }}
+            totalCount={table.getRowModel().rows.length}
+            components={{
+              Table: ({ style, ...props }) => (
+                <Table {...props} style={{ ...style, width: '100%' }} />
+              ),
+              TableHead: TableHeader,
+              TableRow: ({ ...props }) => (
+                <TableRow {...props} className="group hover:bg-muted/50" />
+              ),
+              TableBody: ({ style, ...props }) => (
+                <TableBody {...props} style={{ ...style }} />
+              ),
+            }}
+            fixedHeaderContent={() => (
               <>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell 
-                    key={cell.id}
-                    style={{ width: cell.column.getSize() }}
-                  >
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
-                  </TableCell>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead 
+                        key={header.id}
+                        style={{ width: header.getSize() }}
+                        className="bg-background"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
                 ))}
               </>
-            )
-          }}
-        />
-        {tracks.length === 0 && (
+            )}
+            itemContent={(index) => {
+              const row = table.getRowModel().rows[index]
+              if (!row) return null
+              
+              return (
+                <>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell 
+                      key={cell.id}
+                      style={{ width: cell.column.getSize() }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </>
+              )
+            }}
+          />
+        ) : (
           <div className="h-24 flex items-center justify-center text-center text-muted-foreground">
             No tracks found.
           </div>
