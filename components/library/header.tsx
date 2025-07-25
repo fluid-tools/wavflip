@@ -85,7 +85,7 @@ export function LibraryHeader() {
     // Determine back navigation
     const parentFolder = folderPath[folderPath.length - 2]
     const backHref = parentFolder ? `/library/folders/${parentFolder.id}` : '/library'
-    const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Library'
+    const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Vault'
     
     return (
       <div className="p-6 border-b">

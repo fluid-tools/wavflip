@@ -98,6 +98,11 @@ export function LibraryDndProvider({
     // Prevent dropping on self or invalid operations
     if (active.id === over.id) return
 
+    // Additional check for project-to-project self-drops
+    if (dragData.type === 'project' && dropData.type === 'project' && dragData.id === dropData.id) {
+      return // Silently ignore self-drops without error
+    }
+
     try {
       // Handle folder drops
       if (dragData.type === 'folder' && dropData.type === 'folder') {
