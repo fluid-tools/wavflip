@@ -28,13 +28,14 @@ interface VaultViewProps {
   initialFolders: FolderWithProjects[]
   initialProjects: ProjectWithTrackCount[]
   initialStats: LibraryStats
+  allFolders?: FolderWithProjects[]
 }
 
 type LibraryItem = 
   | { type: 'folder'; data: FolderWithProjects }
   | { type: 'project'; data: ProjectWithTrackCount }
 
-export function VaultView({ initialFolders, initialProjects, initialStats }: VaultViewProps) {
+export function VaultView({ initialFolders, initialProjects, initialStats, allFolders = [] }: VaultViewProps) {
   const [moveFolderState, moveFolderActionState] = useActionState(moveFolderAction, {
     success: false,
     error: null,
@@ -109,7 +110,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
         <FolderCard 
           key={item.data.id} 
           folder={item.data} 
-          allFolders={initialFolders}
+          allFolders={allFolders}
           parentFolderId={null}
           isDragAndDropEnabled={true}
         />
@@ -121,7 +122,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
           project={item.data} 
           folderId={null}
           trackCount={item.data.trackCount}
-          allFolders={initialFolders}
+          allFolders={allFolders}
           isDragAndDropEnabled={true}
         />
       )

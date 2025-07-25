@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Music, Edit2, Trash2, FolderOpen } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -92,35 +92,47 @@ export function ProjectCard({
     moveAction(formData)
   }
 
-  // Handle success/error states
-  if (renameState.success && showRenameDialog) {
-    toast.success('Project renamed successfully')
-    setShowRenameDialog(false)
-    setNewName(project.name)
-  }
+  // Handle success/error states with useEffect to prevent multiple toasts
+  useEffect(() => {
+    if (renameState.success && showRenameDialog) {
+      toast.success('Project renamed successfully')
+      setShowRenameDialog(false)
+      setNewName(project.name)
+    }
+  }, [renameState.success, showRenameDialog, project.name])
 
-  if (renameState.error) {
-    toast.error(renameState.error)
-  }
+  useEffect(() => {
+    if (renameState.error) {
+      toast.error(renameState.error)
+    }
+  }, [renameState.error])
 
-  if (deleteState.success && showDeleteDialog) {
-    toast.success('Project deleted successfully')
-    setShowDeleteDialog(false)
-  }
+  useEffect(() => {
+    if (deleteState.success && showDeleteDialog) {
+      toast.success('Project deleted successfully')
+      setShowDeleteDialog(false)
+    }
+  }, [deleteState.success, showDeleteDialog])
 
-  if (deleteState.error) {
-    toast.error(deleteState.error)
-  }
+  useEffect(() => {
+    if (deleteState.error) {
+      toast.error(deleteState.error)
+    }
+  }, [deleteState.error])
 
-  if (moveState.success && showMoveDialog) {
-    toast.success('Project moved successfully')
-    setShowMoveDialog(false)
-    setSelectedDestinationId(folderId ?? null)
-  }
+  useEffect(() => {
+    if (moveState.success && showMoveDialog) {
+      toast.success('Project moved successfully')
+      setShowMoveDialog(false)
+      setSelectedDestinationId(folderId ?? null)
+    }
+  }, [moveState.success, showMoveDialog, folderId])
 
-  if (moveState.error) {
-    toast.error(moveState.error)
-  }
+  useEffect(() => {
+    if (moveState.error) {
+      toast.error(moveState.error)
+    }
+  }, [moveState.error])
 
   const cardContent = (
     <ContextMenu>

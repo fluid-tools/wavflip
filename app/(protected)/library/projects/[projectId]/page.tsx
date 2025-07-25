@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
-import { getProjectWithTracks } from '@/lib/library-db'
+import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/lib/library-db'
 import { ProjectView } from '@/components/library/projects/view'
 import { TracksTableSkeleton } from '@/components/library/tracks/table-skeleton'
 
@@ -14,14 +14,30 @@ interface ProjectPageProps {
 async function ProjectData({ projectId }: { projectId: string }) {
   const session = await requireAuth()
   
-  // Fetch project data server-side
-  const project = await getProjectWithTracks(projectId, session.user.id)
+  // Fetch project data and all available projects for move functionality
+  const [project, folders, vaultProjects] = await Promise.all([
+    getProjectWithTracks(projectId, session.user.id),
+    getAllUserFolders(session.user.id),
+    getVaultProjects(session.user.id)
+  ])
 
   if (!project) {
     notFound()
   }
 
-  return <ProjectView projectId={projectId} initialProject={project} />
+  // Combine all projects from folders and vault
+  const allProjects = [
+    ...vaultProjects,
+    ...folders.flatMap(folder => folder.projects)
+  ]
+
+  return (
+    <ProjectView 
+      projectId={projectId} 
+      initialProject={project} 
+      availableProjects={allProjects}
+    />
+  )
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {

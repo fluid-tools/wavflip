@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
@@ -83,35 +83,47 @@ export function FolderCard({
     moveAction(formData)
   }
 
-  // Handle success/error states
-  if (renameState.success && showRenameDialog) {
-    toast.success('Folder renamed successfully')
-    setShowRenameDialog(false)
-    setNewName(folder.name)
-  }
+  // Handle success/error states with useEffect to prevent multiple toasts
+  useEffect(() => {
+    if (renameState.success && showRenameDialog) {
+      toast.success('Folder renamed successfully')
+      setShowRenameDialog(false)
+      setNewName(folder.name)
+    }
+  }, [renameState.success, showRenameDialog, folder.name])
 
-  if (renameState.error) {
-    toast.error(renameState.error)
-  }
+  useEffect(() => {
+    if (renameState.error) {
+      toast.error(renameState.error)
+    }
+  }, [renameState.error])
 
-  if (deleteState.success && showDeleteDialog) {
-    toast.success('Folder deleted successfully')
-    setShowDeleteDialog(false)
-  }
+  useEffect(() => {
+    if (deleteState.success && showDeleteDialog) {
+      toast.success('Folder deleted successfully')
+      setShowDeleteDialog(false)
+    }
+  }, [deleteState.success, showDeleteDialog])
 
-  if (deleteState.error) {
-    toast.error(deleteState.error)
-  }
+  useEffect(() => {
+    if (deleteState.error) {
+      toast.error(deleteState.error)
+    }
+  }, [deleteState.error])
 
-  if (moveState.success && showMoveDialog) {
-    toast.success('Folder moved successfully')
-    setShowMoveDialog(false)
-    setSelectedDestinationId(null)
-  }
+  useEffect(() => {
+    if (moveState.success && showMoveDialog) {
+      toast.success('Folder moved successfully')
+      setShowMoveDialog(false)
+      setSelectedDestinationId(null)
+    }
+  }, [moveState.success, showMoveDialog])
 
-  if (moveState.error) {
-    toast.error(moveState.error)
-  }
+  useEffect(() => {
+    if (moveState.error) {
+      toast.error(moveState.error)
+    }
+  }, [moveState.error])
 
   // Calculate folder contents description
   const getContentDescription = () => {

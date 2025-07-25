@@ -60,6 +60,46 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
   return foldersWithProjects
 }
 
+export async function getAllUserFolders(userId: string): Promise<FolderWithProjects[]> {
+  // Get ALL folders for the user (including nested ones)
+  const folders = await db
+    .select()
+    .from(folder)
+    .where(eq(folder.userId, userId))
+    .orderBy(folder.order, folder.createdAt)
+
+  const foldersWithProjects = await Promise.all(
+    folders.map(async (f) => {
+      const projects = await db
+        .select({
+          id: project.id,
+          name: project.name,
+          folderId: project.folderId,
+          userId: project.userId,
+          accessType: project.accessType,
+          order: project.order,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          metadata: project.metadata,
+          trackCount: count(track.id)
+        })
+        .from(project)
+        .leftJoin(track, eq(track.projectId, project.id))
+        .where(eq(project.folderId, f.id))
+        .groupBy(project.id)
+        .orderBy(project.order, project.createdAt)
+      
+      return { 
+        ...f, 
+        projects,
+        subFolders: [] // Not needed for move picker
+      }
+    })
+  )
+
+  return foldersWithProjects
+}
+
 export async function getFolderWithContents(folderId: string, userId: string): Promise<FolderWithProjects | null> {
   // Get the specific folder
   const folderData = await db

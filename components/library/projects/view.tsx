@@ -6,7 +6,7 @@ import { Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import type { ProjectWithTracks } from '@/db/schema/library'
+import type { ProjectWithTracks, ProjectWithTrackCount } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 
 import { UploadTrackDialog } from '../tracks/upload-dialog'
@@ -18,9 +18,10 @@ import { useProject } from '@/hooks/use-project'
 interface ProjectViewProps {
   projectId: string
   initialProject: ProjectWithTracks
+  availableProjects?: ProjectWithTrackCount[]
 }
 
-export function ProjectView({ projectId, initialProject }: ProjectViewProps) {
+export function ProjectView({ projectId, initialProject, availableProjects = [] }: ProjectViewProps) {
   const { project: queryProject, uploadTracks, isUploading } = useProject({ 
     projectId, 
     initialData: initialProject 
@@ -198,7 +199,11 @@ export function ProjectView({ projectId, initialProject }: ProjectViewProps) {
         {/* Track List - Refactored Table */}
         {project?.tracks && project.tracks.length > 0 ? (
           <div className="space-y-4">
-            <TracksTable tracks={project.tracks} projectId={projectId} />
+            <TracksTable 
+              tracks={project.tracks} 
+              projectId={projectId} 
+              availableProjects={availableProjects}
+            />
           </div>
         ) : (
           <Card className="border-dashed">
