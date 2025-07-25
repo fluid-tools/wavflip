@@ -100,9 +100,9 @@ track_versions {
 
 ### Navigation Pattern
 ```
-/library-new (vault root)
-├── /library-new/folders/[folderId] (folder view)
-└── /library-new/projects/[projectId] (project view)
+/library (vault root)
+├── /library/folders/[folderId] (folder view)
+└── /library/projects/[projectId] (project view)
 ```
 
 ### Visual Hierarchy
@@ -186,20 +186,13 @@ const versions = await getTrackVersions(trackId)
 
 ### Page Structure
 ```
-app/(protected)/library-new/
+app/(protected)/library/
 ├── page.tsx (vault root)
 ├── folders/[folderId]/page.tsx
 ├── projects/[projectId]/page.tsx
-├── components/
-│   ├── vault-view.tsx
-│   ├── folder-view.tsx
-│   ├── project-view.tsx
-│   ├── folder-card.tsx
-│   ├── project-card.tsx
-│   ├── track-card.tsx
-│   ├── drag-overlay.tsx
-│   └── empty-states.tsx
 └── loading.tsx
+components/library/
+actions/library.ts
 ```
 
 ### Reusable Components
