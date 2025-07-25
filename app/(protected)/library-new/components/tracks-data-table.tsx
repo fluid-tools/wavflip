@@ -44,6 +44,7 @@ import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/aud
 import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 import { TableVirtuoso } from 'react-virtuoso'
+import React from 'react'
 
 type TrackFromProject = ProjectWithTracks['tracks'][0]
 
@@ -475,64 +476,86 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
     <>
       <div className="rounded-md border">
         {tracks.length > 0 ? (
-          <TableVirtuoso
-            style={{ height: '400px' }}
-            totalCount={table.getRowModel().rows.length}
-            components={{
-              Table: ({ style, ...props }) => (
-                <Table {...props} style={{ ...style, width: '100%' }} />
-              ),
-              TableHead: TableHeader,
-              TableRow: ({ ...props }) => (
-                <TableRow {...props} className="group hover:bg-muted/50" />
-              ),
-              TableBody: ({ style, ...props }) => (
-                <TableBody {...props} style={{ ...style }} />
-              ),
-            }}
-            fixedHeaderContent={() => (
-              <>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead 
-                        key={header.id}
-                        style={{ width: header.getSize() }}
-                        className="bg-background"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </>
-            )}
-            itemContent={(index) => {
-              const row = table.getRowModel().rows[index]
-              if (!row) return null
-              
-              return (
-                <>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+          <div className="w-full">
+            {/* Fixed Header - completely separate from scroll area */}
+            <div className="border-b bg-background">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead 
+                          key={header.id}
+                          style={{ 
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize()
+                          }}
+                          className="border-0"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
                   ))}
-                </>
-              )
-            }}
-          />
+                </TableHeader>
+              </Table>
+            </div>
+
+            {/* Scrollable Body - only contains rows */}
+            <TableVirtuoso
+              style={{ height: '400px' }}
+              totalCount={table.getRowModel().rows.length}
+              components={{
+                Table: ({ style, ...props }) => (
+                  <Table {...props} style={{ ...style, width: '100%' }} />
+                ),
+                TableBody: ({ style, ...props }) => (
+                  <TableBody {...props} style={{ ...style }} />
+                ),
+                TableRow: ({ style, ...props }) => {
+                  // Extract index from the component props or use a CSS-based approach
+                  return (
+                    <TableRow 
+                      {...props} 
+                      style={style}
+                      className="group hover:bg-muted/70 transition-colors even:bg-muted/20 odd:bg-background"
+                    />
+                  )
+                },
+              }}
+              itemContent={(index) => {
+                const row = table.getRowModel().rows[index]
+                if (!row) return null
+                
+                return (
+                  <>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell 
+                        key={cell.id}
+                        style={{ 
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize()
+                        }}
+                        className="border-0"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </>
+                )
+              }}
+            />
+          </div>
         ) : (
           <div className="h-24 flex items-center justify-center text-center text-muted-foreground">
             No tracks found.
