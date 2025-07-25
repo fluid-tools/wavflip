@@ -29,8 +29,9 @@ export type DragData = {
 }
 
 export type DropData = {
-  type: 'folder' | 'vault'
-  id?: string // folderId or undefined for vault
+  type: 'folder' | 'vault' | 'project'
+  id?: string // folderId, projectId, or undefined for vault
+  name?: string // for better user feedback
 }
 
 interface LibraryDndContextType {
@@ -50,9 +51,10 @@ export function useLibraryDnd() {
 
 interface LibraryDndProviderProps {
   children: React.ReactNode
-  onMoveFolder?: (folderId: string, parentFolderId: string | null, sourceParentFolderId: string | null) => Promise<void>
-  onMoveProject?: (projectId: string, folderId: string | null, sourceFolderId: string | null) => Promise<void>
-  onMoveTrack?: (trackId: string, projectId: string, sourceProjectId: string) => Promise<void>
+  onMoveFolder?: (folderId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
+  onMoveProject?: (projectId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
+  onMoveTrack?: (trackId: string, destinationProjectId: string, sourceProjectId: string) => Promise<void>
+  onCombineProjects?: (sourceProjectId: string, targetProjectId: string, parentFolderId: string | null) => Promise<void>
 }
 
 export function LibraryDndProvider({
@@ -60,6 +62,7 @@ export function LibraryDndProvider({
   onMoveFolder,
   onMoveProject,
   onMoveTrack,
+  onCombineProjects,
 }: LibraryDndProviderProps) {
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null)
 
@@ -124,6 +127,13 @@ export function LibraryDndProvider({
           toast.success(`Moved project "${dragData.name}" to vault`)
         }
       }
+             // Handle project-to-project drops (create new folder with both projects)
+       else if (dragData.type === 'project' && dropData.type === 'project') {
+         if (onCombineProjects && dropData.id) {
+           await onCombineProjects(dragData.id, dropData.id, dragData.sourceContainer || null)
+           toast.success(`Combined projects "${dragData.name}" and "${dropData.name || 'project'}" into new folder`)
+         }
+       }
     } catch (error) {
       console.error('Drag and drop error:', error)
       toast.error('Failed to move item')

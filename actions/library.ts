@@ -5,10 +5,11 @@ import {
   createFolder, createProject, createTrack, createTrackVersion,
   deleteFolder, deleteProject, deleteTrack,
   renameFolder, renameProject, renameTrack,
-  moveFolder, moveProject, moveTrack, getUserFolders, getVaultProjects, getFolderWithContents
+  moveFolder, moveProject, moveTrack, getUserFolders, getVaultProjects, getFolderWithContents, getProjectWithTracks
 } from '@/lib/library-db'
 import { requireAuth } from '@/lib/auth-server'
 import type { Folder, Project, Track } from '@/db/schema/library'
+import { nanoid } from 'nanoid'
 
 type FolderActionState = {
   success: boolean
@@ -482,6 +483,65 @@ export async function moveTrackAction(prevState: MoveActionState, formData: Form
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to move track' 
+    }
+  }
+}
+
+export async function createFolderFromProjectsAction(prevState: MoveActionState, formData: FormData): Promise<MoveActionState> {
+  try {
+    const session = await requireAuth()
+    const sourceProjectId = formData.get('sourceProjectId') as string
+    const targetProjectId = formData.get('targetProjectId') as string
+    const parentFolderId = formData.get('parentFolderId') as string | null
+
+    if (!sourceProjectId || !targetProjectId) {
+      return { success: false, error: 'Both project IDs are required' }
+    }
+
+    if (sourceProjectId === targetProjectId) {
+      return { success: false, error: 'Cannot combine a project with itself' }
+    }
+
+    // Get project names to create folder name
+    const [sourceProject, targetProject] = await Promise.all([
+      getProjectWithTracks(sourceProjectId, session.user.id),
+      getProjectWithTracks(targetProjectId, session.user.id)
+    ])
+
+    if (!sourceProject || !targetProject) {
+      return { success: false, error: 'One or both projects not found' }
+    }
+
+    // Create a new folder with a combined name
+    const folderName = `${sourceProject.name} & ${targetProject.name}`
+    
+    const newFolder = await createFolder({
+      name: folderName,
+      userId: session.user.id,
+      parentFolderId: (parentFolderId === '' || parentFolderId === 'vault') ? null : parentFolderId,
+      order: 0
+    })
+
+    // Move both projects to the new folder
+    await Promise.all([
+      moveProject(sourceProjectId, newFolder.id, session.user.id),
+      moveProject(targetProjectId, newFolder.id, session.user.id)
+    ])
+
+    // Revalidate relevant paths
+    if (parentFolderId) {
+      revalidatePath(`/library/folders/${parentFolderId}`)
+    } else {
+      revalidatePath('/library')
+    }
+    revalidatePath(`/library/folders/${newFolder.id}`)
+
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('Failed to create folder from projects:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to create folder from projects' 
     }
   }
 } 

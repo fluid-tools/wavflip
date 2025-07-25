@@ -186,11 +186,19 @@ export function ProjectCard({
     sourceContainer: folderId || 'vault',
   }
 
+  const dropData = {
+    type: 'project' as const,
+    id: project.id,
+    name: project.name,
+  }
+
   return (
     <>
       {isDragAndDropEnabled ? (
         <DraggableWrapper id={`project-${project.id}`} data={dragData}>
-          {cardContent}
+          <DroppableWrapper id={`project-drop-${project.id}`} data={dropData}>
+            {cardContent}
+          </DroppableWrapper>
         </DraggableWrapper>
       ) : (
         cardContent

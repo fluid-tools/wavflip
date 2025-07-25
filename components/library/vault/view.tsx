@@ -12,7 +12,7 @@ import { ProjectCard } from '../projects/card'
 import { Virtuoso } from 'react-virtuoso'
 import { LibraryDndProvider } from '../dnd-context'
 import { DroppableWrapper } from '../droppable-wrapper'
-import { moveFolderAction, moveProjectAction } from '@/actions/library'
+import { moveFolderAction, moveProjectAction, createFolderFromProjectsAction } from '@/actions/library'
 import { toast } from 'sonner'
 
 interface LibraryStats {
@@ -75,6 +75,19 @@ export function VaultView({ initialFolders, initialProjects, initialStats, allFo
       moveProjectActionState(formData)
     })
   }
+
+  const handleCombineProjects = async (sourceProjectId: string, targetProjectId: string, parentFolderId: string | null) => {
+    const formData = new FormData()
+    formData.append('sourceProjectId', sourceProjectId)
+    formData.append('targetProjectId', targetProjectId)
+    // For vault view, combined projects should be created at root level (null parent)
+    formData.append('parentFolderId', '')
+    
+    const result = await createFolderFromProjectsAction({ success: false, error: null }, formData)
+    if (result.error) {
+      throw new Error(result.error)
+    }
+  }
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -133,6 +146,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats, allFo
     <LibraryDndProvider
       onMoveFolder={handleMoveFolder}
       onMoveProject={handleMoveProject}
+      onCombineProjects={handleCombineProjects}
     >
       <DroppableWrapper 
         id="vault" 

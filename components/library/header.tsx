@@ -52,6 +52,20 @@ export function LibraryHeader() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
+  // Fetch parent folder data for project breadcrumbs
+  const parentFolderId = projectData?.folderId
+  const { data: parentFolderData } = useQuery({
+    queryKey: ['folder-name', parentFolderId],
+    queryFn: async () => {
+      if (!parentFolderId) return null
+      const response = await fetch(`/api/folders/${parentFolderId}`)
+      if (!response.ok) throw new Error('Failed to fetch folder')
+      return response.json()
+    },
+    enabled: !!parentFolderId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
   if (isRoot) {
     return (
       <div className="p-6 border-b">
@@ -119,7 +133,7 @@ export function LibraryHeader() {
 
   if (isProject) {
     const projectName = projectData?.name || 'Project'
-    const parentFolderId = projectData?.folderId
+    const parentFolderName = parentFolderData?.name || 'Folder'
     const backHref = parentFolderId ? `/library/folders/${parentFolderId}` : '/library'
     const backText = parentFolderId ? 'Back to Folder' : 'Library'
     
@@ -141,7 +155,7 @@ export function LibraryHeader() {
               <>
                 <ChevronRight className="h-3 w-3" />
                 <Link href={`/library/folders/${parentFolderId}`} className="hover:text-foreground">
-                  Folder
+                  {parentFolderName}
                 </Link>
               </>
             )}

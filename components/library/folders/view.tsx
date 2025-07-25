@@ -11,7 +11,7 @@ import { ProjectCard } from '../projects/card'
 import { Virtuoso } from 'react-virtuoso'
 import { LibraryDndProvider } from '../dnd-context'
 import { DroppableWrapper } from '../droppable-wrapper'
-import { moveFolderAction, moveProjectAction } from '@/actions/library'
+import { moveFolderAction, moveProjectAction, createFolderFromProjectsAction } from '@/actions/library'
 import { toast } from 'sonner'
 
 interface FolderViewProps {
@@ -63,6 +63,18 @@ export function FolderView({ folder, allFolders = [] }: FolderViewProps) {
       moveProjectActionState(formData)
     })
   }
+
+  const handleCombineProjects = async (sourceProjectId: string, targetProjectId: string, parentFolderId: string | null) => {
+    const formData = new FormData()
+    formData.append('sourceProjectId', sourceProjectId)
+    formData.append('targetProjectId', targetProjectId)
+    formData.append('parentFolderId', folder.id) // Use current folder as parent
+    
+    const result = await createFolderFromProjectsAction({ success: false, error: null }, formData)
+    if (result.error) {
+      throw new Error(result.error)
+    }
+  }
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {
     const items: FolderItem[] = [
@@ -108,6 +120,7 @@ export function FolderView({ folder, allFolders = [] }: FolderViewProps) {
     <LibraryDndProvider
       onMoveFolder={handleMoveFolder}
       onMoveProject={handleMoveProject}
+      onCombineProjects={handleCombineProjects}
     >
       <DroppableWrapper 
         id={`folder-${folder.id}`} 
