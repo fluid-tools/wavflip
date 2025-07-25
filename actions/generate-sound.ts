@@ -148,6 +148,20 @@ export async function generateTextToSpeech(
     console.error('Text-to-speech generation failed:', error)
     
     const generationError = error as GenerationError
+    
+    // Handle rate limiting with user-friendly message
+    if (generationError.code === 'system_busy' || 
+        generationError.code === '429' || 
+        generationError.message?.includes('429') || 
+        generationError.message?.toLowerCase().includes('rate limit') ||
+        generationError.message?.toLowerCase().includes('too many requests') ||
+        generationError.message?.toLowerCase().includes('heavy traffic')) {
+      return {
+        success: false,
+        error: 'Please try again in a few moments. We are experiencing heavy traffic right now.'
+      }
+    }
+    
     return {
       success: false,
       error: generationError.message || 'Failed to generate speech. Please try again.'
