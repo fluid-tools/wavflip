@@ -172,7 +172,7 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
     try {
       await Promise.all(uploads)
       toast.success(`${files.length} track(s) uploaded successfully`)
-    } catch (error) {
+    } catch {
       toast.error('Some uploads failed')
     }
   }
