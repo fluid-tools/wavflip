@@ -88,9 +88,9 @@ export async function createFolderAction(prevState: FolderActionState, formData:
 
     // Revalidate appropriate path
     if (parentFolderId) {
-      revalidatePath(`/library-new/folders/${parentFolderId}`)
+      revalidatePath(`/library/folders/${parentFolderId}`)
     } else {
-      revalidatePath('/library-new')
+      revalidatePath('/library')
     }
     
     return { success: true, folder, error: null }
@@ -148,9 +148,9 @@ export async function createProjectAction(prevState: ProjectActionState, formDat
 
     // Revalidate the appropriate path
     if (folderId) {
-      revalidatePath(`/library-new/folders/${folderId}`)
+      revalidatePath(`/library/folders/${folderId}`)
     } else {
-      revalidatePath('/library-new')
+      revalidatePath('/library')
     }
 
     return { success: true, project, error: null }
@@ -201,7 +201,7 @@ export async function createTrackAction(prevState: TrackActionState, formData: F
       mimeType: mimeType || 'audio/mpeg',
     })
 
-    revalidatePath(`/library-new/projects/${projectId}`)
+    revalidatePath(`/library/projects/${projectId}`)
     return { success: true, track, error: null }
   } catch (error) {
     console.error('Failed to create track:', error)
@@ -225,9 +225,9 @@ export async function deleteFolderAction(prevState: DeleteActionState, formData:
 
     // Revalidate the correct parent path
     if (parentFolderId) {
-      revalidatePath(`/library-new/folders/${parentFolderId}`)
+      revalidatePath(`/library/folders/${parentFolderId}`)
     } else {
-      revalidatePath('/library-new')
+      revalidatePath('/library')
     }
 
     return { success: true, error: null }
@@ -254,9 +254,9 @@ export async function deleteProjectAction(prevState: DeleteActionState, formData
 
     // Revalidate appropriate path
     if (folderId) {
-      revalidatePath(`/library-new/folders/${folderId}`)
+      revalidatePath(`/library/folders/${folderId}`)
     } else {
-      revalidatePath('/library-new')
+      revalidatePath('/library')
     }
 
     return { success: true, error: null }
@@ -282,7 +282,7 @@ export async function deleteTrackAction(prevState: DeleteActionState, formData: 
     await deleteTrack(trackId, session.user.id)
 
     if (projectId) {
-      revalidatePath(`/library-new/projects/${projectId}`)
+      revalidatePath(`/library/projects/${projectId}`)
     }
 
     return { success: true, error: null }
@@ -307,8 +307,8 @@ export async function renameFolderAction(prevState: RenameActionState, formData:
 
     await renameFolder(folderId, name, session.user.id)
 
-    revalidatePath('/library-new')
-    revalidatePath(`/library-new/folders/${folderId}`)
+    revalidatePath('/library')
+    revalidatePath(`/library/folders/${folderId}`)
     return { success: true, error: null }
   } catch (error) {
     console.error('Failed to rename folder:', error)
@@ -334,11 +334,11 @@ export async function renameProjectAction(prevState: RenameActionState, formData
 
     // Revalidate appropriate paths
     if (folderId) {
-      revalidatePath(`/library-new/folders/${folderId}`)
+      revalidatePath(`/library/folders/${folderId}`)
     } else {
-      revalidatePath('/library-new')
+      revalidatePath('/library')
     }
-    revalidatePath(`/library-new/projects/${projectId}`)
+    revalidatePath(`/library/projects/${projectId}`)
 
     return { success: true, error: null }
   } catch (error) {
@@ -364,7 +364,7 @@ export async function renameTrackAction(prevState: RenameActionState, formData: 
     await renameTrack(trackId, name, session.user.id)
 
     if (projectId) {
-      revalidatePath(`/library-new/projects/${projectId}`)
+      revalidatePath(`/library/projects/${projectId}`)
     }
 
     return { success: true, error: null }
@@ -392,15 +392,15 @@ export async function moveProjectAction(prevState: MoveActionState, formData: Fo
 
     // Revalidate source and destination paths
     if (sourceFolderId) {
-      revalidatePath(`/library-new/folders/${sourceFolderId}`)
+      revalidatePath(`/library/folders/${sourceFolderId}`)
     } else {
-      revalidatePath('/library-new')
+      revalidatePath('/library')
     }
     
     if (folderId) {
-      revalidatePath(`/library-new/folders/${folderId}`)
+      revalidatePath(`/library/folders/${folderId}`)
     } else {
-      revalidatePath('/library-new')
+      revalidatePath('/library')
     }
 
     return { success: true, error: null }

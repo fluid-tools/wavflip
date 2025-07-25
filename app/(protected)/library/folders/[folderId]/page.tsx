@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
 import { getFolderWithContents } from '@/lib/library-db'
-import { FolderView } from '@/components/library/folders/folder-view'
+import { FolderView } from '@/components/library/folders/view'
 
 interface FolderPageProps {
   params: Promise<{

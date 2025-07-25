@@ -18,9 +18,9 @@ export function LibraryHeader() {
   const pathname = usePathname()
   
   // Parse the current route
-  const isRoot = pathname === '/library-new'
-  const isFolder = pathname.startsWith('/library-new/folders/')
-  const isProject = pathname.startsWith('/library-new/projects/')
+  const isRoot = pathname === '/library'
+  const isFolder = pathname.startsWith('/library/folders/')
+  const isProject = pathname.startsWith('/library/projects/')
   
   // Extract IDs from pathname
   const folderId = isFolder ? pathname.split('/')[3] : null
@@ -70,7 +70,7 @@ export function LibraryHeader() {
     
     // Determine back navigation
     const parentFolder = folderPath[folderPath.length - 2]
-    const backHref = parentFolder ? `/library-new/folders/${parentFolder.id}` : '/library-new'
+    const backHref = parentFolder ? `/library/folders/${parentFolder.id}` : '/library'
     const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Library'
     
     return (
@@ -85,7 +85,7 @@ export function LibraryHeader() {
             </Link>
             
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link href="/library-new" className="hover:text-foreground">
+              <Link href="/library" className="hover:text-foreground">
                 Library
               </Link>
                              {folderPath.map((folder: FolderPathItem, index: number) => (
@@ -95,7 +95,7 @@ export function LibraryHeader() {
                     <span className="text-foreground font-medium">{folder.name}</span>
                   ) : (
                     <Link 
-                      href={`/library-new/folders/${folder.id}`} 
+                      href={`/library/folders/${folder.id}`} 
                       className="hover:text-foreground"
                     >
                       {folder.name}
@@ -120,7 +120,7 @@ export function LibraryHeader() {
   if (isProject) {
     const projectName = projectData?.name || 'Project'
     const parentFolderId = projectData?.folderId
-    const backHref = parentFolderId ? `/library-new/folders/${parentFolderId}` : '/library-new'
+    const backHref = parentFolderId ? `/library/folders/${parentFolderId}` : '/library'
     const backText = parentFolderId ? 'Back to Folder' : 'Library'
     
     return (
@@ -134,13 +134,13 @@ export function LibraryHeader() {
           </Link>
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/library-new" className="hover:text-foreground">
+            <Link href="/library" className="hover:text-foreground">
               Library
             </Link>
             {parentFolderId && (
               <>
                 <ChevronRight className="h-3 w-3" />
-                <Link href={`/library-new/folders/${parentFolderId}`} className="hover:text-foreground">
+                <Link href={`/library/folders/${parentFolderId}`} className="hover:text-foreground">
                   Folder
                 </Link>
               </>

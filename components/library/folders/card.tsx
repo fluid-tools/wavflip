@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useActionState } from 'react'
-import { deleteFolderAction, renameFolderAction } from '../../../app/(protected)/library-new/actions'
+import { deleteFolderAction, renameFolderAction } from '@/actions/library'
 import { toast } from 'sonner'
 import type { FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
@@ -97,7 +97,7 @@ export function FolderCard({ folder, showProjectCount = true }: FolderCardProps)
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <Link href={`/library-new/folders/${folder.id}`} className="block">
+          <Link href={`/library/folders/${folder.id}`} className="block">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createFolderAction } from '../../../app/(protected)/library-new/actions'
+import { createFolderAction } from '@/actions/library'
 import { toast } from 'sonner'
 import type { Folder } from '@/db/schema/library'
 

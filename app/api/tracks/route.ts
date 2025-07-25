@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       mimeType: mimeType || 'audio/mpeg',
     })
 
-    revalidatePath(`/library-new/projects/${projectId}`)
+    revalidatePath(`/library/projects/${projectId}`)
     
     return NextResponse.json({ success: true, track })
   } catch (error) {
@@ -63,7 +63,7 @@ export async function DELETE(request: NextRequest) {
     await deleteTrack(trackId, session.user.id)
 
     if (projectId) {
-      revalidatePath(`/library-new/projects/${projectId}`)
+      revalidatePath(`/library/projects/${projectId}`)
     }
 
     return NextResponse.json({ success: true })
@@ -95,7 +95,7 @@ export async function PATCH(request: NextRequest) {
     await renameTrack(trackId, name.trim(), session.user.id)
 
     if (projectId) {
-      revalidatePath(`/library-new/projects/${projectId}`)
+      revalidatePath(`/library/projects/${projectId}`)
     }
 
     return NextResponse.json({ success: true })

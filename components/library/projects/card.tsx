@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useActionState } from 'react'
-import { deleteProjectAction, renameProjectAction } from '../../../app/(protected)/library-new/actions'
+import { deleteProjectAction, renameProjectAction } from '@/actions/library'
 import { toast } from 'sonner'
 import type { Project, ProjectWithTrackCount } from '@/db/schema/library'
 import Link from 'next/link'
@@ -92,7 +92,7 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <Link href={`/library-new/projects/${project.id}`} className="block">
+          <Link href={`/library/projects/${project.id}`} className="block">
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
