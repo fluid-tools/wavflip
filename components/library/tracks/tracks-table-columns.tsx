@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { AudioTrack } from '@/types/audio'
 import type { PlayerAction } from '@/state/audio-atoms'
-import type { TrackFromProject } from '../../../app/(protected)/library-new/projects/hooks/use-tracks'
+import type { TrackFromProject } from '../../../hooks/use-tracks'
 
 interface ColumnActionsProps {
   track: TrackFromProject

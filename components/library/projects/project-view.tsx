@@ -13,7 +13,7 @@ import { UploadTrackDialog } from '../tracks/upload-track-dialog'
 import { TracksTable } from '../tracks/tracks-table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
-import { useProject } from '../../../app/(protected)/library-new/projects/hooks/use-project'
+import { useProject } from '@/hooks/use-project'
 
 interface ProjectViewProps {
   projectId: string

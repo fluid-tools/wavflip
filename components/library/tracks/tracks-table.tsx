@@ -33,7 +33,7 @@ import { TableVirtuoso } from 'react-virtuoso'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
 import type { AudioTrack } from '@/types/audio'
 import { createTracksTableColumns } from './tracks-table-columns'
-import { useTracks, type TrackFromProject } from '../../../app/(protected)/library-new/projects/hooks/use-tracks'
+import { useTracks, type TrackFromProject } from '../../../hooks/use-tracks'
 
 interface TracksTableProps {
   tracks: TrackFromProject[]
