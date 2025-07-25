@@ -63,7 +63,7 @@ export function FolderView({ folder, allFolders = [] }: FolderViewProps) {
     })
   }
 
-  const handleCombineProjects = async (sourceProjectId: string, targetProjectId: string, _parentFolderId: string | null) => {
+  const handleCombineProjects = async (sourceProjectId: string, targetProjectId: string) => {
     const formData = new FormData()
     formData.append('sourceProjectId', sourceProjectId)
     formData.append('targetProjectId', targetProjectId)

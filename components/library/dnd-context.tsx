@@ -50,7 +50,7 @@ interface LibraryDndProviderProps {
   onMoveFolder?: (folderId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
   onMoveProject?: (projectId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
   onMoveTrack?: (trackId: string, destinationProjectId: string, sourceProjectId: string) => Promise<void>
-  onCombineProjects?: (sourceProjectId: string, targetProjectId: string, parentFolderId: string | null) => Promise<void>
+  onCombineProjects?: (sourceProjectId: string, targetProjectId: string) => Promise<void>
 }
 
 export function LibraryDndProvider({
@@ -131,7 +131,7 @@ export function LibraryDndProvider({
              // Handle project-to-project drops (create new folder with both projects)
        else if (dragData.type === 'project' && dropData.type === 'project') {
          if (onCombineProjects && dropData.id) {
-           await onCombineProjects(dragData.id, dropData.id, dragData.sourceContainer || null)
+           await onCombineProjects(dragData.id, dropData.id)
            toast.success(`Combined projects "${dragData.name}" and "${dropData.name || 'project'}" into new folder`)
          }
        }
