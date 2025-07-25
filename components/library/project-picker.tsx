@@ -5,10 +5,10 @@ import { Music, ChevronRight, ChevronDown, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import type { ProjectWithTrackCount } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/library'
 
 interface ProjectPickerProps {
-  projects: ProjectWithTrackCount[]
+  projects: ProjectWithTracks[]
   selectedProjectId: string | null
   onProjectSelect: (projectId: string) => void
   excludeProjectId?: string // Project to exclude from selection (e.g., current project)

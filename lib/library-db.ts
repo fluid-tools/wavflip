@@ -10,8 +10,7 @@ import type {
   Track, NewTrack,
   TrackVersion, NewTrackVersion,
   FolderWithProjects,
-  ProjectWithTracks,
-  ProjectWithTrackCount
+  ProjectWithTracks
 } from '@/db/schema/library'
 
 // FOLDER OPERATIONS
@@ -50,7 +49,7 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
       
       return { 
         ...f, 
-        projects,
+        projects: projects.map(p => ({ ...p, tracks: [] })),
         subFolderCount: subFolderCount[0]?.count || 0,
         projectCount: projects.length
       }
@@ -91,7 +90,7 @@ export async function getAllUserFolders(userId: string): Promise<FolderWithProje
       
       return { 
         ...f, 
-        projects,
+        projects: projects.map(p => ({ ...p, tracks: [] })),
         subFolders: [] // Not needed for move picker
       }
     })
@@ -229,8 +228,8 @@ export async function renameFolder(folderId: string, name: string, userId: strin
 }
 
 // PROJECT OPERATIONS  
-export async function getVaultProjects(userId: string): Promise<ProjectWithTrackCount[]> {
-  return await db
+export async function getVaultProjects(userId: string): Promise<ProjectWithTracks[]> {
+  const projects = await db
     .select({
       id: project.id,
       name: project.name,
@@ -248,6 +247,8 @@ export async function getVaultProjects(userId: string): Promise<ProjectWithTrack
     .where(and(eq(project.userId, userId), isNull(project.folderId)))
     .groupBy(project.id)
     .orderBy(project.order, project.createdAt)
+  
+  return projects.map(p => ({ ...p, tracks: [] }))
 }
 
 export async function getProjectWithTracks(projectId: string, userId: string): Promise<ProjectWithTracks | null> {
@@ -280,7 +281,7 @@ export async function getProjectWithTracks(projectId: string, userId: string): P
     })
   )
 
-  return { ...proj, tracks: tracksWithVersions }
+  return { ...proj, tracks: tracksWithVersions, trackCount: tracksWithVersions.length }
 }
 
 export async function createProject(data: Omit<NewProject, 'id' | 'createdAt' | 'updatedAt'>): Promise<Project> {

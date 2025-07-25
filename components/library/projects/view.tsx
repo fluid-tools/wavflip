@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useAtom } from 'jotai'
 import { Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import type { ProjectWithTracks, ProjectWithTrackCount } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/library'
 import type { AudioTrack } from '@/types/audio'
 
 import { UploadTrackDialog } from '../tracks/upload-dialog'
@@ -18,7 +18,7 @@ import { useProject } from '@/hooks/use-project'
 interface ProjectViewProps {
   projectId: string
   initialProject: ProjectWithTracks
-  availableProjects?: ProjectWithTrackCount[]
+  availableProjects?: ProjectWithTracks[]
 }
 
 export function ProjectView({ projectId, initialProject, availableProjects = [] }: ProjectViewProps) {
@@ -30,17 +30,17 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
   // Use query data or fallback to initial data
   const project = queryProject || initialProject
   
-  // Debug: Log when project data changes
-  useEffect(() => {
-    console.log('🎵 ProjectView project updated:', project.tracks.length, 'tracks')
-  }, [project.tracks.length])
+  // // Debug: Log when project data changes
+  // useEffect(() => {
+  //   console.log('🎵 ProjectView project updated:', project.tracks?.length || 0, 'tracks')
+  // }, [project.tracks?.length])
   
   const [isDragOver, setIsDragOver] = useState(false)
   const dropZoneRef = useRef<HTMLDivElement>(null)
   
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
 
-  const totalDuration = project.tracks.reduce((sum: number, track) => {
+  const totalDuration = (project.tracks || []).reduce((sum: number, track) => {
     return sum + (track.activeVersion?.duration || 0)
   }, 0)
 
@@ -56,7 +56,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
   }
 
   const handlePlayAll = () => {
-    if (project.tracks.length === 0) return
+    if (!project.tracks || project.tracks.length === 0) return
     
     const firstTrack = project.tracks[0]
     if (!firstTrack.activeVersion) {
@@ -158,7 +158,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
               <div className="flex items-center gap-2 text-muted-foreground">
                 <span>arth</span>
                 <span>•</span>
-                <span>{project.tracks.length} tracks</span>
+                <span>{project.tracks?.length || 0} tracks</span>
                 <span>•</span>
                 <span>{formatTotalDuration(totalDuration)}</span>
                 {project.accessType !== 'private' && (
@@ -178,7 +178,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
             size="lg" 
             className="rounded-full px-8"
             onClick={handlePlayAll}
-            disabled={project.tracks.length === 0 || isUploading}
+            disabled={!project.tracks || project.tracks.length === 0 || isUploading}
           >
             <Play className="h-5 w-5 mr-2" />
             Play
@@ -197,7 +197,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
         </div>
 
         {/* Track List - Refactored Table */}
-        {project?.tracks && project.tracks.length > 0 ? (
+        {project.tracks && project.tracks.length > 0 ? (
           <div className="space-y-4">
             <TracksTable 
               tracks={project.tracks} 

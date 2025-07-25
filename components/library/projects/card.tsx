@@ -25,14 +25,14 @@ import { Label } from '@/components/ui/label'
 import { useActionState } from 'react'
 import { deleteProjectAction, renameProjectAction, moveProjectAction } from '@/actions/library'
 import { toast } from 'sonner'
-import type { Project, ProjectWithTrackCount, FolderWithProjects } from '@/db/schema/library'
+import type { Project, ProjectWithTracks, FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
 import { DraggableWrapper } from '../draggable-wrapper'
 import { DroppableWrapper } from '../droppable-wrapper'
 import { FolderPicker } from '../folder-picker'
 
 interface ProjectCardProps {
-  project: Project | ProjectWithTrackCount
+  project: Project | ProjectWithTracks
   folderId?: string | null
   trackCount?: number
   allFolders?: FolderWithProjects[]

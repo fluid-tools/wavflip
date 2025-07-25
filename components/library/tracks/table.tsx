@@ -35,12 +35,12 @@ import type { AudioTrack } from '@/types/audio'
 import { createTracksTableColumns } from './table-columns'
 import { useTracks, type TrackFromProject } from '../../../hooks/use-tracks'
 import { ProjectPicker } from '../project-picker'
-import type { ProjectWithTrackCount } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/library'
 
 interface TracksTableProps {
   tracks: TrackFromProject[]
   projectId: string
-  availableProjects?: ProjectWithTrackCount[]
+  availableProjects?: ProjectWithTracks[]
 }
 
 export function TracksTable({ tracks, projectId, availableProjects = [] }: TracksTableProps) {

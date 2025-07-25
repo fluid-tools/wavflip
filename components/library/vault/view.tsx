@@ -4,7 +4,7 @@ import { useMemo, startTransition } from 'react'
 import { useActionState } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { FolderWithProjects, ProjectWithTrackCount } from '@/db/schema/library'
+import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/library'
 import { CreateFolderDialog } from '../folders/create-dialog'
 import { CreateProjectDialog } from '../projects/create-dialog'
 import { FolderCard } from '../folders/card'
@@ -26,14 +26,14 @@ interface LibraryStats {
 
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
-  initialProjects: ProjectWithTrackCount[]
+  initialProjects: ProjectWithTracks[]
   initialStats: LibraryStats
   allFolders?: FolderWithProjects[]
 }
 
 type LibraryItem = 
   | { type: 'folder'; data: FolderWithProjects }
-  | { type: 'project'; data: ProjectWithTrackCount }
+  | { type: 'project'; data: ProjectWithTracks }
 
 export function VaultView({ initialFolders, initialProjects, initialStats, allFolders = [] }: VaultViewProps) {
   const [moveFolderState, moveFolderActionState] = useActionState(moveFolderAction, {

@@ -381,12 +381,16 @@ export async function moveFolderAction(prevState: MoveActionState, formData: For
   try {
     const session = await requireAuth()
     const folderId = formData.get('folderId') as string
-    const parentFolderId = formData.get('parentFolderId') as string | null
-    const sourceParentFolderId = formData.get('sourceParentFolderId') as string | null
+    const rawParentFolderId = formData.get('parentFolderId') as string
+    const rawSourceParentFolderId = formData.get('sourceParentFolderId') as string
 
     if (!folderId) {
       return { success: false, error: 'Folder ID is required' }
     }
+
+    // Convert empty strings to null for root placement
+    const parentFolderId = rawParentFolderId === '' ? null : rawParentFolderId
+    const sourceParentFolderId = rawSourceParentFolderId === '' ? null : rawSourceParentFolderId
 
     await moveFolder(folderId, parentFolderId, session.user.id)
 
@@ -417,12 +421,16 @@ export async function moveProjectAction(prevState: MoveActionState, formData: Fo
   try {
     const session = await requireAuth()
     const projectId = formData.get('projectId') as string
-    const folderId = formData.get('folderId') as string | null
-    const sourceFolderId = formData.get('sourceFolderId') as string | null
+    const rawFolderId = formData.get('folderId') as string
+    const rawSourceFolderId = formData.get('sourceFolderId') as string
 
     if (!projectId) {
       return { success: false, error: 'Project ID is required' }
     }
+
+    // Convert empty strings to null for root placement
+    const folderId = rawFolderId === '' ? null : rawFolderId
+    const sourceFolderId = rawSourceFolderId === '' ? null : rawSourceFolderId
 
     await moveProject(projectId, folderId, session.user.id)
 

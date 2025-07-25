@@ -97,22 +97,18 @@ export function FolderPicker({
         <div className="p-2 space-y-1">
           {folderTree.map((folder) => (
             <div key={folder.id} className="space-y-1">
-              <Button
-                variant={selectedFolderId === folder.id ? "default" : "ghost"}
-                className="w-full justify-start h-auto p-2"
-                onClick={() => onFolderSelect(folder.id)}
-              >
+              <div className="flex items-center w-full">
                 <div 
-                  className="flex items-center gap-1 w-full"
+                  className="flex items-center"
                   style={{ paddingLeft: `${folder.level * 16}px` }}
                 >
                   {/* Expand/collapse button for folders with subfolders */}
                   {hasSubfolders(folder.id) ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="p-0 h-4 w-4 hover:bg-transparent"
+                    <button
+                      type="button"
+                      className="p-1 h-6 w-6 hover:bg-muted rounded flex items-center justify-center flex-shrink-0"
                       onClick={(e) => {
+                        e.preventDefault()
                         e.stopPropagation()
                         toggleFolder(folder.id)
                       }}
@@ -122,20 +118,29 @@ export function FolderPicker({
                       ) : (
                         <ChevronRight className="h-3 w-3" />
                       )}
-                    </Button>
+                    </button>
                   ) : (
-                    <div className="w-4" />
+                    <div className="w-6 flex-shrink-0" />
                   )}
-                  
-                  <Folder className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                  <span className="truncate text-left flex-1">{folder.name}</span>
-                  
-                  {/* Project count indicator */}
-                  <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 flex-shrink-0">
-                    {folder.projects?.length || 0}
-                  </span>
                 </div>
-              </Button>
+                
+                <Button
+                  type="button"
+                  variant={selectedFolderId === folder.id ? "default" : "ghost"}
+                  className="flex-1 justify-start h-auto p-2 ml-1"
+                  onClick={() => onFolderSelect(folder.id)}
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    <Folder className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    <span className="truncate text-left flex-1">{folder.name}</span>
+                    
+                    {/* Project count indicator */}
+                    <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 flex-shrink-0">
+                      {folder.projects?.length || 0}
+                    </span>
+                  </div>
+                </Button>
+              </div>
             </div>
           ))}
           
