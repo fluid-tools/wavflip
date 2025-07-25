@@ -51,7 +51,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       return { previousProject, trackId }
     },
-    onError: (error, trackId, context) => {
+    onError: (error, _trackId, context: { previousProject?: ProjectWithTracks; trackId?: string } | undefined) => {
       // Rollback on error
       if (context?.previousProject) {
         queryClient.setQueryData(queryKey, context.previousProject)
@@ -107,7 +107,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       return { previousProject, trackId }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context: { previousProject?: ProjectWithTracks; trackId?: string } | undefined) => {
       // Rollback on error
       if (context?.previousProject) {
         queryClient.setQueryData(queryKey, context.previousProject)
@@ -175,7 +175,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       return { previousProject, trackId }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context: { previousProject?: ProjectWithTracks; trackId?: string } | undefined) => {
       // Rollback on error
       if (context?.previousProject) {
         queryClient.setQueryData(queryKey, context.previousProject)
