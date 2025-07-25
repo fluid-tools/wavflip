@@ -53,6 +53,7 @@ export function ProjectCard({
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(folderId ?? null)
   const [newName, setNewName] = useState(project.name)
+  const [moveActionInProgress, setMoveActionInProgress] = useState(false)
 
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteProjectAction, {
     success: false,
@@ -89,6 +90,7 @@ export function ProjectCard({
     formData.append('projectId', project.id)
     formData.append('folderId', selectedDestinationId || '')
     formData.append('sourceFolderId', folderId || '')
+    setMoveActionInProgress(true) // Track that we just initiated an action
     moveAction(formData)
   }
 
@@ -121,12 +123,13 @@ export function ProjectCard({
   }, [deleteState.error])
 
   useEffect(() => {
-    if (moveState.success && showMoveDialog) {
+    if (moveState.success && moveActionInProgress) {
       toast.success('Project moved successfully')
       setShowMoveDialog(false)
       setSelectedDestinationId(folderId ?? null)
+      setMoveActionInProgress(false)
     }
-  }, [moveState.success, showMoveDialog, folderId])
+  }, [moveState.success, moveActionInProgress, folderId])
 
   useEffect(() => {
     if (moveState.error) {

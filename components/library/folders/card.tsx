@@ -50,6 +50,7 @@ export function FolderCard({
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(folder.name)
+  const [moveActionInProgress, setMoveActionInProgress] = useState(false)
 
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteFolderAction, {
     success: false,
@@ -80,6 +81,7 @@ export function FolderCard({
     formData.append('folderId', folder.id)
     formData.append('parentFolderId', selectedDestinationId || '')
     formData.append('sourceParentFolderId', parentFolderId || '')
+    setMoveActionInProgress(true) // Track that we just initiated an action
     moveAction(formData)
   }
 
@@ -112,12 +114,13 @@ export function FolderCard({
   }, [deleteState.error])
 
   useEffect(() => {
-    if (moveState.success && showMoveDialog) {
+    if (moveState.success && moveActionInProgress) {
       toast.success('Folder moved successfully')
       setShowMoveDialog(false)
       setSelectedDestinationId(null)
+      setMoveActionInProgress(false)
     }
-  }, [moveState.success, showMoveDialog])
+  }, [moveState.success, moveActionInProgress])
 
   useEffect(() => {
     if (moveState.error) {
