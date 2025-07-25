@@ -72,10 +72,11 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
     const generationError = error as GenerationError
     
     // Handle rate limiting with user-friendly message
-    if (generationError.code === '429') {
+    if (generationError.code === 'system_busy' || 
+        generationError.message?.toLowerCase().includes('rate limit')) {
       return {
         success: false,
-        error: 'Please try again in a few moments. WAVFLIP is experiencing heavy traffic right now.'
+        error: 'Please try again in a few moments. We are experiencing heavy traffic right now.'
       }
     }
 

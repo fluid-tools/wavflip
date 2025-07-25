@@ -13,7 +13,6 @@ import { Virtuoso } from 'react-virtuoso'
 import { LibraryDndProvider } from '../dnd-context'
 import { DroppableWrapper } from '../droppable-wrapper'
 import { moveFolderAction, moveProjectAction, createFolderFromProjectsAction } from '@/actions/library'
-import { toast } from 'sonner'
 
 interface LibraryStats {
   totalFolders: number
@@ -36,12 +35,12 @@ type LibraryItem =
   | { type: 'project'; data: ProjectWithTracks }
 
 export function VaultView({ initialFolders, initialProjects, initialStats, allFolders = [] }: VaultViewProps) {
-  const [moveFolderState, moveFolderActionState] = useActionState(moveFolderAction, {
+  const [, moveFolderActionState] = useActionState(moveFolderAction, {
     success: false,
     error: null,
   })
 
-  const [moveProjectState, moveProjectActionState] = useActionState(moveProjectAction, {
+  const [, moveProjectActionState] = useActionState(moveProjectAction, {
     success: false,
     error: null,
   })
@@ -76,7 +75,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats, allFo
     })
   }
 
-  const handleCombineProjects = async (sourceProjectId: string, targetProjectId: string, parentFolderId: string | null) => {
+  const handleCombineProjects = async (sourceProjectId: string, targetProjectId: string, _parentFolderId: string | null) => {
     const formData = new FormData()
     formData.append('sourceProjectId', sourceProjectId)
     formData.append('targetProjectId', targetProjectId)
