@@ -63,7 +63,7 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/upload',
-      } as any)
+      })
 
       // Create track in database
       const response = await fetch('/api/tracks', {

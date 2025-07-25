@@ -16,7 +16,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
-import { upload } from '@vercel/blob/client'
 import { useProject } from '../projects/[projectId]/hooks/use-project'
 
 interface UploadTrackDialogProps {

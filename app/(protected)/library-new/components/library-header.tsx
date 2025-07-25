@@ -68,7 +68,6 @@ export function LibraryHeader() {
   if (isFolder) {
     const folderPath = folderPathData?.path || []
     const currentFolder = folderPath[folderPath.length - 1]
-    const folderName = currentFolder?.name || 'Folder'
     
     // Determine back navigation
     const parentFolder = folderPath[folderPath.length - 2]

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Folder, MoreHorizontal, Edit2, Trash2 } from 'lucide-react'
+import { Folder, Edit2, Trash2 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   ContextMenu,
@@ -79,8 +79,8 @@ export function FolderCard({ folder, showProjectCount = true }: FolderCardProps)
 
   // Calculate folder contents description
   const getContentDescription = () => {
-    const subFolderCount = (folder as any).subFolderCount || 0
-    const projectCount = showProjectCount ? (folder.projects?.length || 0) : ((folder as any).projectCount || 0)
+    const subFolderCount = (folder as FolderWithProjects & { subFolderCount?: number }).subFolderCount || 0
+    const projectCount = showProjectCount ? (folder.projects?.length || 0) : ((folder as FolderWithProjects & { projectCount?: number }).projectCount || 0)
     
     // If folder has subfolders, show combined count regardless of showProjectCount
     if (subFolderCount > 0) {
@@ -191,7 +191,7 @@ export function FolderCard({ folder, showProjectCount = true }: FolderCardProps)
             <DialogHeader>
               <DialogTitle>Delete Folder</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{folder.name}"? This will also delete all projects and tracks inside it. This action cannot be undone.
+                Are you sure you want to delete &quot;{folder.name}&quot;? This will also delete all projects and tracks inside it. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

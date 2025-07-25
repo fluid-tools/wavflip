@@ -200,7 +200,7 @@ export function ProjectCard({ project, folderId, trackCount }: ProjectCardProps)
             <DialogHeader>
               <DialogTitle>Delete Project</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{project.name}"? This will also delete all tracks and versions inside it. This action cannot be undone.
+                Are you sure you want to delete &quot;{project.name}&quot;? This will also delete all tracks and versions inside it. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

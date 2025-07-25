@@ -40,7 +40,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           }),
         }
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
+      onUploadCompleted: async ({ blob }) => {
         console.log('Upload completed:', blob.url)
         
         // Here you could add additional processing like:

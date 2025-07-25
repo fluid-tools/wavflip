@@ -7,9 +7,8 @@ import {
   renameFolder, renameProject, renameTrack,
   moveProject, getUserFolders, getVaultProjects, getFolderWithContents
 } from '@/lib/library-db'
-import { uploadAudioToBlob } from '@/lib/storage/blob-storage'
 import { requireAuth } from '@/lib/auth-server'
-import type { Folder, Project, Track, TrackVersion } from '@/db/schema/library'
+import type { Folder, Project, Track } from '@/db/schema/library'
 
 type FolderActionState = {
   success: boolean
@@ -65,7 +64,7 @@ export async function createFolderAction(prevState: FolderActionState, formData:
       existingFolders = await getUserFolders(session.user.id)
     }
     
-    const existingNames = new Set(existingFolders.map((f: any) => f.name))
+    const existingNames = new Set(existingFolders.map((f: Folder) => f.name))
     
     let folderName = name.trim()
     if (existingNames.has(folderName)) {
@@ -118,13 +117,13 @@ export async function createProjectAction(prevState: ProjectActionState, formDat
     let existingProjects
     if (folderId) {
       const folders = await getUserFolders(session.user.id)
-      const folder = folders.find((f: any) => f.id === folderId)
+      const folder = folders.find((f: Folder) => f.id === folderId)
       existingProjects = folder?.projects || []
     } else {
       existingProjects = await getVaultProjects(session.user.id)
     }
     
-    const existingNames = new Set(existingProjects.map((p: any) => p.name))
+    const existingNames = new Set(existingProjects.map((p: Project) => p.name))
     
     let projectName = name.trim()
     if (existingNames.has(projectName)) {
@@ -210,18 +209,6 @@ export async function createTrackAction(prevState: TrackActionState, formData: F
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to create track' 
     }
-  }
-}
-
-// Basic audio duration extraction (placeholder - would need proper audio processing library)
-async function getAudioDuration(audioBuffer: ArrayBuffer, mimeType: string): Promise<number> {
-  try {
-    // This is a simplified approach - in production, you'd want to use a proper audio library
-    // For now, return 0 and let the client-side player determine duration
-    return 0
-  } catch (error) {
-    console.warn('Could not extract audio duration:', error)
-    return 0
   }
 }
 

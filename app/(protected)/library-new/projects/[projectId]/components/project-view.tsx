@@ -39,7 +39,7 @@ export function ProjectView({ projectId, initialProject }: ProjectViewProps) {
   
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
 
-  const totalDuration = project.tracks.reduce((sum: number, track: any) => {
+  const totalDuration = project.tracks.reduce((sum: number, track) => {
     return sum + (track.activeVersion?.duration || 0)
   }, 0)
 

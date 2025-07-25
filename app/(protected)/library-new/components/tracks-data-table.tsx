@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useAtom } from 'jotai'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
@@ -206,7 +206,7 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
       setShowRenameDialog(false)
       setSelectedTrack(null)
       setNewName('')
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }
@@ -218,7 +218,7 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
       await deleteTrackMutation.mutateAsync(selectedTrack.id)
       setShowDeleteDialog(false)
       setSelectedTrack(null)
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }
@@ -588,7 +588,7 @@ export function TracksDataTable({ tracks, projectId }: TracksDataTableProps) {
           <DialogHeader>
             <DialogTitle>Delete Track</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedTrack?.name}"? This will also delete all versions. This action cannot be undone.
+              Are you sure you want to delete &quot;{selectedTrack?.name}&quot;? This will also delete all versions. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
