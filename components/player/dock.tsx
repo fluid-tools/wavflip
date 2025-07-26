@@ -20,7 +20,8 @@ import {
   playerStateAtom,
   volumeAtom,
   mutedAtom,
-  playerControlsAtom
+  playerControlsAtom,
+  autoPlayAtom
 } from '@/state/audio-atoms'
 import { downloadAndStoreAudio } from '@/lib/storage/library-storage'
 import { toast } from 'sonner'
@@ -42,6 +43,7 @@ export default function PlayerDock() {
   const [playerState] = useAtom(playerStateAtom)
   const [volume] = useAtom(volumeAtom)
   const [muted] = useAtom(mutedAtom)
+  const [autoPlay, setAutoPlay] = useAtom(autoPlayAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   
   const isPlaying = playerState === 'playing'
@@ -79,6 +81,12 @@ export default function PlayerDock() {
     wavesurfer.on('ready', () => {
       const trackDuration = wavesurfer.getDuration()
       dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
+      
+      // Auto-play if requested
+      if (autoPlay) {
+        setAutoPlay(false)
+        wavesurfer.play()
+      }
     })
 
     wavesurfer.on('timeupdate', (time) => {

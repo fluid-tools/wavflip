@@ -27,6 +27,9 @@ export const currentTrackAtom = atom<AudioTrack | null>(null)
 // Player state
 export const playerStateAtom = atom<PlayerState>('idle')
 
+// Auto-play flag for when tracks are loaded
+export const autoPlayAtom = atom<boolean>(false)
+
 // Current playback time and duration
 export const currentTimeAtom = atom<number>(0)
 export const durationAtom = atom<number>(0)
@@ -63,6 +66,7 @@ export const playerControlsAtom = atom(
       case 'PLAY_TRACK':
         set(currentTrackAtom, action.payload)
         set(playerStateAtom, 'loading')
+        set(autoPlayAtom, true)
         break
         
       case 'PLAY':

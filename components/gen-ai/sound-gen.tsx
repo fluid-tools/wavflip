@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Loader2,  Play, Download, MoreHorizontal, Copy, Trash2, Sparkles, Send, User, Bot, Clock, Music, Volume2, History } from 'lucide-react'
+import { Loader2, Play, Download, MoreHorizontal, Copy, Trash2, Sparkles, Send, Clock, Music, Volume2, History } from 'lucide-react'
 import { generateSoundEffect, generateTextToSpeech } from '@/actions/generate-sound'
 import { 
   isGeneratingAtom, 
@@ -189,10 +189,13 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   }
 
   const handlePlaySound = (sound: GeneratedSound) => {
-    // First stop any current playback
+    console.log('Playing sound:', sound)
+    // First stop any current playback and reset state
     dispatchPlayerAction({ type: 'STOP' })
-    // Then load and play the new track
-    dispatchPlayerAction({ type: 'PLAY_TRACK', payload: sound })
+    // Load the track with auto-play enabled
+    setTimeout(() => {
+      dispatchPlayerAction({ type: 'PLAY_TRACK', payload: sound })
+    }, 100)
   }
 
   const handleDeleteSound = (soundId: string) => {
@@ -242,33 +245,21 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
               <div
                 key={message.id}
                 className={cn(
-                  "flex gap-3 items-start",
-                  message.type === 'user' && "flex-row-reverse"
+                  "flex",
+                  message.type === 'user' && "justify-end"
                 )}
               >
-                {/* Avatar */}
-                <div className={cn(
-                  "flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0",
-                  message.type === 'user' && "bg-gradient-to-br from-blue-500 to-blue-600 text-white",
-                  message.type === 'assistant' && "bg-gradient-to-br from-violet-500 to-purple-600 text-white",
-                  message.type === 'system' && "bg-gradient-to-br from-gray-400 to-gray-500 text-white"
-                )}>
-                  {message.type === 'user' && <User className="h-3.5 w-3.5" />}
-                  {message.type === 'assistant' && <Bot className="h-3.5 w-3.5" />}
-                  {message.type === 'system' && <Sparkles className="h-3.5 w-3.5" />}
-                </div>
-
                 {/* Message Content */}
                 <div className={cn(
-                  "flex-1 max-w-[80%]",
-                  message.type === 'user' && "flex justify-end"
+                  "max-w-[85%]",
+                  message.type === 'user' && "ml-auto"
                 )}>
-                  <div className={cn(
-                    "rounded-xl px-3 py-2.5",
-                    message.type === 'user' && "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
-                    message.type === 'assistant' && "bg-muted/40 border border-border/50",
-                    message.type === 'system' && "bg-muted/30 border border-border/30 text-center"
-                  )}>
+                                      <div className={cn(
+                      "rounded-full px-5 py-3",
+                      message.type === 'user' && "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
+                      message.type === 'assistant' && "bg-muted/40 border border-border/50",
+                      message.type === 'system' && "bg-muted/30 border border-border/30 text-center"
+                    )}>
                     {message.content && (
                       <div className="space-y-2">
                         {message.isGenerating && (
@@ -287,7 +278,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                     {message.sound && (
                       <ContextMenu>
                         <ContextMenuTrigger>
-                          <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3 border hover:bg-background/95 transition-all cursor-pointer mt-2">
+                          <div className="bg-background/90 backdrop-blur-sm rounded-2xl p-3 border hover:bg-background/95 transition-all cursor-pointer mt-2">
                             <div className="flex items-start gap-3">
                               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-violet-500/20 flex-shrink-0">
                                 {message.sound.metadata?.model?.includes('tts') ? (
@@ -321,7 +312,10 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                                     <Button
                                       size="sm"
                                       variant="ghost"
-                                      onClick={() => handlePlaySound(message.sound!)}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handlePlaySound(message.sound!)
+                                      }}
                                       className="h-7 w-7 p-0 hover:bg-primary/10"
                                     >
                                       <Play className="h-3.5 w-3.5" />
@@ -434,8 +428,11 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                       {generatedSounds.slice(0, 20).map((sound) => (
                                                   <div 
                             key={sound.id}
-                            className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer space-y-2"
-                            onClick={() => handlePlaySound(sound)}
+                            className="p-2.5 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer space-y-2"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handlePlaySound(sound)
+                            }}
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0">
