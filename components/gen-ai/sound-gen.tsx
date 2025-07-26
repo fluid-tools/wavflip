@@ -255,7 +255,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                   message.type === 'user' && "ml-auto"
                 )}>
                                       <div className={cn(
-                      message.sound ? "rounded-2xl px-4 py-3" : "rounded-full px-5 py-3",
+                      message.sound || message.isGenerating ? "rounded-2xl px-4 py-3" : "rounded-full px-5 py-3",
                       message.type === 'user' && "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
                       message.type === 'assistant' && "bg-muted/40 border border-border/50",
                       message.type === 'system' && "bg-muted/30 border border-border/30 text-center"
