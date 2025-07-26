@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Loader2, Wand2, Mic, Play, Download, MoreHorizontal, Copy, Trash2, Sparkles, Send, User, Bot, Clock, Music, Volume2, History } from 'lucide-react'
+import { Loader2,  Play, Download, MoreHorizontal, Copy, Trash2, Sparkles, Send, User, Bot, Clock, Music, Volume2, History } from 'lucide-react'
 import { generateSoundEffect, generateTextToSpeech } from '@/actions/generate-sound'
 import { 
   isGeneratingAtom, 
@@ -189,6 +189,9 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   }
 
   const handlePlaySound = (sound: GeneratedSound) => {
+    // First stop any current playback
+    dispatchPlayerAction({ type: 'STOP' })
+    // Then load and play the new track
     dispatchPlayerAction({ type: 'PLAY_TRACK', payload: sound })
   }
 
@@ -234,49 +237,49 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
       {/* Chat Messages - ONLY scrollable area using ScrollArea */}
       <div className="flex-1 min-h-0 relative z-10">
         <ScrollArea className="h-full">
-          <div className="max-w-4xl mx-auto px-8 py-12 space-y-8">
+          <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={cn(
-                  "flex gap-6 items-start",
+                  "flex gap-3 items-start",
                   message.type === 'user' && "flex-row-reverse"
                 )}
               >
                 {/* Avatar */}
                 <div className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 shadow-sm",
-                  message.type === 'user' && "bg-primary text-primary-foreground",
-                  message.type === 'assistant' && "bg-violet-100 text-violet-600",
-                  message.type === 'system' && "bg-muted text-muted-foreground"
+                  "flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0",
+                  message.type === 'user' && "bg-gradient-to-br from-blue-500 to-blue-600 text-white",
+                  message.type === 'assistant' && "bg-gradient-to-br from-violet-500 to-purple-600 text-white",
+                  message.type === 'system' && "bg-gradient-to-br from-gray-400 to-gray-500 text-white"
                 )}>
-                  {message.type === 'user' && <User className="h-4 w-4" />}
-                  {message.type === 'assistant' && <Bot className="h-4 w-4" />}
-                  {message.type === 'system' && <Sparkles className="h-4 w-4" />}
+                  {message.type === 'user' && <User className="h-3.5 w-3.5" />}
+                  {message.type === 'assistant' && <Bot className="h-3.5 w-3.5" />}
+                  {message.type === 'system' && <Sparkles className="h-3.5 w-3.5" />}
                 </div>
 
                 {/* Message Content */}
                 <div className={cn(
-                  "flex-1 max-w-[75%]",
+                  "flex-1 max-w-[80%]",
                   message.type === 'user' && "flex justify-end"
                 )}>
                   <div className={cn(
-                    "rounded-2xl px-5 py-4 shadow-sm",
-                    message.type === 'user' && "bg-primary text-primary-foreground",
-                    message.type === 'assistant' && "bg-muted/50 border",
-                    message.type === 'system' && "bg-muted/30 border text-center"
+                    "rounded-xl px-3 py-2.5",
+                    message.type === 'user' && "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
+                    message.type === 'assistant' && "bg-muted/40 border border-border/50",
+                    message.type === 'system' && "bg-muted/30 border border-border/30 text-center"
                   )}>
                     {message.content && (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {message.isGenerating && (
-                          <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center gap-2 text-xs">
                             <Loader2 className="h-3 w-3 animate-spin" />
                             Generating... {Math.round(generationProgress * 100)}%
                           </div>
                         )}
                         <p className="text-sm leading-relaxed">{message.content}</p>
                         {message.isGenerating && (
-                          <Progress value={generationProgress * 100} className="h-1.5" />
+                          <Progress value={generationProgress * 100} className="h-1" />
                         )}
                       </div>
                     )}
@@ -284,53 +287,53 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                     {message.sound && (
                       <ContextMenu>
                         <ContextMenuTrigger>
-                          <div className="bg-background/90 backdrop-blur-sm rounded-xl p-5 border hover:bg-background/95 transition-all cursor-pointer shadow-sm">
-                            <div className="flex items-start gap-4">
-                              <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 flex-shrink-0 shadow-sm">
+                          <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3 border hover:bg-background/95 transition-all cursor-pointer mt-2">
+                            <div className="flex items-start gap-3">
+                              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-violet-500/20 flex-shrink-0">
                                 {message.sound.metadata?.model?.includes('tts') ? (
-                                  <Volume2 className="h-6 w-6 text-primary" />
+                                  <Volume2 className="h-4 w-4 text-primary" />
                                 ) : (
-                                  <Music className="h-6 w-6 text-primary" />
+                                  <Music className="h-4 w-4 text-primary" />
                                 )}
                               </div>
                               
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-base mb-2">{message.sound.title}</h4>
-                                <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+                                <h4 className="font-medium text-sm mb-1">{message.sound.title}</h4>
+                                <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
                                   {message.sound.metadata?.prompt}
                                 </p>
                                 
                                 {/* Waveform Preview */}
-                                <div className="mb-4">
-                                  <WaveformPreview url={message.sound.url} height={35} />
+                                <div className="mb-3">
+                                  <WaveformPreview url={message.sound.url} height={30} />
                                 </div>
                                 
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                    <Clock className="h-3.5 w-3.5" />
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Clock className="h-3 w-3" />
                                     <span>{new Date(message.sound.createdAt).toLocaleTimeString()}</span>
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge variant="outline" className="text-xs h-4">
                                       {message.sound.metadata?.model?.replace('elevenlabs-', '')}
                                     </Badge>
                                   </div>
                                   
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1">
                                     <Button
                                       size="sm"
                                       variant="ghost"
                                       onClick={() => handlePlaySound(message.sound!)}
-                                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                                      className="h-7 w-7 p-0 hover:bg-primary/10"
                                     >
-                                      <Play className="h-4 w-4" />
+                                      <Play className="h-3.5 w-3.5" />
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="ghost"
                                       asChild
-                                      className="h-9 w-9 p-0 hover:bg-primary/10"
+                                      className="h-7 w-7 p-0 hover:bg-primary/10"
                                     >
                                       <a href={message.sound.url} download>
-                                        <Download className="h-4 w-4" />
+                                        <Download className="h-3.5 w-3.5" />
                                       </a>
                                     </Button>
                                     <DropdownMenu>
@@ -338,21 +341,21 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                                         <Button 
                                           size="sm" 
                                           variant="ghost" 
-                                          className="h-9 w-9 p-0 hover:bg-primary/10"
+                                          className="h-7 w-7 p-0 hover:bg-primary/10"
                                         >
-                                          <MoreHorizontal className="h-4 w-4" />
+                                          <MoreHorizontal className="h-3.5 w-3.5" />
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end" className="w-40">
                                         <DropdownMenuItem onClick={() => handleCopyUrl(message.sound!.url)}>
-                                          <Copy className="h-4 w-4 mr-2" />
+                                          <Copy className="h-3.5 w-3.5 mr-2" />
                                           Copy URL
                                         </DropdownMenuItem>
                                         <DropdownMenuItem 
                                           onClick={() => handleDeleteSound(message.sound!.id)}
                                           className="text-destructive focus:text-destructive"
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          <Trash2 className="h-3.5 w-3.5 mr-2" />
                                           Remove
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
@@ -429,29 +432,29 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                   <ScrollArea className="h-full mt-6">
                     <div className="space-y-3">
                       {generatedSounds.slice(0, 20).map((sound) => (
-                        <div 
-                          key={sound.id}
-                          className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer space-y-3"
-                          onClick={() => handlePlaySound(sound)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 flex-shrink-0">
-                              {sound.metadata?.model?.includes('tts') ? (
-                                <Volume2 className="h-3.5 w-3.5 text-primary" />
-                              ) : (
-                                <Music className="h-3.5 w-3.5 text-primary" />
-                              )}
+                                                  <div 
+                            key={sound.id}
+                            className="p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer space-y-2"
+                            onClick={() => handlePlaySound(sound)}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0">
+                                {sound.metadata?.model?.includes('tts') ? (
+                                  <Volume2 className="h-3.5 w-3.5 text-primary" />
+                                ) : (
+                                  <Music className="h-3.5 w-3.5 text-primary" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium truncate">{sound.title}</p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {sound.metadata?.prompt}
+                                </p>
+                              </div>
+                              <Play className="h-3 w-3 text-muted-foreground" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{sound.title}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {sound.metadata?.prompt}
-                              </p>
-                            </div>
-                            <Play className="h-3.5 w-3.5 text-muted-foreground" />
+                            <WaveformPreview url={sound.url} height={20} />
                           </div>
-                          <WaveformPreview url={sound.url} height={25} />
-                        </div>
                       ))}
                     </div>
                   </ScrollArea>
