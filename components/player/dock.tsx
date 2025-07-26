@@ -114,7 +114,7 @@ export default function PlayerDock() {
         wavesurferRef.current = null
       }
     }
-  }, [currentTrack, dispatchPlayerAction, muted, volume])
+  }, [currentTrack, dispatchPlayerAction, muted, volume, autoPlay, setAutoPlay])
 
 
 

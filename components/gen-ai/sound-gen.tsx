@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Loader2, Play, Download, MoreHorizontal, Copy, Trash2, Sparkles, Send, Clock, Music, Volume2, History } from 'lucide-react'
+import { Loader2, Play, Download, MoreHorizontal, Copy, Trash2, Send, Clock, Music, Volume2, History } from 'lucide-react'
 import { generateSoundEffect, generateTextToSpeech } from '@/actions/generate-sound'
 import { 
   isGeneratingAtom, 
