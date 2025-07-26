@@ -15,6 +15,9 @@ import {
 } from 'lucide-react'
 import { 
   currentTrackAtom,
+  currentTimeAtom,
+  durationAtom,
+  playerStateAtom,
   volumeAtom,
   mutedAtom,
   playerControlsAtom
@@ -32,22 +35,30 @@ export default function PlayerDock() {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
   
   const [currentTrack] = useAtom(currentTrackAtom)
+  const [currentTime] = useAtom(currentTimeAtom)
+  const [duration] = useAtom(durationAtom)
+  const [playerState] = useAtom(playerStateAtom)
   const [volume] = useAtom(volumeAtom)
   const [muted] = useAtom(mutedAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
+  
+  const isPlaying = playerState === 'playing'
 
   // Initialize WaveSurfer
   useEffect(() => {
     if (!waveformRef.current || !currentTrack) return
 
+    // Clean up previous instance
+    if (wavesurferRef.current) {
+      wavesurferRef.current.destroy()
+      wavesurferRef.current = null
+    }
+
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
-      height: 80,
+      height: 50,
       waveColor: 'rgb(148 163 184)',
       progressColor: 'rgb(59 130 246)',
       cursorColor: 'rgb(59 130 246)',
@@ -67,27 +78,22 @@ export default function PlayerDock() {
     // Set up event listeners
     wavesurfer.on('ready', () => {
       const trackDuration = wavesurfer.getDuration()
-      setDuration(trackDuration)
       dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
     })
 
     wavesurfer.on('timeupdate', (time) => {
-      setCurrentTime(time)
       dispatchPlayerAction({ type: 'SET_TIME', payload: time })
     })
 
     wavesurfer.on('play', () => {
-      setIsPlaying(true)
       dispatchPlayerAction({ type: 'PLAY' })
     })
 
     wavesurfer.on('pause', () => {
-      setIsPlaying(false)
       dispatchPlayerAction({ type: 'PAUSE' })
     })
 
     wavesurfer.on('finish', () => {
-      setIsPlaying(false)
       dispatchPlayerAction({ type: 'STOP' })
     })
 
@@ -95,10 +101,14 @@ export default function PlayerDock() {
     wavesurfer.setVolume(muted ? 0 : volume)
 
     return () => {
-      wavesurfer.destroy()
-      wavesurferRef.current = null
+      if (wavesurferRef.current) {
+        wavesurferRef.current.destroy()
+        wavesurferRef.current = null
+      }
     }
   }, [currentTrack, dispatchPlayerAction, muted, volume])
+
+
 
   // Sync volume changes
   useEffect(() => {
@@ -108,7 +118,13 @@ export default function PlayerDock() {
 
   const handlePlayPause = () => {
     if (!wavesurferRef.current) return
-    wavesurferRef.current.playPause()
+    
+    try {
+      wavesurferRef.current.playPause()
+    } catch (error) {
+      console.error('Playback error:', error)
+      dispatchPlayerAction({ type: 'ERROR' })
+    }
   }
 
   const handleVolumeChange = (value: number[]) => {
@@ -125,7 +141,6 @@ export default function PlayerDock() {
     setIsSaving(true)
     try {
       await downloadAndStoreAudio(currentTrack)
-      // Note: No ADD_TO_PLAYLIST needed - if track is playing, it's already accessible
       toast.success('Track saved to library!')
     } catch (error) {
       console.error('Failed to save track:', error)
@@ -140,21 +155,12 @@ export default function PlayerDock() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/50 shadow-2xl">
-      {/* Waveform Container */}
-      <div className="px-4 sm:px-6 pt-4 pb-3">
-        <div 
-          ref={waveformRef}
-          className="w-full rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/20"
-        />
-      </div>
-
-      {/* Controls Container */}
-      <div className="px-4 sm:px-6 pb-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/50 shadow-2xl transform transition-transform duration-300 ease-out">
+      <div className="px-4 sm:px-6 py-4">
         <div className="flex items-center gap-4">
-          {/* Track Info - Responsive */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+          {/* Track Info */}
+          <div className="flex items-center gap-3 min-w-0 flex-shrink-0 w-64">
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
               <span className="text-white text-sm font-medium">
                 {currentTrack.type === 'generated' ? '🎵' : '📁'}
               </span>
@@ -165,13 +171,13 @@ export default function PlayerDock() {
               </h4>
               {currentTrack.metadata?.prompt && (
                 <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  &ldquo;{currentTrack.metadata.prompt.substring(0, 60)}...&rdquo;
+                  &ldquo;{currentTrack.metadata.prompt.substring(0, 40)}...&rdquo;
                 </p>
               )}
             </div>
           </div>
 
-          {/* Play Button - Always Visible */}
+          {/* Play Button */}
           <Button
             size="lg"
             onClick={handlePlayPause}
@@ -184,10 +190,18 @@ export default function PlayerDock() {
             )}
           </Button>
 
+          {/* Waveform - Takes remaining space */}
+          <div className="flex-1 min-w-0 px-4">
+            <div 
+              ref={waveformRef}
+              className="w-full rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/20"
+            />
+          </div>
+
           {/* Desktop Controls */}
-          <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-4 flex-shrink-0">
             {/* Time Display */}
-            <div className="text-xs text-muted-foreground font-mono tabular-nums">
+            <div className="text-xs text-muted-foreground font-mono tabular-nums min-w-[80px]">
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
 
@@ -243,7 +257,7 @@ export default function PlayerDock() {
           </div>
 
           {/* Mobile Controls */}
-          <div className="flex sm:hidden items-center gap-2 flex-shrink-0">
+          <div className="flex md:hidden items-center gap-2 flex-shrink-0">
             <Button
               size="sm"
               variant="ghost"
@@ -270,7 +284,7 @@ export default function PlayerDock() {
         </div>
 
         {/* Mobile Time Display */}
-        <div className="flex sm:hidden justify-center mt-2">
+        <div className="flex md:hidden justify-center mt-2">
           <div className="text-xs text-muted-foreground font-mono tabular-nums">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>

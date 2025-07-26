@@ -24,6 +24,7 @@ import type { GeneratedSound } from '@/types/audio'
 import { downloadAndStoreAudio } from '@/lib/storage/library-storage'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { WaveformPreview } from '@/components/player/waveform-preview'
 
 interface SoundGeneratorProps {
   className?: string
@@ -295,9 +296,14 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                               
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-semibold text-base mb-2">{message.sound.title}</h4>
-                                <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
+                                <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
                                   {message.sound.metadata?.prompt}
                                 </p>
+                                
+                                {/* Waveform Preview */}
+                                <div className="mb-4">
+                                  <WaveformPreview url={message.sound.url} height={35} />
+                                </div>
                                 
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -425,23 +431,26 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                       {generatedSounds.slice(0, 20).map((sound) => (
                         <div 
                           key={sound.id}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                          className="p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer space-y-3"
                           onClick={() => handlePlaySound(sound)}
                         >
-                          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 flex-shrink-0">
-                            {sound.metadata?.model?.includes('tts') ? (
-                              <Volume2 className="h-3.5 w-3.5 text-primary" />
-                            ) : (
-                              <Music className="h-3.5 w-3.5 text-primary" />
-                            )}
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 flex-shrink-0">
+                              {sound.metadata?.model?.includes('tts') ? (
+                                <Volume2 className="h-3.5 w-3.5 text-primary" />
+                              ) : (
+                                <Music className="h-3.5 w-3.5 text-primary" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{sound.title}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {sound.metadata?.prompt}
+                              </p>
+                            </div>
+                            <Play className="h-3.5 w-3.5 text-muted-foreground" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{sound.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {sound.metadata?.prompt}
-                            </p>
-                          </div>
-                          <Play className="h-3.5 w-3.5 text-muted-foreground" />
+                          <WaveformPreview url={sound.url} height={25} />
                         </div>
                       ))}
                     </div>
