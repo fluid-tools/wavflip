@@ -68,10 +68,10 @@ export function LibraryHeader() {
 
   if (isRoot) {
     return (
-      <div className="p-6 border-b">
+      <div className="px-6 py-4 border-b">
         <div>
-          <h1 className="text-2xl font-semibold">Library</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl font-medium tracking-tight">Library</h1>
+          <p className="text-muted-foreground text-sm">
             Organize your tracks in folders and projects
           </p>
         </div>
@@ -88,7 +88,7 @@ export function LibraryHeader() {
     const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Vault'
     
     return (
-      <div className="p-6 border-b">
+      <div className="px-6 py-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href={backHref}>
@@ -138,7 +138,7 @@ export function LibraryHeader() {
     const backText = parentFolderId ? 'Back to Folder' : 'Library'
     
     return (
-      <div className="p-6 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="px-6 py-4 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <Link href={backHref}>
             <Button variant="ghost" size="sm">
