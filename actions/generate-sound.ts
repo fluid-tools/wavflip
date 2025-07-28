@@ -73,6 +73,8 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
     
     // Handle rate limiting with user-friendly message
     if (generationError.code === 'system_busy' || 
+        generationError.code === '503' ||
+        generationError.code === '429' ||
         generationError.message?.toLowerCase().includes('rate limit')) {
       return {
         success: false,
@@ -152,6 +154,8 @@ export async function generateTextToSpeech(
     
     // Handle rate limiting with user-friendly message
     if (generationError.code === 'system_busy' || 
+        generationError.code === '503' ||
+        generationError.code === '429' ||
         generationError.message?.toLowerCase().includes('rate limit')) {
       return {
         success: false,
