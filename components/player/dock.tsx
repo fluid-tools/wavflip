@@ -60,14 +60,14 @@ export default function PlayerDock() {
 
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
-      height: 50,
-      waveColor: 'rgb(148 163 184)',
-      progressColor: 'rgb(59 130 246)',
-      cursorColor: 'rgb(59 130 246)',
-      cursorWidth: 2,
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 2,
+      height: 60,
+      waveColor: 'rgb(64 64 64)',
+      progressColor: 'rgb(255 255 255)',
+      cursorColor: 'rgb(255 255 255)',
+      cursorWidth: 3,
+      barWidth: 3,
+      barGap: 2,
+      barRadius: 3,
       fillParent: true,
       interact: true,
       dragToSeek: true,
@@ -185,22 +185,22 @@ export default function PlayerDock() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/50 shadow-2xl transform transition-transform duration-300 ease-out">
-      <div className="px-4 sm:px-6 py-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-900/95 backdrop-blur-md border-t border-neutral-800 shadow-2xl transform transition-transform duration-300 ease-out">
+      <div className="px-4 sm:px-6 py-3">
         <div className="flex items-center gap-4">
           {/* Track Info */}
           <div className="flex items-center gap-3 min-w-0 flex-shrink-0 w-64">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-              <span className="text-white text-sm font-medium">
+            <div className="w-10 h-10 rounded-md bg-neutral-800 border border-neutral-700 flex items-center justify-center flex-shrink-0">
+              <span className="text-neutral-300 text-sm font-medium">
                 {currentTrack.type === 'generated' ? '🎵' : '📁'}
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="font-semibold text-sm text-foreground truncate leading-tight">
+              <h4 className="font-medium text-sm text-neutral-100 truncate leading-tight">
                 {currentTrack.title}
               </h4>
               {currentTrack.metadata?.prompt && (
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                <p className="text-xs text-neutral-400 truncate mt-0.5">
                   &ldquo;{currentTrack.metadata.prompt.substring(0, 40)}...&rdquo;
                 </p>
               )}
@@ -211,12 +211,12 @@ export default function PlayerDock() {
           <Button
             size="lg"
             onClick={handlePlayPause}
-            className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex-shrink-0"
+            className="w-10 h-10 rounded-md bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 flex-shrink-0"
           >
             {isPlaying ? (
-              <Pause className="h-5 w-5" />
+              <Pause className="h-4 w-4" />
             ) : (
-              <Play className="h-5 w-5 ml-0.5" />
+              <Play className="h-4 w-4 ml-0.5" />
             )}
           </Button>
 
@@ -224,14 +224,14 @@ export default function PlayerDock() {
           <div className="flex-1 min-w-0 px-4">
             <div 
               ref={waveformRef}
-              className="w-full rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/20"
+              className="w-full rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
             />
           </div>
 
           {/* Desktop Controls */}
           <div className="hidden md:flex items-center gap-4 flex-shrink-0">
             {/* Time Display */}
-            <div className="text-xs text-muted-foreground font-mono tabular-nums min-w-[80px]">
+            <div className="text-xs text-neutral-400 font-mono tabular-nums min-w-[80px]">
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
 
@@ -241,7 +241,7 @@ export default function PlayerDock() {
                 size="sm"
                 variant="ghost"
                 onClick={handleToggleMute}
-                className="w-8 h-8 p-0 hover:bg-muted/50"
+                className="w-8 h-8 p-0 hover:bg-neutral-800 text-neutral-300"
               >
                 {muted || volume === 0 ? (
                   <VolumeX className="h-4 w-4" />
@@ -256,7 +256,7 @@ export default function PlayerDock() {
                   onValueChange={handleVolumeChange}
                   max={1}
                   step={0.01}
-                  className="cursor-pointer"
+                  className="cursor-pointer [&_.bg-muted]:bg-neutral-700 [&_.bg-primary]:bg-neutral-300 [&_.border-primary]:border-neutral-300 [&_.bg-background]:bg-neutral-100"
                 />
               </div>
             </div>
@@ -268,7 +268,7 @@ export default function PlayerDock() {
                 variant="ghost"
                 onClick={handleSaveToLibrary}
                 disabled={isSaving}
-                className="w-8 h-8 p-0 hover:bg-muted/50"
+                className="w-8 h-8 p-0 hover:bg-neutral-800 text-neutral-300"
               >
                 <Heart className="h-4 w-4" />
               </Button>
@@ -277,7 +277,7 @@ export default function PlayerDock() {
                 size="sm"
                 variant="ghost"
                 asChild
-                className="w-8 h-8 p-0 hover:bg-muted/50"
+                className="w-8 h-8 p-0 hover:bg-neutral-800 text-neutral-300"
               >
                 <a href={currentTrack.url} download>
                   <Download className="h-4 w-4" />
@@ -292,7 +292,7 @@ export default function PlayerDock() {
               size="sm"
               variant="ghost"
               onClick={handleToggleMute}
-              className="w-8 h-8 p-0"
+              className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
             >
               {muted || volume === 0 ? (
                 <VolumeX className="h-4 w-4" />
@@ -306,7 +306,7 @@ export default function PlayerDock() {
               variant="ghost"
               onClick={handleSaveToLibrary}
               disabled={isSaving}
-              className="w-8 h-8 p-0"
+              className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
             >
               <Heart className="h-4 w-4" />
             </Button>
@@ -315,7 +315,7 @@ export default function PlayerDock() {
 
         {/* Mobile Time Display */}
         <div className="flex md:hidden justify-center mt-2">
-          <div className="text-xs text-muted-foreground font-mono tabular-nums">
+          <div className="text-xs text-neutral-400 font-mono tabular-nums">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
         </div>
