@@ -7,7 +7,9 @@ import {
   isGeneratingAtom, 
   generationProgressAtom, 
   playerControlsAtom,
-  generatedSoundsAtom 
+  generatedSoundsAtom,
+  currentTrackAtom,
+  playerStateAtom
 } from '@/state/audio-atoms'
 import { downloadAndStoreAudio } from '@/lib/storage/library-storage'
 import { WELCOME_MESSAGE } from '@/lib/constants/prompts'
@@ -47,6 +49,8 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   const [generationProgress] = useAtom(generationProgressAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [generatedSounds] = useAtom(generatedSoundsAtom)
+  const [currentTrack] = useAtom(currentTrackAtom)
+  const [playerState] = useAtom(playerStateAtom)
 
   const handleGenerate = () => {
     if (!prompt.trim()) {
@@ -143,8 +147,14 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
 
   const handlePlaySound = (sound: GeneratedSound) => {
     console.log('Playing sound:', sound)
-    // Load the track with auto-play enabled
+    // Check if this is the current track and it's playing
+    if (currentTrack?.id === sound.id && playerState === 'playing') {
+      // If it's the same track and playing, pause it
+      dispatchPlayerAction({ type: 'PAUSE' })
+    } else {
+      // Otherwise, play the track
       dispatchPlayerAction({ type: 'PLAY_TRACK', payload: sound })
+    }
   }
 
   const handleDeleteSound = (soundId: string) => {

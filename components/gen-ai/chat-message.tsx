@@ -5,9 +5,11 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Loader2, Play, Download, MoreHorizontal, Copy, Trash2, Clock, Music, Volume2 } from 'lucide-react'
+import { Loader2, Play, Pause, Download, MoreHorizontal, Copy, Trash2, Clock, Music, Volume2 } from 'lucide-react'
 import { WaveformPreview } from '@/components/player/waveform-preview'
 import { cn } from '@/lib/utils'
+import { useAtom } from 'jotai'
+import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
 
 interface ChatMessageProps {
@@ -33,6 +35,12 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const isUser = type === 'user'
   const isSystem = type === 'system'
+  
+  const [currentTrack] = useAtom(currentTrackAtom)
+  const [playerState] = useAtom(playerStateAtom)
+  
+  const isCurrentTrack = currentTrack?.id === sound?.id
+  const isPlaying = playerState === 'playing' && isCurrentTrack
 
   return (
     <div className={cn(
@@ -69,32 +77,32 @@ export function ChatMessage({
           {sound && (
             <ContextMenu>
               <ContextMenuTrigger>
-                <div className="bg-background/90 backdrop-blur-sm rounded-xl p-2.5 border hover:bg-background/95 transition-all cursor-pointer mt-2">
-                  <div className="flex items-start gap-2.5">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-violet-500/20 flex-shrink-0">
+                <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-2 border border-neutral-800 hover:bg-neutral-800/90 transition-all cursor-pointer mt-2">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-neutral-800 border border-neutral-700 flex-shrink-0">
                       {sound.metadata?.model?.includes('tts') ? (
-                        <Volume2 className="h-3.5 w-3.5 text-primary" />
+                        <Volume2 className="h-3.5 w-3.5 text-neutral-300" />
                       ) : (
-                        <Music className="h-3.5 w-3.5 text-primary" />
+                        <Music className="h-3.5 w-3.5 text-neutral-300" />
                       )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm mb-1">{sound.title}</h4>
-                      <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
+                      <h4 className="font-medium text-sm mb-1 text-neutral-100">{sound.title}</h4>
+                      <p className="text-xs text-neutral-400 mb-2 line-clamp-1">
                         {sound.metadata?.prompt}
                       </p>
                       
                       {/* Waveform Preview */}
-                      <div className="mb-2.5">
-                        <WaveformPreview url={sound.url} height={25} />
+                      <div className="mb-3">
+                        <WaveformPreview url={sound.url} height={30} />
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-400">
                           <Clock className="h-3 w-3" />
                           <span>{new Date(sound.createdAt).toLocaleTimeString()}</span>
-                          <Badge variant="outline" className="text-xs h-3.5 px-1.5">
+                          <Badge variant="outline" className="text-xs h-3.5 px-1.5 border-neutral-700 text-neutral-300">
                             {sound.metadata?.model?.replace('elevenlabs-', '')}
                           </Badge>
                         </div>
@@ -107,15 +115,24 @@ export function ChatMessage({
                               e.stopPropagation()
                               onPlaySound?.(sound)
                             }}
-                            className="h-6 w-6 p-0 hover:bg-primary/10"
+                            className={cn(
+                              "h-6 w-6 p-0 transition-all",
+                              isCurrentTrack 
+                                ? "bg-neutral-700 hover:bg-neutral-600 text-neutral-100" 
+                                : "hover:bg-neutral-800 text-neutral-300"
+                            )}
                           >
-                            <Play className="h-3 w-3" />
+                            {isPlaying ? (
+                              <Pause className="h-3 w-3" />
+                            ) : (
+                              <Play className="h-3 w-3" />
+                            )}
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
                             asChild
-                            className="h-6 w-6 p-0 hover:bg-primary/10"
+                            className="h-6 w-6 p-0 hover:bg-neutral-800 text-neutral-300"
                           >
                             <a href={sound.url} download>
                               <Download className="h-3 w-3" />
@@ -126,7 +143,7 @@ export function ChatMessage({
                               <Button 
                                 size="sm" 
                                 variant="ghost" 
-                                className="h-6 w-6 p-0 hover:bg-primary/10"
+                                className="h-6 w-6 p-0 hover:bg-neutral-800 text-neutral-300"
                               >
                                 <MoreHorizontal className="h-3 w-3" />
                               </Button>
@@ -151,18 +168,28 @@ export function ChatMessage({
                   </div>
                 </div>
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-40">
-                <ContextMenuItem onClick={() => onPlaySound?.(sound)}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Play
+              <ContextMenuContent className="w-40 bg-neutral-900 border border-neutral-800">
+                <ContextMenuItem 
+                  onClick={() => onPlaySound?.(sound)}
+                  className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
+                >
+                  {isPlaying ? (
+                    <Pause className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Play className="h-4 w-4 mr-2" />
+                  )}
+                  {isPlaying ? 'Pause' : 'Play'}
                 </ContextMenuItem>
-                <ContextMenuItem onClick={() => onCopyUrl?.(sound.url)}>
+                <ContextMenuItem 
+                  onClick={() => onCopyUrl?.(sound.url)}
+                  className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
+                >
                   <Copy className="h-4 w-4 mr-2" />
                   Copy URL
                 </ContextMenuItem>
                 <ContextMenuItem 
                   onClick={() => onDeleteSound?.(sound.id)}
-                  className="text-destructive focus:text-destructive"
+                  className="text-red-400 hover:bg-neutral-800 focus:bg-neutral-800 hover:text-red-300"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Remove
