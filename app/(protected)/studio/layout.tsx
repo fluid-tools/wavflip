@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { StudioHeader } from '@/components/studio/header'
+// import { StudioHeader } from '@/components/studio/header'
 
 interface StudioLayoutProps {
   children: ReactNode
