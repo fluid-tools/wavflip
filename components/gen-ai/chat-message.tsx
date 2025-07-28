@@ -5,12 +5,13 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Loader2, Play, Pause, Download, MoreHorizontal, Copy, Trash2, Clock, Music, Volume2 } from 'lucide-react'
+import { Loader2, Play, Pause, Download, MoreHorizontal, Copy, Trash2, Music, Volume2 } from 'lucide-react'
 import { WaveformPreview } from '@/components/player/waveform-preview'
 import { cn } from '@/lib/utils'
 import { useAtom } from 'jotai'
 import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
+import { toast } from 'sonner'
 
 interface ChatMessageProps {
   type: 'user' | 'assistant' | 'system'
@@ -77,8 +78,8 @@ export function ChatMessage({
           {sound && (
             <ContextMenu>
               <ContextMenuTrigger>
-                <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-2 border border-neutral-800 hover:bg-neutral-800/90 transition-all cursor-pointer mt-2">
-                  <div className="flex items-start gap-3">
+                <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl border border-neutral-800 hover:bg-neutral-800/90 transition-all cursor-pointer mt-2">
+                  <div className="flex items-start gap-3 p-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-md bg-neutral-800 border border-neutral-700 flex-shrink-0">
                       {sound.metadata?.model?.includes('tts') ? (
                         <Volume2 className="h-3.5 w-3.5 text-neutral-300" />
@@ -88,20 +89,52 @@ export function ChatMessage({
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm mb-1 text-neutral-100">{sound.title}</h4>
-                      <p className="text-xs text-neutral-400 mb-2 line-clamp-1">
-                        {sound.metadata?.prompt}
-                      </p>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h4 className="font-medium text-sm text-neutral-100 truncate">
+                          {sound.title}
+                        </h4>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-6 w-6 p-0 hover:bg-neutral-800 text-neutral-300 flex-shrink-0"
+                            >
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={() => onCopyUrl?.(sound.url)}>
+                              <Copy className="h-3.5 w-3.5 mr-2" />
+                              Copy URL
+                            </DropdownMenuItem>
+                            {sound.metadata?.prompt && (
+                              <DropdownMenuItem onClick={() => {
+                                navigator.clipboard.writeText(sound.metadata!.prompt!)
+                                toast.success('Prompt copied to clipboard')
+                              }}>
+                                <Copy className="h-3.5 w-3.5 mr-2" />
+                                Copy Prompt
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem 
+                              onClick={() => onDeleteSound?.(sound.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-2" />
+                              Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                       
                       {/* Waveform Preview */}
-                      <div className="mb-3">
+                      <div className="mb-2">
                         <WaveformPreview url={sound.url} height={30} />
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs text-neutral-400">
-                          <Clock className="h-3 w-3" />
-                          <span>{new Date(sound.createdAt).toLocaleTimeString()}</span>
+                        <div className="flex items-center gap-1.5">
                           <Badge variant="outline" className="text-xs h-3.5 px-1.5 border-neutral-700 text-neutral-300">
                             {sound.metadata?.model?.replace('elevenlabs-', '')}
                           </Badge>
@@ -138,30 +171,6 @@ export function ChatMessage({
                               <Download className="h-3 w-3" />
                             </a>
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-6 w-6 p-0 hover:bg-neutral-800 text-neutral-300"
-                              >
-                                <MoreHorizontal className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem onClick={() => onCopyUrl?.(sound.url)}>
-                                <Copy className="h-3.5 w-3.5 mr-2" />
-                                Copy URL
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => onDeleteSound?.(sound.id)}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                Remove
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
                       </div>
                     </div>
@@ -187,6 +196,18 @@ export function ChatMessage({
                   <Copy className="h-4 w-4 mr-2" />
                   Copy URL
                 </ContextMenuItem>
+                {sound.metadata?.prompt && (
+                  <ContextMenuItem 
+                    onClick={() => {
+                      navigator.clipboard.writeText(sound.metadata!.prompt!)
+                      toast.success('Prompt copied to clipboard')
+                    }}
+                    className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Prompt
+                  </ContextMenuItem>
+                )}
                 <ContextMenuItem 
                   onClick={() => onDeleteSound?.(sound.id)}
                   className="text-red-400 hover:bg-neutral-800 focus:bg-neutral-800 hover:text-red-300"
