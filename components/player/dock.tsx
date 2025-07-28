@@ -125,6 +125,7 @@ export default function PlayerDock() {
         wavesurferRef.current = null
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack, dispatchPlayerAction, autoPlay, setAutoPlay])
 
 
