@@ -4,7 +4,7 @@ export function StudioHeader() {
       <div>
         <h1 className="text-xl font-medium tracking-tight">AI Studio</h1>
         <p className="text-muted-foreground text-sm">
-          Generate sounds and beats with AI
+          Generate sounds and musical elements with AI
         </p>
       </div>
     </div>

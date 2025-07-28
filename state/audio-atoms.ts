@@ -64,9 +64,18 @@ export const playerControlsAtom = atom(
   (get, set, action: PlayerAction) => {
     switch (action.type) {
       case 'PLAY_TRACK':
-        set(currentTrackAtom, action.payload)
-        set(playerStateAtom, 'loading')
-        set(autoPlayAtom, true)
+        const currentTrack = get(currentTrackAtom)
+        // If it's the same track, just play it
+        if (currentTrack && currentTrack.id === action.payload.id) {
+          set(playerStateAtom, 'playing')
+        } else {
+          // Load new track
+          set(currentTrackAtom, action.payload)
+          set(playerStateAtom, 'loading')
+          set(autoPlayAtom, true)
+          // Reset time when loading new track
+          set(currentTimeAtom, 0)
+        }
         break
         
       case 'PLAY':

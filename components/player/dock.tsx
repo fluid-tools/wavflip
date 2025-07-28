@@ -85,9 +85,20 @@ export default function PlayerDock() {
       // Auto-play if requested
       if (autoPlay) {
         setAutoPlay(false)
-        wavesurfer.play()
+        // Small delay to ensure everything is ready
+        setTimeout(() => {
+          wavesurfer.play()
+        }, 100)
       }
     })
+
+    // Handle play action when track is already loaded
+    if (autoPlay && wavesurfer.getDuration() > 0) {
+      setAutoPlay(false)
+      setTimeout(() => {
+        wavesurfer.play()
+      }, 100)
+    }
 
     wavesurfer.on('timeupdate', (time) => {
       dispatchPlayerAction({ type: 'SET_TIME', payload: time })
@@ -123,6 +134,17 @@ export default function PlayerDock() {
     if (!wavesurferRef.current) return
     wavesurferRef.current.setVolume(muted ? 0 : volume)
   }, [volume, muted])
+
+  // Handle play state changes
+  useEffect(() => {
+    if (!wavesurferRef.current || !currentTrack) return
+    
+    if (playerState === 'playing' && wavesurferRef.current.getDuration() > 0) {
+      wavesurferRef.current.play()
+    } else if (playerState === 'paused') {
+      wavesurferRef.current.pause()
+    }
+  }, [playerState, currentTrack])
 
   const handlePlayPause = () => {
     if (!wavesurferRef.current) return
