@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
@@ -21,9 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useActionState } from 'react'
-import { deleteFolderAction, renameFolderAction, moveFolderAction } from '@/actions/library'
-import { toast } from 'sonner'
+import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/hooks/use-library-action'
 import type { FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
 import { DraggableWrapper } from '../draggable-wrapper'
@@ -51,19 +49,24 @@ export function FolderCard({
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(folder.name)
 
-  const [deleteState, deleteAction, isDeleting] = useActionState(deleteFolderAction, {
-    success: false,
-    error: null,
+  const [deleteState, deleteAction, isDeleting] = useDeleteFolderAction({
+    onSuccess: () => {
+      setShowDeleteDialog(false)
+    }
   })
 
-  const [renameState, renameAction, isRenaming] = useActionState(renameFolderAction, {
-    success: false,
-    error: null,
+  const [renameState, renameAction, isRenaming] = useRenameFolderAction({
+    onSuccess: () => {
+      setShowRenameDialog(false)
+      setNewName(folder.name)
+    }
   })
 
-  const [moveState, moveAction, isMoving] = useActionState(moveFolderAction, {
-    success: false,
-    error: null,
+  const [moveState, moveAction, isMoving] = useMoveFolderAction({
+    onSuccess: () => {
+      setShowMoveDialog(false)
+      setSelectedDestinationId(null)
+    }
   })
 
   const handleRename = async (formData: FormData) => {
@@ -83,35 +86,7 @@ export function FolderCard({
     moveAction(formData)
   }
 
-  // Clean state management - handle success/error in single effects
-  useEffect(() => {
-    if (renameState.success) {
-      toast.success('Folder renamed successfully')
-      setShowRenameDialog(false)
-      setNewName(folder.name)
-    } else if (renameState.error) {
-      toast.error(renameState.error)
-    }
-  }, [renameState, folder.name])
-
-  useEffect(() => {
-    if (deleteState.success) {
-      toast.success('Folder deleted successfully')
-      setShowDeleteDialog(false)
-    } else if (deleteState.error) {
-      toast.error(deleteState.error)
-    }
-  }, [deleteState])
-
-  useEffect(() => {
-    if (moveState.success) {
-      toast.success('Folder moved successfully')
-      setShowMoveDialog(false)
-      setSelectedDestinationId(null)
-    } else if (moveState.error) {
-      toast.error(moveState.error)
-    }
-  }, [moveState])
+  // State management is now handled by the custom hooks automatically
 
   // Calculate folder contents description
   const getContentDescription = () => {

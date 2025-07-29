@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
-import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/lib/library-db'
+import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/server/library'
 import { ProjectView } from '@/components/library/projects/view'
 import { TracksTableSkeleton } from '@/components/library/tracks/table-skeleton'
 

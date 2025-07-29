@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getUserFolders } from '@/lib/library-db'
+import { getFolderWithContents } from '@/server/library'
 
 export async function GET(
   request: NextRequest,
@@ -14,9 +14,7 @@ export async function GET(
       return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 })
     }
 
-    // Get all user folders and find the requested one
-    const folders = await getUserFolders(session.user.id)
-    const folder = folders.find(f => f.id === folderId)
+    const folder = await getFolderWithContents(folderId, session.user.id)
 
     if (!folder) {
       return NextResponse.json({ error: 'Folder not found' }, { status: 404 })

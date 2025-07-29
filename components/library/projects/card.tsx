@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Music, Edit2, Trash2, FolderOpen } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -22,9 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useActionState } from 'react'
-import { deleteProjectAction, renameProjectAction, moveProjectAction } from '@/actions/library'
-import { toast } from 'sonner'
+import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/hooks/use-library-action'
 import type { Project, ProjectWithTracks, FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
 import { DraggableWrapper } from '../draggable-wrapper'
@@ -54,19 +52,24 @@ export function ProjectCard({
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
 
-  const [deleteState, deleteAction, isDeleting] = useActionState(deleteProjectAction, {
-    success: false,
-    error: null,
+  const [deleteState, deleteAction, isDeleting] = useDeleteProjectAction({
+    onSuccess: () => {
+      setShowDeleteDialog(false)
+    }
   })
 
-  const [renameState, renameAction, isRenaming] = useActionState(renameProjectAction, {
-    success: false,
-    error: null,
+  const [renameState, renameAction, isRenaming] = useRenameProjectAction({
+    onSuccess: () => {
+      setShowRenameDialog(false)
+      setNewName(project.name)
+    }
   })
 
-  const [moveState, moveAction, isMoving] = useActionState(moveProjectAction, {
-    success: false,
-    error: null,
+  const [moveState, moveAction, isMoving] = useMoveProjectAction({
+    onSuccess: () => {
+      setShowMoveDialog(false)
+      setSelectedDestinationId(folderId ?? null)
+    }
   })
 
   const handleRename = async (formData: FormData) => {
@@ -86,35 +89,7 @@ export function ProjectCard({
     moveAction(formData)
   }
 
-  // Clean state management - handle success/error in single effects
-  useEffect(() => {
-    if (renameState.success) {
-      toast.success('Project renamed successfully')
-      setShowRenameDialog(false)
-      setNewName(project.name)
-    } else if (renameState.error) {
-      toast.error(renameState.error)
-    }
-  }, [renameState, project.name])
-
-  useEffect(() => {
-    if (deleteState.success) {
-      toast.success('Project deleted successfully')
-      setShowDeleteDialog(false)
-    } else if (deleteState.error) {
-      toast.error(deleteState.error)
-    }
-  }, [deleteState])
-
-  useEffect(() => {
-    if (moveState.success) {
-      toast.success('Project moved successfully')
-      setShowMoveDialog(false)
-      setSelectedDestinationId(folderId ?? null)
-    } else if (moveState.error) {
-      toast.error(moveState.error)
-    }
-  }, [moveState, folderId])
+  // State management is now handled by the custom hooks automatically
 
   const cardContent = (
     <ContextMenu>

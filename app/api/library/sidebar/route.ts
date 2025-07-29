@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getAllUserFolders, getVaultProjects } from '@/lib/library-db'
+import { getAllUserFolders, getVaultProjects } from '@/server/library'
 
 export async function GET(request: NextRequest) {
   try {

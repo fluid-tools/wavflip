@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { createTrack, createTrackVersion, deleteTrack, renameTrack } from '@/lib/library-db'
-import { revalidatePath } from 'next/cache'
+import { createTrack, createTrackVersion, deleteTrack, renameTrack } from '@/server/library'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,8 +35,6 @@ export async function POST(request: NextRequest) {
       duration: parseFloat(duration) || 0,
       mimeType: mimeType || 'audio/mpeg',
     })
-
-    revalidatePath(`/library/projects/${projectId}`)
     
     return NextResponse.json({ success: true, track })
   } catch (error) {
@@ -61,10 +58,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteTrack(trackId, session.user.id)
-
-    if (projectId) {
-      revalidatePath(`/library/projects/${projectId}`)
-    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -93,10 +86,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     await renameTrack(trackId, name.trim(), session.user.id)
-
-    if (projectId) {
-      revalidatePath(`/library/projects/${projectId}`)
-    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useActionState } from 'react'
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,8 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createFolderAction } from '@/actions/library'
-import { toast } from 'sonner'
+import { useCreateFolderAction } from '@/hooks/use-library-action'
 import type { Folder } from '@/db/schema/library'
 
 type ActionState = {
@@ -28,40 +26,31 @@ type ActionState = {
 interface CreateFolderDialogProps {
   parentFolderId?: string | null
   triggerText?: string
+  onSuccess?: () => void
 }
 
-export function CreateFolderDialog({ parentFolderId = null, triggerText = "New Folder" }: CreateFolderDialogProps) {
+export function CreateFolderDialog({ parentFolderId = null, triggerText = "New Folder", onSuccess }: CreateFolderDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const [state, formAction] = useActionState(
-    createFolderAction, 
-    { success: false, error: null } as ActionState
-  )
-
-  // Handle success/error from action
-  useEffect(() => {
-    if (state.success && isSubmitting) {
-      toast.success('Folder created successfully')
+  const [state, formAction] = useCreateFolderAction({
+    onSuccess: () => {
       setOpen(false)
       setName('')
-      setIsSubmitting(false)
+      onSuccess?.()
+    },
+    specificInvalidations: () => {
+      // Additional specific invalidations if needed
+      if (parentFolderId) {
+        // The hook already handles sidebar invalidation
+      }
     }
-  }, [state.success, isSubmitting])
-
-  useEffect(() => {
-    if (state.error && isSubmitting) {
-      toast.error(state.error)
-      setIsSubmitting(false)
-    }
-  }, [state.error, isSubmitting])
+  })
 
   const handleSubmit = async (formData: FormData) => {
     if (parentFolderId) {
       formData.append('parentFolderId', parentFolderId)
     }
-    setIsSubmitting(true)
     formAction(formData)
   }
 
@@ -106,12 +95,11 @@ export function CreateFolderDialog({ parentFolderId = null, triggerText = "New F
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !name.trim()}>
-              {isSubmitting ? 'Creating...' : 'Create Folder'}
+            <Button type="submit" disabled={!name.trim()}>
+              Create Folder
             </Button>
           </DialogFooter>
         </form>

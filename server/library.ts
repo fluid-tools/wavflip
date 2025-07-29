@@ -1,4 +1,4 @@
-'use server'
+import 'server-only'
 
 import { db } from '@/db'
 import { folder, project, track, trackVersion } from '@/db/schema/library'
@@ -13,7 +13,10 @@ import type {
   ProjectWithTracks
 } from '@/db/schema/library'
 
+// ================================
 // FOLDER OPERATIONS
+// ================================
+
 export async function getUserFolders(userId: string): Promise<FolderWithProjects[]> {
   // Only get root-level folders (parentFolderId is null)
   const folders = await db
@@ -227,7 +230,17 @@ export async function renameFolder(folderId: string, name: string, userId: strin
     .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
 }
 
+export async function moveFolder(folderId: string, parentFolderId: string | null, userId: string): Promise<void> {
+  await db
+    .update(folder)
+    .set({ parentFolderId, updatedAt: new Date() })
+    .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
+}
+
+// ================================
 // PROJECT OPERATIONS  
+// ================================
+
 export async function getVaultProjects(userId: string): Promise<ProjectWithTracks[]> {
   const projects = await db
     .select({
@@ -312,13 +325,6 @@ export async function renameProject(projectId: string, name: string, userId: str
     .where(and(eq(project.id, projectId), eq(project.userId, userId)))
 }
 
-export async function moveFolder(folderId: string, parentFolderId: string | null, userId: string): Promise<void> {
-  await db
-    .update(folder)
-    .set({ parentFolderId, updatedAt: new Date() })
-    .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
-}
-
 export async function moveProject(projectId: string, folderId: string | null, userId: string): Promise<void> {
   await db
     .update(project)
@@ -326,7 +332,10 @@ export async function moveProject(projectId: string, folderId: string | null, us
     .where(and(eq(project.id, projectId), eq(project.userId, userId)))
 }
 
+// ================================
 // TRACK OPERATIONS
+// ================================
+
 export async function createTrack(data: Omit<NewTrack, 'id' | 'createdAt' | 'updatedAt'>): Promise<Track> {
   let trackName = data.name.trim()
   
@@ -386,7 +395,10 @@ export async function moveTrack(trackId: string, projectId: string, userId: stri
     .where(and(eq(track.id, trackId), eq(track.userId, userId)))
 }
 
+// ================================
 // TRACK VERSION OPERATIONS
+// ================================
+
 export async function createTrackVersion(data: Omit<NewTrackVersion, 'id' | 'version' | 'createdAt'>): Promise<TrackVersion> {
   // Get the next version number for this track
   const existingVersions = await db
@@ -424,7 +436,10 @@ export async function setActiveVersion(trackId: string, versionId: string, userI
     .where(and(eq(track.id, trackId), eq(track.userId, userId)))
 }
 
+// ================================
 // LIBRARY STATS
+// ================================
+
 export async function getLibraryStats(userId: string) {
   const folders = await db
     .select()
@@ -458,4 +473,73 @@ export async function getLibraryStats(userId: string) {
     totalSize,
     totalDuration,
   }
+}
+
+// ================================
+// UTILITY FUNCTIONS
+// ================================
+
+export async function handleDuplicateFolderName(
+  name: string, 
+  parentFolderId: string | null, 
+  userId: string
+): Promise<string> {
+  let existingFolders: Array<{ name: string }>
+  
+  if (parentFolderId) {
+    const parentFolder = await getFolderWithContents(parentFolderId, userId)
+    existingFolders = parentFolder?.subFolders || []
+  } else {
+    existingFolders = await getUserFolders(userId)
+  }
+  
+  const existingNames = new Set(existingFolders.map((f: { name: string }) => f.name))
+  
+  let folderName = name.trim()
+  if (existingNames.has(folderName)) {
+    let counter = 1
+    let newName = `${folderName} (${counter})`
+    
+    while (existingNames.has(newName)) {
+      counter++
+      newName = `${folderName} (${counter})`
+    }
+    
+    folderName = newName
+  }
+  
+  return folderName
+}
+
+export async function handleDuplicateProjectName(
+  name: string,
+  folderId: string | null,
+  userId: string
+): Promise<string> {
+  let existingProjects: Array<{ name: string }>
+  
+  if (folderId) {
+    const folders = await getUserFolders(userId)
+    const folder = folders.find((f: { id: string }) => f.id === folderId)
+    existingProjects = folder?.projects || []
+  } else {
+    existingProjects = await getVaultProjects(userId)
+  }
+  
+  const existingNames = new Set(existingProjects.map((p: { name: string }) => p.name))
+  
+  let projectName = name.trim()
+  if (existingNames.has(projectName)) {
+    let counter = 1
+    let newName = `${projectName} (${counter})`
+    
+    while (existingNames.has(newName)) {
+      counter++
+      newName = `${projectName} (${counter})`
+    }
+    
+    projectName = newName
+  }
+  
+  return projectName
 } 

@@ -1,8 +1,8 @@
 "use client"
 
 import { usePathname } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { useLibraryCache } from '@/hooks/use-library-cache'
+import React from 'react'
+import { useLibrarySidebar } from '@/hooks/use-library'
 import Link from "next/link"
 import { 
   FolderOpen, 
@@ -17,6 +17,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarGroupAction,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -25,7 +26,14 @@ import {
   SidebarMenuSubButton,
   SidebarMenuAction,
 } from "@/components/ui/sidebar"
-import { SidebarCreateActions } from './sidebar-create-actions'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { CreateFolderDialog } from './folders/create-dialog'
+import { CreateProjectDialog } from './projects/create-dialog'
 
 interface FolderWithProjects {
   id: string
@@ -39,21 +47,14 @@ interface FolderWithProjects {
   subfolders?: FolderWithProjects[]
 }
 
+
+
 export function LibrarySidebarNavigation() {
   const pathname = usePathname()
-  const { invalidateSidebar } = useLibraryCache()
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
-  // Use consistent query keys with the main library
-  const { data: libraryData, isLoading } = useQuery({
-    queryKey: ['library-sidebar'],
-    queryFn: async () => {
-      const response = await fetch('/api/library/sidebar')
-      if (!response.ok) throw new Error('Failed to fetch library data')
-      return response.json()
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  // Use the new library hooks
+  const { data: libraryData, isLoading } = useLibrarySidebar()
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders)
@@ -70,6 +71,8 @@ export function LibrarySidebarNavigation() {
     const isActive = pathname === `/library/folders/${folder.id}`
     const hasSubItems = (folder.subfolders && folder.subfolders.length > 0) || folder.projects.length > 0
 
+    const shouldShowSubItems = hasSubItems
+
     return (
       <div key={folder.id}>
         <SidebarMenuItem>
@@ -80,7 +83,7 @@ export function LibrarySidebarNavigation() {
             </Link>
           </SidebarMenuButton>
           
-          {hasSubItems && (
+          {shouldShowSubItems && (
             <SidebarMenuAction onClick={() => toggleFolder(folder.id)}>
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
@@ -91,9 +94,9 @@ export function LibrarySidebarNavigation() {
           )}
         </SidebarMenuItem>
         
-        {hasSubItems && isExpanded && (
+        {shouldShowSubItems && isExpanded && (
           <SidebarMenuSub>
-            {/* Render projects in this folder */}
+            {/* Render real projects in this folder */}
             {folder.projects.map((project) => (
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuSubButton 
@@ -111,7 +114,7 @@ export function LibrarySidebarNavigation() {
               </SidebarMenuSubItem>
             ))}
             
-            {/* Render subfolders - use SidebarMenuSubItem with SidebarMenuSubButton */}
+            {/* Render real subfolders */}
             {folder.subfolders?.map((subfolder) => (
               <SidebarMenuSubItem key={subfolder.id}>
                 <SidebarMenuSubButton 
@@ -172,7 +175,6 @@ export function LibrarySidebarNavigation() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
-        <SidebarCreateActions onSuccess={invalidateSidebar} />
       </SidebarGroup>
     )
   }
@@ -184,6 +186,29 @@ export function LibrarySidebarNavigation() {
       <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
         Library
       </SidebarGroupLabel>
+      
+      {/* Quick create action - proper sidebar style */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <SidebarGroupAction title="Add Folder or Project" className="group-data-[collapsible=icon]:hidden">
+            <Plus />
+            <span className="sr-only">Add Folder or Project</span>
+          </SidebarGroupAction>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start">
+          <DropdownMenuItem asChild>
+            <CreateFolderDialog 
+              triggerText="Create Folder" 
+            />
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <CreateProjectDialog 
+              triggerText="Create Project" 
+            />
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      
       <SidebarGroupContent>
         <SidebarMenu>
           {/* Root level projects */}
@@ -207,7 +232,7 @@ export function LibrarySidebarNavigation() {
           {/* Root level folders */}
           {folders.map((folder: FolderWithProjects) => renderFolder(folder))}
           
-          {/* Empty state or quick actions */}
+          {/* Empty state */}
           {folders.length === 0 && rootProjects.length === 0 && (
             <SidebarMenuItem>
               <SidebarMenuButton disabled>
@@ -218,9 +243,6 @@ export function LibrarySidebarNavigation() {
           )}
         </SidebarMenu>
       </SidebarGroupContent>
-      
-      {/* Quick create actions */}
-      <SidebarCreateActions onSuccess={invalidateSidebar} />
     </SidebarGroup>
   )
 } 
