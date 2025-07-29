@@ -8,7 +8,6 @@ import {
   Settings, 
   User, 
   LogOut,
-  Plus,
   Search,
   Mic
 } from "lucide-react"
