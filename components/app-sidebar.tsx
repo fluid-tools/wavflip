@@ -69,11 +69,6 @@ const quickActions = [
     url: "/library",
     icon: Search,
   },
-  {
-    title: "Create Project",
-    url: "/library/projects",
-    icon: Plus,
-  },
 ]
 
 export function AppSidebar() {
