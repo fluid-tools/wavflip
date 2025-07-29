@@ -9,11 +9,8 @@ import {
   User, 
   LogOut,
   Plus,
-  FolderOpen,
   Search,
-  Mic,
-  Headphones,
-  Volume2
+  Mic
 } from "lucide-react"
 
 import { useSession, signOut } from "@/lib/auth-client"
@@ -31,8 +28,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuAction,
-  SidebarMenuBadge,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 import {

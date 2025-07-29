@@ -51,7 +51,6 @@ export async function DELETE(request: NextRequest) {
     const session = await requireAuth()
     const formData = await request.formData()
     const trackId = formData.get('trackId') as string
-    const projectId = formData.get('projectId') as string
 
     if (!trackId) {
       return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
@@ -75,7 +74,6 @@ export async function PATCH(request: NextRequest) {
     const formData = await request.formData()
     const trackId = formData.get('trackId') as string
     const name = formData.get('name') as string
-    const projectId = formData.get('projectId') as string
 
     if (!trackId) {
       return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })

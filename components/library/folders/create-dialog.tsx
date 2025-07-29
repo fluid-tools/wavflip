@@ -17,11 +17,7 @@ import { Label } from '@/components/ui/label'
 import { useCreateFolderAction } from '@/hooks/use-library-action'
 import type { Folder } from '@/db/schema/library'
 
-type ActionState = {
-  success: boolean
-  error: string | null
-  folder?: Folder
-}
+
 
 interface CreateFolderDialogProps {
   parentFolderId?: string | null
@@ -33,7 +29,7 @@ export function CreateFolderDialog({ parentFolderId = null, triggerText = "New F
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   
-  const [state, formAction] = useCreateFolderAction({
+  const [, formAction] = useCreateFolderAction({
     onSuccess: () => {
       setOpen(false)
       setName('')

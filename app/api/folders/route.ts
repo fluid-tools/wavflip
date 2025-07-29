@@ -7,7 +7,7 @@ import {
   handleDuplicateFolderName 
 } from '@/server/library'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await requireAuth()
     

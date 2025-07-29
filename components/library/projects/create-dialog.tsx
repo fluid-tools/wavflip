@@ -23,17 +23,13 @@ interface CreateProjectDialogProps {
   onSuccess?: () => void
 }
 
-type ActionState = {
-  success: boolean
-  error: string | null
-  project?: Project
-}
+
 
 export function CreateProjectDialog({ folderId = null, triggerText = "New Project", onSuccess }: CreateProjectDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   
-  const [state, formAction] = useCreateProjectAction({
+  const [, formAction] = useCreateProjectAction({
     onSuccess: () => {
       setOpen(false)
       setName('')

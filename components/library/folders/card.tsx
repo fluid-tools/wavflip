@@ -47,20 +47,20 @@ export function FolderCard({
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(folder.name)
 
-  const [deleteState, deleteAction, isDeleting] = useDeleteFolderAction({
+  const [, deleteAction, isDeleting] = useDeleteFolderAction({
     onSuccess: () => {
       setShowDeleteDialog(false)
     }
   })
 
-  const [renameState, renameAction, isRenaming] = useRenameFolderAction({
+  const [, renameAction, isRenaming] = useRenameFolderAction({
     onSuccess: () => {
       setShowRenameDialog(false)
       setNewName(folder.name)
     }
   })
 
-  const [moveState, moveAction, isMoving] = useMoveFolderAction({
+  const [, moveAction, isMoving] = useMoveFolderAction({
     onSuccess: () => {
       setShowMoveDialog(false)
       setSelectedDestinationId(null)

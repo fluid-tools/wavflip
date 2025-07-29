@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/hooks/use-library-action'
-import type { Project, ProjectWithTracks, FolderWithProjects } from '@/db/schema/library'
+import type { Project, ProjectWithTracks } from '@/db/schema/library'
 import Link from 'next/link'
 import { DraggableWrapper } from '../draggable-wrapper'
 import { DroppableWrapper } from '../droppable-wrapper'
@@ -50,20 +50,20 @@ export function ProjectCard({
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
 
-  const [deleteState, deleteAction, isDeleting] = useDeleteProjectAction({
+  const [, deleteAction, isDeleting] = useDeleteProjectAction({
     onSuccess: () => {
       setShowDeleteDialog(false)
     }
   })
 
-  const [renameState, renameAction, isRenaming] = useRenameProjectAction({
+  const [, renameAction, isRenaming] = useRenameProjectAction({
     onSuccess: () => {
       setShowRenameDialog(false)
       setNewName(project.name)
     }
   })
 
-  const [moveState, moveAction, isMoving] = useMoveProjectAction({
+  const [, moveAction, isMoving] = useMoveProjectAction({
     onSuccess: () => {
       setShowMoveDialog(false)
       setSelectedDestinationId(folderId ?? null)
