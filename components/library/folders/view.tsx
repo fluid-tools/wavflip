@@ -15,14 +15,13 @@ import { moveFolderAction, moveProjectAction, createFolderFromProjectsAction } f
 
 interface FolderViewProps {
   folder: FolderWithProjects
-  allFolders?: FolderWithProjects[]
 }
 
 type FolderItem = 
   | { type: 'folder'; data: NonNullable<FolderWithProjects['subFolders']>[number] }
   | { type: 'project'; data: FolderWithProjects['projects'][number] }
 
-export function FolderView({ folder, allFolders = [] }: FolderViewProps) {
+export function FolderView({ folder }: FolderViewProps) {
   const [, moveFolderActionState] = useActionState(moveFolderAction, {
     success: false,
     error: null,
@@ -96,7 +95,6 @@ export function FolderView({ folder, allFolders = [] }: FolderViewProps) {
           key={item.data.id} 
           folder={{ ...item.data, projects: [] }} 
           showProjectCount={false}
-          allFolders={allFolders}
           parentFolderId={folder.id}
           isDragAndDropEnabled={true}
         />
@@ -108,7 +106,6 @@ export function FolderView({ folder, allFolders = [] }: FolderViewProps) {
           project={item.data} 
           folderId={folder.id}
           trackCount={item.data.trackCount}
-          allFolders={allFolders}
           isDragAndDropEnabled={true}
         />
       )

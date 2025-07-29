@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
-import { getFolderWithContents, getAllUserFolders } from '@/server/library'
+import { getFolderWithContents } from '@/server/library'
 import { FolderView } from '@/components/library/folders/view'
 
 interface FolderPageProps {
@@ -20,15 +20,12 @@ export default async function FolderPage({ params }: FolderPageProps) {
     notFound()
   }
 
-  // Fetch folder data and all folders for move functionality
-  const [folder, allFolders] = await Promise.all([
-    getFolderWithContents(folderId, session.user.id),
-    getAllUserFolders(session.user.id)
-  ])
+  // Fetch folder data
+  const folder = await getFolderWithContents(folderId, session.user.id)
 
   if (!folder) {
     notFound()
   }
 
-  return <FolderView folder={folder} allFolders={allFolders} />
+  return <FolderView folder={folder} />
 } 

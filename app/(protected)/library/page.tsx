@@ -1,5 +1,5 @@
 import { requireAuth } from '@/lib/auth-server'
-import { getUserFolders, getAllUserFolders, getVaultProjects, getLibraryStats } from '@/server/library'
+import { getUserFolders, getVaultProjects, getLibraryStats } from '@/server/library'
 import { VaultView } from '@/components/library/vault/view'
 
 export default async function LibraryNewPage() {
