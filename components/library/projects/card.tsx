@@ -33,7 +33,6 @@ interface ProjectCardProps {
   project: Project | ProjectWithTracks
   folderId?: string | null
   trackCount?: number
-  allFolders?: FolderWithProjects[]
   isDragAndDropEnabled?: boolean
 }
 
@@ -41,7 +40,6 @@ export function ProjectCard({
   project, 
   folderId, 
   trackCount, 
-  allFolders = [], 
   isDragAndDropEnabled = false 
 }: ProjectCardProps) {
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
@@ -265,7 +263,6 @@ export function ProjectCard({
             </DialogHeader>
             <div className="py-4">
               <FolderPicker
-                folders={allFolders}
                 selectedFolderId={selectedDestinationId}
                 onFolderSelect={setSelectedDestinationId}
                 allowVaultSelection={true}

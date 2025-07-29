@@ -11,7 +11,7 @@ import {
   handleDuplicateProjectName
 } from '@/server/library'
 import { requireAuth } from '@/lib/auth-server'
-import type { Folder, Project, Track } from '@/db/schema/library'
+import type { Folder, Project } from '@/db/schema/library'
 
 type FolderActionState = {
   success: boolean

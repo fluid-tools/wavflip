@@ -35,7 +35,7 @@ import {
 import { CreateFolderDialog } from './folders/create-dialog'
 import { CreateProjectDialog } from './projects/create-dialog'
 
-interface FolderWithProjects {
+interface SidebarFolder {
   id: string
   name: string
   parentFolderId: string | null
@@ -44,7 +44,9 @@ interface FolderWithProjects {
     name: string
     trackCount: number
   }>
-  subfolders?: FolderWithProjects[]
+  subfolders: SidebarFolder[]
+  projectCount: number
+  subFolderCount: number
 }
 
 
@@ -66,7 +68,7 @@ export function LibrarySidebarNavigation() {
     setExpandedFolders(newExpanded)
   }
 
-  const renderFolder = (folder: FolderWithProjects, level = 0) => {
+  const renderFolder = (folder: SidebarFolder, level = 0) => {
     const isExpanded = expandedFolders.has(folder.id)
     const isActive = pathname === `/library/folders/${folder.id}`
     const hasSubItems = (folder.subfolders && folder.subfolders.length > 0) || folder.projects.length > 0
@@ -114,29 +116,10 @@ export function LibrarySidebarNavigation() {
               </SidebarMenuSubItem>
             ))}
             
-            {/* Render real subfolders */}
-            {folder.subfolders?.map((subfolder) => (
-              <SidebarMenuSubItem key={subfolder.id}>
-                <SidebarMenuSubButton 
-                  asChild 
-                  isActive={pathname === `/library/folders/${subfolder.id}`}
-                >
-                  <Link href={`/library/folders/${subfolder.id}`}>
-                    <Folder className="h-4 w-4" />
-                    <span>{subfolder.name}</span>
-                  </Link>
-                </SidebarMenuSubButton>
-                {subfolder.subfolders && subfolder.subfolders.length > 0 && (
-                  <SidebarMenuAction onClick={() => toggleFolder(subfolder.id)}>
-                    {expandedFolders.has(subfolder.id) ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </SidebarMenuAction>
-                )}
-              </SidebarMenuSubItem>
-            ))}
+            {/* Render real subfolders recursively */}
+            {folder.subfolders.map((subfolder) => 
+              renderFolder(subfolder, level + 1)
+            )}
           </SidebarMenuSub>
         )}
       </div>
@@ -230,7 +213,7 @@ export function LibrarySidebarNavigation() {
           ))}
           
           {/* Root level folders */}
-          {folders.map((folder: FolderWithProjects) => renderFolder(folder))}
+          {folders.map((folder: SidebarFolder) => renderFolder(folder))}
           
           {/* Empty state */}
           {folders.length === 0 && rootProjects.length === 0 && (

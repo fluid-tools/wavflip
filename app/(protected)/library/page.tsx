@@ -6,9 +6,8 @@ export default async function LibraryNewPage() {
   const session = await requireAuth()
   
   // Fetch all data server-side
-  const [folders, allFolders, projects, stats] = await Promise.all([
+  const [folders, projects, stats] = await Promise.all([
     getUserFolders(session.user.id), // For display (root level only)
-    getAllUserFolders(session.user.id), // For move dialogs (all folders)
     getVaultProjects(session.user.id),
     getLibraryStats(session.user.id)
   ])
@@ -19,7 +18,6 @@ export default async function LibraryNewPage() {
         initialFolders={folders}
         initialProjects={projects}
         initialStats={stats}
-        allFolders={allFolders}
       />
     </div>
   )

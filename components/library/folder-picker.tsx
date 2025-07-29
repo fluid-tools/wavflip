@@ -1,19 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Folder, ChevronRight, ChevronDown, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import type { FolderWithProjects } from '@/db/schema/library'
 
-interface FolderNode extends FolderWithProjects {
-  isExpanded?: boolean
+interface HierarchicalFolder {
+  id: string
+  name: string
+  parentFolderId: string | null
+  projects: Array<{
+    id: string
+    name: string
+    trackCount: number
+  }>
+  subfolders: HierarchicalFolder[]
+  projectCount: number
+  subFolderCount: number
   level: number
 }
 
+interface FolderNode extends HierarchicalFolder {
+  isExpanded?: boolean
+}
+
 interface FolderPickerProps {
-  folders: FolderWithProjects[]
   selectedFolderId: string | null
   onFolderSelect: (folderId: string | null) => void
   excludeFolderId?: string // Folder to exclude from selection (e.g., the item being moved)
@@ -22,7 +35,6 @@ interface FolderPickerProps {
 }
 
 export function FolderPicker({
-  folders,
   selectedFolderId,
   onFolderSelect,
   excludeFolderId,
@@ -30,37 +42,46 @@ export function FolderPicker({
   className,
 }: FolderPickerProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-  const [folderTree, setFolderTree] = useState<FolderNode[]>([])
 
-  // Build hierarchical folder structure with levels
-  useEffect(() => {
-    const buildTree = (parentId: string | null = null, level: number = 0): FolderNode[] => {
-      return folders
-        .filter(folder => folder.parentFolderId === parentId && folder.id !== excludeFolderId)
-        .map(folder => ({
+  // Fetch hierarchical folders from server
+  const { data: foldersData, isLoading } = useQuery({
+    queryKey: ['hierarchical-folders', excludeFolderId],
+    queryFn: async () => {
+      const url = new URL('/api/library/hierarchical-folders', window.location.origin)
+      if (excludeFolderId) {
+        url.searchParams.set('exclude', excludeFolderId)
+      }
+      const response = await fetch(url.toString())
+      if (!response.ok) throw new Error('Failed to fetch folders')
+      return response.json()
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  const hierarchicalFolders = foldersData?.folders || []
+
+  // Flatten hierarchical folders into a displayable list
+  const flattenFolders = (folders: HierarchicalFolder[]): FolderNode[] => {
+    const result: FolderNode[] = []
+    
+    const traverse = (folderList: HierarchicalFolder[]) => {
+      for (const folder of folderList) {
+        result.push({
           ...folder,
-          level,
-          isExpanded: expandedFolders.has(folder.id),
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name))
-    }
-
-    const getAllFolders = (parentId: string | null = null, level: number = 0): FolderNode[] => {
-      const currentLevel = buildTree(parentId, level)
-      const result: FolderNode[] = []
-
-      for (const folder of currentLevel) {
-        result.push(folder)
-        if (expandedFolders.has(folder.id)) {
-          result.push(...getAllFolders(folder.id, level + 1))
+          isExpanded: expandedFolders.has(folder.id)
+        })
+        
+        if (expandedFolders.has(folder.id) && folder.subfolders.length > 0) {
+          traverse(folder.subfolders)
         }
       }
-
-      return result
     }
+    
+    traverse(folders)
+    return result
+  }
 
-    setFolderTree(getAllFolders())
-  }, [folders, expandedFolders, excludeFolderId])
+  const folderTree = flattenFolders(hierarchicalFolders)
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders)
@@ -72,8 +93,8 @@ export function FolderPicker({
     setExpandedFolders(newExpanded)
   }
 
-  const hasSubfolders = (folderId: string) => {
-    return folders.some(folder => folder.parentFolderId === folderId && folder.id !== excludeFolderId)
+  const hasSubfolders = (folder: HierarchicalFolder) => {
+    return folder.subfolders.length > 0
   }
 
   return (
@@ -95,7 +116,12 @@ export function FolderPicker({
       {/* Folder tree */}
       <ScrollArea className="h-64 border rounded-md">
         <div className="p-2 space-y-1">
-          {folderTree.map((folder) => (
+          {isLoading ? (
+            <div className="text-center text-muted-foreground py-8">
+              Loading folders...
+            </div>
+          ) : (
+            folderTree.map((folder) => (
             <div key={folder.id} className="space-y-1">
               <div className="flex items-center w-full">
                 <div 
@@ -103,7 +129,7 @@ export function FolderPicker({
                   style={{ paddingLeft: `${folder.level * 16}px` }}
                 >
                   {/* Expand/collapse button for folders with subfolders */}
-                  {hasSubfolders(folder.id) ? (
+                  {hasSubfolders(folder) ? (
                     <button
                       type="button"
                       className="p-1 h-6 w-6 hover:bg-muted rounded flex items-center justify-center flex-shrink-0"
@@ -142,9 +168,10 @@ export function FolderPicker({
                 </Button>
               </div>
             </div>
-          ))}
+            ))
+          )}
           
-          {folderTree.length === 0 && (
+          {!isLoading && folderTree.length === 0 && (
             <div className="text-center text-muted-foreground py-8">
               No folders available
             </div>

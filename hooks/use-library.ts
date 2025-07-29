@@ -23,18 +23,22 @@ export const libraryKeys = {
 // SIDEBAR HOOK
 // ================================
 
-interface LibrarySidebarData {
-  folders: Array<{
+interface SidebarFolder {
+  id: string
+  name: string
+  parentFolderId: string | null
+  projects: Array<{
     id: string
     name: string
-    parentFolderId: string | null
-    projects: Array<{
-      id: string
-      name: string
-      trackCount: number
-    }>
-    subfolders: any[]
+    trackCount: number
   }>
+  subfolders: SidebarFolder[]
+  projectCount: number
+  subFolderCount: number
+}
+
+interface LibrarySidebarData {
+  folders: SidebarFolder[]
   rootProjects: Array<{
     id: string
     name: string

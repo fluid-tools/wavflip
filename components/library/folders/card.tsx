@@ -31,7 +31,6 @@ import { FolderPicker } from '../folder-picker'
 interface FolderCardProps {
   folder: FolderWithProjects
   showProjectCount?: boolean
-  allFolders?: FolderWithProjects[]
   parentFolderId?: string | null
   isDragAndDropEnabled?: boolean
 }
@@ -39,7 +38,6 @@ interface FolderCardProps {
 export function FolderCard({ 
   folder, 
   showProjectCount = true, 
-  allFolders = [], 
   parentFolderId = null,
   isDragAndDropEnabled = false 
 }: FolderCardProps) {
@@ -272,7 +270,6 @@ export function FolderCard({
             </DialogHeader>
             <div className="py-4">
               <FolderPicker
-                folders={allFolders}
                 selectedFolderId={selectedDestinationId}
                 onFolderSelect={setSelectedDestinationId}
                 excludeFolderId={folder.id}

@@ -2,7 +2,7 @@ import 'server-only'
 
 import { db } from '@/db'
 import { folder, project, track, trackVersion } from '@/db/schema/library'
-import { eq, and, isNull, desc, count } from 'drizzle-orm'
+import { eq, and, isNull, desc, count, not } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { 
   Folder, NewFolder, 
@@ -100,6 +100,208 @@ export async function getAllUserFolders(userId: string): Promise<FolderWithProje
   )
 
   return foldersWithProjects
+}
+
+interface SidebarFolder {
+  id: string
+  name: string
+  parentFolderId: string | null
+  projects: Array<{
+    id: string
+    name: string
+    trackCount: number
+  }>
+  subfolders: SidebarFolder[]
+  projectCount: number
+  subFolderCount: number
+}
+
+interface SidebarData {
+  folders: SidebarFolder[]
+  rootProjects: Array<{
+    id: string
+    name: string
+    trackCount: number
+  }>
+}
+
+export async function getSidebarData(userId: string): Promise<SidebarData> {
+  // Get all folders with their projects and track counts
+  const allFolders = await db
+    .select()
+    .from(folder)
+    .where(eq(folder.userId, userId))
+    .orderBy(folder.order, folder.createdAt)
+
+  // Get all projects with track counts for each folder
+  const folderProjects = await Promise.all(
+    allFolders.map(async (f) => {
+      const projects = await db
+        .select({
+          id: project.id,
+          name: project.name,
+          trackCount: count(track.id)
+        })
+        .from(project)
+        .leftJoin(track, eq(track.projectId, project.id))
+        .where(eq(project.folderId, f.id))
+        .groupBy(project.id)
+        .orderBy(project.order, project.createdAt)
+      
+      return { folderId: f.id, projects }
+    })
+  )
+
+  // Create a map for quick project lookup
+  const projectsByFolder = new Map(
+    folderProjects.map(fp => [fp.folderId, fp.projects])
+  )
+
+  // Build hierarchical structure
+  const buildHierarchy = (parentId: string | null = null): SidebarFolder[] => {
+    return allFolders
+      .filter(f => f.parentFolderId === parentId)
+      .map(f => {
+        const projects = projectsByFolder.get(f.id) || []
+        const subfolders = buildHierarchy(f.id)
+        
+        return {
+          id: f.id,
+          name: f.name,
+          parentFolderId: f.parentFolderId,
+          projects,
+          subfolders,
+          projectCount: projects.length,
+          subFolderCount: subfolders.length
+        }
+      })
+  }
+
+  // Get root projects (not in any folder)
+  const rootProjects = await db
+    .select({
+      id: project.id,
+      name: project.name,
+      trackCount: count(track.id)
+    })
+    .from(project)
+    .leftJoin(track, eq(track.projectId, project.id))
+    .where(and(eq(project.userId, userId), isNull(project.folderId)))
+    .groupBy(project.id)
+    .orderBy(project.order, project.createdAt)
+
+  return {
+    folders: buildHierarchy(),
+    rootProjects
+  }
+}
+
+interface FolderPathItem {
+  id: string
+  name: string
+  parentFolderId: string | null
+}
+
+export async function getFolderPath(folderId: string, userId: string): Promise<FolderPathItem[]> {
+  const path: FolderPathItem[] = []
+  let currentFolderId: string | null = folderId
+
+  while (currentFolderId) {
+    const folderData: Folder[] = await db
+      .select()
+      .from(folder)
+      .where(and(eq(folder.id, currentFolderId), eq(folder.userId, userId)))
+      .limit(1)
+
+    if (folderData.length === 0) {
+      throw new Error('Folder not found')
+    }
+
+    const currentFolder: Folder = folderData[0]
+    path.unshift({
+      id: currentFolder.id,
+      name: currentFolder.name,
+      parentFolderId: currentFolder.parentFolderId
+    })
+
+    currentFolderId = currentFolder.parentFolderId
+  }
+
+  return path
+}
+
+interface HierarchicalFolder {
+  id: string
+  name: string
+  parentFolderId: string | null
+  projects: Array<{
+    id: string
+    name: string
+    trackCount: number
+  }>
+  subfolders: HierarchicalFolder[]
+  projectCount: number
+  subFolderCount: number
+  level: number
+}
+
+export async function getHierarchicalFolders(userId: string, excludeFolderId?: string): Promise<HierarchicalFolder[]> {
+  // Get all folders except the excluded one
+  const allFolders = await db
+    .select()
+    .from(folder)
+    .where(
+      excludeFolderId 
+        ? and(eq(folder.userId, userId), not(eq(folder.id, excludeFolderId)))
+        : eq(folder.userId, userId)
+    )
+    .orderBy(folder.order, folder.createdAt)
+
+  // Get projects for each folder
+  const folderProjects = await Promise.all(
+    allFolders.map(async (f) => {
+      const projects = await db
+        .select({
+          id: project.id,
+          name: project.name,
+          trackCount: count(track.id)
+        })
+        .from(project)
+        .leftJoin(track, eq(track.projectId, project.id))
+        .where(eq(project.folderId, f.id))
+        .groupBy(project.id)
+        .orderBy(project.order, project.createdAt)
+      
+      return { folderId: f.id, projects }
+    })
+  )
+
+  const projectsByFolder = new Map(
+    folderProjects.map(fp => [fp.folderId, fp.projects])
+  )
+
+  // Build hierarchical structure with level tracking
+  const buildHierarchy = (parentId: string | null = null, level: number = 0): HierarchicalFolder[] => {
+    return allFolders
+      .filter(f => f.parentFolderId === parentId)
+      .map(f => {
+        const projects = projectsByFolder.get(f.id) || []
+        const subfolders = buildHierarchy(f.id, level + 1)
+        
+        return {
+          id: f.id,
+          name: f.name,
+          parentFolderId: f.parentFolderId,
+          projects,
+          subfolders,
+          projectCount: projects.length,
+          subFolderCount: subfolders.length,
+          level
+        }
+      })
+  }
+
+  return buildHierarchy()
 }
 
 export async function getFolderWithContents(folderId: string, userId: string): Promise<FolderWithProjects | null> {
