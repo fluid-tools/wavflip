@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { useLibraryCache } from '@/hooks/use-library-cache'
 import Link from "next/link"
 import { 
   FolderOpen, 
@@ -24,8 +25,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuAction,
 } from "@/components/ui/sidebar"
-import { CreateFolderDialog } from './folders/create-dialog'
-import { CreateProjectDialog } from './projects/create-dialog'
+import { SidebarCreateActions } from './sidebar-create-actions'
 
 interface FolderWithProjects {
   id: string
@@ -41,11 +41,12 @@ interface FolderWithProjects {
 
 export function LibrarySidebarNavigation() {
   const pathname = usePathname()
+  const { invalidateSidebar } = useLibraryCache()
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
-  // Fetch user's folders and projects for sidebar
-  const { data: libraryData } = useQuery({
-    queryKey: ['sidebar-library-data'],
+  // Use consistent query keys with the main library
+  const { data: libraryData, isLoading } = useQuery({
+    queryKey: ['library-sidebar'],
     queryFn: async () => {
       const response = await fetch('/api/library/sidebar')
       if (!response.ok) throw new Error('Failed to fetch library data')
@@ -139,10 +140,10 @@ export function LibrarySidebarNavigation() {
     )
   }
 
-  if (!libraryData) {
+  if (isLoading) {
     return (
       <SidebarGroup>
-        <SidebarGroupLabel>Library</SidebarGroupLabel>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Library</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -153,6 +154,25 @@ export function LibrarySidebarNavigation() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
+      </SidebarGroup>
+    )
+  }
+
+  if (!libraryData) {
+    return (
+      <SidebarGroup>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Library</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton disabled>
+                <FolderOpen className="h-4 w-4" />
+                <span>No content yet</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+        <SidebarCreateActions onSuccess={invalidateSidebar} />
       </SidebarGroup>
     )
   }
@@ -198,6 +218,9 @@ export function LibrarySidebarNavigation() {
           )}
         </SidebarMenu>
       </SidebarGroupContent>
+      
+      {/* Quick create actions */}
+      <SidebarCreateActions onSuccess={invalidateSidebar} />
     </SidebarGroup>
   )
 } 

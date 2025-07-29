@@ -12,14 +12,16 @@ export async function GET(request: NextRequest) {
       getVaultProjects(session.user.id)
     ])
 
-    // Build hierarchical folder structure
+    // Build hierarchical folder structure with projects included
     const buildHierarchy = (folders: any[], parentId: string | null = null): any[] => {
       return folders
         .filter(folder => folder.parentFolderId === parentId)
         .map(folder => ({
-          ...folder,
-          subfolders: buildHierarchy(folders, folder.id),
-          projects: folder.projects || []
+          id: folder.id,
+          name: folder.name,
+          parentFolderId: folder.parentFolderId,
+          projects: folder.projects || [],
+          subfolders: buildHierarchy(folders, folder.id)
         }))
     }
 
@@ -27,7 +29,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       folders: hierarchicalFolders,
-      rootProjects
+      rootProjects: rootProjects.map(project => ({
+        id: project.id,
+        name: project.name,
+        trackCount: project.trackCount || 0
+      }))
     })
   } catch (error) {
     console.error('Failed to fetch sidebar library data:', error)

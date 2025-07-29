@@ -9,7 +9,6 @@ import {
 } from '@/lib/library-db'
 import { requireAuth } from '@/lib/auth-server'
 import type { Folder, Project, Track } from '@/db/schema/library'
-import { nanoid } from 'nanoid'
 
 type FolderActionState = {
   success: boolean
