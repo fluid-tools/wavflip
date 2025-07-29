@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, startTransition } from 'react'
-import { useActionState } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/library'
@@ -13,7 +12,8 @@ import { ProjectCard } from '../projects/card'
 import { Virtuoso } from 'react-virtuoso'
 import { LibraryDndProvider } from '../dnd-context'
 import { DroppableWrapper } from '../droppable-wrapper'
-import { moveFolderAction, moveProjectAction, createFolderFromProjectsAction } from '@/actions/library'
+import { createFolderFromProjectsAction } from '@/actions/library'
+import { useMoveFolderAction, useMoveProjectAction } from '@/hooks/use-library-action'
 
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
@@ -26,15 +26,8 @@ type LibraryItem =
   | { type: 'project'; data: ProjectWithTracks }
 
 export function VaultView({ initialFolders, initialProjects, initialStats }: VaultViewProps) {
-  const [, moveFolderActionState] = useActionState(moveFolderAction, {
-    success: false,
-    error: null,
-  })
-
-  const [, moveProjectActionState] = useActionState(moveProjectAction, {
-    success: false,
-    error: null,
-  })
+  const [, moveFolderAction] = useMoveFolderAction()
+  const [, moveProjectAction] = useMoveProjectAction()
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -47,7 +40,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
     formData.append('sourceParentFolderId', sourceParentFolderId || '')
     
     startTransition(() => {
-      moveFolderActionState(formData)
+      moveFolderAction(formData)
     })
   }
 
@@ -62,7 +55,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
     formData.append('sourceFolderId', sourceFolderId || '')
     
     startTransition(() => {
-      moveProjectActionState(formData)
+      moveProjectAction(formData)
     })
   }
 

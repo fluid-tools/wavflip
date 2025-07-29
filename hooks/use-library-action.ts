@@ -127,6 +127,7 @@ export function useRenameFolderAction(options: Omit<UseLibraryActionOptions, 'su
     { success: false, error: null },
     {
       successMessage: 'Folder renamed successfully',
+      invalidationStrategy: 'all',
       ...options
     }
   )
@@ -140,6 +141,7 @@ export function useRenameProjectAction(options: Omit<UseLibraryActionOptions, 's
     { success: false, error: null },
     {
       successMessage: 'Project renamed successfully',
+      invalidationStrategy: 'all',
       ...options
     }
   )

@@ -44,9 +44,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import SettingsDialog from "@/components/navbar/settings-dialog"
 import { LibrarySidebarNavigation } from "@/components/library/sidebar-navigation"
+import Image from 'next/image'
 
 // Main navigation items
 const mainNavItems = [
@@ -109,7 +109,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Volume2 className="h-4 w-4" />
+           <Image src="/logo.svg" alt="WAVFLIP" width={32} height={32} unoptimized />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground">WAVFLIP</span>
