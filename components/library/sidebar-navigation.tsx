@@ -10,7 +10,8 @@ import {
   Music, 
   ChevronDown, 
   ChevronRight,
-  Plus
+  Plus,
+  FolderPlus
 } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -54,6 +55,8 @@ interface SidebarFolder {
 export function LibrarySidebarNavigation() {
   const pathname = usePathname()
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
+  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
   // Use the new library hooks
   const { data: libraryData, isLoading } = useLibrarySidebar()
@@ -179,15 +182,13 @@ export function LibrarySidebarNavigation() {
           </SidebarGroupAction>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="right" align="start">
-          <DropdownMenuItem asChild>
-            <CreateFolderDialog 
-              triggerText="Create Folder" 
-            />
+          <DropdownMenuItem onClick={() => setShowCreateFolderDialog(true)}>
+            <FolderPlus className="h-4 w-4 mr-2" />
+            Create Folder
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <CreateProjectDialog 
-              triggerText="Create Project" 
-            />
+          <DropdownMenuItem onClick={() => setShowCreateProjectDialog(true)}>
+            <Music className="h-4 w-4 mr-2" />
+            Create Project
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -226,6 +227,18 @@ export function LibrarySidebarNavigation() {
           )}
         </SidebarMenu>
       </SidebarGroupContent>
+
+      {/* Dialogs triggered by dropdown */}
+      <CreateFolderDialog 
+        open={showCreateFolderDialog}
+        onOpenChange={setShowCreateFolderDialog}
+        onSuccess={() => setShowCreateFolderDialog(false)}
+      />
+      <CreateProjectDialog 
+        open={showCreateProjectDialog}
+        onOpenChange={setShowCreateProjectDialog}
+        onSuccess={() => setShowCreateProjectDialog(false)}
+      />
     </SidebarGroup>
   )
 } 

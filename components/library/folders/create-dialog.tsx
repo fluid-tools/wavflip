@@ -20,23 +20,29 @@ interface CreateFolderDialogProps {
   parentFolderId?: string | null
   triggerText?: string
   onSuccess?: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function CreateFolderDialog({ parentFolderId = null, triggerText = "New Folder", onSuccess }: CreateFolderDialogProps) {
-  const [open, setOpen] = useState(false)
+export function CreateFolderDialog({ 
+  parentFolderId = null, 
+  triggerText = "New Folder", 
+  onSuccess,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange
+}: CreateFolderDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const [name, setName] = useState('')
+  
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen = controlledOnOpenChange || setInternalOpen
   
   const [, formAction] = useCreateFolderAction({
     onSuccess: () => {
       setOpen(false)
       setName('')
       onSuccess?.()
-    },
-    specificInvalidations: () => {
-      // Additional specific invalidations if needed
-      if (parentFolderId) {
-        // The hook already handles sidebar invalidation
-      }
     }
   })
 
@@ -51,12 +57,15 @@ export function CreateFolderDialog({ parentFolderId = null, triggerText = "New F
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          {triggerText}
-        </Button>
-      </DialogTrigger>
+      {/* Only show trigger when not controlled (used as standalone) */}
+      {controlledOpen === undefined && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            {triggerText}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px]">
         <form action={handleSubmit}>
           <DialogHeader>
