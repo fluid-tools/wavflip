@@ -14,6 +14,7 @@ import { TracksTable } from '../tracks/table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
 import { useProject } from '@/hooks/use-project'
+import { useSession } from '@/lib/auth-client'
 
 interface ProjectViewProps {
   projectId: string
@@ -22,6 +23,7 @@ interface ProjectViewProps {
 }
 
 export function ProjectView({ projectId, initialProject, availableProjects = [] }: ProjectViewProps) {
+  const { data: session } = useSession()
   const { project: queryProject, uploadTracks, isUploading } = useProject({ 
     projectId, 
     initialData: initialProject 
@@ -156,7 +158,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
               <p className="text-sm font-medium text-muted-foreground">PROJECT</p>
               <h1 className="text-4xl font-bold">{project.name}</h1>
               <div className="flex items-center gap-2 text-muted-foreground">
-                <span>arth</span>
+                <span>{session?.user?.name || session?.user?.email || 'Unknown'}</span>
                 <span>•</span>
                 <span>{project.tracks?.length || 0} tracks</span>
                 <span>•</span>
