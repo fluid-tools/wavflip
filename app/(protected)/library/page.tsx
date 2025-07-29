@@ -1,15 +1,16 @@
 import { requireAuth } from '@/lib/auth-server'
-import { getUserFolders, getVaultProjects, getLibraryStats } from '@/server/library'
+import { getLibraryData } from '@/server/library/data'
+import { getUserFolders, getVaultProjects } from '@/server/library'
 import { VaultView } from '@/components/library/vault/view'
 
 export default async function LibraryNewPage() {
   const session = await requireAuth()
   
-  // Fetch all data server-side
-  const [folders, projects, stats] = await Promise.all([
-    getUserFolders(session.user.id), // For display (root level only)
-    getVaultProjects(session.user.id),
-    getLibraryStats(session.user.id)
+  // Fetch data using unified approach
+  const [libraryData, folders, projects] = await Promise.all([
+    getLibraryData(session.user.id, { includeStats: true, includeHierarchy: false }),
+    getUserFolders(session.user.id), // For VaultView format
+    getVaultProjects(session.user.id) // For VaultView format
   ])
 
   return (
@@ -17,7 +18,7 @@ export default async function LibraryNewPage() {
       <VaultView 
         initialFolders={folders}
         initialProjects={projects}
-        initialStats={stats}
+        initialStats={libraryData.stats!}
       />
     </div>
   )

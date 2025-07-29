@@ -5,6 +5,7 @@ import { useActionState } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/library'
+import type { LibraryStats } from '@/server/library'
 import { CreateFolderDialog } from '../folders/create-dialog'
 import { CreateProjectDialog } from '../projects/create-dialog'
 import { FolderCard } from '../folders/card'
@@ -13,15 +14,6 @@ import { Virtuoso } from 'react-virtuoso'
 import { LibraryDndProvider } from '../dnd-context'
 import { DroppableWrapper } from '../droppable-wrapper'
 import { moveFolderAction, moveProjectAction, createFolderFromProjectsAction } from '@/actions/library'
-
-interface LibraryStats {
-  totalFolders: number
-  totalProjects: number
-  totalTracks: number
-  totalVersions: number
-  totalSize: number
-  totalDuration: number
-}
 
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]

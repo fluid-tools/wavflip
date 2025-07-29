@@ -116,9 +116,10 @@ export function useVaultProjects() {
   return useQuery({
     queryKey: libraryKeys.vaultProjects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
-      const response = await fetch('/api/library/vault-projects')
-      if (!response.ok) throw new Error('Failed to fetch vault projects')
-      return response.json()
+      const response = await fetch('/api/library/sidebar')
+      if (!response.ok) throw new Error('Failed to fetch library data')
+      const data = await response.json()
+      return data.rootProjects || []
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -152,9 +153,10 @@ export function useLibraryStats() {
   return useQuery({
     queryKey: libraryKeys.stats(),
     queryFn: async () => {
-      const response = await fetch('/api/library/stats')
+      const response = await fetch('/api/library/sidebar?stats=true')
       if (!response.ok) throw new Error('Failed to fetch library stats')
-      return response.json()
+      const data = await response.json()
+      return data.stats
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,

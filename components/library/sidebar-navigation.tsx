@@ -195,7 +195,7 @@ export function LibrarySidebarNavigation() {
       <SidebarGroupContent>
         <SidebarMenu>
           {/* Root level projects */}
-          {rootProjects.map((project: any) => (
+          {rootProjects.map((project) => (
             <SidebarMenuItem key={project.id}>
               <SidebarMenuButton 
                 asChild 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getFolderPath } from '@/server/library'
+import { getLibraryData } from '@/server/library/data'
 
 export async function GET(
   request: NextRequest,
@@ -14,8 +14,13 @@ export async function GET(
       return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 })
     }
 
-    const path = await getFolderPath(folderId, session.user.id)
-    return NextResponse.json({ path })
+    const data = await getLibraryData(session.user.id, {
+      includeHierarchy: false,
+      includePath: true,
+      specificFolderId: folderId
+    })
+    
+    return NextResponse.json({ path: data.path })
   } catch (error) {
     console.error('Failed to fetch folder path:', error)
     return NextResponse.json(
