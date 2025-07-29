@@ -23,8 +23,8 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
 
   // Parse the current route for library breadcrumbs
   const isRoot = pathname === '/library'
-  const isFolder = pathname.startsWith('/library/folders/')
-  const isProject = pathname.startsWith('/library/projects/')
+  const isFolder = pathname.startsWith('/library/folders/') && pathname.split('/').length >= 4
+  const isProject = pathname.startsWith('/library/projects/') && pathname.split('/').length >= 4
   
   // Extract IDs from pathname
   const folderId = isFolder ? pathname.split('/')[3] : null
@@ -36,7 +36,10 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
     queryFn: async () => {
       if (!folderId) return null
       const response = await fetch(`/api/folders/${folderId}/path`)
-      if (!response.ok) throw new Error('Failed to fetch folder path')
+      if (!response.ok) {
+        console.error('Failed to fetch folder path:', response.status, response.statusText)
+        throw new Error('Failed to fetch folder path')
+      }
       return response.json()
     },
     enabled: !!folderId,
@@ -45,11 +48,14 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
 
   // Fetch project data for breadcrumbs
   const { data: projectData } = useQuery({
-    queryKey: ['project-name', projectId],
+    queryKey: ['project-data', projectId],
     queryFn: async () => {
       if (!projectId) return null
       const response = await fetch(`/api/projects/${projectId}`)
-      if (!response.ok) throw new Error('Failed to fetch project')
+      if (!response.ok) {
+        console.error('Failed to fetch project:', response.status, response.statusText)
+        throw new Error('Failed to fetch project')
+      }
       return response.json()
     },
     enabled: !!projectId,
@@ -59,11 +65,14 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
   // Fetch parent folder data for project breadcrumbs
   const parentFolderId = projectData?.folderId
   const { data: parentFolderData } = useQuery({
-    queryKey: ['folder-name', parentFolderId],
+    queryKey: ['folder-data', parentFolderId],
     queryFn: async () => {
       if (!parentFolderId) return null
       const response = await fetch(`/api/folders/${parentFolderId}`)
-      if (!response.ok) throw new Error('Failed to fetch folder')
+      if (!response.ok) {
+        console.error('Failed to fetch parent folder:', response.status, response.statusText)
+        throw new Error('Failed to fetch folder')
+      }
       return response.json()
     },
     enabled: !!parentFolderId,
@@ -90,7 +99,7 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
     // Determine back navigation
     const parentFolder = folderPath[folderPath.length - 2]
     const backHref = parentFolder ? `/library/folders/${parentFolder.id}` : '/library'
-    const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Vault'
+    const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Back to Library'
     
     return (
       <div className="flex items-center justify-between flex-1">
@@ -138,7 +147,7 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
     const projectName = projectData?.name || 'Project'
     const parentFolderName = parentFolderData?.name || 'Folder'
     const backHref = parentFolderId ? `/library/folders/${parentFolderId}` : '/library'
-    const backText = parentFolderId ? 'Back to Folder' : 'Library'
+    const backText = parentFolderId ? 'Back to Folder' : 'Back to Library'
     
     return (
       <div className="flex items-center gap-4">

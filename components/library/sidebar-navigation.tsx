@@ -110,10 +110,27 @@ export function LibrarySidebarNavigation() {
               </SidebarMenuSubItem>
             ))}
             
-            {/* Render subfolders */}
+            {/* Render subfolders - use SidebarMenuSubItem with SidebarMenuSubButton */}
             {folder.subfolders?.map((subfolder) => (
               <SidebarMenuSubItem key={subfolder.id}>
-                {renderFolder(subfolder, level + 1)}
+                <SidebarMenuSubButton 
+                  asChild 
+                  isActive={pathname === `/library/folders/${subfolder.id}`}
+                >
+                  <Link href={`/library/folders/${subfolder.id}`}>
+                    <Folder className="h-4 w-4" />
+                    <span>{subfolder.name}</span>
+                  </Link>
+                </SidebarMenuSubButton>
+                {subfolder.subfolders && subfolder.subfolders.length > 0 && (
+                  <SidebarMenuAction onClick={() => toggleFolder(subfolder.id)}>
+                    {expandedFolders.has(subfolder.id) ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </SidebarMenuAction>
+                )}
               </SidebarMenuSubItem>
             ))}
           </SidebarMenuSub>
