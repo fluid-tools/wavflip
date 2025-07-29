@@ -15,9 +15,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateFolderAction } from '@/hooks/use-library-action'
-import type { Folder } from '@/db/schema/library'
-
-
 
 interface CreateFolderDialogProps {
   parentFolderId?: string | null

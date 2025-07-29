@@ -15,7 +15,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateProjectAction } from '@/hooks/use-library-action'
-import type { Project } from '@/db/schema/library'
 
 interface CreateProjectDialogProps {
   folderId?: string | null
