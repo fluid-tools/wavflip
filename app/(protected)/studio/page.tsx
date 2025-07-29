@@ -8,7 +8,7 @@ export default function StudioPage() {
 
   return (
     <div
-      className="flex-1 min-h-0 transition-all duration-300 ease-out"
+      className="flex-1 min-h-0 w-full transition-all duration-300 ease-out"
       style={{
         paddingBottom: currentTrack ? '80px' : '0px'
       }}

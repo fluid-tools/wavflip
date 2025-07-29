@@ -14,7 +14,7 @@ export default async function LibraryNewPage() {
   ])
 
   return (
-    <div className="p-6">
+    <div className="w-full h-full p-6">
       <VaultView 
         initialFolders={folders}
         initialProjects={projects}
