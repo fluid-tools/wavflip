@@ -14,14 +14,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function ThemeToggle() {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon">
-          <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+          {theme === 'light' && <Sun className="h-[1.2rem] w-[1.2rem]" />}
+          {theme === 'dark' && <Moon className="h-[1.2rem] w-[1.2rem]" />}
+          {theme === 'system' && <Monitor className="h-[1.2rem] w-[1.2rem]" />}
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
@@ -44,22 +45,22 @@ export function ThemeToggleGroup() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <ToggleGroup 
-      type="single" 
-      value={theme} 
+    <ToggleGroup
+      type="single"
+      value={theme}
       onValueChange={(value) => value && setTheme(value)}
       className="w-full"
-      variant="outline"
+      variant="default"
       size="sm"
     >
-      <ToggleGroupItem value="light" aria-label="Light theme" className="flex-1">
-        <Sun className="h-4 w-4" />
+      <ToggleGroupItem value="light" aria-label="Light theme" >
+        <Sun />
       </ToggleGroupItem>
-      <ToggleGroupItem value="dark" aria-label="Dark theme" className="flex-1">
-        <Moon className="h-4 w-4" />
+      <ToggleGroupItem value="dark" aria-label="Dark theme">
+        <Moon />
       </ToggleGroupItem>
-      <ToggleGroupItem value="system" aria-label="System theme" className="flex-1">
-        <Monitor className="h-4 w-4" />
+      <ToggleGroupItem value="system" aria-label="System theme">
+        <Monitor />
       </ToggleGroupItem>
     </ToggleGroup>
   )

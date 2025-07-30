@@ -35,8 +35,8 @@ export default async function ProtectedLayout({
                     <main className="flex-1 w-full">
                         {children}
                     </main>
+                    <PlayerDock />
                 </div>
-                <PlayerDock />
             </SidebarProvider>
         </AppProviders>
     );

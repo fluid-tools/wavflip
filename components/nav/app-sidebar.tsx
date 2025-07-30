@@ -2,12 +2,10 @@
 
 import { usePathname } from 'next/navigation'
 import Link from "next/link"
-import { 
-  Library, 
-  Music, 
-  Settings, 
-  User, 
-  LogOut,
+import {
+  Library,
+  Music,
+  Settings,
   Search,
   Mic
 } from "lucide-react"
@@ -38,10 +36,36 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import SettingsDialog from "./settings-dialog"
 import { LibrarySidebarNavigation } from "./library-nav"
 import { ThemeToggle, ThemeToggleGroup } from "./theme-toggle"
 import Image from 'next/image'
+
+// User dropdown content component
+function UserDropdownContent({ session, handleSignOut }: { session: any, handleSignOut: () => void }) {
+  return (
+    <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuLabel className="font-normal">
+        <div className="flex flex-col space-y-1">
+          <p className="text-sm font-medium leading-none">{session?.user.name}</p>
+          <p className="text-xs leading-none text-muted-foreground">
+            {session?.user.email}
+          </p>
+        </div>
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      <SettingsDialog>
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+          <Settings className="mr-2 h-4 w-4" />
+          <span>Settings</span>
+        </DropdownMenuItem>
+      </SettingsDialog>
+      <DropdownMenuSeparator />
+      <ThemeToggleGroup />
+    </DropdownMenuContent>
+  )
+}
 
 // Main navigation items
 const mainNavItems = [
@@ -88,18 +112,18 @@ export function AppSidebar() {
 
   const initials = session?.user.name
     ? session.user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
     : session?.user.email?.[0].toUpperCase() || "U"
 
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-           <Image src="/logo.svg" alt="WAVFLIP" width={32} height={32} unoptimized />
+        <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+          <div className="flex items-center justify-center">
+            <Image src="/logo.svg" alt="WAVFLIP" width={32} height={32} unoptimized />
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground">WAVFLIP</span>
@@ -107,7 +131,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         {/* Main Navigation */}
         <SidebarGroup>
@@ -116,8 +140,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.url}
                   >
                     <Link href={item.url}>
@@ -161,56 +185,37 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <SidebarMenu>
           {/* User Profile */}
-          <SidebarMenuItem>
+          <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0">
+                <SidebarMenuButton className="group-data-[collapsible=icon]:hidden">
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={session?.user.image || ""} alt={session?.user.name || ""} className="object-cover" />
                     <AvatarFallback className="text-xs flex items-center justify-center">{initials}</AvatarFallback>
                   </Avatar>
-                  <span className="truncate group-data-[collapsible=icon]:hidden">{session?.user.name || session?.user.email}</span>
+                  <span className="truncate">{session?.user.name || session?.user.email}</span>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{session?.user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {session?.user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <SettingsDialog>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                </SettingsDialog>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+              <UserDropdownContent session={session} handleSignOut={handleSignOut} />
+            </DropdownMenu>
+
+            {/* User Profile - Collapsed Mode */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild className="hidden group-data-[collapsible=icon]:flex">
+                <Button variant="outline" size="icon">
+                  <Avatar className="h-[1.2rem] w-[1.2rem]">
+                    <AvatarImage src={session?.user.image || ""} alt={session?.user.name || ""} className="object-cover" />
+                    <AvatarFallback className="text-[0.6rem] flex items-center justify-center">{initials}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <UserDropdownContent session={session} handleSignOut={handleSignOut} />
             </DropdownMenu>
           </SidebarMenuItem>
-          
+
           {/* Theme Toggle - Collapsed Mode */}
-          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:mt-2">
             <ThemeToggle />
-          </SidebarMenuItem>
-          
-          {/* Theme Toggle - Expanded Mode */}
-          <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
-            <div className="px-2 py-1">
-              <ThemeToggleGroup />
-            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
