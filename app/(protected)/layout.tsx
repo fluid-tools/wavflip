@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/auth-server";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/sidebar-navbar/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { ConditionalNavbar } from "@/components/conditional-navbar";
+import { Navbar } from "@/components/navbar";
 import dynamic from "next/dynamic";
 import PlayerDockSkeleton from "@/components/player/dock-skeleton";
 import { AppProviders } from "@/state/providers";
@@ -30,7 +30,7 @@ export default async function ProtectedLayout({
                 <div className="flex flex-col min-h-screen w-full">
                     <header className="flex items-center gap-2 p-4 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                         <SidebarTrigger />
-                        <ConditionalNavbar />
+                        <Navbar />
                     </header>
                     <main className="flex-1 w-full">
                         {children}

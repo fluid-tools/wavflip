@@ -11,7 +11,7 @@ import {
   currentTrackAtom,
   playerStateAtom
 } from '@/state/audio-atoms'
-import { downloadAndStoreAudio } from '@/lib/storage/library-storage'
+import { downloadAndStoreAudio } from '@/lib/storage/local-library'
 import { WELCOME_MESSAGE } from '@/lib/constants/prompts'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'

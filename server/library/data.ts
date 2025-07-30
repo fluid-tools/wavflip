@@ -122,7 +122,7 @@ export async function getLibraryData(userId: string, options: LibraryQueryOption
 // SPECIFIC DATA HELPERS
 // ================================
 
-export async function getFolderPath(folderId: string, userId: string): Promise<BreadcrumbItem[]> {
+async function getFolderPath(folderId: string, userId: string): Promise<BreadcrumbItem[]> {
   const path: BreadcrumbItem[] = []
   let currentFolderId: string | null = folderId
 

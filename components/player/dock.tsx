@@ -23,7 +23,7 @@ import {
   playerControlsAtom,
   autoPlayAtom
 } from '@/state/audio-atoms'
-import { downloadAndStoreAudio } from '@/lib/storage/library-storage'
+import { downloadAndStoreAudio } from '@/lib/storage/local-library'
 import { toast } from 'sonner'
 
 function formatTime(seconds: number): string {

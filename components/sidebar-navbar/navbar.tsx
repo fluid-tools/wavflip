@@ -2,13 +2,11 @@
 
 import { usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UserProfile } from "./navbar/user-profile"
 import Link from "next/link"
-import { ThemeToggle } from "./theme-toggle"
 import { useSidebar } from "@/components/ui/sidebar"
-import { LibraryBreadcrumbs } from "./library/breadcrumbs"
+import { LibraryBreadcrumbs } from "../library/breadcrumbs"
 
-export function ConditionalNavbar() {
+export function Navbar() {
   const pathname = usePathname()
   const { open } = useSidebar()
   const currentTab = pathname.includes('/library') ? 'library' : 'studio'
@@ -32,9 +30,6 @@ export function ConditionalNavbar() {
           )}
           <LibraryBreadcrumbs showActions={true} />
         </div>
-        <div className="flex items-center gap-2">
-          {/* User profile and theme toggle are now in sidebar */}
-        </div>
       </div>
     )
   }
@@ -54,9 +49,6 @@ export function ConditionalNavbar() {
           </TabsList>
         </Tabs>
       )}
-      <div className="flex items-center gap-2">
-        {/* User profile and theme toggle are now in sidebar */}
-      </div>
     </div>
   )
 } 
