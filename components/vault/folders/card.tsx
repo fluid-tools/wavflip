@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Music, Edit2, Trash2, FolderOpen } from 'lucide-react'
+import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -22,157 +21,171 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-library-action'
-import type { Project, ProjectWithTracks } from '@/db/schema/library'
+import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/actions/use-vault-action'
+import type { FolderWithProjects } from '@/db/schema/vault'
 import Link from 'next/link'
-import { DraggableWrapper } from '@/components/library/dnd/draggable-wrapper'
-import { DroppableWrapper } from '@/components/library/dnd/droppable-wrapper'
-import { FolderPicker } from '@/components/library/folders/picker'
+import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
+import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
+import { FolderPicker } from './picker'
 
-interface ProjectCardProps {
-  project: Project | ProjectWithTracks
-  folderId?: string | null
-  trackCount?: number
+interface FolderCardProps {
+  folder: FolderWithProjects
+  showProjectCount?: boolean
+  parentFolderId?: string | null
   isDragAndDropEnabled?: boolean
 }
 
-export function ProjectCard({ 
-  project, 
-  folderId, 
-  trackCount, 
+export function FolderCard({ 
+  folder, 
+  showProjectCount = true, 
+  parentFolderId = null,
   isDragAndDropEnabled = false 
-}: ProjectCardProps) {
-  // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
-  const displayTrackCount = trackCount ?? ('trackCount' in project ? project.trackCount : 0)
+}: FolderCardProps) {
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
-  const [newName, setNewName] = useState(project.name)
+  const [newName, setNewName] = useState(folder.name)
 
-  const [, deleteAction, isDeleting] = useDeleteProjectAction({
+  const [, deleteAction, isDeleting] = useDeleteFolderAction({
     onSuccess: () => {
       setShowDeleteDialog(false)
     }
   })
 
-  const [, renameAction, isRenaming] = useRenameProjectAction({
+  const [, renameAction, isRenaming] = useRenameFolderAction({
     onSuccess: () => {
       setShowRenameDialog(false)
-      setNewName(project.name)
+      setNewName(folder.name)
     }
   })
 
-  const [, moveAction, isMoving] = useMoveProjectAction({
+  const [, moveAction, isMoving] = useMoveFolderAction({
     onSuccess: () => {
       setShowMoveDialog(false)
-      setSelectedDestinationId(folderId ?? null)
+      setSelectedDestinationId(null)
     }
   })
 
   const handleRename = async (formData: FormData) => {
-    formData.append('projectId', project.id)
+    formData.append('folderId', folder.id)
     renameAction(formData)
   }
 
   const handleDelete = async (formData: FormData) => {
-    formData.append('projectId', project.id)
+    formData.append('folderId', folder.id)
     deleteAction(formData)
   }
 
   const handleMove = async (formData: FormData) => {
-    formData.append('projectId', project.id)
-    formData.append('folderId', selectedDestinationId || '')
-    formData.append('sourceFolderId', folderId || '')
+    formData.append('folderId', folder.id)
+    formData.append('parentFolderId', selectedDestinationId || '')
+    formData.append('sourceParentFolderId', parentFolderId || '')
     moveAction(formData)
   }
 
   // State management is now handled by the custom hooks automatically
 
+  // Calculate folder contents description
+  const getContentDescription = () => {
+    const subFolderCount = (folder as FolderWithProjects & { subFolderCount?: number }).subFolderCount || 0
+    const projectCount = showProjectCount ? (folder.projects?.length || 0) : ((folder as FolderWithProjects & { projectCount?: number }).projectCount || 0)
+    
+    // A folder is only "empty" if it has no subfolders AND no projects
+    if (subFolderCount === 0 && projectCount === 0) {
+      return 'Empty'
+    }
+    
+    // Build description based on what's actually in the folder
+    const parts = []
+    if (subFolderCount > 0) {
+      parts.push(`${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}`)
+    }
+    if (projectCount > 0) {
+      parts.push(`${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`)
+    }
+    
+    return parts.join(', ')
+  }
+
   const cardContent = (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <Link href={`/library/projects/${project.id}`} className="block">
+        <Link href={`/vault/folders/${folder.id}`} className="block">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                  <Music className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <Folder className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-sm truncate">{project.name}</CardTitle>
+                  <CardTitle className="text-sm truncate">{folder.name}</CardTitle>
                   <CardDescription className="text-xs">
-                    {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
+                    {getContentDescription()}
                   </CardDescription>
                 </div>
-                {project.accessType !== 'private' && (
-                  <Badge variant="secondary" className="text-xs">
-                    {project.accessType}
-                  </Badge>
-                )}
               </div>
             </CardHeader>
           </Card>
         </Link>
       </ContextMenuTrigger>
 
-        <ContextMenuContent className="w-48">
-          <ContextMenuItem
-            onClick={(e) => {
-              e.preventDefault()
-              setNewName(project.name)
-              setShowRenameDialog(true)
-            }}
-          >
-            <Edit2 className="h-4 w-4" />
-            Rename
-          </ContextMenuItem>
-          <ContextMenuItem
-            onClick={(e) => {
-              e.preventDefault()
-              setSelectedDestinationId(folderId ?? null)
-              setShowMoveDialog(true)
-            }}
-          >
-            <FolderOpen className="h-4 w-4" />
-            Move to Folder
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem
-            variant="destructive"
-            onClick={(e) => {
-              e.preventDefault()
-              setShowDeleteDialog(true)
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </ContextMenuItem>
-        </ContextMenuContent>
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem
+          onClick={(e) => {
+            e.preventDefault()
+            setNewName(folder.name)
+            setShowRenameDialog(true)
+          }}
+        >
+          <Edit2 className="h-4 w-4" />
+          Rename
+        </ContextMenuItem>
+        <ContextMenuItem
+          onClick={(e) => {
+            e.preventDefault()
+            setSelectedDestinationId(null)
+            setShowMoveDialog(true)
+          }}
+        >
+          <FolderOpen className="h-4 w-4" />
+          Move to Folder
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem
+          variant="destructive"
+          onClick={(e) => {
+            e.preventDefault()
+            setShowDeleteDialog(true)
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
     </ContextMenu>
   )
 
   const dragData = {
-    type: 'project' as const,
-    id: project.id,
-    name: project.name,
-    sourceContainer: folderId || 'vault',
+    type: 'folder' as const,
+    id: folder.id,
+    name: folder.name,
+    sourceContainer: parentFolderId || 'vault',
   }
 
   const dropData = {
-    type: 'project' as const,
-    id: project.id,
-    name: project.name,
+    type: 'folder' as const,
+    id: folder.id,
   }
 
   return (
     <>
       {isDragAndDropEnabled ? (
-        <DraggableWrapper id={`project-${project.id}`} data={dragData}>
-          <DroppableWrapper id={`project-drop-${project.id}`} data={dropData}>
+        <DroppableWrapper id={`folder-${folder.id}`} data={dropData}>
+          <DraggableWrapper id={`folder-${folder.id}`} data={dragData}>
             {cardContent}
-          </DroppableWrapper>
-        </DraggableWrapper>
+          </DraggableWrapper>
+        </DroppableWrapper>
       ) : (
         cardContent
       )}
@@ -182,9 +195,9 @@ export function ProjectCard({
         <DialogContent className="sm:max-w-[425px]">
           <form action={handleRename}>
             <DialogHeader>
-              <DialogTitle>Rename Project</DialogTitle>
+              <DialogTitle>Rename Folder</DialogTitle>
               <DialogDescription>
-                Enter a new name for this project.
+                Enter a new name for this folder.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -225,9 +238,9 @@ export function ProjectCard({
         <DialogContent className="sm:max-w-[425px]">
           <form action={handleDelete}>
             <DialogHeader>
-              <DialogTitle>Delete Project</DialogTitle>
+              <DialogTitle>Delete Folder</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete &quot;{project.name}&quot;? This will also delete all tracks and versions inside it. This action cannot be undone.
+                Are you sure you want to delete &quot;{folder.name}&quot;? This will also delete all projects and tracks inside it. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -256,15 +269,16 @@ export function ProjectCard({
         <DialogContent className="sm:max-w-[500px]">
           <form action={handleMove}>
             <DialogHeader>
-              <DialogTitle>Move Project</DialogTitle>
+              <DialogTitle>Move Folder</DialogTitle>
               <DialogDescription>
-                Choose where to move &quot;{project.name}&quot;.
+                Choose where to move &quot;{folder.name}&quot;.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <FolderPicker
                 selectedFolderId={selectedDestinationId}
                 onFolderSelect={setSelectedDestinationId}
+                excludeFolderId={folder.id}
                 allowVaultSelection={true}
               />
             </div>

@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import React from 'react'
-import { useLibrarySidebar } from '@/hooks/use-library'
+import { useVaultSidebar } from '@/hooks/use-vault'
 import Link from "next/link"
 import { 
   FolderOpen, 
@@ -33,8 +33,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CreateFolderDialog } from '@/components/library/folders/create-dialog'
-import { CreateProjectDialog } from '@/components/library/projects/create-dialog'
+import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
+import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 
 interface SidebarFolder {
   id: string
@@ -58,8 +58,8 @@ export function LibrarySidebarNavigation() {
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
-  // Use the new library hooks
-  const { data: libraryData, isLoading } = useLibrarySidebar()
+  // Use the new vault hooks
+  const { data: libraryData, isLoading } = useVaultSidebar()
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders)
@@ -73,7 +73,7 @@ export function LibrarySidebarNavigation() {
 
   const renderFolder = (folder: SidebarFolder, level = 0) => {
     const isExpanded = expandedFolders.has(folder.id)
-    const isActive = pathname === `/library/folders/${folder.id}`
+    const isActive = pathname === `/vault/folders/${folder.id}`
     const hasSubItems = (folder.subfolders && folder.subfolders.length > 0) || folder.projects.length > 0
 
     const shouldShowSubItems = hasSubItems
@@ -82,7 +82,7 @@ export function LibrarySidebarNavigation() {
       <div key={folder.id}>
         <SidebarMenuItem>
           <SidebarMenuButton asChild isActive={isActive}>
-            <Link href={`/library/folders/${folder.id}`}>
+            <Link href={`/vault/folders/${folder.id}`}>
               <Folder className="h-4 w-4" />
               <span>{folder.name}</span>
             </Link>
@@ -106,9 +106,9 @@ export function LibrarySidebarNavigation() {
               <SidebarMenuSubItem key={project.id}>
                 <SidebarMenuSubButton 
                   asChild 
-                  isActive={pathname === `/library/projects/${project.id}`}
+                  isActive={pathname === `/vault/projects/${project.id}`}
                 >
-                  <Link href={`/library/projects/${project.id}`}>
+                  <Link href={`/vault/projects/${project.id}`}>
                     <Music className="h-4 w-4" />
                     <span>{project.name}</span>
                     <span className="ml-auto text-xs text-muted-foreground">
@@ -132,7 +132,7 @@ export function LibrarySidebarNavigation() {
   if (isLoading) {
     return (
       <SidebarGroup>
-        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Library</SidebarGroupLabel>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Vault</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -150,7 +150,7 @@ export function LibrarySidebarNavigation() {
   if (!libraryData) {
     return (
       <SidebarGroup>
-        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Library</SidebarGroupLabel>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Vault</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -170,7 +170,7 @@ export function LibrarySidebarNavigation() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-        Library
+        Vault
       </SidebarGroupLabel>
       
       {/* Quick create action - proper sidebar style */}
@@ -200,9 +200,9 @@ export function LibrarySidebarNavigation() {
             <SidebarMenuItem key={project.id}>
               <SidebarMenuButton 
                 asChild 
-                isActive={pathname === `/library/projects/${project.id}`}
+                isActive={pathname === `/vault/projects/${project.id}`}
               >
-                <Link href={`/library/projects/${project.id}`}>
+                <Link href={`/vault/projects/${project.id}`}>
                   <Music className="h-4 w-4" />
                   <span>{project.name}</span>
                   <span className="ml-auto text-xs text-muted-foreground">

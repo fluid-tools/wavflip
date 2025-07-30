@@ -27,8 +27,8 @@ export default async function HomePage() {
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href={session ? "/library" : "/sign-in"}>
-              {session ? "My Library" : "Sign In"}
+            <Link href={session ? "/vault" : "/sign-in"}>
+              {session ? "My Vault" : "Sign In"}
             </Link>
           </Button>
         </div>

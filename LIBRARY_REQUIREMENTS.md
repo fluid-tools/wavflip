@@ -1,7 +1,7 @@
-# Library System Requirements & Implementation Plan
+# Vault System Requirements & Implementation Plan
 
 ## Overview
-Building a new hierarchical library system with drag-and-drop functionality, versioning, and Mac Finder-style UI. This is separate from the existing library and uses PostgreSQL with proper schema design.
+Building a new hierarchical vault system with drag-and-drop functionality, versioning, and Mac Finder-style UI. This is separate from the existing vault and uses PostgreSQL with proper schema design.
 
 ## Hierarchy Structure
 
@@ -100,9 +100,9 @@ track_versions {
 
 ### Navigation Pattern
 ```
-/library (vault root)
-├── /library/folders/[folderId] (folder view)
-└── /library/projects/[projectId] (project view)
+/vault (vault root)
+├── /vault/folders/[folderId] (folder view)
+└── /vault/projects/[projectId] (project view)
 ```
 
 ### Visual Hierarchy
@@ -186,13 +186,13 @@ const versions = await getTrackVersions(trackId)
 
 ### Page Structure
 ```
-app/(protected)/library/
+app/(protected)/vault/
 ├── page.tsx (vault root)
 ├── folders/[folderId]/page.tsx
 ├── projects/[projectId]/page.tsx
 └── loading.tsx
-components/library/
-actions/library.ts
+components/vault/
+actions/vault.ts
 ```
 
 ### Reusable Components
@@ -241,7 +241,7 @@ actions/library.ts
 ## Development Phases
 
 ### Phase 1: Schema & Database ✅
-- [x] Create database schema (`db/schema/library.ts`)
+- [x] Create database schema (`db/schema/vault.ts`)
 - [ ] Set up Drizzle migrations  
 - [ ] Create basic CRUD operations
 - [ ] Test versioning system
@@ -297,11 +297,11 @@ actions/library.ts
 
 ## Next Steps
 
-1. **Create database schema** in `db/schema/library.ts`
+1. **Create database schema** in `db/schema/vault.ts`
 2. **Set up basic page structure** with routing
 3. **Build core components** for vault/folder/project views
 4. **Implement drag and drop** with @dnd-kit
 5. **Add versioning UI** for track management
 6. **Polish and optimize** for production use
 
-This document serves as the single source of truth for the library system implementation. 
+This document serves as the single source of truth for the vault system implementation. 

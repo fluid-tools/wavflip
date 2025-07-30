@@ -4,7 +4,7 @@ import {
   createProject, 
   deleteProject,
   handleDuplicateProjectName 
-} from '@/server/library'
+} from '@/server/vault'
 
 export async function POST(request: NextRequest) {
   try {

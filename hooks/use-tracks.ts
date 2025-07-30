@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ProjectWithTracks } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/vault'
 
 interface UseTracksProps {
   projectId: string

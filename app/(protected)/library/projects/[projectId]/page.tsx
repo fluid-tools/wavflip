@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
-import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/server/library'
-import { ProjectView } from '@/components/library/projects/view'
-import { TracksTableSkeleton } from '@/components/library/tracks/table-skeleton'
+import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/server/vault'
+import { ProjectView } from '@/components/vault/projects/view'
+import { TracksTableSkeleton } from '@/components/vault/tracks/table-skeleton'
 
 interface ProjectPageProps {
   params: Promise<{

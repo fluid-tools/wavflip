@@ -35,7 +35,7 @@ import type { AudioTrack } from '@/types/audio'
 import { createTracksTableColumns } from './table-columns'
 import { useTracks, type TrackFromProject } from '../../../hooks/use-tracks'
 import { ProjectPicker } from '../projects/picker'
-import type { ProjectWithTracks } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/vault'
 
 interface TracksTableProps {
   tracks: TrackFromProject[]

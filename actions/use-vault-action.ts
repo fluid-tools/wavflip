@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { toast } from 'sonner'
-import { useLibraryInvalidation } from '../hooks/use-library'
+import { useVaultInvalidation } from '@/hooks/use-vault'
 
 type BaseActionState = {
   success: boolean
@@ -16,12 +16,12 @@ interface UseLibraryActionOptions {
   specificInvalidations?: () => void
 }
 
-export function useLibraryAction(
+export function useVaultAction(
   action: (prevState: any, formData: FormData) => Promise<any>,
   initialState: BaseActionState,
   options: UseLibraryActionOptions = {}
 ) {
-  const invalidate = useLibraryInvalidation()
+  const invalidate = useVaultInvalidation()
   const {
     successMessage,
     onSuccess,
@@ -66,9 +66,9 @@ export function useLibraryAction(
 
 // Specific hooks for common operations
 export function useCreateFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { createFolderAction } = require('@/actions/library')
+  const { createFolderAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     createFolderAction,
     { success: false, error: null },
     {
@@ -80,9 +80,9 @@ export function useCreateFolderAction(options: Omit<UseLibraryActionOptions, 'su
 }
 
 export function useCreateProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { createProjectAction } = require('@/actions/library')
+  const { createProjectAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     createProjectAction,
     { success: false, error: null },
     {
@@ -94,9 +94,9 @@ export function useCreateProjectAction(options: Omit<UseLibraryActionOptions, 's
 }
 
 export function useDeleteFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { deleteFolderAction } = require('@/actions/library')
+  const { deleteFolderAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     deleteFolderAction,
     { success: false, error: null },
     {
@@ -107,9 +107,9 @@ export function useDeleteFolderAction(options: Omit<UseLibraryActionOptions, 'su
 }
 
 export function useDeleteProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { deleteProjectAction } = require('@/actions/library')
+  const { deleteProjectAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     deleteProjectAction,
     { success: false, error: null },
     {
@@ -120,9 +120,9 @@ export function useDeleteProjectAction(options: Omit<UseLibraryActionOptions, 's
 }
 
 export function useRenameFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { renameFolderAction } = require('@/actions/library')
+  const { renameFolderAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     renameFolderAction,
     { success: false, error: null },
     {
@@ -134,9 +134,9 @@ export function useRenameFolderAction(options: Omit<UseLibraryActionOptions, 'su
 }
 
 export function useRenameProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { renameProjectAction } = require('@/actions/library')
+  const { renameProjectAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     renameProjectAction,
     { success: false, error: null },
     {
@@ -148,9 +148,9 @@ export function useRenameProjectAction(options: Omit<UseLibraryActionOptions, 's
 }
 
 export function useMoveFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { moveFolderAction } = require('@/actions/library')
+  const { moveFolderAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     moveFolderAction,
     { success: false, error: null },
     {
@@ -161,9 +161,9 @@ export function useMoveFolderAction(options: Omit<UseLibraryActionOptions, 'succ
 }
 
 export function useMoveProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
-  const { moveProjectAction } = require('@/actions/library')
+  const { moveProjectAction } = require('@/actions/vault')
   
-  return useLibraryAction(
+  return useVaultAction(
     moveProjectAction,
     { success: false, error: null },
     {

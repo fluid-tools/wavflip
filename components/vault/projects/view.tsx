@@ -6,7 +6,7 @@ import { Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import type { ProjectWithTracks } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/vault'
 import type { AudioTrack } from '@/types/audio'
 
 import { UploadTrackDialog } from '../tracks/upload-dialog'

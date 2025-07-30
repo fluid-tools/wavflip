@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { db } from '@/db'
-import { folder, project, track, trackVersion } from '@/db/schema/library'
+import { folder, project, track, trackVersion } from '@/db/schema/vault'
 import { eq, and, isNull, count, not, desc } from 'drizzle-orm'
 import type { 
   LibraryData, 

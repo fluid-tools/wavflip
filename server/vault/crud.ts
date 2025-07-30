@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { db } from '@/db'
-import { folder, project, track, trackVersion } from '@/db/schema/library'
+import { folder, project, track, trackVersion } from '@/db/schema/vault'
 import { eq, and, desc, not, isNull, count } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { 

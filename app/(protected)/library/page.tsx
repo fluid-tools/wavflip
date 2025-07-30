@@ -1,7 +1,7 @@
 import { requireAuth } from '@/lib/auth-server'
-import { getLibraryData } from '@/server/library/data'
-import { getUserFolders, getVaultProjects } from '@/server/library'
-import { VaultView } from '@/components/library/vault/view'
+import { getLibraryData } from '@/server/vault/data'
+import { getUserFolders, getVaultProjects } from '@/server/vault'
+import { VaultView } from '@/app/(protected)/vault/client'
 
 export default async function LibraryNewPage() {
   const session = await requireAuth()

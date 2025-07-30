@@ -1,7 +1,7 @@
 # R2 Vault Structure Analysis (WONT BE DOING THIS)
 
 ## Overview
-Analysis of migrating from PostgreSQL UUID-based library to Cloudflare R2 path-based storage structure.
+Analysis of migrating from PostgreSQL UUID-based vault to Cloudflare R2 path-based storage structure.
 
 ## Current PostgreSQL Approach (What You Have)
 

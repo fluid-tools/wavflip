@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getLibraryData } from '@/server/library/data'
+import { getLibraryData } from '@/server/vault/data'
 
 export async function GET(
   request: NextRequest,

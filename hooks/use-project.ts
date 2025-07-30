@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { upload } from '@vercel/blob/client'
-import type { ProjectWithTracks } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/vault'
 import { nanoid } from 'nanoid'
 
 interface UseProjectProps {

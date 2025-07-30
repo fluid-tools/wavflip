@@ -4,15 +4,15 @@ import { usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { useSidebar } from "@/components/ui/sidebar"
-import { LibraryBreadcrumbs } from "../library/breadcrumbs"
+import { LibraryBreadcrumbs } from "../vault/breadcrumbs"
 
 export function Navbar() {
   const pathname = usePathname()
   const { open } = useSidebar()
-  const currentTab = pathname.includes('/library') ? 'library' : 'studio'
+  const currentTab = pathname.includes('/vault') ? 'vault' : 'studio'
 
-  // Library breadcrumbs section
-  if (pathname.includes('/library')) {
+  // Vault breadcrumbs section
+  if (pathname.includes('/vault')) {
     return (
       <div className="flex items-center justify-between flex-1">
         <div className="flex items-center gap-4 flex-1">
@@ -22,8 +22,8 @@ export function Navbar() {
                 <TabsTrigger asChild value="studio">
                   <Link href="/studio">Studio</Link>
                 </TabsTrigger>
-                <TabsTrigger asChild value="library">
-                  <Link href="/library">Library</Link>
+                <TabsTrigger asChild value="vault">
+                  <Link href="/vault">Vault</Link>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -43,8 +43,8 @@ export function Navbar() {
             <TabsTrigger asChild value="studio">
               <Link href="/studio">Studio</Link>
             </TabsTrigger>
-            <TabsTrigger asChild value="library">
-              <Link href="/library">Library</Link>
+            <TabsTrigger asChild value="vault">
+              <Link href="/vault">Vault</Link>
             </TabsTrigger>
           </TabsList>
         </Tabs>

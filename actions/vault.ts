@@ -9,9 +9,9 @@ import {
   getProjectWithTracks,
   handleDuplicateFolderName,
   handleDuplicateProjectName
-} from '@/server/library'
+} from '@/server/vault'
 import { requireAuth } from '@/lib/auth-server'
-import type { Folder, Project } from '@/db/schema/library'
+import type { Folder, Project } from '@/db/schema/vault'
 
 type FolderActionState = {
   success: boolean
@@ -66,13 +66,13 @@ export async function createFolderAction(prevState: FolderActionState, formData:
 
     // Revalidate appropriate paths for UI updates
     if (parentFolderId) {
-      revalidatePath(`/library/folders/${parentFolderId}`)
+      revalidatePath(`/vault/folders/${parentFolderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
-    // Always revalidate the root library for sidebar updates
-    revalidatePath('/library')
-    revalidatePath('/api/library/sidebar')
+    // Always revalidate the root vault for sidebar updates
+    revalidatePath('/vault')
+    revalidatePath('/api/vault/sidebar')
 
     return { success: true, folder, error: null }
   } catch (error) {
@@ -111,13 +111,13 @@ export async function createProjectAction(prevState: ProjectActionState, formDat
 
     // Revalidate the appropriate paths for UI updates
     if (folderId) {
-      revalidatePath(`/library/folders/${folderId}`)
+      revalidatePath(`/vault/folders/${folderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
-    // Always revalidate the root library for sidebar updates
-    revalidatePath('/library')
-    revalidatePath('/api/library/sidebar')
+    // Always revalidate the root vault for sidebar updates
+    revalidatePath('/vault')
+    revalidatePath('/api/vault/sidebar')
 
     return { success: true, project, error: null }
   } catch (error) {
@@ -142,13 +142,13 @@ export async function deleteFolderAction(prevState: DeleteActionState, formData:
 
     // Revalidate the correct parent path and sidebar
     if (parentFolderId) {
-      revalidatePath(`/library/folders/${parentFolderId}`)
+      revalidatePath(`/vault/folders/${parentFolderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
     // Always revalidate for sidebar updates
-    revalidatePath('/library')
-    revalidatePath('/api/library/sidebar')
+    revalidatePath('/vault')
+    revalidatePath('/api/vault/sidebar')
 
     return { success: true, error: null }
   } catch (error) {
@@ -174,13 +174,13 @@ export async function deleteProjectAction(prevState: DeleteActionState, formData
 
     // Revalidate appropriate paths and sidebar
     if (folderId) {
-      revalidatePath(`/library/folders/${folderId}`)
+      revalidatePath(`/vault/folders/${folderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
     // Always revalidate for sidebar updates
-    revalidatePath('/library')
-    revalidatePath('/api/library/sidebar')
+    revalidatePath('/vault')
+    revalidatePath('/api/vault/sidebar')
 
     return { success: true, error: null }
   } catch (error) {
@@ -205,9 +205,9 @@ export async function renameFolderAction(prevState: RenameActionState, formData:
     await renameFolder(folderId, name, session.user.id)
 
     // Revalidate all relevant paths and sidebar
-    revalidatePath('/library')
-    revalidatePath(`/library/folders/${folderId}`)
-    revalidatePath('/api/library/sidebar')
+    revalidatePath('/vault')
+    revalidatePath(`/vault/folders/${folderId}`)
+    revalidatePath('/api/vault/sidebar')
     return { success: true, error: null }
   } catch (error) {
     console.error('Failed to rename folder:', error)
@@ -233,12 +233,12 @@ export async function renameProjectAction(prevState: RenameActionState, formData
 
     // Revalidate appropriate paths and sidebar
     if (folderId) {
-      revalidatePath(`/library/folders/${folderId}`)
+      revalidatePath(`/vault/folders/${folderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
-    revalidatePath(`/library/projects/${projectId}`)
-    revalidatePath('/api/library/sidebar')
+    revalidatePath(`/vault/projects/${projectId}`)
+    revalidatePath('/api/vault/sidebar')
 
     return { success: true, error: null }
   } catch (error) {
@@ -269,15 +269,15 @@ export async function moveFolderAction(prevState: MoveActionState, formData: For
 
     // Revalidate source and destination paths
     if (sourceParentFolderId) {
-      revalidatePath(`/library/folders/${sourceParentFolderId}`)
+      revalidatePath(`/vault/folders/${sourceParentFolderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
 
     if (parentFolderId) {
-      revalidatePath(`/library/folders/${parentFolderId}`)
+      revalidatePath(`/vault/folders/${parentFolderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
 
     return { success: true, error: null }
@@ -309,15 +309,15 @@ export async function moveProjectAction(prevState: MoveActionState, formData: Fo
 
     // Revalidate source and destination paths
     if (sourceFolderId) {
-      revalidatePath(`/library/folders/${sourceFolderId}`)
+      revalidatePath(`/vault/folders/${sourceFolderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
 
     if (folderId) {
-      revalidatePath(`/library/folders/${folderId}`)
+      revalidatePath(`/vault/folders/${folderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
 
     return { success: true, error: null }
@@ -373,11 +373,11 @@ export async function createFolderFromProjectsAction(prevState: MoveActionState,
 
     // Revalidate relevant paths
     if (parentFolderId) {
-      revalidatePath(`/library/folders/${parentFolderId}`)
+      revalidatePath(`/vault/folders/${parentFolderId}`)
     } else {
-      revalidatePath('/library')
+      revalidatePath('/vault')
     }
-    revalidatePath(`/library/folders/${newFolder.id}`)
+    revalidatePath(`/vault/folders/${newFolder.id}`)
 
     return { success: true, error: null }
   } catch (error) {

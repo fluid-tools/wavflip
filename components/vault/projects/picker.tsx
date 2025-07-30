@@ -4,7 +4,7 @@ import { Music } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import type { ProjectWithTracks } from '@/db/schema/library'
+import type { ProjectWithTracks } from '@/db/schema/vault'
 
 interface ProjectPickerProps {
   projects: ProjectWithTracks[]

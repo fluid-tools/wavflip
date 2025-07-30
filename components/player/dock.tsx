@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useAtom } from 'jotai'
+import { usePathname } from 'next/navigation'
 import WaveSurfer from 'wavesurfer.js'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -23,8 +24,9 @@ import {
   playerControlsAtom,
   autoPlayAtom
 } from '@/state/audio-atoms'
-import { downloadAndStoreAudio } from '@/lib/storage/local-library'
+import { downloadAndStoreAudio } from '@/lib/storage/local-vault'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60)
@@ -36,6 +38,7 @@ export default function PlayerDock() {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const pathname = usePathname()
   
   const [currentTrack] = useAtom(currentTrackAtom)
   const [currentTime] = useAtom(currentTimeAtom)
@@ -47,6 +50,9 @@ export default function PlayerDock() {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   
   const isPlaying = playerState === 'playing'
+  
+  // Use fixed positioning for vault routes, absolute for studio
+  const useFixedPosition = pathname?.startsWith('/vault')
 
   // Initialize WaveSurfer
   useEffect(() => {
@@ -172,10 +178,10 @@ export default function PlayerDock() {
     setIsSaving(true)
     try {
       await downloadAndStoreAudio(currentTrack)
-      toast.success('Track saved to library!')
+      toast.success('Track saved to vault!')
     } catch (error) {
       console.error('Failed to save track:', error)
-      toast.error('Failed to save track to library')
+      toast.error('Failed to save track to vault')
     } finally {
       setIsSaving(false)
     }
@@ -186,7 +192,10 @@ export default function PlayerDock() {
   }
 
   return (
-    <div data-player-dock className="absolute bottom-0 left-0 right-0 z-50 bg-neutral-900/95 backdrop-blur-md border-t border-l rounded-tl-2xl border-neutral-800 shadow-2xl transform transition-transform duration-300 ease-out">
+    <div data-player-dock className={cn(
+      "bottom-0 left-0 right-0 z-50 bg-neutral-900/95 backdrop-blur-md border-t border-l rounded-tl-2xl border-neutral-800 shadow-2xl transform transition-transform duration-300 ease-out",
+      useFixedPosition ? "fixed" : "absolute"
+    )}>
       <div className="px-4 sm:px-6 py-3">
         <div className="flex items-center gap-4">
           {/* Track Info */}

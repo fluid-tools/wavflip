@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/auth-server'
-import { getFolderWithContents } from '@/server/library'
-import { FolderView } from '@/components/library/folders/view'
+import { getFolderWithContents } from '@/server/vault'
+import { FolderView } from '@/app/(protected)/vault/folders/[folderId]/client'
 
 interface FolderPageProps {
   params: Promise<{

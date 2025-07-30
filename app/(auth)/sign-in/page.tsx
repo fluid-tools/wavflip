@@ -37,7 +37,7 @@ export default function SignIn() {
           toast.error(error.message || 'An error occurred');
         } else {
           toast.success("Account created successfully!");
-          router.push("/library");
+          router.push("/vault");
         }
       } else {
         const { error } = await signIn.email({
@@ -55,7 +55,7 @@ export default function SignIn() {
           }
         } else {
           toast.success("Signed in successfully!");
-          router.push("/library");
+          router.push("/vault");
         }
       }
     } catch {
@@ -72,7 +72,7 @@ export default function SignIn() {
     try {
       await signIn.social({
         provider: "google",
-        callbackURL: "/library"
+        callbackURL: "/vault"
       });
     } catch {
       toast.error("Failed to sign in with Google");
@@ -90,7 +90,7 @@ export default function SignIn() {
     try {
       await sendVerificationEmail({
         email: email,
-        callbackURL: window.location.origin + "/library"
+        callbackURL: window.location.origin + "/vault"
       });
       toast.success("Verification email sent! Check your inbox.");
     } catch (error) {

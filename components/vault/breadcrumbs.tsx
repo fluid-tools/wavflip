@@ -25,10 +25,10 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
-  // Parse the current route for library breadcrumbs
-  const isRoot = pathname === '/library'
-  const isFolder = pathname.startsWith('/library/folders/') && pathname.split('/').length >= 4
-  const isProject = pathname.startsWith('/library/projects/') && pathname.split('/').length >= 4
+  // Parse the current route for vault breadcrumbs
+  const isRoot = pathname === '/vault'
+  const isFolder = pathname.startsWith('/vault/folders/') && pathname.split('/').length >= 4
+  const isProject = pathname.startsWith('/vault/projects/') && pathname.split('/').length >= 4
   
   // Extract IDs from pathname
   const folderId = isFolder ? pathname.split('/')[3] : null
@@ -83,7 +83,7 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  if (!pathname.includes('/library')) {
+  if (!pathname.includes('/vault')) {
     return null
   }
 
@@ -103,8 +103,8 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
     return (
       <div className="flex items-center justify-between flex-1">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/library" className="hover:text-foreground">
-            Library
+          <Link href="/vault" className="hover:text-foreground">
+            Vault
           </Link>
           {folderPath.map((folder: FolderPathItem, index: number) => (
             <div key={folder.id} className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
                 <span className="text-foreground font-medium">{folder.name}</span>
               ) : (
                 <Link 
-                  href={`/library/folders/${folder.id}`} 
+                  href={`/vault/folders/${folder.id}`} 
                   className="hover:text-foreground"
                 >
                   {folder.name}
@@ -153,13 +153,13 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
     
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/library" className="hover:text-foreground">
-          Library
+        <Link href="/vault" className="hover:text-foreground">
+          Vault
         </Link>
         {parentFolderId && (
           <>
             <ChevronRight className="h-3 w-3" />
-            <Link href={`/library/folders/${parentFolderId}`} className="hover:text-foreground">
+            <Link href={`/vault/folders/${parentFolderId}`} className="hover:text-foreground">
               {parentFolderName}
             </Link>
           </>

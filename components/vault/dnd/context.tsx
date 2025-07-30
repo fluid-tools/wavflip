@@ -37,10 +37,10 @@ interface LibraryDndContextType {
 
 const LibraryDndContext = createContext<LibraryDndContextType | null>(null)
 
-export function useLibraryDnd() {
+export function useVaultDnd() {
   const context = useContext(LibraryDndContext)
   if (!context) {
-    throw new Error('useLibraryDnd must be used within LibraryDndProvider')
+    throw new Error('useVaultDnd must be used within LibraryDndProvider')
   }
   return context
 }

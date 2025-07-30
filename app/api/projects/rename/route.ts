@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { renameProject } from '@/server/library'
+import { renameProject } from '@/server/vault'
 
 export async function PATCH(request: NextRequest) {
   try {

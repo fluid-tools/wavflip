@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getProjectWithTracks } from '@/server/library'
+import { getProjectWithTracks } from '@/server/vault'
 
 export async function GET(
   request: NextRequest,

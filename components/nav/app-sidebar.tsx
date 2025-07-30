@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from "next/link"
 import {
-  Library,
+  Vault,
   Music,
   Settings,
   Search,
@@ -39,7 +39,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import SettingsDialog from "./settings-dialog"
-import { LibrarySidebarNavigation } from "./library-nav"
+import { LibrarySidebarNavigation } from "./vault-nav"
 import { ThemeToggleGroup } from "./theme-toggle"
 import Image from 'next/image'
 
@@ -84,9 +84,9 @@ const mainNavItems = [
     icon: Music,
   },
   {
-    title: "Library",
-    url: "/library",
-    icon: Library,
+    title: "Vault",
+    url: "/vault",
+    icon: Vault,
   },
 ]
 
@@ -99,7 +99,7 @@ const quickActions = [
   },
   {
     title: "Browse Samples",
-    url: "/library",
+    url: "/vault",
     icon: Search,
   },
 ]
@@ -166,7 +166,7 @@ export function AppSidebar() {
 
         <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
 
-        {/* Library Navigation - Shows nested folders/projects */}
+        {/* Vault Navigation - Shows nested folders/projects */}
         <LibrarySidebarNavigation />
 
         <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />

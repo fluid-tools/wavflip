@@ -9,7 +9,7 @@ title: "wavesurfer.js"
 
 [![npm](https://img.shields.io/npm/v/wavesurfer.js)](https://www.npmjs.com/package/wavesurfer.js)[![sponsor](https://img.shields.io/badge/sponsor_us-%F0%9F%A4%8D-%23B14586)](https://github.com/sponsors/katspaugh)
 
-**Wavesurfer.js** is an interactive waveform rendering and audio playback library, perfect for web applications. It leverages modern web technologies to provide a robust and visually engaging audio experience.
+**Wavesurfer.js** is an interactive waveform rendering and audio playback vault, perfect for web applications. It leverages modern web technologies to provide a robust and visually engaging audio experience.
 
 ![waveform screenshot](https://github.com/katspaugh/wavesurfer.js/assets/381895/05f03bed-800e-4fa1-b09a-82a39a1c62ce)
 
@@ -41,7 +41,7 @@ import WaveSurfer from 'wavesurfer.js'
 Copy
 ```
 
-Alternatively, insert a UMD script tag which exports the library as a global `WaveSurfer` variable:
+Alternatively, insert a UMD script tag which exports the vault as a global `WaveSurfer` variable:
 
 ```html
 <script src="https://unpkg.com/wavesurfer.js@7"></script>
@@ -230,7 +230,7 @@ We appreciate your feedback and contributions!
 
 If you encounter any issues or have suggestions for improvements, please don't hesitate to post in our [forum](https://github.com/wavesurfer-js/wavesurfer.js/discussions/categories/q-a).
 
-We hope you enjoy using wavesurfer.js and look forward to hearing about your experiences with the library!
+We hope you enjoy using wavesurfer.js and look forward to hearing about your experiences with the vault!
 
 ### Settings
 

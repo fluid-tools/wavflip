@@ -7,7 +7,7 @@ import type {
   TrackVersion, NewTrackVersion,
   FolderWithProjects,
   ProjectWithTracks
-} from '@/db/schema/library'
+} from '@/db/schema/vault'
 
 // Re-export schema types for convenience
 export type { 

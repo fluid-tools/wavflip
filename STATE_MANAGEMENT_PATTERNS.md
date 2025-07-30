@@ -9,7 +9,7 @@ This document outlines the state management patterns and architectural decisions
 We use a **hybrid approach** based on the complexity and requirements of each operation:
 
 #### 1. Server Actions with `useActionState` (Preferred)
-**Used for**: Library operations (folders, projects, basic CRUD)
+**Used for**: Vault operations (folders, projects, basic CRUD)
 - ✅ Server-side validation
 - ✅ Automatic React Query invalidation via wrapped hooks
 - ✅ Better error handling
@@ -77,10 +77,10 @@ React's `useActionState` automatically handles transitions for **form submission
 ## Implementation Locations
 
 ### Server Actions (with `useActionState`)
-- **Folder operations**: `components/library/folders/`
-- **Project operations**: `components/library/projects/` 
-- **Library navigation**: Context menus, dialogs
-- **Wrapped hooks**: `hooks/use-library-action.ts`
+- **Folder operations**: `components/vault/folders/`
+- **Project operations**: `components/vault/projects/` 
+- **Vault navigation**: Context menus, dialogs
+- **Wrapped hooks**: `hooks/use-vault-action.ts`
 
 ### Client Hooks (React Query)
 - **Track operations**: `hooks/use-project.ts`, `hooks/use-tracks.ts`
@@ -102,11 +102,11 @@ React's `useActionState` automatically handles transitions for **form submission
 - Complex client-side state interdependencies
 
 ### React Query Invalidation
-All server actions use wrapped hooks (`use-library-action.ts`) that automatically handle React Query invalidation:
+All server actions use wrapped hooks (`use-vault-action.ts`) that automatically handle React Query invalidation:
 
 ```typescript
 // Automatic invalidation strategies
-invalidationStrategy: 'all'    // Invalidates all library data
+invalidationStrategy: 'all'    // Invalidates all vault data
 invalidationStrategy: 'sidebar' // Invalidates sidebar only  
 invalidationStrategy: 'specific' // Custom invalidation logic
 ```

@@ -5,7 +5,7 @@ import {
   createFolder, 
   deleteFolder,
   handleDuplicateFolderName 
-} from '@/server/library'
+} from '@/server/vault'
 
 export async function GET() {
   try {

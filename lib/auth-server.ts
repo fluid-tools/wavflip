@@ -29,6 +29,6 @@ export async function requireAuth() {
 export async function requireNoAuth() {
   const session = await getServerSession()
   if (session) {
-    redirect('/library')
+    redirect('/vault')
   }
 } 

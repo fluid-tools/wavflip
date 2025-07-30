@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request)
   
   // Protected routes - require authentication
-  const protectedRoutes = ['/library', '/studio']
+  const protectedRoutes = ['/vault', '/studio']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   
   // Auth routes - redirect if already has session
@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
   }
   
   if (isAuthRoute && sessionCookie) {
-    return NextResponse.redirect(new URL('/library', request.url))
+    return NextResponse.redirect(new URL('/vault', request.url))
   }
   
   // Keep landing page (/) accessible for everyone

@@ -1,14 +1,14 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/library'
+import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
 
 // ================================
 // QUERY KEYS
 // ================================
 
 export const libraryKeys = {
-  all: ['library'] as const,
+  all: ['vault'] as const,
   sidebar: () => [...libraryKeys.all, 'sidebar'] as const,
   folders: () => [...libraryKeys.all, 'folders'] as const,
   folder: (id: string) => [...libraryKeys.folders(), id] as const,
@@ -36,7 +36,7 @@ interface SidebarFolder {
   subFolderCount: number
 }
 
-interface LibrarySidebarData {
+interface VaultSidebarData {
   folders: SidebarFolder[]
   rootProjects: Array<{
     id: string
@@ -45,12 +45,12 @@ interface LibrarySidebarData {
   }>
 }
 
-export function useLibrarySidebar() {
+export function useVaultSidebar() {
   return useQuery({
     queryKey: libraryKeys.sidebar(),
-    queryFn: async (): Promise<LibrarySidebarData> => {
-      const response = await fetch('/api/library/sidebar')
-      if (!response.ok) throw new Error('Failed to fetch library sidebar')
+    queryFn: async (): Promise<VaultSidebarData> => {
+      const response = await fetch('/api/vault/sidebar')
+      if (!response.ok) throw new Error('Failed to fetch vault sidebar')
       return response.json()
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -115,8 +115,8 @@ export function useVaultProjects() {
   return useQuery({
     queryKey: libraryKeys.vaultProjects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
-      const response = await fetch('/api/library/sidebar')
-      if (!response.ok) throw new Error('Failed to fetch library data')
+      const response = await fetch('/api/vault/sidebar')
+      if (!response.ok) throw new Error('Failed to fetch vault data')
       const data = await response.json()
       return data.rootProjects || []
     },
@@ -129,7 +129,7 @@ export function useVaultProjects() {
 // QUERY INVALIDATION HELPER
 // ================================
 
-export function useLibraryInvalidation() {
+export function useVaultInvalidation() {
   const queryClient = useQueryClient()
   
   return {
@@ -148,12 +148,12 @@ export function useLibraryInvalidation() {
 // LIBRARY STATS HOOK
 // ================================
 
-export function useLibraryStats() {
+export function useVaultStats() {
   return useQuery({
     queryKey: libraryKeys.stats(),
     queryFn: async () => {
-      const response = await fetch('/api/library/sidebar?stats=true')
-      if (!response.ok) throw new Error('Failed to fetch library stats')
+      const response = await fetch('/api/vault/sidebar?stats=true')
+      if (!response.ok) throw new Error('Failed to fetch vault stats')
       const data = await response.json()
       return data.stats
     },

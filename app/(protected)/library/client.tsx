@@ -3,17 +3,16 @@
 import { useMemo, startTransition, useState } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/library'
-import type { LibraryStats } from '@/server/library'
-import { CreateFolderDialog } from '../folders/create-dialog'
-import { CreateProjectDialog } from '../projects/create-dialog'
-import { FolderCard } from '../folders/card'
-import { ProjectCard } from '../projects/card'
+import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
+import type { LibraryStats } from '@/server/vault'
+import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
+import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
+import { FolderCard } from '@/components/vault/folders/card'
+import { ProjectCard } from '@/components/vault/projects/card'
 import { Virtuoso } from 'react-virtuoso'
-import { LibraryDndProvider } from '../dnd/context'
-import { DroppableWrapper } from '../dnd/droppable-wrapper'
-import { createFolderFromProjectsAction } from '@/actions/library'
-import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-library-action'
+import { DndLayout } from '@/components/vault/dnd-layout'
+import { createFolderFromProjectsAction } from '@/actions/vault'
+import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
 
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
@@ -126,19 +125,16 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
   }
 
   return (
-    <LibraryDndProvider
+    <DndLayout
+      droppableId="vault"
+      droppableData={{ type: 'vault' }}
       onMoveFolder={handleMoveFolder}
       onMoveProject={handleMoveProject}
       onCombineProjects={handleCombineProjects}
+      onCreateFolder={() => setShowCreateFolderDialog(true)}
+      onCreateProject={() => setShowCreateProjectDialog(true)}
+      className="space-y-6 min-h-screen"
     >
-      <DroppableWrapper 
-        id="vault" 
-        data={{ type: 'vault' }}
-        className="space-y-6 min-h-screen"
-        showContextMenu={true}
-        onCreateFolder={() => setShowCreateFolderDialog(true)}
-        onCreateProject={() => setShowCreateProjectDialog(true)}
-      >
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -191,7 +187,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
       {/* Content Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Library Contents</h2>
+          <h2 className="text-lg font-medium">Vault Contents</h2>
           <div className="flex gap-2">
             <CreateFolderDialog />
             <CreateProjectDialog />
@@ -234,7 +230,6 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
           </Card>
         )}
       </div>
-      </DroppableWrapper>
 
       {/* Context Menu Dialogs */}
       <CreateFolderDialog 
@@ -247,6 +242,6 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
-    </LibraryDndProvider>
+    </DndLayout>
   )
 } 

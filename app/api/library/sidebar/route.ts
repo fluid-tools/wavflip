@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getLibraryData } from '@/server/library/data'
+import { getLibraryData } from '@/server/vault/data'
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,9 +20,9 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(libraryData)
   } catch (error) {
-    console.error('Failed to fetch library data:', error)
+    console.error('Failed to fetch vault data:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch library data' },
+      { error: error instanceof Error ? error.message : 'Failed to fetch vault data' },
       { status: 500 }
     )
   }

@@ -1,4 +1,4 @@
-import { TracksTableSkeleton } from '../../../../../components/library/tracks/table-skeleton'
+import { TracksTableSkeleton } from '../../../../../components/vault/tracks/table-skeleton'
 
 export default function ProjectLoading() {
   return (

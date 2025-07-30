@@ -2,14 +2,14 @@ import { get, set, del } from 'idb-keyval'
 import type { AudioTrack } from '@/types/audio'
 
 const LIBRARY_KEY_PREFIX = 'wavflip-track-'
-const LIBRARY_INDEX_KEY = 'wavflip-library-index'
+const LIBRARY_INDEX_KEY = 'wavflip-vault-index'
 
 export interface LibraryTrack extends AudioTrack {
   audioData?: ArrayBuffer // Store audio data locally
   blobUrl?: string // Temporary blob URL for playback
 }
 
-// Get all tracks from library
+// Get all tracks from vault
 export async function getLibraryTracks(): Promise<LibraryTrack[]> {
   try {
     const trackIds = await get(LIBRARY_INDEX_KEY) || []
@@ -25,12 +25,12 @@ export async function getLibraryTracks(): Promise<LibraryTrack[]> {
     // Sort by creation date (newest first)
     return tracks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   } catch (error) {
-    console.error('Failed to get library tracks:', error)
+    console.error('Failed to get vault tracks:', error)
     return []
   }
 }
 
-// Add track to library
+// Add track to vault
 export async function addTrackToLibrary(track: AudioTrack, audioData?: ArrayBuffer): Promise<void> {
   try {
     const libraryTrack: LibraryTrack = {
@@ -48,12 +48,12 @@ export async function addTrackToLibrary(track: AudioTrack, audioData?: ArrayBuff
       await set(LIBRARY_INDEX_KEY, trackIds)
     }
   } catch (error) {
-    console.error('Failed to add track to library:', error)
-    throw new Error('Failed to save track to library')
+    console.error('Failed to add track to vault:', error)
+    throw new Error('Failed to save track to vault')
   }
 }
 
-// Remove track from library
+// Remove track from vault
 export async function removeTrackFromLibrary(trackId: string): Promise<void> {
   try {
     // Remove the track data
@@ -64,22 +64,22 @@ export async function removeTrackFromLibrary(trackId: string): Promise<void> {
     const updatedIds = trackIds.filter((id: string) => id !== trackId)
     await set(LIBRARY_INDEX_KEY, updatedIds)
   } catch (error) {
-    console.error('Failed to remove track from library:', error)
-    throw new Error('Failed to remove track from library')
+    console.error('Failed to remove track from vault:', error)
+    throw new Error('Failed to remove track from vault')
   }
 }
 
-// Get a specific track from library
+// Get a specific track from vault
 export async function getTrackFromLibrary(trackId: string): Promise<LibraryTrack | null> {
   try {
     return await get(`${LIBRARY_KEY_PREFIX}${trackId}`) || null
   } catch (error) {
-    console.error('Failed to get track from library:', error)
+    console.error('Failed to get track from vault:', error)
     return null
   }
 }
 
-// Clear entire library
+// Clear entire vault
 export async function clearLibrary(): Promise<void> {
   try {
     const trackIds = await get(LIBRARY_INDEX_KEY) || []
@@ -92,8 +92,8 @@ export async function clearLibrary(): Promise<void> {
     // Clear the index
     await del(LIBRARY_INDEX_KEY)
   } catch (error) {
-    console.error('Failed to clear library:', error)
-    throw new Error('Failed to clear library')
+    console.error('Failed to clear vault:', error)
+    throw new Error('Failed to clear vault')
   }
 }
 
@@ -138,7 +138,7 @@ export interface LibraryStats {
   uploadedTracks: number
 }
 
-// Get library stats
+// Get vault stats
 export async function getLibraryStats(): Promise<LibraryStats> {
   try {
     const tracks = await getLibraryTracks()
@@ -172,7 +172,7 @@ export async function getLibraryStats(): Promise<LibraryStats> {
       uploadedTracks
     }
   } catch (error) {
-    console.error('Failed to get library stats:', error)
+    console.error('Failed to get vault stats:', error)
     return {
       totalTracks: 0,
       totalSize: 0,

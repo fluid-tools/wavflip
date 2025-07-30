@@ -3,16 +3,15 @@
 import { useMemo, startTransition, useState } from 'react'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import type { FolderWithProjects } from '@/db/schema/library'
-import { CreateProjectDialog } from '../projects/create-dialog'
-import { CreateFolderDialog } from './create-dialog'
-import { FolderCard } from './card'
-import { ProjectCard } from '../projects/card'
+import type { FolderWithProjects } from '@/db/schema/vault'
+import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
+import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
+import { FolderCard } from '@/components/vault/folders/card'
+import { ProjectCard } from '@/components/vault/projects/card'
 import { Virtuoso } from 'react-virtuoso'
-import { LibraryDndProvider } from '../dnd/context'
-import { DroppableWrapper } from '../dnd/droppable-wrapper'
-import { createFolderFromProjectsAction } from '@/actions/library'
-import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-library-action'
+import { DndLayout } from '@/components/vault/dnd-layout'
+import { createFolderFromProjectsAction } from '@/actions/vault'
+import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
 
 interface FolderViewProps {
   folder: FolderWithProjects
@@ -109,19 +108,16 @@ export function FolderView({ folder }: FolderViewProps) {
   }
 
   return (
-    <LibraryDndProvider
+    <DndLayout
+      droppableId={`folder-${folder.id}`}
+      droppableData={{ type: 'folder', id: folder.id }}
       onMoveFolder={handleMoveFolder}
       onMoveProject={handleMoveProject}
       onCombineProjects={handleCombineProjects}
+      onCreateFolder={() => setShowCreateFolderDialog(true)}
+      onCreateProject={() => setShowCreateProjectDialog(true)}
+      className="p-6 space-y-6 min-h-screen"
     >
-      <DroppableWrapper 
-        id={`folder-${folder.id}`} 
-        data={{ type: 'folder', id: folder.id }}
-        className="p-6 space-y-6 min-h-screen"
-        showContextMenu={true}
-        onCreateFolder={() => setShowCreateFolderDialog(true)}
-        onCreateProject={() => setShowCreateProjectDialog(true)}
-      >
       {/* Folder Info */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold">{folder.name}</h1>
@@ -163,7 +159,6 @@ export function FolderView({ folder }: FolderViewProps) {
           </CardContent>
         </Card>
       )}
-      </DroppableWrapper>
 
       {/* Context Menu Dialogs */}
       <CreateFolderDialog 
@@ -178,6 +173,6 @@ export function FolderView({ folder }: FolderViewProps) {
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
-    </LibraryDndProvider>
+    </DndLayout>
   )
 } 
