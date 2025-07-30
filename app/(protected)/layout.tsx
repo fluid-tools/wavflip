@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/server/auth";
-import { SidebarWrapper } from "@/components/nav/sidebar-wrapper";
+import { AppSidebar } from "@/components/nav/app-sidebar";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Navbar } from "@/components/nav/base-nav";
 import dynamic from "next/dynamic";
@@ -26,7 +26,7 @@ export default async function ProtectedLayout({
     return (
         <AppProviders>
             <SidebarProvider defaultOpen={defaultOpen}>
-                <SidebarWrapper />
+                <AppSidebar />
                 <SidebarInset className="flex flex-col min-h-screen">
                     <header className="flex items-center gap-2 p-4 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                         <SidebarTrigger />

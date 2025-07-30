@@ -14,6 +14,9 @@ import {
 import { useSession, signOut } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useAtom } from 'jotai'
+import { currentTrackAtom } from '@/state/audio-atoms'
+import { cn } from '@/lib/utils'
 
 import {
   Sidebar,
@@ -108,6 +111,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const router = useRouter()
+  const [currentTrack] = useAtom(currentTrackAtom)
 
   const handleSignOut = async () => {
     try {
@@ -128,8 +132,14 @@ export function AppSidebar() {
     : session?.user.email?.[0].toUpperCase() || "U"
 
   return (
-    <Sidebar variant="floating" collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <div 
+      className={cn(
+        "transition-all duration-300 ease-out",
+        currentTrack ? "[&_[data-slot=sidebar-container]]:!h-[calc(100vh-88px)]" : ""
+      )}
+    >
+      <Sidebar variant="floating" collapsible="icon">
+        <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
           <div className="flex items-center justify-center">
             <Image src="/logo.svg" alt="WAVFLIP" width={32} height={32} unoptimized />
@@ -223,8 +233,9 @@ export function AppSidebar() {
           </SidebarMenuItem>
 
        
-        </SidebarMenu>
+         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+    </div>
   )
-} 
+}
