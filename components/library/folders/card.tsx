@@ -24,9 +24,9 @@ import { Label } from '@/components/ui/label'
 import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/hooks/use-library-action'
 import type { FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
-import { DraggableWrapper } from '../dnd/draggable-wrapper'
-import { DroppableWrapper } from '../dnd/droppable-wrapper'
-import { FolderPicker } from '../folder-picker'
+import { DraggableWrapper } from '@/components/library/dnd/draggable-wrapper'
+import { DroppableWrapper } from '@/components/library/dnd/droppable-wrapper'
+import { FolderPicker } from './picker'
 
 interface FolderCardProps {
   folder: FolderWithProjects
