@@ -2,7 +2,7 @@ import 'server-only'
 
 import { db } from '@/db'
 import { folder, project, track, trackVersion } from '@/db/schema/vault'
-import { eq, and, isNull, count, not, desc } from 'drizzle-orm'
+import { eq, and, isNull, count, not } from 'drizzle-orm'
 import type { 
   VaultData, 
   VaultFolder, 

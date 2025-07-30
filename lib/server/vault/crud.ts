@@ -192,7 +192,7 @@ export async function getFolderWithContents(folderId: string, userId: string): P
     .orderBy(project.order, project.createdAt)
 
   // Calculate total counts including nested content
-  const calculateTotalProjectCount = (folders: any[]): number => {
+  const calculateTotalProjectCount = (folders: typeof rootFolders): number => {
     return folders.reduce((total, folder) => {
       return total + (folder.projects?.length || 0) + calculateTotalProjectCount(folder.subFolders || [])
     }, 0)
