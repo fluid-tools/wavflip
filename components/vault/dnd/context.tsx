@@ -18,7 +18,6 @@ import { useState, createContext, useContext, useCallback, useMemo, useEffect } 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Folder, Music, FileAudio } from 'lucide-react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { useDragHistory } from './hooks'
 import type { DragData, DropData, DndCallbacks, ItemType, DragOperation } from './types'
 
@@ -46,7 +45,7 @@ interface VaultDndProviderProps extends DndCallbacks {
   children: React.ReactNode
 }
 
-function DragPreview({ data, count = 1 }: { data: DragData; count?: number }) {
+function DragPreview({ data }: { data: DragData }) {
   const icons = {
     folder: <Folder className="h-5 w-5 text-blue-600" />,
     project: <Music className="h-5 w-5 text-green-600" />,
@@ -54,28 +53,13 @@ function DragPreview({ data, count = 1 }: { data: DragData; count?: number }) {
   }
 
   return (
-    <Card className={cn(
-      'w-64 shadow-2xl border-2 border-primary/30',
-      'bg-background/95 backdrop-blur-sm',
-      'animate-in fade-in-0 zoom-in-95 duration-200'
-    )}>
+    <Card className="w-64 opacity-90 shadow-lg border-2 border-primary/50 rounded-xl">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-muted border flex items-center justify-center relative">
+          <div className="h-10 w-10 rounded-lg bg-background border flex items-center justify-center">
             {icons[data.type]}
-            {count > 1 && (
-              <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-medium">
-                {count}
-              </div>
-            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm truncate">
-              {data.name}
-              {count > 1 && <span className="text-muted-foreground ml-1">+{count - 1} more</span>}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground capitalize">{data.type}</p>
-          </div>
+          <CardTitle className="text-sm truncate">{data.name}</CardTitle>
         </div>
       </CardHeader>
     </Card>
@@ -159,29 +143,30 @@ export function VaultDndProvider({
     setActiveDragData(null)
     document.body.style.cursor = ''
 
+    // Early returns - all validation checks grouped together
     if (!over || !active.data.current) return
 
     const dragData = active.data.current as DragData
     const dropData = over.data.current as DropData
 
+    // Prevent dropping on self
     if (active.id === over.id) return
-    if (!canDrop(dragData.type, dropData.type)) {
-      toast.error(`Cannot drop ${dragData.type} into ${dropData.type}`)
-      return
-    }
 
-    // Don't trigger action if dropping back to the same location
+    // Prevent invalid drop combinations (silently)
+    if (!canDrop(dragData.type, dropData.type)) return
+
+    // Prevent project-to-project self-drops (silently)
+    if (dragData.type === 'project' && dropData.type === 'project' && dragData.id === dropData.id) return
+
+    // Prevent dropping item back to its current location (silently)
     const sourceLocation = dragData.sourceContainer || 'vault'
     const targetLocation = dropData.id || 'vault'
     if (sourceLocation === targetLocation) return
 
-    // Don't combine a project with itself
-    if (dragData.type === 'project' && dropData.type === 'project' && dragData.id === dropData.id) return
-
     const operation: DragOperation = {
       type: dragData.type,
-      from: dragData.sourceContainer || 'vault',
-      to: dropData.id || 'vault',
+      from: sourceLocation,
+      to: targetLocation,
       itemId: dragData.id,
       timestamp: Date.now(),
     }
@@ -299,10 +284,7 @@ export function VaultDndProvider({
           easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
         }}>
           {activeDragData ? (
-            <DragPreview 
-              data={activeDragData} 
-              count={selectedItems.size > 1 ? selectedItems.size : 1}
-            />
+            <DragPreview data={activeDragData} />
           ) : null}
         </DragOverlay>
       </DndContext>

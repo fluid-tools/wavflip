@@ -21,6 +21,7 @@ interface DroppableWrapperProps {
   onDelete?: () => void
   accepts?: ItemType[]
   highlightOnHover?: boolean
+  applyRoundedCorners?: boolean
 }
 
 export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapperProps>(
@@ -38,6 +39,7 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
     onDelete,
     accepts,
     highlightOnHover = true,
+    applyRoundedCorners = true,
   }, ref) {
     const { isOver, active, setNodeRef } = useDroppable({
       id,
@@ -58,12 +60,9 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
           }
         }}
         className={cn(
-          'relative transition-all duration-200',
-          highlightOnHover && isValidDrop && [
-            'bg-primary/5 ring-2 ring-primary/50 ring-inset',
-            'before:absolute before:inset-0 before:bg-gradient-to-b before:from-primary/10 before:to-transparent before:pointer-events-none',
-          ],
-          highlightOnHover && isOver && !canDrop && 'opacity-50',
+          'transition-colors duration-200',
+          applyRoundedCorners && 'rounded-xl',
+          highlightOnHover && isValidDrop && 'bg-muted/50 ring-2 ring-primary/50 ring-inset',
           className
         )}
         aria-dropeffect={canDrop ? 'move' : 'none'}

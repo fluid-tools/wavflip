@@ -1,7 +1,8 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { VaultDndProvider, type DropData } from './dnd/context'
+import { VaultDndProvider } from './dnd/context'
+import { DropData } from './dnd/types'
 import { DroppableWrapper } from './dnd/droppable-wrapper'
 
 interface DndLayoutProps {
@@ -40,6 +41,7 @@ export function DndLayout({
         showContextMenu={true}
         onCreateFolder={onCreateFolder}
         onCreateProject={onCreateProject}
+        applyRoundedCorners={false}
       >
         {children}
       </DroppableWrapper>

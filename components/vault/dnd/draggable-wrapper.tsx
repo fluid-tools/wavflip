@@ -62,7 +62,7 @@ export const DraggableWrapper = memo(forwardRef<HTMLDivElement, DraggableWrapper
         }}
         style={style}
         className={cn(
-          'relative',
+          'relative rounded-xl',
           isDragging ? 'z-50 cursor-grabbing' : 'cursor-grab',
           'touch-none select-none',
           className
