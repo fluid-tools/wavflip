@@ -170,6 +170,14 @@ export function VaultDndProvider({
       return
     }
 
+    // Don't trigger action if dropping back to the same location
+    const sourceLocation = dragData.sourceContainer || 'vault'
+    const targetLocation = dropData.id || 'vault'
+    if (sourceLocation === targetLocation) return
+
+    // Don't combine a project with itself
+    if (dragData.type === 'project' && dropData.type === 'project' && dragData.id === dropData.id) return
+
     const operation: DragOperation = {
       type: dragData.type,
       from: dragData.sourceContainer || 'vault',

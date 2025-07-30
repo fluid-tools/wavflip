@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface VaultLayoutProps {
   children: ReactNode
@@ -6,10 +7,12 @@ interface VaultLayoutProps {
 
 export default function VaultLayout({ children }: VaultLayoutProps) {
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className="flex-1 w-full">
-        {children}
-      </div>
+    <div className="h-full w-full flex flex-col">
+      <ScrollArea className="flex-1">
+        <div className="pb-24">
+          {children}
+        </div>
+      </ScrollArea>
     </div>
   )
 } 

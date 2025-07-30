@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/server/auth";
-import { AppSidebar } from "@/components/nav/app-sidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarWrapper } from "@/components/nav/sidebar-wrapper";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Navbar } from "@/components/nav/base-nav";
 import dynamic from "next/dynamic";
 import PlayerDockSkeleton from "@/components/player/dock-skeleton";
@@ -26,8 +26,8 @@ export default async function ProtectedLayout({
     return (
         <AppProviders>
             <SidebarProvider defaultOpen={defaultOpen}>
-                <AppSidebar />
-                <div className="flex flex-col min-h-screen w-full relative">
+                <SidebarWrapper />
+                <SidebarInset className="flex flex-col min-h-screen">
                     <header className="flex items-center gap-2 p-4 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                         <SidebarTrigger />
                         <Navbar />
@@ -36,7 +36,7 @@ export default async function ProtectedLayout({
                         {children}
                     </main>
                     <PlayerDock />
-                </div>
+                </SidebarInset>
             </SidebarProvider>
         </AppProviders>
     );

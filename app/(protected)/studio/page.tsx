@@ -5,12 +5,12 @@ import { useAtom } from 'jotai'
 
 export default function StudioPage() {
   const [currentTrack] = useAtom(currentTrackAtom)
-
+  
   return (
-    <div
-      className="flex-1 min-h-0 w-full transition-all duration-300 ease-out"
+    <div 
+      className="h-full w-full transition-all duration-300 ease-out"
       style={{
-        paddingBottom: currentTrack ? '80px' : '0px'
+        paddingBottom: currentTrack ? '88px' : '0px'
       }}
     >
       <SoundGenerator />

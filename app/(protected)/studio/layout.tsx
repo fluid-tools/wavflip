@@ -7,10 +7,8 @@ interface StudioLayoutProps {
 
 export default function StudioLayout({ children }: StudioLayoutProps) {
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className="flex flex-col bg-background h-full w-full">
-        {children}
-      </div>
+    <div className="h-full w-full overflow-hidden">
+      {children}
     </div>
   )
 } 
