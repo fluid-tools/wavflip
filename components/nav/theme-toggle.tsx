@@ -1,10 +1,11 @@
 "use client"
 
 import * as React from "react";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,5 +37,30 @@ export function ThemeToggle() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+export function ThemeToggleGroup() {
+  const { theme, setTheme } = useTheme()
+
+  return (
+    <ToggleGroup 
+      type="single" 
+      value={theme} 
+      onValueChange={(value) => value && setTheme(value)}
+      className="w-full"
+      variant="outline"
+      size="sm"
+    >
+      <ToggleGroupItem value="light" aria-label="Light theme" className="flex-1">
+        <Sun className="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="dark" aria-label="Dark theme" className="flex-1">
+        <Moon className="h-4 w-4" />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="system" aria-label="System theme" className="flex-1">
+        <Monitor className="h-4 w-4" />
+      </ToggleGroupItem>
+    </ToggleGroup>
   )
 }

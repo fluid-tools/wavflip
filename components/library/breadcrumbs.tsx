@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import Link from "next/link"
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ChevronRight, Plus, FolderPlus, Music } from 'lucide-react'
+import { ChevronRight, Plus, FolderPlus, Music } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { CreateProjectDialog } from './projects/create-dialog'
 import { CreateFolderDialog } from './folders/create-dialog'
@@ -100,41 +100,27 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
   if (isFolder) {
     const folderPath = folderPathData?.path || []
     
-    // Determine back navigation
-    const parentFolder = folderPath[folderPath.length - 2]
-    const backHref = parentFolder ? `/library/folders/${parentFolder.id}` : '/library'
-    const backText = parentFolder ? `Back to ${parentFolder.name}` : 'Back to Library'
-    
     return (
       <div className="flex items-center justify-between flex-1">
-        <div className="flex items-center gap-4">
-          <Link href={backHref}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {backText}
-            </Button>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link href="/library" className="hover:text-foreground">
+            Library
           </Link>
-          
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/library" className="hover:text-foreground">
-              Library
-            </Link>
-            {folderPath.map((folder: FolderPathItem, index: number) => (
-              <div key={folder.id} className="flex items-center gap-2">
-                <ChevronRight className="h-3 w-3" />
-                {index === folderPath.length - 1 ? (
-                  <span className="text-foreground font-medium">{folder.name}</span>
-                ) : (
-                  <Link 
-                    href={`/library/folders/${folder.id}`} 
-                    className="hover:text-foreground"
-                  >
-                    {folder.name}
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
+          {folderPath.map((folder: FolderPathItem, index: number) => (
+            <div key={folder.id} className="flex items-center gap-2">
+              <ChevronRight className="h-3 w-3" />
+              {index === folderPath.length - 1 ? (
+                <span className="text-foreground font-medium">{folder.name}</span>
+              ) : (
+                <Link 
+                  href={`/library/folders/${folder.id}`} 
+                  className="hover:text-foreground"
+                >
+                  {folder.name}
+                </Link>
+              )}
+            </div>
+          ))}
         </div>
         
         {showActions && folderId && (
@@ -164,33 +150,22 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
   if (isProject) {
     const projectName = projectData?.name || 'Project'
     const parentFolderName = parentFolderData?.name || 'Folder'
-    const backHref = parentFolderId ? `/library/folders/${parentFolderId}` : '/library'
-    const backText = parentFolderId ? 'Back to Folder' : 'Back to Library'
     
     return (
-      <div className="flex items-center gap-4">
-        <Link href={backHref}>
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {backText}
-          </Button>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link href="/library" className="hover:text-foreground">
+          Library
         </Link>
-        
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/library" className="hover:text-foreground">
-            Library
-          </Link>
-          {parentFolderId && (
-            <>
-              <ChevronRight className="h-3 w-3" />
-              <Link href={`/library/folders/${parentFolderId}`} className="hover:text-foreground">
-                {parentFolderName}
-              </Link>
-            </>
-          )}
-          <ChevronRight className="h-3 w-3" />
-          <span className="text-foreground font-medium">{projectName}</span>
-        </div>
+        {parentFolderId && (
+          <>
+            <ChevronRight className="h-3 w-3" />
+            <Link href={`/library/folders/${parentFolderId}`} className="hover:text-foreground">
+              {parentFolderName}
+            </Link>
+          </>
+        )}
+        <ChevronRight className="h-3 w-3" />
+        <span className="text-foreground font-medium">{projectName}</span>
       </div>
     )
   }

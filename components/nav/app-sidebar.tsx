@@ -39,8 +39,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import SettingsDialog from "./settings-dialog"
-import { LibrarySidebarNavigation } from "./sidebar-navigation"
-import { ThemeToggle } from "./theme-toggle"
+import { LibrarySidebarNavigation } from "./library-nav"
+import { ThemeToggle, ThemeToggleGroup } from "./theme-toggle"
 import Image from 'next/image'
 
 // Main navigation items
@@ -160,18 +160,18 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <SidebarMenu>
+          {/* User Profile */}
           <SidebarMenuItem>
-            <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton className="flex-1 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:flex-none">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={session?.user.image || ""} alt={session?.user.name || ""} />
-                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                    </Avatar>
-                    <span className="truncate group-data-[collapsible=icon]:hidden">{session?.user.name || session?.user.email}</span>
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:p-0">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={session?.user.image || ""} alt={session?.user.name || ""} className="object-cover" />
+                    <AvatarFallback className="text-xs flex items-center justify-center">{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className="truncate group-data-[collapsible=icon]:hidden">{session?.user.name || session?.user.email}</span>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
@@ -198,12 +198,18 @@ export function AppSidebar() {
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
-              </DropdownMenu>
-              
-              {/* Theme Toggle */}
-              <div className="group-data-[collapsible=icon]:hidden">
-                <ThemeToggle />
-              </div>
+            </DropdownMenu>
+          </SidebarMenuItem>
+          
+          {/* Theme Toggle - Collapsed Mode */}
+          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+            <ThemeToggle />
+          </SidebarMenuItem>
+          
+          {/* Theme Toggle - Expanded Mode */}
+          <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
+            <div className="px-2 py-1">
+              <ThemeToggleGroup />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
