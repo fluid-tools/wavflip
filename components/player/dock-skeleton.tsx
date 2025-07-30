@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function PlayerDockSkeleton() {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/50 shadow-2xl">
+    <div className="absolute bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-l rounded-tl-2xl border-border/50 shadow-2xl">
       {/* Waveform Container */}
       <div className="px-4 sm:px-6 pt-4 pb-3">
         <div className="w-full rounded-lg overflow-hidden bg-muted/30 ring-1 ring-border/20">
