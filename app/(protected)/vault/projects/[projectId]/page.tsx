@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/server/auth'
-import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/lib/lib/server/vault'
+import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/lib/server/vault'
 import { ProjectView } from './client'
 
 interface ProjectPageProps {
