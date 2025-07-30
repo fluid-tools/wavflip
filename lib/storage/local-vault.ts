@@ -1,22 +1,22 @@
 import { get, set, del } from 'idb-keyval'
 import type { AudioTrack } from '@/types/audio'
 
-const LIBRARY_KEY_PREFIX = 'wavflip-track-'
-const LIBRARY_INDEX_KEY = 'wavflip-vault-index'
+const VAULT_KEY_PREFIX = 'wavflip-track-'
+const VAULT_INDEX_KEY = 'wavflip-vault-index'
 
-export interface LibraryTrack extends AudioTrack {
+export interface LocalVaultTrack extends AudioTrack {
   audioData?: ArrayBuffer // Store audio data locally
   blobUrl?: string // Temporary blob URL for playback
 }
 
 // Get all tracks from vault
-export async function getLibraryTracks(): Promise<LibraryTrack[]> {
+export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
   try {
-    const trackIds = await get(LIBRARY_INDEX_KEY) || []
-    const tracks: LibraryTrack[] = []
+    const trackIds = await get(VAULT_INDEX_KEY) || []
+    const tracks: LocalVaultTrack[] = []
     
     for (const trackId of trackIds) {
-      const track = await get(`${LIBRARY_KEY_PREFIX}${trackId}`)
+      const track = await get(`${VAULT_KEY_PREFIX}${trackId}`)
       if (track) {
         tracks.push(track)
       }
@@ -31,21 +31,21 @@ export async function getLibraryTracks(): Promise<LibraryTrack[]> {
 }
 
 // Add track to vault
-export async function addTrackToLibrary(track: AudioTrack, audioData?: ArrayBuffer): Promise<void> {
+export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer): Promise<void> {
   try {
-    const libraryTrack: LibraryTrack = {
+    const vaultTrack: LocalVaultTrack = {
       ...track,
       audioData
     }
     
     // Store the track
-    await set(`${LIBRARY_KEY_PREFIX}${track.id}`, libraryTrack)
+    await set(`${VAULT_KEY_PREFIX}${track.id}`, vaultTrack)
     
     // Update the index
-    const trackIds = await get(LIBRARY_INDEX_KEY) || []
+    const trackIds = await get(VAULT_INDEX_KEY) || []
     if (!trackIds.includes(track.id)) {
       trackIds.push(track.id)
-      await set(LIBRARY_INDEX_KEY, trackIds)
+      await set(VAULT_INDEX_KEY, trackIds)
     }
   } catch (error) {
     console.error('Failed to add track to vault:', error)
@@ -54,15 +54,15 @@ export async function addTrackToLibrary(track: AudioTrack, audioData?: ArrayBuff
 }
 
 // Remove track from vault
-export async function removeTrackFromLibrary(trackId: string): Promise<void> {
+export async function removeTrackFromVault(trackId: string): Promise<void> {
   try {
     // Remove the track data
-    await del(`${LIBRARY_KEY_PREFIX}${trackId}`)
+    await del(`${VAULT_KEY_PREFIX}${trackId}`)
     
     // Update the index
-    const trackIds = await get(LIBRARY_INDEX_KEY) || []
+    const trackIds = await get(VAULT_INDEX_KEY) || []
     const updatedIds = trackIds.filter((id: string) => id !== trackId)
-    await set(LIBRARY_INDEX_KEY, updatedIds)
+    await set(VAULT_INDEX_KEY, updatedIds)
   } catch (error) {
     console.error('Failed to remove track from vault:', error)
     throw new Error('Failed to remove track from vault')
@@ -70,9 +70,9 @@ export async function removeTrackFromLibrary(trackId: string): Promise<void> {
 }
 
 // Get a specific track from vault
-export async function getTrackFromLibrary(trackId: string): Promise<LibraryTrack | null> {
+export async function getTrackFromVault(trackId: string): Promise<LocalVaultTrack | null> {
   try {
-    return await get(`${LIBRARY_KEY_PREFIX}${trackId}`) || null
+    return await get(`${VAULT_KEY_PREFIX}${trackId}`) || null
   } catch (error) {
     console.error('Failed to get track from vault:', error)
     return null
@@ -80,17 +80,17 @@ export async function getTrackFromLibrary(trackId: string): Promise<LibraryTrack
 }
 
 // Clear entire vault
-export async function clearLibrary(): Promise<void> {
+export async function clearVault(): Promise<void> {
   try {
-    const trackIds = await get(LIBRARY_INDEX_KEY) || []
+    const trackIds = await get(VAULT_INDEX_KEY) || []
     
     // Remove all tracks
     for (const trackId of trackIds) {
-      await del(`${LIBRARY_KEY_PREFIX}${trackId}`)
+      await del(`${VAULT_KEY_PREFIX}${trackId}`)
     }
     
     // Clear the index
-    await del(LIBRARY_INDEX_KEY)
+    await del(VAULT_INDEX_KEY)
   } catch (error) {
     console.error('Failed to clear vault:', error)
     throw new Error('Failed to clear vault')
@@ -98,7 +98,7 @@ export async function clearLibrary(): Promise<void> {
 }
 
 // Download audio data from URL and store locally
-export async function downloadAndStoreAudio(track: AudioTrack): Promise<LibraryTrack> {
+export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVaultTrack> {
   try {
     const response = await fetch(track.url)
     if (!response.ok) {
@@ -106,13 +106,13 @@ export async function downloadAndStoreAudio(track: AudioTrack): Promise<LibraryT
     }
     
     const audioData = await response.arrayBuffer()
-    const libraryTrack: LibraryTrack = {
+    const vaultTrack: LocalVaultTrack = {
       ...track,
       audioData
     }
     
-    await addTrackToLibrary(libraryTrack, audioData)
-    return libraryTrack
+    await addTrackToVault(vaultTrack, audioData)
+    return vaultTrack
   } catch (error) {
     console.error('Failed to download and store audio:', error)
     throw new Error('Failed to download audio for offline storage')
@@ -130,7 +130,7 @@ export function revokeBlobUrl(url: string): void {
   URL.revokeObjectURL(url)
 }
 
-export interface LibraryStats {
+interface VaultStats {
   totalTracks: number
   totalSize: number
   totalDuration: number
@@ -139,9 +139,9 @@ export interface LibraryStats {
 }
 
 // Get vault stats
-export async function getLibraryStats(): Promise<LibraryStats> {
+export async function getVaultStats(): Promise<VaultStats> {
   try {
-    const tracks = await getLibraryTracks()
+    const tracks = await getVaultTracks()
     
     let totalSize = 0
     let totalDuration = 0

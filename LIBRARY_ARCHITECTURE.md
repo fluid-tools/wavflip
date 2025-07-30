@@ -24,12 +24,12 @@ server/vault/
 
 **One Core Function:**
 ```typescript
-getLibraryData(userId: string, options: LibraryQueryOptions): Promise<LibraryData>
+getVaultData(userId: string, options: VaultQueryOptions): Promise<VaultData>
 ```
 
 **Unified Options:**
 ```typescript
-interface LibraryQueryOptions {
+interface VaultQueryOptions {
   includeStats?: boolean      // Include vault statistics
   includePath?: boolean       // Include folder breadcrumbs  
   includeHierarchy?: boolean  // Include nested folder structure
@@ -41,11 +41,11 @@ interface LibraryQueryOptions {
 
 **Unified Response:**
 ```typescript
-interface LibraryData {
-  folders: LibraryFolder[]        // Hierarchical folder structure
-  rootProjects: LibraryProject[] // Root-level projects (vault)
+interface VaultData {
+  folders: VaultFolder[]        // Hierarchical folder structure
+  rootProjects: VaultProject[] // Root-level projects (vault)
   path?: BreadcrumbItem[]         // Folder breadcrumbs (if requested)
-  stats?: LibraryStats           // Vault statistics (if requested)
+  stats?: VaultStats           // Vault statistics (if requested)
 }
 ```
 
@@ -89,12 +89,12 @@ interface FolderPathItem { ... }     // with slight differences
 
 **After (Unified):**
 ```typescript
-interface LibraryFolder {            // One type to rule them all
+interface VaultFolder {            // One type to rule them all
   id: string
   name: string
   parentFolderId: string | null
-  projects: LibraryProject[]
-  subfolders: LibraryFolder[]        // Recursive structure
+  projects: VaultProject[]
+  subfolders: VaultFolder[]        // Recursive structure
   projectCount: number
   subFolderCount: number
   level?: number                     // Optional for display
@@ -106,7 +106,7 @@ interface LibraryFolder {            // One type to rule them all
 ### Sidebar Navigation
 ```typescript
 const { data } = useVaultSidebar()
-// Uses: getLibraryData(userId, { includeHierarchy: true })
+// Uses: getVaultData(userId, { includeHierarchy: true })
 ```
 
 ### Move Dialog  
@@ -114,7 +114,7 @@ const { data } = useVaultSidebar()
 const { data } = useQuery(['vault-data', 'hierarchical', excludeId], () =>
   fetch(`/api/vault/sidebar?exclude=${excludeId}`)
 )
-// Uses: getLibraryData(userId, { excludeFolderId, includeLevels: true })
+// Uses: getVaultData(userId, { excludeFolderId, includeLevels: true })
 ```
 
 ### Folder Breadcrumbs
@@ -122,13 +122,13 @@ const { data } = useQuery(['vault-data', 'hierarchical', excludeId], () =>
 const { data } = useQuery(['folder-path', folderId], () =>
   fetch(`/api/folders/${folderId}/path`)
 )
-// Uses: getLibraryData(userId, { includePath: true, specificFolderId })
+// Uses: getVaultData(userId, { includePath: true, specificFolderId })
 ```
 
 ### Vault Statistics
 ```typescript
 const { data } = useVaultStats()
-// Uses: getLibraryData(userId, { includeStats: true })
+// Uses: getVaultData(userId, { includeStats: true })
 ```
 
 ## 🚀 **Performance Benefits**

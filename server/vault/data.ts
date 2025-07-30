@@ -4,11 +4,11 @@ import { db } from '@/db'
 import { folder, project, track, trackVersion } from '@/db/schema/vault'
 import { eq, and, isNull, count, not, desc } from 'drizzle-orm'
 import type { 
-  LibraryData, 
-  LibraryFolder, 
+  VaultData, 
+  VaultFolder, 
   BreadcrumbItem, 
-  LibraryStats,
-  LibraryQueryOptions,
+  VaultStats,
+  VaultQueryOptions,
   Folder,
 } from './types'
 
@@ -16,7 +16,7 @@ import type {
 // CORE DATA FETCHING
 // ================================
 
-export async function getLibraryData(userId: string, options: LibraryQueryOptions = {}): Promise<LibraryData> {
+export async function getVaultData(userId: string, options: VaultQueryOptions = {}): Promise<VaultData> {
   const {
     includeStats = false,
     includePath = false,
@@ -62,21 +62,21 @@ export async function getLibraryData(userId: string, options: LibraryQueryOption
   )
 
   // Calculate total project count including nested projects
-  const calculateTotalProjectCount = (folders: LibraryFolder[]): number => {
+  const calculateTotalProjectCount = (folders: VaultFolder[]): number => {
     return folders.reduce((total, folder) => {
       return total + folder.projects.length + calculateTotalProjectCount(folder.subfolders)
     }, 0)
   }
 
   // Build hierarchical structure
-  const buildHierarchy = (parentId: string | null = null, level = 0): LibraryFolder[] => {
+  const buildHierarchy = (parentId: string | null = null, level = 0): VaultFolder[] => {
     return allFolders
       .filter(f => f.parentFolderId === parentId)
       .map(f => {
         const projects = projectsByFolder.get(f.id) || []
         const subfolders = includeHierarchy ? buildHierarchy(f.id, level + 1) : []
 
-        const folder: LibraryFolder = {
+        const folder: VaultFolder = {
           id: f.id,
           name: f.name,
           parentFolderId: f.parentFolderId,
@@ -107,7 +107,7 @@ export async function getLibraryData(userId: string, options: LibraryQueryOption
     .groupBy(project.id)
     .orderBy(project.order, project.createdAt)
 
-  const result: LibraryData = {
+  const result: VaultData = {
     folders: buildHierarchy(),
     rootProjects
   }
@@ -119,7 +119,7 @@ export async function getLibraryData(userId: string, options: LibraryQueryOption
 
   // Add stats if requested
   if (includeStats) {
-    result.stats = await getLibraryStats(userId)
+    result.stats = await getVaultStats(userId)
   }
 
   return result
@@ -157,7 +157,7 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
   return path
 }
 
-export async function getLibraryStats(userId: string): Promise<LibraryStats> {
+export async function getVaultStats(userId: string): Promise<VaultStats> {
   const [projectCount, trackCount, folderCount, versionData] = await Promise.all([
     db
       .select({ count: count() })
@@ -201,16 +201,16 @@ export async function getLibraryStats(userId: string): Promise<LibraryStats> {
 // ================================
 
 // For sidebar navigation
-export async function getSidebarData(userId: string): Promise<LibraryData> {
-  return getLibraryData(userId, {
+export async function getSidebarData(userId: string): Promise<VaultData> {
+  return getVaultData(userId, {
     includeHierarchy: true,
     includeLevels: false
   })
 }
 
 // For move dialogs
-export async function getHierarchicalFolders(userId: string, excludeFolderId?: string): Promise<LibraryFolder[]> {
-  const data = await getLibraryData(userId, {
+export async function getHierarchicalFolders(userId: string, excludeFolderId?: string): Promise<VaultFolder[]> {
+  const data = await getVaultData(userId, {
     includeHierarchy: true,
     includeLevels: true,
     excludeFolderId
@@ -219,8 +219,8 @@ export async function getHierarchicalFolders(userId: string, excludeFolderId?: s
 }
 
 // For folder views with breadcrumbs
-export async function getFolderData(folderId: string, userId: string): Promise<LibraryData> {
-  return getLibraryData(userId, {
+export async function getFolderData(folderId: string, userId: string): Promise<VaultData> {
+  return getVaultData(userId, {
     includeHierarchy: false,
     includePath: true,
     specificFolderId: folderId

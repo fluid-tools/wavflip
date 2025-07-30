@@ -8,10 +8,10 @@ export * from './data'
 
 // Export unified data functions  
 export {
-  getLibraryData,
+  getVaultData,
   getSidebarData,
   getHierarchicalFolders,
-  getLibraryStats
+  getVaultStats
 } from './data'
 
 // Export all functions from CRUD module (includes both data fetching and mutations)

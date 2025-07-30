@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getLibraryData } from '@/server/vault/data'
+import { getVaultData } from '@/server/vault/data'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,14 +11,14 @@ export async function GET(request: NextRequest) {
     const includeStats = searchParams.get('stats') === 'true'
     const excludeFolderId = searchParams.get('exclude') || undefined
     
-    const libraryData = await getLibraryData(session.user.id, {
+    const vaultData = await getVaultData(session.user.id, {
       includeHierarchy: true,
       includeLevels: !!excludeFolderId, // Include levels if we're excluding (for move dialogs)
       includeStats,
       excludeFolderId
     })
     
-    return NextResponse.json(libraryData)
+    return NextResponse.json(vaultData)
   } catch (error) {
     console.error('Failed to fetch vault data:', error)
     return NextResponse.json(

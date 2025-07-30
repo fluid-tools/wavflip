@@ -9,7 +9,7 @@ type BaseActionState = {
   error: string | null
 }
 
-interface UseLibraryActionOptions {
+interface UseVaultActionOptions {
   successMessage?: string
   onSuccess?: (result: any) => void
   invalidationStrategy?: 'all' | 'sidebar' | 'specific'
@@ -19,7 +19,7 @@ interface UseLibraryActionOptions {
 export function useVaultAction(
   action: (prevState: any, formData: FormData) => Promise<any>,
   initialState: BaseActionState,
-  options: UseLibraryActionOptions = {}
+  options: UseVaultActionOptions = {}
 ) {
   const invalidate = useVaultInvalidation()
   const {
@@ -65,7 +65,7 @@ export function useVaultAction(
 }
 
 // Specific hooks for common operations
-export function useCreateFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useCreateFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { createFolderAction } = require('@/actions/vault')
   
   return useVaultAction(
@@ -79,7 +79,7 @@ export function useCreateFolderAction(options: Omit<UseLibraryActionOptions, 'su
   )
 }
 
-export function useCreateProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useCreateProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { createProjectAction } = require('@/actions/vault')
   
   return useVaultAction(
@@ -93,7 +93,7 @@ export function useCreateProjectAction(options: Omit<UseLibraryActionOptions, 's
   )
 }
 
-export function useDeleteFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useDeleteFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { deleteFolderAction } = require('@/actions/vault')
   
   return useVaultAction(
@@ -106,7 +106,7 @@ export function useDeleteFolderAction(options: Omit<UseLibraryActionOptions, 'su
   )
 }
 
-export function useDeleteProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useDeleteProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { deleteProjectAction } = require('@/actions/vault')
   
   return useVaultAction(
@@ -119,7 +119,7 @@ export function useDeleteProjectAction(options: Omit<UseLibraryActionOptions, 's
   )
 }
 
-export function useRenameFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useRenameFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { renameFolderAction } = require('@/actions/vault')
   
   return useVaultAction(
@@ -133,7 +133,7 @@ export function useRenameFolderAction(options: Omit<UseLibraryActionOptions, 'su
   )
 }
 
-export function useRenameProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useRenameProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { renameProjectAction } = require('@/actions/vault')
   
   return useVaultAction(
@@ -147,7 +147,7 @@ export function useRenameProjectAction(options: Omit<UseLibraryActionOptions, 's
   )
 }
 
-export function useMoveFolderAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useMoveFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { moveFolderAction } = require('@/actions/vault')
   
   return useVaultAction(
@@ -160,7 +160,7 @@ export function useMoveFolderAction(options: Omit<UseLibraryActionOptions, 'succ
   )
 }
 
-export function useMoveProjectAction(options: Omit<UseLibraryActionOptions, 'successMessage'> = {}) {
+export function useMoveProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
   const { moveProjectAction } = require('@/actions/vault')
   
   return useVaultAction(

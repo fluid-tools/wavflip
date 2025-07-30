@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import { getLibraryData } from '@/server/vault/data'
+import { getVaultData } from '@/server/vault/data'
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 })
     }
 
-    const data = await getLibraryData(session.user.id, {
+    const data = await getVaultData(session.user.id, {
       includeHierarchy: false,
       includePath: true,
       specificFolderId: folderId

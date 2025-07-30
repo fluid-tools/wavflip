@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export default function LibraryLoading() {
+export default function VaultLoading() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-6 border-b">

@@ -20,31 +20,31 @@ export type {
 }
 
 // ================================
-// UNIFIED LIBRARY DATA TYPES
+// UNIFIED VAULT DATA TYPES
 // ================================
 
-export interface LibraryProject {
+export interface VaultProject {
   id: string
   name: string
   trackCount: number
 }
 
-export interface LibraryFolder {
+export interface VaultFolder {
   id: string
   name: string
   parentFolderId: string | null
-  projects: LibraryProject[]
-  subfolders: LibraryFolder[]
+  projects: VaultProject[]
+  subfolders: VaultFolder[]
   projectCount: number
   subFolderCount: number
   level?: number // Optional for hierarchy display
 }
 
-export interface LibraryData {
-  folders: LibraryFolder[]
-  rootProjects: LibraryProject[]
+export interface VaultData {
+  folders: VaultFolder[]
+  rootProjects: VaultProject[]
   path?: BreadcrumbItem[] // Optional for specific folder views
-  stats?: LibraryStats
+  stats?: VaultStats
 }
 
 export interface BreadcrumbItem {
@@ -53,7 +53,7 @@ export interface BreadcrumbItem {
   parentFolderId: string | null
 }
 
-export interface LibraryStats {
+export interface VaultStats {
   totalFolders: number
   totalProjects: number
   totalTracks: number
@@ -66,7 +66,7 @@ export interface LibraryStats {
 // QUERY OPTIONS
 // ================================
 
-export interface LibraryQueryOptions {
+export interface VaultQueryOptions {
   // Which data to include
   includeStats?: boolean
   includePath?: boolean

@@ -1,10 +1,10 @@
 import { ReactNode } from 'react'
 
-interface LibraryLayoutProps {
+interface VaultLayoutProps {
   children: ReactNode
 }
 
-export default function LibraryLayout({ children }: LibraryLayoutProps) {
+export default function VaultLayout({ children }: VaultLayoutProps) {
   return (
     <div className="flex flex-col h-full w-full">
       <div className="flex-1 w-full">

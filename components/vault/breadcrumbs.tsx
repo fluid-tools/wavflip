@@ -16,11 +16,11 @@ interface FolderPathItem {
   parentFolderId: string | null
 }
 
-interface LibraryBreadcrumbsProps {
+interface VaultBreadcrumbsProps {
   showActions?: boolean
 }
 
-export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsProps) {
+export function VaultBreadcrumbs({ showActions = true }: VaultBreadcrumbsProps) {
   const pathname = usePathname()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)

@@ -59,7 +59,7 @@ export function VaultSidebarNavigation() {
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
   // Use the new vault hooks
-  const { data: libraryData, isLoading } = useVaultSidebar()
+  const { data: vaultData, isLoading } = useVaultSidebar()
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders)
@@ -147,7 +147,7 @@ export function VaultSidebarNavigation() {
     )
   }
 
-  if (!libraryData) {
+  if (!vaultData) {
     return (
       <SidebarGroup>
         <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Vault</SidebarGroupLabel>
@@ -165,7 +165,7 @@ export function VaultSidebarNavigation() {
     )
   }
 
-  const { folders = [], rootProjects = [] } = libraryData
+  const { folders = [], rootProjects = [] } = vaultData
 
   return (
     <SidebarGroup>

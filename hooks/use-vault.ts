@@ -7,15 +7,15 @@ import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
 // QUERY KEYS
 // ================================
 
-export const libraryKeys = {
+export const vaultKeys = {
   all: ['vault'] as const,
-  sidebar: () => [...libraryKeys.all, 'sidebar'] as const,
-  folders: () => [...libraryKeys.all, 'folders'] as const,
-  folder: (id: string) => [...libraryKeys.folders(), id] as const,
-  projects: () => [...libraryKeys.all, 'projects'] as const,
-  project: (id: string) => [...libraryKeys.projects(), id] as const,
-  vaultProjects: () => [...libraryKeys.all, 'vault-projects'] as const,
-  stats: () => [...libraryKeys.all, 'stats'] as const,
+  sidebar: () => [...vaultKeys.all, 'sidebar'] as const,
+  folders: () => [...vaultKeys.all, 'folders'] as const,
+  folder: (id: string) => [...vaultKeys.folders(), id] as const,
+  projects: () => [...vaultKeys.all, 'projects'] as const,
+  project: (id: string) => [...vaultKeys.projects(), id] as const,
+  vaultProjects: () => [...vaultKeys.all, 'vault-projects'] as const,
+  stats: () => [...vaultKeys.all, 'stats'] as const,
 }
 
 // ================================
@@ -47,7 +47,7 @@ interface VaultSidebarData {
 
 export function useVaultSidebar() {
   return useQuery({
-    queryKey: libraryKeys.sidebar(),
+    queryKey: vaultKeys.sidebar(),
     queryFn: async (): Promise<VaultSidebarData> => {
       const response = await fetch('/api/vault/sidebar')
       if (!response.ok) throw new Error('Failed to fetch vault sidebar')
@@ -63,7 +63,7 @@ export function useVaultSidebar() {
 // ================================
 
 export function useFolder(folderId: string, initialData?: FolderWithProjects) {
-  const queryKey = libraryKeys.folder(folderId)
+  const queryKey = vaultKeys.folder(folderId)
   
   return useQuery({
     queryKey,
@@ -80,7 +80,7 @@ export function useFolder(folderId: string, initialData?: FolderWithProjects) {
 
 export function useRootFolders() {
   return useQuery({
-    queryKey: libraryKeys.folders(),
+    queryKey: vaultKeys.folders(),
     queryFn: async (): Promise<FolderWithProjects[]> => {
       const response = await fetch('/api/folders')
       if (!response.ok) throw new Error('Failed to fetch folders')
@@ -96,7 +96,7 @@ export function useRootFolders() {
 // ================================
 
 export function useProject(projectId: string, initialData?: ProjectWithTracks) {
-  const queryKey = libraryKeys.project(projectId)
+  const queryKey = vaultKeys.project(projectId)
   
   return useQuery({
     queryKey,
@@ -113,7 +113,7 @@ export function useProject(projectId: string, initialData?: ProjectWithTracks) {
 
 export function useVaultProjects() {
   return useQuery({
-    queryKey: libraryKeys.vaultProjects(),
+    queryKey: vaultKeys.vaultProjects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
       const response = await fetch('/api/vault/sidebar')
       if (!response.ok) throw new Error('Failed to fetch vault data')
@@ -133,24 +133,24 @@ export function useVaultInvalidation() {
   const queryClient = useQueryClient()
   
   return {
-    invalidateAll: () => queryClient.invalidateQueries({ queryKey: libraryKeys.all }),
-    invalidateSidebar: () => queryClient.invalidateQueries({ queryKey: libraryKeys.sidebar() }),
-    invalidateFolders: () => queryClient.invalidateQueries({ queryKey: libraryKeys.folders() }),
-    invalidateFolder: (id: string) => queryClient.invalidateQueries({ queryKey: libraryKeys.folder(id) }),
-    invalidateProjects: () => queryClient.invalidateQueries({ queryKey: libraryKeys.projects() }),
-    invalidateProject: (id: string) => queryClient.invalidateQueries({ queryKey: libraryKeys.project(id) }),
-    invalidateVaultProjects: () => queryClient.invalidateQueries({ queryKey: libraryKeys.vaultProjects() }),
-    invalidateStats: () => queryClient.invalidateQueries({ queryKey: libraryKeys.stats() }),
+    invalidateAll: () => queryClient.invalidateQueries({ queryKey: vaultKeys.all }),
+    invalidateSidebar: () => queryClient.invalidateQueries({ queryKey: vaultKeys.sidebar() }),
+    invalidateFolders: () => queryClient.invalidateQueries({ queryKey: vaultKeys.folders() }),
+    invalidateFolder: (id: string) => queryClient.invalidateQueries({ queryKey: vaultKeys.folder(id) }),
+    invalidateProjects: () => queryClient.invalidateQueries({ queryKey: vaultKeys.projects() }),
+    invalidateProject: (id: string) => queryClient.invalidateQueries({ queryKey: vaultKeys.project(id) }),
+    invalidateVaultProjects: () => queryClient.invalidateQueries({ queryKey: vaultKeys.vaultProjects() }),
+    invalidateStats: () => queryClient.invalidateQueries({ queryKey: vaultKeys.stats() }),
   }
 }
 
 // ================================
-// LIBRARY STATS HOOK
+// VAULT STATS HOOK
 // ================================
 
 export function useVaultStats() {
   return useQuery({
-    queryKey: libraryKeys.stats(),
+    queryKey: vaultKeys.stats(),
     queryFn: async () => {
       const response = await fetch('/api/vault/sidebar?stats=true')
       if (!response.ok) throw new Error('Failed to fetch vault stats')

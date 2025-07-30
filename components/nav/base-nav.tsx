@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { useSidebar } from "@/components/ui/sidebar"
-import { LibraryBreadcrumbs } from "../vault/breadcrumbs"
+import { VaultBreadcrumbs } from "../vault/breadcrumbs"
 
 export function Navbar() {
   const pathname = usePathname()
@@ -28,7 +28,7 @@ export function Navbar() {
               </TabsList>
             </Tabs>
           )}
-          <LibraryBreadcrumbs showActions={true} />
+          <VaultBreadcrumbs showActions={true} />
         </div>
       </div>
     )

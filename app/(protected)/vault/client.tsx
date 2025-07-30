@@ -4,7 +4,7 @@ import { useMemo, startTransition, useState } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
-import type { LibraryStats } from '@/server/vault'
+import type { VaultStats } from '@/server/vault'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { FolderCard } from '@/components/vault/folders/card'
@@ -17,10 +17,10 @@ import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-a
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
   initialProjects: ProjectWithTracks[]
-  initialStats: LibraryStats
+  initialStats: VaultStats
 }
 
-type LibraryItem = 
+type VaultItem = 
   | { type: 'folder'; data: FolderWithProjects }
   | { type: 'project'; data: ProjectWithTracks }
 
@@ -87,8 +87,8 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
   }
 
   // Combine folders and projects into a single array for virtualization
-  const libraryItems = useMemo((): LibraryItem[] => {
-    const items: LibraryItem[] = [
+  const vaultItems = useMemo((): VaultItem[] => {
+    const items: VaultItem[] = [
       ...initialFolders.map(folder => ({ type: 'folder' as const, data: folder })),
       ...initialProjects.map(project => ({ type: 'project' as const, data: project }))
     ]
@@ -99,7 +99,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
   const ITEMS_PER_ROW = 4
 
   const renderItem = (index: number) => {
-    const item = libraryItems[index]
+    const item = vaultItems[index]
     if (!item) return null
 
     if (item.type === 'folder') {
@@ -194,16 +194,16 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
           </div>
         </div>
 
-        {libraryItems.length > 0 ? (
+        {vaultItems.length > 0 ? (
           <div style={{ height: '600px' }}>
             <Virtuoso
               style={{ height: '100%' }}
-              totalCount={Math.ceil(libraryItems.length / ITEMS_PER_ROW)}
+              totalCount={Math.ceil(vaultItems.length / ITEMS_PER_ROW)}
               itemContent={(rowIndex) => (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
                   {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
                     const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
-                    return itemIndex < libraryItems.length ? (
+                    return itemIndex < vaultItems.length ? (
                       <div key={itemIndex}>
                         {renderItem(itemIndex)}
                       </div>

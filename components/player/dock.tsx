@@ -172,7 +172,7 @@ export default function PlayerDock() {
     dispatchPlayerAction({ type: 'TOGGLE_MUTE' })
   }
 
-  const handleSaveToLibrary = async () => {
+  const handleSaveToVault = async () => {
     if (!currentTrack) return
     
     setIsSaving(true)
@@ -276,7 +276,7 @@ export default function PlayerDock() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={handleSaveToLibrary}
+                onClick={handleSaveToVault}
                 disabled={isSaving}
                 className="w-8 h-8 p-0 hover:bg-neutral-800 text-neutral-300"
               >
@@ -314,7 +314,7 @@ export default function PlayerDock() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={handleSaveToLibrary}
+              onClick={handleSaveToVault}
               disabled={isSaving}
               className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
             >
