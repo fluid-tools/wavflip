@@ -34,7 +34,7 @@ import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/aud
 import type { AudioTrack } from '@/types/audio'
 import { createTracksTableColumns } from './table-columns'
 import { useTracks, type TrackFromProject } from '../../../hooks/use-tracks'
-import { ProjectPicker } from '../project-picker'
+import { ProjectPicker } from '../projects/picker'
 import type { ProjectWithTracks } from '@/db/schema/library'
 
 interface TracksTableProps {
