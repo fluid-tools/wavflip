@@ -33,12 +33,7 @@ export function ConditionalNavbar() {
           <LibraryBreadcrumbs showActions={true} />
         </div>
         <div className="flex items-center gap-2">
-          {!open && (
-            <>
-              <UserProfile />
-              <ThemeToggle />
-            </>
-          )}
+          {/* User profile and theme toggle are now in sidebar */}
         </div>
       </div>
     )
@@ -60,12 +55,7 @@ export function ConditionalNavbar() {
         </Tabs>
       )}
       <div className="flex items-center gap-2">
-        {!open && (
-          <>
-            <UserProfile />
-            <ThemeToggle />
-          </>
-        )}
+        {/* User profile and theme toggle are now in sidebar */}
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import type { DragData } from './dnd-context'
+import type { DragData } from './context'
 
 interface DraggableWrapperProps {
   id: string

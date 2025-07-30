@@ -2,9 +2,11 @@
 
 import { usePathname } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import Link from "next/link"
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Plus, FolderPlus, Music } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { CreateProjectDialog } from './projects/create-dialog'
 import { CreateFolderDialog } from './folders/create-dialog'
 
@@ -20,6 +22,8 @@ interface LibraryBreadcrumbsProps {
 
 export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsProps) {
   const pathname = usePathname()
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
+  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
   // Parse the current route for library breadcrumbs
   const isRoot = pathname === '/library'
@@ -134,10 +138,24 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
         </div>
         
         {showActions && folderId && (
-          <div className="flex gap-2">
-            <CreateFolderDialog parentFolderId={folderId} triggerText="New Folder" />
-            <CreateProjectDialog folderId={folderId} triggerText="New Project" />
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                New
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowCreateFolderDialog(true)}>
+                <FolderPlus className="h-4 w-4 mr-2" />
+                Create Folder
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowCreateProjectDialog(true)}>
+                <Music className="h-4 w-4 mr-2" />
+                Create Project
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     )
@@ -177,5 +195,21 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
     )
   }
 
-  return null
+  return (
+    <>
+      {/* Controlled Dialogs */}
+      <CreateFolderDialog 
+        parentFolderId={folderId}
+        open={showCreateFolderDialog}
+        onOpenChange={setShowCreateFolderDialog}
+        onSuccess={() => setShowCreateFolderDialog(false)}
+      />
+      <CreateProjectDialog 
+        folderId={folderId}
+        open={showCreateProjectDialog}
+        onOpenChange={setShowCreateProjectDialog}
+        onSuccess={() => setShowCreateProjectDialog(false)}
+      />
+    </>
+  )
 } 

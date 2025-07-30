@@ -40,6 +40,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import SettingsDialog from "@/components/navbar/settings-dialog"
 import { LibrarySidebarNavigation } from "@/components/library/sidebar-navigation"
+import { ThemeToggle } from "@/components/theme-toggle"
 import Image from 'next/image'
 
 // Main navigation items
@@ -160,16 +161,17 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={session?.user.image || ""} alt={session?.user.name || ""} />
-                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                  </Avatar>
-                  <span className="truncate group-data-[collapsible=icon]:hidden">{session?.user.name || session?.user.email}</span>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
+            <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton className="flex-1 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:flex-none">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={session?.user.image || ""} alt={session?.user.name || ""} />
+                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate group-data-[collapsible=icon]:hidden">{session?.user.name || session?.user.email}</span>
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
@@ -196,7 +198,13 @@ export function AppSidebar() {
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+              </DropdownMenu>
+              
+              {/* Theme Toggle */}
+              <div className="group-data-[collapsible=icon]:hidden">
+                <ThemeToggle />
+              </div>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

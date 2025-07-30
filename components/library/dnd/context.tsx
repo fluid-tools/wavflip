@@ -53,6 +53,34 @@ interface LibraryDndProviderProps {
   onCombineProjects?: (sourceProjectId: string, targetProjectId: string) => Promise<void>
 }
 
+function DragPreview({ data }: { data: DragData }) {
+  const getIcon = () => {
+    switch (data.type) {
+      case 'folder':
+        return <Folder className="h-5 w-5 text-blue-600" />
+      case 'project':
+        return <Music className="h-5 w-5 text-green-600" />
+      case 'track':
+        return <FolderOpen className="h-5 w-5 text-purple-600" />
+      default:
+        return null
+    }
+  }
+
+  return (
+    <Card className="w-64 opacity-90 shadow-lg border-2 border-dashed border-primary/50">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-background border flex items-center justify-center">
+            {getIcon()}
+          </div>
+          <CardTitle className="text-sm truncate">{data.name}</CardTitle>
+        </div>
+      </CardHeader>
+    </Card>
+  )
+}
+
 export function LibraryDndProvider({
   children,
   onMoveFolder,
@@ -128,13 +156,13 @@ export function LibraryDndProvider({
           toast.success(`Moved project "${dragData.name}" to vault`)
         }
       }
-             // Handle project-to-project drops (create new folder with both projects)
-       else if (dragData.type === 'project' && dropData.type === 'project') {
-         if (onCombineProjects && dropData.id) {
-           await onCombineProjects(dragData.id, dropData.id)
-           toast.success(`Combined projects "${dragData.name}" and "${dropData.name || 'project'}" into new folder`)
-         }
-       }
+      // Handle project-to-project drops (create new folder with both projects)
+      else if (dragData.type === 'project' && dropData.type === 'project') {
+        if (onCombineProjects && dropData.id) {
+          await onCombineProjects(dragData.id, dropData.id)
+          toast.success(`Combined projects "${dragData.name}" and "${dropData.name || 'project'}" into new folder`)
+        }
+      }
     } catch (error) {
       console.error('Drag and drop error:', error)
       toast.error('Failed to move item')
@@ -175,30 +203,3 @@ export function LibraryDndProvider({
   )
 }
 
-function DragPreview({ data }: { data: DragData }) {
-  const getIcon = () => {
-    switch (data.type) {
-      case 'folder':
-        return <Folder className="h-5 w-5 text-blue-600" />
-      case 'project':
-        return <Music className="h-5 w-5 text-green-600" />
-      case 'track':
-        return <FolderOpen className="h-5 w-5 text-purple-600" />
-      default:
-        return null
-    }
-  }
-
-  return (
-    <Card className="w-64 opacity-90 shadow-lg border-2 border-dashed border-primary/50">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-background border flex items-center justify-center">
-            {getIcon()}
-          </div>
-          <CardTitle className="text-sm truncate">{data.name}</CardTitle>
-        </div>
-      </CardHeader>
-    </Card>
-  )
-} 

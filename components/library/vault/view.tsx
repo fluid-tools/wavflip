@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, startTransition } from 'react'
+import { useMemo, startTransition, useState } from 'react'
 import { Folder, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/library'
@@ -10,8 +10,8 @@ import { CreateProjectDialog } from '../projects/create-dialog'
 import { FolderCard } from '../folders/card'
 import { ProjectCard } from '../projects/card'
 import { Virtuoso } from 'react-virtuoso'
-import { LibraryDndProvider } from '../dnd-context'
-import { DroppableWrapper } from '../droppable-wrapper'
+import { LibraryDndProvider } from '../dnd/context'
+import { DroppableWrapper } from '../dnd/droppable-wrapper'
 import { createFolderFromProjectsAction } from '@/actions/library'
 import { useMoveFolderAction, useMoveProjectAction } from '@/hooks/use-library-action'
 
@@ -28,6 +28,8 @@ type LibraryItem =
 export function VaultView({ initialFolders, initialProjects, initialStats }: VaultViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
+  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -132,7 +134,10 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
       <DroppableWrapper 
         id="vault" 
         data={{ type: 'vault' }}
-        className="space-y-6"
+        className="space-y-6 min-h-screen"
+        showContextMenu={true}
+        onCreateFolder={() => setShowCreateFolderDialog(true)}
+        onCreateProject={() => setShowCreateProjectDialog(true)}
       >
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -230,6 +235,18 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
         )}
       </div>
       </DroppableWrapper>
+
+      {/* Context Menu Dialogs */}
+      <CreateFolderDialog 
+        open={showCreateFolderDialog}
+        onOpenChange={setShowCreateFolderDialog}
+        onSuccess={() => setShowCreateFolderDialog(false)}
+      />
+      <CreateProjectDialog 
+        open={showCreateProjectDialog}
+        onOpenChange={setShowCreateProjectDialog}
+        onSuccess={() => setShowCreateProjectDialog(false)}
+      />
     </LibraryDndProvider>
   )
 } 

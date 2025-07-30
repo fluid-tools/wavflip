@@ -176,7 +176,7 @@ export function LibrarySidebarNavigation() {
       {/* Quick create action - proper sidebar style */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarGroupAction title="Add Folder or Project" className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupAction title="Add Folder or Project">
             <Plus />
             <span className="sr-only">Add Folder or Project</span>
           </SidebarGroupAction>

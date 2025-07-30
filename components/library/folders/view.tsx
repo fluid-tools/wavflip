@@ -1,15 +1,16 @@
 'use client'
 
-import { useMemo, startTransition } from 'react'
+import { useMemo, startTransition, useState } from 'react'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/library'
 import { CreateProjectDialog } from '../projects/create-dialog'
+import { CreateFolderDialog } from './create-dialog'
 import { FolderCard } from './card'
 import { ProjectCard } from '../projects/card'
 import { Virtuoso } from 'react-virtuoso'
-import { LibraryDndProvider } from '../dnd-context'
-import { DroppableWrapper } from '../droppable-wrapper'
+import { LibraryDndProvider } from '../dnd/context'
+import { DroppableWrapper } from '../dnd/droppable-wrapper'
 import { createFolderFromProjectsAction } from '@/actions/library'
 import { useMoveFolderAction, useMoveProjectAction } from '@/hooks/use-library-action'
 
@@ -24,6 +25,8 @@ type FolderItem =
 export function FolderView({ folder }: FolderViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
+  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -114,7 +117,10 @@ export function FolderView({ folder }: FolderViewProps) {
       <DroppableWrapper 
         id={`folder-${folder.id}`} 
         data={{ type: 'folder', id: folder.id }}
-        className="p-6 space-y-6"
+        className="p-6 space-y-6 min-h-screen"
+        showContextMenu={true}
+        onCreateFolder={() => setShowCreateFolderDialog(true)}
+        onCreateProject={() => setShowCreateProjectDialog(true)}
       >
       {/* Folder Info */}
       <div className="space-y-2">
@@ -158,6 +164,20 @@ export function FolderView({ folder }: FolderViewProps) {
         </Card>
       )}
       </DroppableWrapper>
+
+      {/* Context Menu Dialogs */}
+      <CreateFolderDialog 
+        parentFolderId={folder.id}
+        open={showCreateFolderDialog}
+        onOpenChange={setShowCreateFolderDialog}
+        onSuccess={() => setShowCreateFolderDialog(false)}
+      />
+      <CreateProjectDialog 
+        folderId={folder.id}
+        open={showCreateProjectDialog}
+        onOpenChange={setShowCreateProjectDialog}
+        onSuccess={() => setShowCreateProjectDialog(false)}
+      />
     </LibraryDndProvider>
   )
 } 
