@@ -186,7 +186,7 @@ export default function PlayerDock() {
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-50 bg-neutral-900/95 backdrop-blur-md border-t border-neutral-800 shadow-2xl transform transition-transform duration-300 ease-out">
+    <div className="absolute bottom-0 left-0 right-0 z-50 bg-neutral-900/95 backdrop-blur-md border-t border-l rounded-tl-2xl border-neutral-800 shadow-2xl transform transition-transform duration-300 ease-out">
       <div className="px-4 sm:px-6 py-3">
         <div className="flex items-center gap-4">
           {/* Track Info */}

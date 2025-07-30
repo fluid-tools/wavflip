@@ -7,7 +7,8 @@ import {
   Music,
   Settings,
   Search,
-  Mic
+  Mic,
+  LogOut
 } from "lucide-react"
 
 import { useSession, signOut } from "@/lib/auth-client"
@@ -39,11 +40,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import SettingsDialog from "./settings-dialog"
 import { LibrarySidebarNavigation } from "./library-nav"
-import { ThemeToggle, ThemeToggleGroup } from "./theme-toggle"
+import { ThemeToggleGroup } from "./theme-toggle"
 import Image from 'next/image'
 
 // User dropdown content component
-function UserDropdownContent({ session, handleSignOut }: { session: any, handleSignOut: () => void }) {
+function UserDropdownContent({ session, handleSignOut }: { 
+  session: { user: { name?: string; email?: string; image?: string | null } } | null; 
+  handleSignOut: () => void 
+}) {
   return (
     <DropdownMenuContent className="w-56" align="end" forceMount>
       <DropdownMenuLabel className="font-normal">
@@ -63,6 +67,11 @@ function UserDropdownContent({ session, handleSignOut }: { session: any, handleS
       </SettingsDialog>
       <DropdownMenuSeparator />
       <ThemeToggleGroup />
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={handleSignOut}>
+        <LogOut className="mr-1 h-4 w-4" />
+        <span>Sign out</span>
+      </DropdownMenuItem>
     </DropdownMenuContent>
   )
 }
@@ -213,10 +222,7 @@ export function AppSidebar() {
             </DropdownMenu>
           </SidebarMenuItem>
 
-          {/* Theme Toggle - Collapsed Mode */}
-          <SidebarMenuItem className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:mt-2">
-            <ThemeToggle />
-          </SidebarMenuItem>
+       
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

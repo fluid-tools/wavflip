@@ -27,17 +27,15 @@ export default async function ProtectedLayout({
         <AppProviders>
             <SidebarProvider defaultOpen={defaultOpen}>
                 <AppSidebar />
-                <div className="flex flex-col min-h-screen w-full">
+                <div className="flex flex-col min-h-screen w-full relative">
                     <header className="flex items-center gap-2 p-4 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                         <SidebarTrigger />
                         <Navbar />
                     </header>
-                    <main className="flex-1 w-full pb-20">
+                    <main className="flex-1 w-full">
                         {children}
                     </main>
-                    <div className="relative">
-                        <PlayerDock />
-                    </div>
+                    <PlayerDock />
                 </div>
             </SidebarProvider>
         </AppProviders>
