@@ -33,8 +33,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CreateFolderDialog } from './folders/create-dialog'
-import { CreateProjectDialog } from './projects/create-dialog'
+import { CreateFolderDialog } from '@/components/library/folders/create-dialog'
+import { CreateProjectDialog } from '@/components/library/projects/create-dialog'
 
 interface SidebarFolder {
   id: string

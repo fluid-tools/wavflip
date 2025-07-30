@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/auth-server";
-import { AppSidebar } from "@/components/sidebar-navbar/app-sidebar";
+import { AppSidebar } from "@/components/nav/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Navbar } from "@/components/navbar";
+import { Navbar } from "@/components/nav/navbar";
 import dynamic from "next/dynamic";
 import PlayerDockSkeleton from "@/components/player/dock-skeleton";
 import { AppProviders } from "@/state/providers";

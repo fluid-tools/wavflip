@@ -38,9 +38,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import SettingsDialog from "@/components/navbar/settings-dialog"
-import { LibrarySidebarNavigation } from "@/components/library/sidebar-navigation"
-import { ThemeToggle } from "@/components/sidebar-navbar/theme-toggle"
+import SettingsDialog from "./settings-dialog"
+import { LibrarySidebarNavigation } from "./sidebar-navigation"
+import { ThemeToggle } from "./theme-toggle"
 import Image from 'next/image'
 
 // Main navigation items
