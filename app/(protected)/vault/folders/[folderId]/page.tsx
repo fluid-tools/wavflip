@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
-import { requireAuth } from '@/lib/auth-server'
-import { getFolderWithContents } from '@/server/vault'
+import { requireAuth } from '@/lib/server/auth'
+import { getFolderWithContents } from '@/lib/server/vault'
 import { FolderView } from '@/app/(protected)/vault/folders/[folderId]/client'
 
 interface FolderPageProps {
@@ -16,16 +16,12 @@ export default async function FolderPage({ params }: FolderPageProps) {
     params
   ])
 
-  if (!folderId) {
-    notFound()
-  }
+  if (!folderId) notFound()
 
   // Fetch folder data
   const folder = await getFolderWithContents(folderId, session.user.id)
 
-  if (!folder) {
-    notFound()
-  }
+  if (!folder) notFound()
 
   return <FolderView folder={folder} />
 } 

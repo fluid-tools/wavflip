@@ -9,8 +9,8 @@ import {
   getProjectWithTracks,
   handleDuplicateFolderName,
   handleDuplicateProjectName
-} from '@/server/vault'
-import { requireAuth } from '@/lib/auth-server'
+} from '@/lib/server/vault'
+import { requireAuth } from '@/lib/server/auth'
 import type { Folder, Project } from '@/db/schema/vault'
 
 type FolderActionState = {

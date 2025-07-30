@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth-server";
+import { requireAuth } from "@/lib/server/auth";
 import { AppSidebar } from "@/components/nav/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Navbar } from "@/components/nav/base-nav";

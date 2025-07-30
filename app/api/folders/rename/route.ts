@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth-server'
-import { renameFolder } from '@/server/vault'
+import { requireAuth } from '@/lib/server/auth'
+import { renameFolder } from '@/lib/server/vault'
 
 export async function PATCH(request: NextRequest) {
   try {

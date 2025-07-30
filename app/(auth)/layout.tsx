@@ -1,4 +1,4 @@
-import { requireNoAuth } from "@/lib/auth-server";
+import { requireNoAuth } from "@/lib/server/auth";
 
 export default async function AuthLayout({
   children,

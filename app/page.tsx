@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getServerSession } from '@/lib/auth-server'
+import { getServerSession } from '@/lib/server/auth'
 import { Button } from '@/components/ui/button'
 
 export default async function HomePage() {

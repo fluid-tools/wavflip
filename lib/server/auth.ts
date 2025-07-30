@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from './auth'
+import { auth } from '../auth'
 
 // Get session using better-auth's recommended approach
 export async function getServerSession() {

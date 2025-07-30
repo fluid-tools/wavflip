@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth-server'
-import { moveFolder } from '@/server/vault'
+import { requireAuth } from '@/lib/server/auth'
+import { moveFolder } from '@/lib/server/vault'
 
 export async function PATCH(request: NextRequest) {
   try {

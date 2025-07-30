@@ -1,6 +1,6 @@
-import { requireAuth } from '@/lib/auth-server'
-import { getVaultData } from '@/server/vault/data'
-import { getUserFolders, getVaultProjects } from '@/server/vault'
+import { requireAuth } from '@/lib/server/auth'
+import { getVaultData } from '@/lib/server/vault/data'
+import { getUserFolders, getVaultProjects } from '@/lib/server/vault'
 import { VaultView } from '@/app/(protected)/vault/client'
 
 export default async function VaultPage() {

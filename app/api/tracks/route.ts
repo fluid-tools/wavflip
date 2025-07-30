@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth-server'
-import { createTrack, createTrackVersion, deleteTrack, renameTrack } from '@/server/vault'
+import { requireAuth } from '@/lib/server/auth'
+import { createTrack, createTrackVersion, deleteTrack, renameTrack } from '@/lib/server/vault'
 
 export async function POST(request: NextRequest) {
   try {
