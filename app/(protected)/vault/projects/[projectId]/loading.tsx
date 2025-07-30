@@ -1,4 +1,4 @@
-import { TracksTableSkeleton } from '../../../../../components/vault/tracks/table-skeleton'
+import { TracksTableSkeleton } from '@/components/vault/tracks/table-skeleton'
 
 export default function ProjectLoading() {
   return (
@@ -13,7 +13,7 @@ export default function ProjectLoading() {
             <div className="h-4 w-48 bg-muted rounded animate-pulse" />
           </div>
         </div>
-        
+
         {/* Action Buttons Skeleton */}
         <div className="flex items-center gap-4 mb-8">
           <div className="h-10 w-20 bg-muted rounded-full animate-pulse" />
