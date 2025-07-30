@@ -61,6 +61,13 @@ export async function getLibraryData(userId: string, options: LibraryQueryOption
     folderProjects.map(fp => [fp.folderId, fp.projects])
   )
 
+  // Calculate total project count including nested projects
+  const calculateTotalProjectCount = (folders: LibraryFolder[]): number => {
+    return folders.reduce((total, folder) => {
+      return total + folder.projects.length + calculateTotalProjectCount(folder.subfolders)
+    }, 0)
+  }
+
   // Build hierarchical structure
   const buildHierarchy = (parentId: string | null = null, level = 0): LibraryFolder[] => {
     return allFolders
@@ -68,14 +75,14 @@ export async function getLibraryData(userId: string, options: LibraryQueryOption
       .map(f => {
         const projects = projectsByFolder.get(f.id) || []
         const subfolders = includeHierarchy ? buildHierarchy(f.id, level + 1) : []
-        
+
         const folder: LibraryFolder = {
           id: f.id,
           name: f.name,
           parentFolderId: f.parentFolderId,
           projects,
           subfolders,
-          projectCount: projects.length,
+          projectCount: projects.length + calculateTotalProjectCount(subfolders),
           subFolderCount: subfolders.length
         }
 

@@ -27,34 +27,24 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
 
   const foldersWithProjects = await Promise.all(
     folders.map(async (f) => {
-      const [projects, subFolderCount] = await Promise.all([
-        db
-          .select({
-            id: project.id,
-            name: project.name,
-            folderId: project.folderId,
-            userId: project.userId,
-            accessType: project.accessType,
-            order: project.order,
-            createdAt: project.createdAt,
-            updatedAt: project.updatedAt,
-            metadata: project.metadata,
-            trackCount: count(track.id)
-          })
-          .from(project)
-          .leftJoin(track, eq(track.projectId, project.id))
-          .where(eq(project.folderId, f.id))
-          .groupBy(project.id)
-          .orderBy(project.order, project.createdAt),
-        db.select({ count: count() }).from(folder)
-          .where(and(eq(folder.parentFolderId, f.id), eq(folder.userId, userId)))
-      ])
+      // Get full folder contents to calculate proper counts
+      const fullFolderContent = await getFolderWithContents(f.id, userId)
+      if (!fullFolderContent) {
+        return { 
+          ...f, 
+          projects: [],
+          subFolders: [],
+          subFolderCount: 0,
+          projectCount: 0
+        }
+      }
       
       return { 
         ...f, 
-        projects: projects.map(p => ({ ...p, tracks: [] })),
-        subFolderCount: subFolderCount[0]?.count || 0,
-        projectCount: projects.length
+        projects: fullFolderContent.projects,
+        subFolders: fullFolderContent.subFolders,
+        subFolderCount: fullFolderContent.subFolderCount,
+        projectCount: fullFolderContent.projectCount
       }
     })
   )
@@ -167,12 +157,19 @@ export async function getFolderWithContents(folderId: string, userId: string): P
 
   if (!folderData) return null
 
-  // Get subfolders
-  const subFolders = await db
-    .select()
-    .from(folder)
-    .where(and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId)))
-    .orderBy(folder.order, folder.createdAt)
+  // Get subfolders with their full content
+  const subFolders = await Promise.all(
+    (await db
+      .select()
+      .from(folder)
+      .where(and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId)))
+      .orderBy(folder.order, folder.createdAt))
+      .map(async (sf) => {
+        // Recursively get subfolder contents
+        const subFolderContent = await getFolderWithContents(sf.id, userId)
+        return subFolderContent || { ...sf, projects: [], subFolders: [], subFolderCount: 0, projectCount: 0 }
+      })
+  )
 
   // Get projects in this folder
   const projects = await db
@@ -194,12 +191,23 @@ export async function getFolderWithContents(folderId: string, userId: string): P
     .groupBy(project.id)
     .orderBy(project.order, project.createdAt)
 
+  // Calculate total counts including nested content
+  const calculateTotalProjectCount = (folders: any[]): number => {
+    return folders.reduce((total, folder) => {
+      return total + (folder.projects?.length || 0) + calculateTotalProjectCount(folder.subFolders || [])
+    }, 0)
+  }
+
+  const directProjectCount = projects.length
+  const nestedProjectCount = calculateTotalProjectCount(subFolders)
+  const totalProjectCount = directProjectCount + nestedProjectCount
+
   return {
     ...folderData,
     subFolders: subFolders.map(sf => ({ ...sf, projects: [], subFolders: [] })),
     projects: projects.map(p => ({ ...p, tracks: [] })),
     subFolderCount: subFolders.length,
-    projectCount: projects.length
+    projectCount: totalProjectCount
   }
 }
 

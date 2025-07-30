@@ -32,10 +32,12 @@ export default async function ProtectedLayout({
                         <SidebarTrigger />
                         <Navbar />
                     </header>
-                    <main className="flex-1 w-full">
+                    <main className="flex-1 w-full pb-20">
                         {children}
                     </main>
-                    <PlayerDock />
+                    <div className="relative">
+                        <PlayerDock />
+                    </div>
                 </div>
             </SidebarProvider>
         </AppProviders>

@@ -89,7 +89,7 @@ export function FolderView({ folder }: FolderViewProps) {
       return (
         <FolderCard 
           key={item.data.id} 
-          folder={{ ...item.data, projects: [] }} 
+          folder={item.data} 
           showProjectCount={false}
           parentFolderId={folder.id}
           isDragAndDropEnabled={true}

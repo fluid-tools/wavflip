@@ -127,7 +127,7 @@ export function LibraryBreadcrumbs({ showActions = true }: LibraryBreadcrumbsPro
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-1" />
                 New
               </Button>
             </DropdownMenuTrigger>

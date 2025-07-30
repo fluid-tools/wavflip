@@ -57,7 +57,7 @@ function UserDropdownContent({ session, handleSignOut }: { session: any, handleS
       <DropdownMenuSeparator />
       <SettingsDialog>
         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          <Settings className="mr-2 h-4 w-4" />
+          <Settings className="mr-1 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
       </SettingsDialog>

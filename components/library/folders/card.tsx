@@ -91,15 +91,21 @@ export function FolderCard({
     const subFolderCount = (folder as FolderWithProjects & { subFolderCount?: number }).subFolderCount || 0
     const projectCount = showProjectCount ? (folder.projects?.length || 0) : ((folder as FolderWithProjects & { projectCount?: number }).projectCount || 0)
     
-    // If folder has subfolders, show combined count regardless of showProjectCount
-    if (subFolderCount > 0) {
-      if (projectCount === 0) return `${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}`
-      return `${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}, ${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
+    // A folder is only "empty" if it has no subfolders AND no projects
+    if (subFolderCount === 0 && projectCount === 0) {
+      return 'Empty'
     }
     
-    // If no subfolders, show project count or empty state
-    if (projectCount === 0) return showProjectCount ? '0 projects' : 'Empty'
-    return `${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
+    // Build description based on what's actually in the folder
+    const parts = []
+    if (subFolderCount > 0) {
+      parts.push(`${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}`)
+    }
+    if (projectCount > 0) {
+      parts.push(`${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`)
+    }
+    
+    return parts.join(', ')
   }
 
   const cardContent = (
