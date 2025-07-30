@@ -8,7 +8,6 @@ import {
   json,
   pgEnum,
   unique,
-  foreignKey,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -95,10 +94,10 @@ export const trackVersion = pgTable("track_version", {
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),
   metadata: json("metadata"), // Version-specific metadata
-}, (table) => ({
+}, (table) => [
   // Unique version numbers per track
-  uniqueVersionPerTrack: unique().on(table.trackId, table.version),
-}));
+  unique("unique_version_per_track").on(table.trackId, table.version),
+]);
 
 // Types for use in the application
 export type Folder = typeof folder.$inferSelect;
