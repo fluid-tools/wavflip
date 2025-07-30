@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/hooks/use-library-action'
+import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-library-action'
 import type { Project, ProjectWithTracks } from '@/db/schema/library'
 import Link from 'next/link'
 import { DraggableWrapper } from '@/components/library/dnd/draggable-wrapper'

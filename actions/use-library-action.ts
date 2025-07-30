@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { toast } from 'sonner'
-import { useLibraryInvalidation } from './use-library'
+import { useLibraryInvalidation } from '../hooks/use-library'
 
 type BaseActionState = {
   success: boolean

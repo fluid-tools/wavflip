@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/hooks/use-library-action'
+import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/actions/use-library-action'
 import type { FolderWithProjects } from '@/db/schema/library'
 import Link from 'next/link'
 import { DraggableWrapper } from '@/components/library/dnd/draggable-wrapper'

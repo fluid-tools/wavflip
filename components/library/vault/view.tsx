@@ -13,7 +13,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { LibraryDndProvider } from '../dnd/context'
 import { DroppableWrapper } from '../dnd/droppable-wrapper'
 import { createFolderFromProjectsAction } from '@/actions/library'
-import { useMoveFolderAction, useMoveProjectAction } from '@/hooks/use-library-action'
+import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-library-action'
 
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
