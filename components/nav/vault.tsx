@@ -52,7 +52,7 @@ interface SidebarFolder {
 
 
 
-export function LibrarySidebarNavigation() {
+export function VaultSidebarNavigation() {
   const pathname = usePathname()
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)

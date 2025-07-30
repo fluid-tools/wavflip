@@ -39,7 +39,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import SettingsDialog from "./settings-dialog"
-import { LibrarySidebarNavigation } from "./vault-nav"
+import { VaultSidebarNavigation } from "./vault"
 import { ThemeToggleGroup } from "./theme-toggle"
 import Image from 'next/image'
 
@@ -167,7 +167,7 @@ export function AppSidebar() {
         <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
 
         {/* Vault Navigation - Shows nested folders/projects */}
-        <LibrarySidebarNavigation />
+        <VaultSidebarNavigation />
 
         <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
 
