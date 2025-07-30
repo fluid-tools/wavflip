@@ -6,7 +6,7 @@ import { Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import type { ProjectWithTracks } from '@/db/schema/vault'
+import type { ProjectWithTracks, TrackWithVersions } from '@/db/schema/vault'
 import type { AudioTrack } from '@/types/audio'
 
 import { UploadTrackDialog } from '../tracks/upload-dialog'
@@ -42,7 +42,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
   
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
 
-  const totalDuration = (project.tracks || []).reduce((sum: number, track) => {
+  const totalDuration = (project.tracks || []).reduce((sum: number, track: TrackWithVersions) => {
     return sum + (track.activeVersion?.duration || 0)
   }, 0)
 

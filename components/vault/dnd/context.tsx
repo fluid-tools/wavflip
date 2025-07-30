@@ -30,22 +30,22 @@ export type DropData = {
   name?: string // for better user feedback
 }
 
-interface LibraryDndContextType {
+interface VaultDndContextType {
   activeDragData: DragData | null
   onDragMove: (data: { type: 'folder' | 'project' | 'track'; from: string; to: string; itemId: string }) => Promise<void>
 }
 
-const LibraryDndContext = createContext<LibraryDndContextType | null>(null)
+const VaultDndContext = createContext<VaultDndContextType | null>(null)
 
 export function useVaultDnd() {
-  const context = useContext(LibraryDndContext)
+  const context = useContext(VaultDndContext)
   if (!context) {
-    throw new Error('useVaultDnd must be used within LibraryDndProvider')
+    throw new Error('useVaultDnd must be used within VaultDndProvider')
   }
   return context
 }
 
-interface LibraryDndProviderProps {
+interface VaultDndProviderProps {
   children: React.ReactNode
   onMoveFolder?: (folderId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
   onMoveProject?: (projectId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
@@ -81,13 +81,13 @@ function DragPreview({ data }: { data: DragData }) {
   )
 }
 
-export function LibraryDndProvider({
+export function VaultDndProvider({
   children,
   onMoveFolder,
   onMoveProject,
   onMoveTrack,
   onCombineProjects,
-}: LibraryDndProviderProps) {
+}: VaultDndProviderProps) {
   const [activeDragData, setActiveDragData] = useState<DragData | null>(null)
 
   const mouseSensor = useSensor(MouseSensor, {
@@ -185,7 +185,7 @@ export function LibraryDndProvider({
   }
 
   return (
-    <LibraryDndContext.Provider value={{ activeDragData, onDragMove }}>
+    <VaultDndContext.Provider value={{ activeDragData, onDragMove }}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -199,7 +199,7 @@ export function LibraryDndProvider({
           ) : null}
         </DragOverlay>
       </DndContext>
-    </LibraryDndContext.Provider>
+    </VaultDndContext.Provider>
   )
 }
 

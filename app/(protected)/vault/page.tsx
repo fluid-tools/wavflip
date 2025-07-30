@@ -3,7 +3,7 @@ import { getLibraryData } from '@/server/vault/data'
 import { getUserFolders, getVaultProjects } from '@/server/vault'
 import { VaultView } from '@/app/(protected)/vault/client'
 
-export default async function LibraryNewPage() {
+export default async function VaultPage() {
   const session = await requireAuth()
   
   // Fetch data using unified approach

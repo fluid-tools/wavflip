@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { LibraryDndProvider, type DropData } from './dnd/context'
+import { VaultDndProvider, type DropData } from './dnd/context'
 import { DroppableWrapper } from './dnd/droppable-wrapper'
 
 interface DndLayoutProps {
@@ -28,7 +28,7 @@ export function DndLayout({
   className = "p-6 space-y-6 min-h-screen"
 }: DndLayoutProps) {
   return (
-    <LibraryDndProvider
+    <VaultDndProvider
       onMoveFolder={onMoveFolder}
       onMoveProject={onMoveProject}
       onCombineProjects={onCombineProjects}
@@ -43,6 +43,6 @@ export function DndLayout({
       >
         {children}
       </DroppableWrapper>
-    </LibraryDndProvider>
+    </VaultDndProvider>
   )
 }
