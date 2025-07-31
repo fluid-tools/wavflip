@@ -44,7 +44,7 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
     try {
       await sendVerificationEmail({
         email: session.user.email,
-        callbackURL: window.location.origin
+        callbackURL: process.env.NEXT_PUBLIC_APP_URL + "/vault"
       })
       toast.success("Verification email sent! Check your inbox.")
     } catch (error) {
@@ -62,7 +62,7 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
     try {
       await requestPasswordReset({
         email: session.user.email,
-        redirectTo: window.location.origin + "/reset-password"
+        redirectTo: process.env.NEXT_PUBLIC_APP_URL + "/reset-password"
       })
       toast.success("Password reset email sent! Check your inbox to change your password.")
     } catch (error) {
