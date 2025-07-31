@@ -22,14 +22,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
-import { useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import type { Project, ProjectWithTracks } from '@/db/schema/vault'
 import Link from 'next/link'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from '@/components/vault/folders/picker'
 import Image from 'next/image'
+import { useProject } from '@/hooks/data/use-project'
 
 interface ProjectCardProps {
   project: Project | ProjectWithTracks
@@ -52,9 +51,9 @@ export function ProjectCard({
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
-  const [isUploadingImage, setIsUploadingImage] = useState(false)
   
-  const queryClient = useQueryClient()
+  // Use the project hook for image upload functionality
+  const { uploadImage, isUploadingImage } = useProject({ projectId: project.id })
 
   const [, deleteAction, isDeleting] = useDeleteProjectAction({
     onSuccess: () => {
@@ -93,39 +92,6 @@ export function ProjectCard({
     moveAction(formData)
   }
 
-  const handleImageUpload = async (file: File) => {
-    setIsUploadingImage(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch(`/api/projects/${project.id}/image`, {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image')
-      }
-
-      const result = await response.json()
-      
-      if (result.success) {
-        toast.success('Project image updated successfully')
-        // Invalidate queries to refresh the UI
-        queryClient.invalidateQueries({ queryKey: ['project', project.id] })
-        queryClient.invalidateQueries({ queryKey: ['vault'] })
-        queryClient.invalidateQueries({ queryKey: ['vault-sidebar'] })
-      } else {
-        throw new Error(result.error || 'Upload failed')
-      }
-    } catch (error) {
-      toast.error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    } finally {
-      setIsUploadingImage(false)
-    }
-  }
-
   const triggerImageUpload = () => {
     const input = document.createElement('input')
     input.type = 'file'
@@ -134,7 +100,7 @@ export function ProjectCard({
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
-        await handleImageUpload(file)
+        await uploadImage(file)
       }
     }
     input.click()

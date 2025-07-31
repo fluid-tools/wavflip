@@ -8,14 +8,14 @@ import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
 // ================================
 
 export const vaultKeys = {
-  all: ['vault'] as const,
-  sidebar: () => [...vaultKeys.all, 'sidebar'] as const,
-  folders: () => [...vaultKeys.all, 'folders'] as const,
+  base: ['vault'] as const,
+  sidebar: () => [...vaultKeys.base, 'sidebar'] as const,
+  folders: () => [...vaultKeys.base, 'folders'] as const,
   folder: (id: string) => [...vaultKeys.folders(), id] as const,
-  projects: () => [...vaultKeys.all, 'projects'] as const,
+  projects: () => [...vaultKeys.base, 'projects'] as const,
   project: (id: string) => [...vaultKeys.projects(), id] as const,
-  vaultProjects: () => [...vaultKeys.all, 'vault-projects'] as const,
-  stats: () => [...vaultKeys.all, 'stats'] as const,
+  vaultProjects: () => [...vaultKeys.base, 'vault-projects'] as const,
+  stats: () => [...vaultKeys.base, 'stats'] as const,
 }
 
 // ================================
@@ -133,7 +133,7 @@ export function useVaultInvalidation() {
   const queryClient = useQueryClient()
   
   return {
-    invalidateAll: () => queryClient.invalidateQueries({ queryKey: vaultKeys.all }),
+    invalidateAll: () => queryClient.invalidateQueries({ queryKey: vaultKeys.base }),
     invalidateSidebar: () => queryClient.invalidateQueries({ queryKey: vaultKeys.sidebar() }),
     invalidateFolders: () => queryClient.invalidateQueries({ queryKey: vaultKeys.folders() }),
     invalidateFolder: (id: string) => queryClient.invalidateQueries({ queryKey: vaultKeys.folder(id) }),

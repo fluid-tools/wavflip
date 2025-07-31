@@ -48,6 +48,7 @@ export function useVaultAction(
           break
         case 'all':
         default:
+          // This invalidates all vault-related queries since they all start with ['vault']
           invalidate.invalidateAll()
           break
       }

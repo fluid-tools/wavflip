@@ -6,6 +6,7 @@ import { upload } from '@vercel/blob/client'
 import type { ProjectWithTracks } from '@/db/schema/vault'
 import type { ProjectImageResponse } from '@/types/project'
 import { nanoid } from 'nanoid'
+import { vaultKeys } from './use-vault'
 
 interface UseProjectProps {
   projectId: string
@@ -20,7 +21,7 @@ interface UploadTrackData {
 
 export function useProject({ projectId, initialData }: UseProjectProps) {
   const queryClient = useQueryClient()
-  const queryKey = ['project', projectId]
+  const queryKey = vaultKeys.project(projectId)
 
   // Fetch project data
   const query = useQuery({
@@ -208,7 +209,8 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
         })
         
         // Invalidate vault queries to update cards instantly
-        queryClient.invalidateQueries({ queryKey: ['vault'] })
+        // This invalidates all vault-related queries since they all start with ['vault']
+        queryClient.invalidateQueries({ queryKey: vaultKeys.base })
         
         toast.success('Project image updated successfully')
       }

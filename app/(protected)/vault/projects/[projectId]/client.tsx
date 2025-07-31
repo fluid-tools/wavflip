@@ -2,20 +2,31 @@
 
 import { useState, useRef } from 'react'
 import { useAtom } from 'jotai'
-import { Play, Shuffle, MoreHorizontal, Share, Upload } from 'lucide-react'
+import { Play, Shuffle, MoreHorizontal, Share, Upload, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { ProjectWithTracks, TrackWithVersions } from '@/db/schema/vault'
 import type { AudioTrack } from '@/types/audio'
 import Image from 'next/image'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 import { UploadTrackDialog } from '@/components/vault/tracks/upload-dialog'
 import { TracksTable } from '@/components/vault/tracks/table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
 import { useProject } from '@/hooks/data/use-project'
-import { useSession } from '@/lib/auth-client'
 
 interface ProjectViewProps {
     projectId: string
@@ -24,7 +35,7 @@ interface ProjectViewProps {
 }
 
 export function ProjectView({ projectId, initialProject, availableProjects = [] }: ProjectViewProps) {
-    const { project: queryProject, uploadTracks, isUploading } = useProject({
+    const { project: queryProject, uploadTracks, isUploading, uploadImage, isUploadingImage } = useProject({
         projectId,
         initialData: initialProject
     })
@@ -133,36 +144,101 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
             <div className="p-6 space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4">
                     {/* Album Art */}
-                    <div className="relative w-32 h-32 rounded-lg shadow-lg overflow-hidden flex-shrink-0 self-center sm:self-start">
-                        {project.image ? (
-                            <Image 
-                                src={project.image} 
-                                alt={project.name}
-                                fill
-                                className="object-cover"
-                                sizes="128px"
-                                unoptimized
-                            />
-                        ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">
-                                {/* Placeholder abstract design */}
-                                <div className="absolute inset-0 opacity-20">
-                                    <svg viewBox="0 0 200 200" className="w-full h-full">
-                                        <path
-                                            d="M20,180 Q50,20 100,100 T180,80 L180,180 Z"
-                                            fill="currentColor"
-                                            className="text-yellow-400"
-                                        />
-                                        <path
-                                            d="M0,160 Q40,40 80,120 T160,100 L160,200 Z"
-                                            fill="currentColor"
-                                            className="text-orange-400"
-                                        />
-                                    </svg>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <ContextMenu>
+                                    <ContextMenuTrigger asChild>
+                                        <div 
+                                            className="relative w-32 h-32 rounded-lg shadow-lg overflow-hidden flex-shrink-0 self-center sm:self-start cursor-pointer group border-2 border-transparent group-hover:border-primary/50 transition-colors"
+                                            onClick={(e) => {
+                                                e.preventDefault()
+                                                const input = document.createElement('input')
+                                                input.type = 'file'
+                                                input.accept = 'image/*'
+                                                input.multiple = false
+                                                input.onchange = async (e) => {
+                                                    const file = (e.target as HTMLInputElement).files?.[0]
+                                                    if (file) {
+                                                        await uploadImage(file)
+                                                    }
+                                                }
+                                                input.click()
+                                            }}
+                                        >
+                                {isUploadingImage && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                                        <Upload className="h-6 w-6 text-white animate-spin" />
+                                    </div>
+                                )}
+                                {project.image ? (
+                                    <Image 
+                                        src={project.image} 
+                                        alt={project.name}
+                                        fill
+                                        className="object-cover"
+                                        sizes="128px"
+                                        unoptimized
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">
+                                        {/* Placeholder abstract design */}
+                                        <div className="absolute inset-0 opacity-20">
+                                            <svg viewBox="0 0 200 200" className="w-full h-full">
+                                                <path
+                                                    d="M20,180 Q50,20 100,100 T180,80 L180,180 Z"
+                                                    fill="currentColor"
+                                                    className="text-yellow-400"
+                                                />
+                                                <path
+                                                    d="M0,160 Q40,40 80,120 T160,100 L160,200 Z"
+                                                    fill="currentColor"
+                                                    className="text-orange-400"
+                                                />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Overlay on hover */}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                    <div className="bg-black/60 rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ImageIcon className="h-6 w-6 text-white" />
+                                    </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent className="w-48">
+                            <ContextMenuItem
+                                onClick={() => {
+                                    const input = document.createElement('input')
+                                    input.type = 'file'
+                                    input.accept = 'image/*'
+                                    input.multiple = false
+                                    input.onchange = async (e) => {
+                                        const file = (e.target as HTMLInputElement).files?.[0]
+                                        if (file) {
+                                            await uploadImage(file)
+                                        }
+                                    }
+                                    input.click()
+                                }}
+                                disabled={isUploadingImage}
+                            >
+                                {isUploadingImage ? (
+                                    <Upload className="h-4 w-4 animate-spin mr-2" />
+                                ) : (
+                                    <ImageIcon className="h-4 w-4 mr-2" />
+                                )}
+                                {isUploadingImage ? 'Uploading...' : 'Upload Image'}
+                            </ContextMenuItem>
+                        </ContextMenuContent>
+                    </ContextMenu>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Click to upload project image</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    </TooltipProvider>
 
                     {/* Project Info */}
                     <div className="flex-1 flex flex-col justify-center sm:justify-end text-center sm:text-left">
