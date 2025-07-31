@@ -120,29 +120,56 @@ export function FolderCard({
                       <Card className="w-40 rounded-lg overflow-hidden bg-background border border-muted p-2">
             <div className="relative w-full aspect-square">
               <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full">
-                {folder.projects?.slice(0, 4).map((project) => (
-                  <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
-                    {project.image ? (
-                      <Image
-                        src={project.image}
-                        alt={project.name}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted" />
-                    )}
-                  </div>
-                ))}
-                {Array.from({ length: Math.max(0, 4 - (folder.projects?.length || 0)) }).map((_, idx) => (
-                  <div key={idx} className="w-full h-full rounded-sm bg-muted flex items-center justify-center">
-                    {idx === 0 && (folder.projects?.length || 0) === 0 && (
+                {/* 
+                  Grid Logic:
+                  1. If folder has projects: Show up to 4 project previews
+                     - Project with image: Show the image
+                     - Project without image: Show project initial in a colored circle
+                  2. If folder has no projects: Show folder icon in first cell
+                  3. Fill remaining cells with empty placeholders
+                */}
+                {folder.projects && folder.projects.length > 0 ? (
+                  <>
+                    {/* Render project previews (up to 4) */}
+                    {folder.projects.slice(0, 4).map((project) => (
+                      <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
+                        {project.image ? (
+                          // Project has image: show the image
+                          <Image
+                            src={project.image}
+                            alt={project.name}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                            unoptimized
+                          />
+                        ) : (
+                          // Project has no image: show initial in colored circle
+                          <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
+                            <span className="text-green-600 dark:text-green-400 font-semibold text-xs">
+                              {project.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {/* Fill remaining cells with empty placeholders */}
+                    {Array.from({ length: Math.max(0, 4 - folder.projects.length) }).map((_, idx) => (
+                      <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {/* No projects: show folder icon in first cell, rest empty */}
+                    <div className="w-full h-full rounded-sm bg-muted flex items-center justify-center">
                       <Folder className="text-muted-foreground h-4 w-4" />
-                    )}
-                  </div>
-                ))}
+                    </div>
+                    {/* Fill remaining 3 cells with empty placeholders */}
+                    {Array.from({ length: 3 }).map((_, idx) => (
+                      <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                    ))}
+                  </>
+                )}
               </div>
             </div>
             <div className="mt-2">

@@ -8,10 +8,12 @@ import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { FolderCard } from '@/components/vault/folders/card'
 import { ProjectCard } from '@/components/vault/projects/card'
+import { ViewToggle } from '@/components/vault/view-toggle'
 import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { createFolderFromProjectsAction } from '@/actions/vault'
 import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useVaultView } from '@/hooks/use-vault-view'
 
 interface FolderViewProps {
   folder: FolderWithProjects
@@ -26,6 +28,7 @@ export function FolderView({ folder }: FolderViewProps) {
   const [, moveProjectAction] = useMoveProjectAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
+  const { isCompact, toggleView } = useVaultView()
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -92,6 +95,7 @@ export function FolderView({ folder }: FolderViewProps) {
           showProjectCount={false}
           parentFolderId={folder.id}
           isDragAndDropEnabled={true}
+          isCompact={isCompact}
         />
       )
     } else {
@@ -102,6 +106,7 @@ export function FolderView({ folder }: FolderViewProps) {
           folderId={folder.id}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
+          isCompact={isCompact}
         />
       )
     }
@@ -119,11 +124,14 @@ export function FolderView({ folder }: FolderViewProps) {
       className="p-6 space-y-6 min-h-screen"
     >
       {/* Folder Info */}
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">{folder.name}</h1>
-        <p className="text-muted-foreground">
-          {folder.subFolders?.length || 0} {(folder.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folder.projects.length} {folder.projects.length === 1 ? 'project' : 'projects'}
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-semibold">{folder.name}</h1>
+          <p className="text-muted-foreground">
+            {folder.subFolders?.length || 0} {(folder.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folder.projects.length} {folder.projects.length === 1 ? 'project' : 'projects'}
+          </p>
+        </div>
+        <ViewToggle isCompact={isCompact} onToggle={toggleView} />
       </div>
 
       {/* Folders and Projects Grid */}
@@ -133,7 +141,7 @@ export function FolderView({ folder }: FolderViewProps) {
             style={{ height: '100%' }}
             totalCount={Math.ceil(folderItems.length / ITEMS_PER_ROW)}
             itemContent={(rowIndex) => (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+              <div className="flex flex-wrap gap-4 mb-4">
                 {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
                   const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
                   return itemIndex < folderItems.length ? (
