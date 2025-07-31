@@ -133,22 +133,32 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
             <div className="p-6">
                 <div className="flex gap-6 mb-8">
                     {/* Album Art */}
-                    <div className="w-64 h-64 bg-gradient-to-br from-red-900 via-red-800 to-red-900 rounded-lg shadow-2xl flex items-center justify-center relative overflow-hidden">
-                        {/* Placeholder abstract design */}
-                        <div className="absolute inset-0 opacity-20">
-                            <svg viewBox="0 0 200 200" className="w-full h-full">
-                                <path
-                                    d="M20,180 Q50,20 100,100 T180,80 L180,180 Z"
-                                    fill="currentColor"
-                                    className="text-yellow-400"
-                                />
-                                <path
-                                    d="M0,160 Q40,40 80,120 T160,100 L160,200 Z"
-                                    fill="currentColor"
-                                    className="text-orange-400"
-                                />
-                            </svg>
-                        </div>
+                    <div className="w-64 h-64 rounded-lg shadow-2xl overflow-hidden">
+                        {project.image ? (
+                            <img 
+                                src={project.image} 
+                                alt={project.name}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center relative">
+                                {/* Placeholder abstract design */}
+                                <div className="absolute inset-0 opacity-20">
+                                    <svg viewBox="0 0 200 200" className="w-full h-full">
+                                        <path
+                                            d="M20,180 Q50,20 100,100 T180,80 L180,180 Z"
+                                            fill="currentColor"
+                                            className="text-yellow-400"
+                                        />
+                                        <path
+                                            d="M0,160 Q40,40 80,120 T160,100 L160,200 Z"
+                                            fill="currentColor"
+                                            className="text-orange-400"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Project Info */}

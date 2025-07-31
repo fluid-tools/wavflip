@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
+import { AspectRatio } from '@/components/ui/aspect-ratio'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -115,15 +116,12 @@ export function FolderCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/folders/${folder.id}`} className="block">
-          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
-            <div className={cn(
-              "relative overflow-hidden",
-              isCompact ? "h-20" : "h-32"
-            )}>
-              <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 p-1">
-                <div className="grid grid-cols-2 gap-0.5 h-full">
+          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer overflow-hidden">
+            <AspectRatio ratio={1}>
+              <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 p-2">
+                <div className="grid grid-cols-2 gap-1 h-full">
                   {folder.projects?.slice(0, 4).map((project) => (
-                    <div key={project.id} className="rounded-sm overflow-hidden bg-slate-200 dark:bg-slate-700">
+                    <div key={project.id} className="rounded overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                       {project.image ? (
                         <img 
                           src={project.image} 
@@ -131,37 +129,39 @@ export function FolderCard({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-slate-300 dark:bg-slate-600" />
+                        <div className="w-full h-full bg-slate-100 dark:bg-slate-700" />
                       )}
                     </div>
                   ))}
                   {Array.from({ length: Math.max(0, 4 - (folder.projects?.length || 0)) }).map((_, index) => (
-                    <div key={`empty-${index}`} className="rounded-sm bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                    <div key={`empty-${index}`} className="rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
                       {index === 0 && (folder.projects?.length || 0) === 0 && (
                         <Folder className={cn(
-                          "text-blue-500",
-                          isCompact ? "h-3 w-3" : "h-4 w-4"
+                          "text-blue-600 dark:text-blue-400",
+                          isCompact ? "h-4 w-4" : "h-6 w-6"
                         )} />
                       )}
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="absolute bottom-2 left-2 right-2 text-white">
-                <h3 className={cn(
-                  "font-medium truncate",
-                  isCompact ? "text-xs" : "text-sm"
-                )}>
-                  {folder.name}
-                </h3>
-                <p className={cn(
-                  "text-white/80 truncate",
-                  isCompact ? "text-[10px]" : "text-xs"
-                )}>
-                  {getContentDescription()}
-                </p>
-              </div>
+            </AspectRatio>
+            <div className={cn(
+              "p-2 space-y-1",
+              isCompact && "p-1.5 space-y-0.5"
+            )}>
+              <h3 className={cn(
+                "font-medium truncate",
+                isCompact ? "text-xs" : "text-sm"
+              )}>
+                {folder.name}
+              </h3>
+              <p className={cn(
+                "text-muted-foreground truncate",
+                isCompact ? "text-[10px]" : "text-xs"
+              )}>
+                {getContentDescription()}
+              </p>
             </div>
           </Card>
         </Link>

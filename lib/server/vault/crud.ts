@@ -66,6 +66,7 @@ export async function getAllUserFolders(userId: string): Promise<FolderWithProje
         .select({
           id: project.id,
           name: project.name,
+          image: project.image,
           folderId: project.folderId,
           userId: project.userId,
           accessType: project.accessType,
@@ -97,6 +98,7 @@ export async function getVaultProjects(userId: string): Promise<ProjectWithTrack
     .select({
       id: project.id,
       name: project.name,
+      image: project.image,
       folderId: project.folderId,
       userId: project.userId,
       accessType: project.accessType,
@@ -176,6 +178,7 @@ export async function getFolderWithContents(folderId: string, userId: string): P
     .select({
       id: project.id,
       name: project.name,
+      image: project.image,
       folderId: project.folderId,
       userId: project.userId,
       accessType: project.accessType,

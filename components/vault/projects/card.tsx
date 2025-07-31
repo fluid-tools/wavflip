@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Music, Edit2, Trash2, FolderOpen, Image, Upload } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { AspectRatio } from '@/components/ui/aspect-ratio'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -148,82 +149,50 @@ export function ProjectCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/projects/${project.id}`} className="block">
-          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
-            {project.image ? (
-              <div className={cn(
-                "relative overflow-hidden",
-                isCompact ? "h-20" : "h-32"
-              )}>
+          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer overflow-hidden">
+            <AspectRatio ratio={1}>
+              {project.image ? (
                 <img 
                   src={project.image} 
                   alt={project.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/40" />
-                <div className="absolute bottom-2 left-2 right-2 text-white">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className={cn(
-                        "font-medium truncate",
-                        isCompact ? "text-xs" : "text-sm"
-                      )}>
-                        {project.name}
-                      </h3>
-                      <p className={cn(
-                        "text-white/80 truncate",
-                        isCompact ? "text-[10px]" : "text-xs"
-                      )}>
-                        {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
-                      </p>
-                    </div>
-                    {project.accessType !== 'private' && (
-                      <Badge variant="outline" className="text-white border-white/50 text-[10px] px-1 py-0">
-                        {project.accessType}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className={cn(
-                "flex items-center gap-3",
-                isCompact ? "p-2" : "p-3"
-              )}>
-                <div className={cn(
-                  "rounded bg-green-100 dark:bg-green-900/20 flex items-center justify-center shrink-0",
-                  isCompact ? "h-8 w-8" : "h-10 w-10"
-                )}>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 flex items-center justify-center">
                   <Music className={cn(
                     "text-green-600 dark:text-green-400",
-                    isCompact ? "h-3 w-3" : "h-4 w-4"
+                    isCompact ? "h-8 w-8" : "h-12 w-12"
                   )} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className={cn(
-                      "font-medium truncate",
-                      isCompact ? "text-xs" : "text-sm"
-                    )}>
-                      {project.name}
-                    </h3>
-                    {project.accessType !== 'private' && (
-                      <Badge variant="secondary" className={cn(
-                        "shrink-0",
-                        isCompact ? "text-[10px] px-1 py-0" : "text-xs"
-                      )}>
-                        {project.accessType}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className={cn(
-                    "text-muted-foreground truncate",
-                    isCompact ? "text-[10px]" : "text-xs"
+              )}
+            </AspectRatio>
+            <div className={cn(
+              "p-2 space-y-1",
+              isCompact && "p-1.5 space-y-0.5"
+            )}>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className={cn(
+                  "font-medium truncate",
+                  isCompact ? "text-xs" : "text-sm"
+                )}>
+                  {project.name}
+                </h3>
+                {project.accessType !== 'private' && (
+                  <Badge variant="secondary" className={cn(
+                    "shrink-0",
+                    isCompact ? "text-[10px] px-1 py-0" : "text-xs"
                   )}>
-                    {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
-                  </p>
-                </div>
+                    {project.accessType}
+                  </Badge>
+                )}
               </div>
-            )}
+              <p className={cn(
+                "text-muted-foreground truncate",
+                isCompact ? "text-[10px]" : "text-xs"
+              )}>
+                {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
+              </p>
+            </div>
           </Card>
         </Link>
       </ContextMenuTrigger>

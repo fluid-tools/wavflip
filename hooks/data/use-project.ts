@@ -206,6 +206,10 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
             image: data.imageUrl || null
           }
         })
+        
+        // Invalidate vault queries to update cards instantly
+        queryClient.invalidateQueries({ queryKey: ['vault'] })
+        
         toast.success('Project image updated successfully')
       }
     },
