@@ -40,6 +40,7 @@ export const folder = pgTable("folder", {
 export const project = pgTable("project", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  image: text("image"),
   folderId: text("folder_id").references(() => folder.id, { 
     onDelete: "cascade" 
   }), // nullable - projects can exist in vault root
