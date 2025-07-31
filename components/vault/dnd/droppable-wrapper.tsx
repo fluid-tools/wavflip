@@ -62,7 +62,7 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
         className={cn(
           'transition-colors duration-200',
           applyRoundedCorners && 'rounded-xl',
-          highlightOnHover && isValidDrop && 'bg-muted/50 ring-2 ring-primary/50 ring-inset',
+          highlightOnHover && isValidDrop && 'opacity-90 shadow-lg border-2 border-primary/50',
           className
         )}
         aria-dropeffect={canDrop ? 'move' : 'none'}

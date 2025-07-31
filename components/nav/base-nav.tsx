@@ -4,12 +4,21 @@ import { usePathname } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { useSidebar } from "@/components/ui/sidebar"
-import { VaultBreadcrumbs } from "../vault/breadcrumbs"
 import { RecentSheet } from "../gen-ai/recent-sheet"
 import { useAtom } from 'jotai'
 import { generatedSoundsAtom } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
 import { cn } from '@/lib/utils'
+import dynamic from 'next/dynamic'
+
+const VaultBreadcrumbs = dynamic(() => import("../vault/breadcrumbs").then(mod => ({ default: mod.VaultBreadcrumbs })), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="h-4 bg-muted rounded animate-pulse w-12" />
+    </div>
+  )
+})
 
 export function Navbar() {
   const pathname = usePathname()
