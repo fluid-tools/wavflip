@@ -9,8 +9,8 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Loader2, Send, Music, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MUSIC_PROMPTS } from '@/lib/constants/prompts'
-import { RecentSheet } from './recent-sheet'
-import type { GeneratedSound } from '@/types/audio'
+
+
 
 interface InputAreaProps {
   prompt: string
@@ -19,8 +19,6 @@ interface InputAreaProps {
   setIsTTSMode: (mode: boolean) => void
   isLoading: boolean
   onGenerate: () => void
-  onPlaySound: (sound: GeneratedSound) => void
-  generatedSounds: GeneratedSound[]
   className?: string
 }
 
@@ -31,8 +29,6 @@ export function InputArea({
   setIsTTSMode,
   isLoading,
   onGenerate,
-  onPlaySound,
-  generatedSounds,
   className
 }: InputAreaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -72,11 +68,7 @@ export function InputArea({
             </div>
           </div>
 
-          {/* Recent Generations Sheet Trigger */}
-          <RecentSheet 
-            generatedSounds={generatedSounds}
-            onPlaySound={onPlaySound}
-          />
+
         </div>
 
         {/* Prompt Suggestions */}

@@ -7,7 +7,6 @@ import {
   isGeneratingAtom, 
   generationProgressAtom, 
   playerControlsAtom,
-  generatedSoundsAtom,
   currentTrackAtom,
   playerStateAtom
 } from '@/state/audio-atoms'
@@ -48,7 +47,6 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   const [isGenerating] = useAtom(isGeneratingAtom)
   const [generationProgress] = useAtom(generationProgressAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
-  const [generatedSounds] = useAtom(generatedSoundsAtom)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
 
@@ -186,8 +184,6 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
         setIsTTSMode={setIsTTSMode}
         isLoading={isLoading}
         onGenerate={handleGenerate}
-        onPlaySound={handlePlaySound}
-        generatedSounds={generatedSounds}
       />
     </div>
   )
