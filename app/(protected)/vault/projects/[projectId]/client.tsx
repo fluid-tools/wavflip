@@ -24,7 +24,6 @@ interface ProjectViewProps {
 }
 
 export function ProjectView({ projectId, initialProject, availableProjects = [] }: ProjectViewProps) {
-    const { data: session } = useSession()
     const { project: queryProject, uploadTracks, isUploading } = useProject({
         projectId,
         initialData: initialProject
@@ -171,8 +170,8 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
                             <p className="text-sm font-medium text-muted-foreground">PROJECT</p>
                             <h1 className="text-2xl font-bold">{project.name}</h1>
                             <div className="flex items-center gap-2 text-muted-foreground justify-center sm:justify-start flex-wrap">
-                                <span>{session?.user?.name || session?.user?.email || 'Unknown'}</span>
-                                <span>•</span>
+                                {/* <span>{project.userId || 'Unknown'}</span> */}
+                                {/* <span>•</span> */}
                                 <span>{project.tracks?.length || 0} tracks</span>
                                 <span>•</span>
                                 <span>{formatTotalDuration(totalDuration)}</span>
