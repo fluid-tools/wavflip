@@ -42,7 +42,33 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import SettingsDialog from "./settings-dialog"
-import { VaultSidebarNavigation } from "./vault"
+import dynamic from 'next/dynamic'
+
+const VaultSidebarNavigation = dynamic(() => import("./vault").then(mod => ({ default: mod.VaultSidebarNavigation })), {
+  ssr: false,
+  loading: () => (
+    <SidebarGroup>
+      <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Vault</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled>
+              <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+              <div className="h-4 bg-muted rounded animate-pulse flex-1" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled>
+              <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+              <div className="h-4 bg-muted rounded animate-pulse flex-1" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+})
+
 import { ThemeToggleGroup } from "./theme-toggle"
 import Image from 'next/image'
 
