@@ -15,8 +15,6 @@ import {
   MeasuringStrategy,
 } from '@dnd-kit/core'
 import { useState, createContext, useContext, useCallback, useMemo, useEffect } from 'react'
-import { Card, CardHeader, CardTitle } from '@/components/ui/card'
-import { Folder, Music, FileAudio } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDragHistory } from './hooks'
 import type { DragData, DropData, DndCallbacks, ItemType, DragOperation } from './types'

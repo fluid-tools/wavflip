@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { ProjectWithTracks, TrackWithVersions } from '@/db/schema/vault'
 import type { AudioTrack } from '@/types/audio'
+import Image from 'next/image'
 
 import { UploadTrackDialog } from '@/components/vault/tracks/upload-dialog'
 import { TracksTable } from '@/components/vault/tracks/table'
@@ -135,10 +136,13 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
                     {/* Album Art */}
                     <div className="w-64 h-64 rounded-lg shadow-2xl overflow-hidden">
                         {project.image ? (
-                            <img 
+                            <Image 
                                 src={project.image} 
                                 alt={project.name}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                sizes="256px"
+                                unoptimized
                             />
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center relative">

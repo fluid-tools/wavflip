@@ -2,9 +2,7 @@
 
 import { useState } from 'react'
 import { Music, Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { AspectRatio } from '@/components/ui/aspect-ratio'
+import { Card } from '@/components/ui/card'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -23,7 +21,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils'
 import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -39,15 +36,13 @@ interface ProjectCardProps {
   folderId?: string | null
   trackCount?: number
   isDragAndDropEnabled?: boolean
-  isCompact?: boolean
 }
 
 export function ProjectCard({ 
   project, 
   folderId, 
   trackCount, 
-  isDragAndDropEnabled = false,
-  isCompact = false
+  isDragAndDropEnabled = false
 }: ProjectCardProps) {
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
   const displayTrackCount = trackCount ?? ('trackCount' in project ? project.trackCount : 0)

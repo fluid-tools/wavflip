@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import { AspectRatio } from '@/components/ui/aspect-ratio'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -28,7 +27,6 @@ import Link from 'next/link'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from './picker'
-import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
 interface FolderCardProps {
@@ -36,15 +34,13 @@ interface FolderCardProps {
   showProjectCount?: boolean
   parentFolderId?: string | null
   isDragAndDropEnabled?: boolean
-  isCompact?: boolean
 }
 
 export function FolderCard({ 
   folder, 
   showProjectCount = true, 
   parentFolderId = null,
-  isDragAndDropEnabled = false,
-  isCompact = false
+  isDragAndDropEnabled = false
 }: FolderCardProps) {
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
