@@ -207,7 +207,7 @@ export async function getFolderWithContents(folderId: string, userId: string): P
 
   return {
     ...folderData,
-    subFolders: subFolders.map(sf => ({ ...sf, projects: [], subFolders: [] })),
+    subFolders,
     projects: projects.map(p => ({ ...p, tracks: [] })),
     subFolderCount: subFolders.length,
     projectCount: totalProjectCount
