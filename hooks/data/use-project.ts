@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { upload } from '@vercel/blob/client'
 import type { ProjectWithTracks } from '@/db/schema/vault'
+import type { ProjectImageResponse } from '@/types/project'
 import { nanoid } from 'nanoid'
 
 interface UseProjectProps {
@@ -62,7 +63,7 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       // Upload to Vercel Blob
       const blob = await upload(file.name, file, {
         access: 'public',
-        handleUploadUrl: '/api/upload',
+        handleUploadUrl: '/api/vault/upload',
       })
 
       // Create track in database
@@ -177,6 +178,42 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
     }
   }
 
+  // Upload project image mutation
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File): Promise<ProjectImageResponse> => {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`/api/projects/${projectId}/image`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(error)
+      }
+
+      return response.json()
+    },
+    onSuccess: (data) => {
+      if (data.success && data.imageUrl) {
+        // Update the project in cache with new image
+        queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            image: data.imageUrl || null
+          }
+        })
+        toast.success('Project image updated successfully')
+      }
+    },
+    onError: (error) => {
+      toast.error(`Failed to upload image: ${error.message}`)
+    },
+  })
+
   return {
     project: query.data,
     isLoading: query.isLoading,
@@ -186,5 +223,7 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
     uploadTrack: uploadTrackMutation.mutateAsync,
     uploadTracks,
     isUploading: uploadTrackMutation.isPending,
+    uploadImage: uploadImageMutation.mutateAsync,
+    isUploadingImage: uploadImageMutation.isPending,
   }
 } 

@@ -116,33 +116,53 @@ export function FolderCard({
       <ContextMenuTrigger asChild>
         <Link href={`/vault/folders/${folder.id}`} className="block">
           <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
-            <CardHeader className={isCompact ? "p-2.5" : "p-3"}>
-              <div className="flex items-center gap-2.5">
-                <div className={cn(
-                  "rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center flex-shrink-0",
-                  isCompact ? "h-6 w-6" : "h-8 w-8"
-                )}>
-                  <Folder className={cn(
-                    "text-blue-600 dark:text-blue-400",
-                    isCompact ? "h-3 w-3" : "h-4 w-4"
-                  )} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <CardTitle className={cn(
-                    "font-medium truncate",
-                    isCompact ? "text-xs" : "text-sm"
-                  )}>
-                    {folder.name}
-                  </CardTitle>
-                  <CardDescription className={cn(
-                    "truncate",
-                    isCompact ? "text-[10px]" : "text-xs"
-                  )}>
-                    {getContentDescription()}
-                  </CardDescription>
+            <div className={cn(
+              "relative overflow-hidden",
+              isCompact ? "h-20" : "h-32"
+            )}>
+              <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 p-1">
+                <div className="grid grid-cols-2 gap-0.5 h-full">
+                  {folder.projects?.slice(0, 4).map((project) => (
+                    <div key={project.id} className="rounded-sm overflow-hidden bg-slate-200 dark:bg-slate-700">
+                      {project.image ? (
+                        <img 
+                          src={project.image} 
+                          alt={project.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-300 dark:bg-slate-600" />
+                      )}
+                    </div>
+                  ))}
+                  {Array.from({ length: Math.max(0, 4 - (folder.projects?.length || 0)) }).map((_, index) => (
+                    <div key={`empty-${index}`} className="rounded-sm bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                      {index === 0 && (folder.projects?.length || 0) === 0 && (
+                        <Folder className={cn(
+                          "text-blue-500",
+                          isCompact ? "h-3 w-3" : "h-4 w-4"
+                        )} />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            </CardHeader>
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="absolute bottom-2 left-2 right-2 text-white">
+                <h3 className={cn(
+                  "font-medium truncate",
+                  isCompact ? "text-xs" : "text-sm"
+                )}>
+                  {folder.name}
+                </h3>
+                <p className={cn(
+                  "text-white/80 truncate",
+                  isCompact ? "text-[10px]" : "text-xs"
+                )}>
+                  {getContentDescription()}
+                </p>
+              </div>
+            </div>
           </Card>
         </Link>
       </ContextMenuTrigger>

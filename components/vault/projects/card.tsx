@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Music, Edit2, Trash2, FolderOpen } from 'lucide-react'
+import { Music, Edit2, Trash2, FolderOpen, Image, Upload } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -24,6 +24,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import type { Project, ProjectWithTracks } from '@/db/schema/vault'
 import Link from 'next/link'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
@@ -52,6 +54,9 @@ export function ProjectCard({
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  
+  const queryClient = useQueryClient()
 
   const [, deleteAction, isDeleting] = useDeleteProjectAction({
     onSuccess: () => {
@@ -90,6 +95,53 @@ export function ProjectCard({
     moveAction(formData)
   }
 
+  const handleImageUpload = async (file: File) => {
+    setIsUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`/api/projects/${project.id}/image`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      const result = await response.json()
+      
+      if (result.success) {
+        toast.success('Project image updated successfully')
+        // Invalidate queries to refresh the UI
+        queryClient.invalidateQueries({ queryKey: ['project', project.id] })
+        queryClient.invalidateQueries({ queryKey: ['vault'] })
+        queryClient.invalidateQueries({ queryKey: ['vault-sidebar'] })
+      } else {
+        throw new Error(result.error || 'Upload failed')
+      }
+    } catch (error) {
+      toast.error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
+  const triggerImageUpload = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.multiple = false
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        await handleImageUpload(file)
+      }
+    }
+    input.click()
+  }
+
   // State management is now handled by the custom hooks automatically
 
   const cardContent = (
@@ -97,48 +149,101 @@ export function ProjectCard({
       <ContextMenuTrigger asChild>
         <Link href={`/vault/projects/${project.id}`} className="block">
           <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
-            <CardHeader className={isCompact ? "p-2.5" : "p-3"}>
-              <div className="flex items-center gap-2.5">
+            {project.image ? (
+              <div className={cn(
+                "relative overflow-hidden",
+                isCompact ? "h-20" : "h-32"
+              )}>
+                <img 
+                  src={project.image} 
+                  alt={project.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute bottom-2 left-2 right-2 text-white">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className={cn(
+                        "font-medium truncate",
+                        isCompact ? "text-xs" : "text-sm"
+                      )}>
+                        {project.name}
+                      </h3>
+                      <p className={cn(
+                        "text-white/80 truncate",
+                        isCompact ? "text-[10px]" : "text-xs"
+                      )}>
+                        {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
+                      </p>
+                    </div>
+                    {project.accessType !== 'private' && (
+                      <Badge variant="outline" className="text-white border-white/50 text-[10px] px-1 py-0">
+                        {project.accessType}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className={cn(
+                "flex items-center gap-3",
+                isCompact ? "p-2" : "p-3"
+              )}>
                 <div className={cn(
-                  "rounded-md bg-green-50 dark:bg-green-950/30 flex items-center justify-center flex-shrink-0",
-                  isCompact ? "h-6 w-6" : "h-8 w-8"
+                  "rounded bg-green-100 dark:bg-green-900/20 flex items-center justify-center shrink-0",
+                  isCompact ? "h-8 w-8" : "h-10 w-10"
                 )}>
                   <Music className={cn(
                     "text-green-600 dark:text-green-400",
                     isCompact ? "h-3 w-3" : "h-4 w-4"
                   )} />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <CardTitle className={cn(
+                    <h3 className={cn(
                       "font-medium truncate",
                       isCompact ? "text-xs" : "text-sm"
                     )}>
                       {project.name}
-                    </CardTitle>
+                    </h3>
                     {project.accessType !== 'private' && (
                       <Badge variant="secondary" className={cn(
                         "shrink-0",
-                        isCompact ? "text-[10px] px-1 py-0.5 h-4" : "text-xs px-1.5 py-0.5 h-5"
+                        isCompact ? "text-[10px] px-1 py-0" : "text-xs"
                       )}>
                         {project.accessType}
                       </Badge>
                     )}
                   </div>
-                  <CardDescription className={cn(
-                    "truncate",
+                  <p className={cn(
+                    "text-muted-foreground truncate",
                     isCompact ? "text-[10px]" : "text-xs"
                   )}>
-                    {isCompact ? displayTrackCount : `${displayTrackCount} ${displayTrackCount === 1 ? 'track' : 'tracks'}`}
-                  </CardDescription>
+                    {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
+                  </p>
                 </div>
               </div>
-            </CardHeader>
+            )}
           </Card>
         </Link>
       </ContextMenuTrigger>
 
         <ContextMenuContent className="w-48">
+          <ContextMenuItem
+            onClick={(e) => {
+              e.preventDefault()
+              triggerImageUpload()
+            }}
+            disabled={isUploadingImage}
+          >
+            {isUploadingImage ? (
+              <Upload className="h-4 w-4 animate-spin" />
+            ) : (
+              <Image className="h-4 w-4" />
+            )}
+            {isUploadingImage ? 'Uploading...' : 'Upload Image'}
+          </ContextMenuItem>
+          <ContextMenuSeparator />
           <ContextMenuItem
             onClick={(e) => {
               e.preventDefault()
