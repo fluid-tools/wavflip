@@ -7,11 +7,11 @@ import { requireAuth } from '@/lib/server/auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const session = await requireAuth()
-    const { projectId } = params
+    const { projectId } = await params
 
     // Verify project ownership
     const existingProject = await db

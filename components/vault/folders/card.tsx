@@ -34,6 +34,7 @@ interface FolderCardProps {
   showProjectCount?: boolean
   parentFolderId?: string | null
   isDragAndDropEnabled?: boolean
+  isCompact?: boolean
 }
 
 export function FolderCard({ 

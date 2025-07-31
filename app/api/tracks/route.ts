@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
-import { createTrack, createTrackVersion, deleteTrack, renameTrack } from '@/lib/server/vault'
+import { createTrack, createTrackVersion, deleteTrack, renameTrack, setActiveVersion } from '@/lib/server/vault'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,13 +28,16 @@ export async function POST(request: NextRequest) {
     })
 
     // Create first version with the uploaded file
-    await createTrackVersion({
+    const version = await createTrackVersion({
       trackId: track.id,
       fileUrl,
       size: parseInt(fileSize) || 0,
       duration: parseFloat(duration) || 0,
       mimeType: mimeType || 'audio/mpeg',
     })
+
+    // Set the active version for the track
+    await setActiveVersion(track.id, version.id, session.user.id)
     
     return NextResponse.json({ success: true, track })
   } catch (error) {

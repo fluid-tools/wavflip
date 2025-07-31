@@ -36,6 +36,7 @@ interface ProjectCardProps {
   folderId?: string | null
   trackCount?: number
   isDragAndDropEnabled?: boolean
+  isCompact?: boolean
 }
 
 export function ProjectCard({ 
