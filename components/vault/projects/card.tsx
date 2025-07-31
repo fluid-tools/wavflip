@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Music, Edit2, Trash2, FolderOpen, Image, Upload } from 'lucide-react'
+import { Music, Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
@@ -32,6 +32,7 @@ import Link from 'next/link'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from '@/components/vault/folders/picker'
+import Image from 'next/image'
 
 interface ProjectCardProps {
   project: Project | ProjectWithTracks
@@ -149,49 +150,26 @@ export function ProjectCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/projects/${project.id}`} className="block">
-          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer overflow-hidden">
-            <AspectRatio ratio={1}>
+          <Card className="max-w-[160px] w-full rounded-lg overflow-hidden bg-background border border-muted p-2">
+            <div className="relative w-full aspect-square">
               {project.image ? (
-                <img 
-                  src={project.image} 
+                <Image
+                  src={project.image}
                   alt={project.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="160px"
+                  unoptimized
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 flex items-center justify-center">
-                  <Music className={cn(
-                    "text-green-600 dark:text-green-400",
-                    isCompact ? "h-8 w-8" : "h-12 w-12"
-                  )} />
+                <div className="w-full h-full flex items-center justify-center bg-muted">
+                  <Music className="text-muted-foreground h-8 w-8" />
                 </div>
               )}
-            </AspectRatio>
-            <div className={cn(
-              "p-2 space-y-1",
-              isCompact && "p-1.5 space-y-0.5"
-            )}>
-              <div className="flex items-center justify-between gap-2">
-                <h3 className={cn(
-                  "font-medium truncate",
-                  isCompact ? "text-xs" : "text-sm"
-                )}>
-                  {project.name}
-                </h3>
-                {project.accessType !== 'private' && (
-                  <Badge variant="secondary" className={cn(
-                    "shrink-0",
-                    isCompact ? "text-[10px] px-1 py-0" : "text-xs"
-                  )}>
-                    {project.accessType}
-                  </Badge>
-                )}
-              </div>
-              <p className={cn(
-                "text-muted-foreground truncate",
-                isCompact ? "text-[10px]" : "text-xs"
-              )}>
-                {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
-              </p>
+            </div>
+            <div className="mt-2">
+              <h3 className="text-xs font-medium truncate">{project.name}</h3>
+              <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
             </div>
           </Card>
         </Link>
@@ -208,7 +186,7 @@ export function ProjectCard({
             {isUploadingImage ? (
               <Upload className="h-4 w-4 animate-spin" />
             ) : (
-              <Image className="h-4 w-4" />
+              <ImageIcon className="h-4 w-4" />
             )}
             {isUploadingImage ? 'Uploading...' : 'Upload Image'}
           </ContextMenuItem>

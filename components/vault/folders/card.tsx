@@ -29,6 +29,7 @@ import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from './picker'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 
 interface FolderCardProps {
   folder: FolderWithProjects
@@ -116,52 +117,37 @@ export function FolderCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/folders/${folder.id}`} className="block">
-          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer overflow-hidden">
-            <AspectRatio ratio={1}>
-              <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 p-2">
-                <div className="grid grid-cols-2 gap-1 h-full">
-                  {folder.projects?.slice(0, 4).map((project) => (
-                    <div key={project.id} className="rounded overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                      {project.image ? (
-                        <img 
-                          src={project.image} 
-                          alt={project.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-slate-100 dark:bg-slate-700" />
-                      )}
-                    </div>
-                  ))}
-                  {Array.from({ length: Math.max(0, 4 - (folder.projects?.length || 0)) }).map((_, index) => (
-                    <div key={`empty-${index}`} className="rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                      {index === 0 && (folder.projects?.length || 0) === 0 && (
-                        <Folder className={cn(
-                          "text-blue-600 dark:text-blue-400",
-                          isCompact ? "h-4 w-4" : "h-6 w-6"
-                        )} />
-                      )}
-                    </div>
-                  ))}
-                </div>
+          <Card className="max-w-[160px] w-full rounded-lg overflow-hidden bg-background border border-muted p-2">
+            <div className="relative w-full aspect-square">
+              <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full">
+                {folder.projects?.slice(0, 4).map((project) => (
+                  <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
+                    {project.image ? (
+                      <Image
+                        src={project.image}
+                        alt={project.name}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted" />
+                    )}
+                  </div>
+                ))}
+                {Array.from({ length: Math.max(0, 4 - (folder.projects?.length || 0)) }).map((_, idx) => (
+                  <div key={idx} className="w-full h-full rounded-sm bg-muted flex items-center justify-center">
+                    {idx === 0 && (folder.projects?.length || 0) === 0 && (
+                      <Folder className="text-muted-foreground h-4 w-4" />
+                    )}
+                  </div>
+                ))}
               </div>
-            </AspectRatio>
-            <div className={cn(
-              "p-2 space-y-1",
-              isCompact && "p-1.5 space-y-0.5"
-            )}>
-              <h3 className={cn(
-                "font-medium truncate",
-                isCompact ? "text-xs" : "text-sm"
-              )}>
-                {folder.name}
-              </h3>
-              <p className={cn(
-                "text-muted-foreground truncate",
-                isCompact ? "text-[10px]" : "text-xs"
-              )}>
-                {getContentDescription()}
-              </p>
+            </div>
+            <div className="mt-2">
+              <h3 className="text-xs font-medium truncate">{folder.name}</h3>
+              <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
             </div>
           </Card>
         </Link>
