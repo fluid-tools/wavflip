@@ -45,7 +45,7 @@ export const DraggableWrapper = memo(forwardRef<HTMLDivElement, DraggableWrapper
 
     const style = {
       transform: CSS.Translate.toString(transform),
-      opacity: isDragging ? 0.5 : 1,
+      opacity: isDragging ? 1 : 1,
       transition: isDragging ? 'none' : 'transform 200ms ease, opacity 200ms ease',
     }
 
@@ -62,8 +62,8 @@ export const DraggableWrapper = memo(forwardRef<HTMLDivElement, DraggableWrapper
         }}
         style={style}
         className={cn(
-          'relative rounded-xl',
-          isDragging ? 'z-50 cursor-grabbing' : 'cursor-grab',
+          'relative rounded-lg',
+          isDragging ? 'z-50 cursor-grabbing opacity-90 shadow-lg border-2 border-primary/50' : 'cursor-grab',
           'touch-none select-none',
           className
         )}

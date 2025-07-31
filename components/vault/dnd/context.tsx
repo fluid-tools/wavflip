@@ -45,27 +45,6 @@ interface VaultDndProviderProps extends DndCallbacks {
   children: React.ReactNode
 }
 
-function DragPreview({ data }: { data: DragData }) {
-  const icons = {
-    folder: <Folder className="h-5 w-5 text-blue-600" />,
-    project: <Music className="h-5 w-5 text-green-600" />,
-    track: <FileAudio className="h-5 w-5 text-purple-600" />,
-  }
-
-  return (
-    <Card className="w-64 opacity-90 shadow-lg border-2 border-primary/50 rounded-xl">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-background border flex items-center justify-center">
-            {icons[data.type]}
-          </div>
-          <CardTitle className="text-sm truncate">{data.name}</CardTitle>
-        </div>
-      </CardHeader>
-    </Card>
-  )
-}
-
 const dropRules: Record<ItemType, string[]> = {
   folder: ['folder', 'vault'],
   project: ['folder', 'vault', 'project'],
@@ -283,9 +262,7 @@ export function VaultDndProvider({
           duration: 200,
           easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
         }}>
-          {activeDragData ? (
-            <DragPreview data={activeDragData} />
-          ) : null}
+          {null}
         </DragOverlay>
       </DndContext>
     </VaultDndContext.Provider>

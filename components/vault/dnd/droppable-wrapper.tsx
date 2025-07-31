@@ -61,7 +61,7 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
         }}
         className={cn(
           'transition-colors duration-200',
-          applyRoundedCorners && 'rounded-xl',
+          applyRoundedCorners && 'rounded-lg',
           highlightOnHover && isValidDrop && 'opacity-90 shadow-lg border-2 border-primary/50',
           className
         )}
