@@ -11,5 +11,5 @@ export const {
     requestPasswordReset,
     resetPassword
 } = createAuthClient({
-    baseURL: process.env.NEXT_PUBLIC_APP_URL,
+    baseURL: process.env.NEXT_PUBLIC_BASE_URL,
 });

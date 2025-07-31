@@ -47,7 +47,7 @@ export function FolderPicker({
   const { data: foldersData, isLoading } = useQuery({
     queryKey: ['vault-data', 'hierarchical', excludeFolderId],
     queryFn: async () => {
-      const url = new URL('/api/vault/sidebar', process.env.NEXT_PUBLIC_APP_URL)
+      const url = new URL('/api/vault/sidebar', process.env.NEXT_PUBLIC_BASE_URL)
       if (excludeFolderId) {
         url.searchParams.set('exclude', excludeFolderId)
       }

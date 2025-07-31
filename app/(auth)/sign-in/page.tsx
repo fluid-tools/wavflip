@@ -90,7 +90,7 @@ export default function SignIn() {
     try {
       await sendVerificationEmail({
         email: email,
-        callbackURL: process.env.NEXT_PUBLIC_APP_URL + "/vault"
+        callbackURL: process.env.NEXT_PUBLIC_BASE_URL + "/vault"
       });
       toast.success("Verification email sent! Check your inbox.");
     } catch (error) {
@@ -111,7 +111,7 @@ export default function SignIn() {
     try {
       await requestPasswordReset({
         email: email,
-        redirectTo: process.env.NEXT_PUBLIC_APP_URL + "/reset-password"
+        redirectTo: process.env.NEXT_PUBLIC_BASE_URL + "/reset-password"
       });
       toast.success("Password reset email sent! Check your inbox.");
     } catch (error) {
