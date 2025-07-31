@@ -116,10 +116,10 @@ export function FolderCard({
       <ContextMenuTrigger asChild>
         <Link href={`/vault/folders/${folder.id}`} className="block">
           <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
-            <CardHeader className={isCompact ? "pb-2" : "pb-3"}>
-              <div className="flex items-center gap-3">
+            <CardHeader className={isCompact ? "p-2.5" : "p-3"}>
+              <div className="flex items-center gap-2.5">
                 <div className={cn(
-                  "rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center",
+                  "rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center flex-shrink-0",
                   isCompact ? "h-6 w-6" : "h-8 w-8"
                 )}>
                   <Folder className={cn(
@@ -134,16 +134,12 @@ export function FolderCard({
                   )}>
                     {folder.name}
                   </CardTitle>
-                  {!isCompact && (
-                    <CardDescription className="text-xs">
-                      {getContentDescription()}
-                    </CardDescription>
-                  )}
-                  {isCompact && (
-                    <div className="text-[10px] text-muted-foreground">
-                      {getContentDescription()}
-                    </div>
-                  )}
+                  <CardDescription className={cn(
+                    "truncate",
+                    isCompact ? "text-[10px]" : "text-xs"
+                  )}>
+                    {getContentDescription()}
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>

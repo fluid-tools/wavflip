@@ -22,13 +22,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
 import type { Project, ProjectWithTracks } from '@/db/schema/vault'
 import Link from 'next/link'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from '@/components/vault/folders/picker'
-import { cn } from '@/lib/utils'
 
 interface ProjectCardProps {
   project: Project | ProjectWithTracks
@@ -97,10 +97,10 @@ export function ProjectCard({
       <ContextMenuTrigger asChild>
         <Link href={`/vault/projects/${project.id}`} className="block">
           <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
-            <CardHeader className={isCompact ? "pb-2" : "pb-3"}>
-              <div className="flex items-center gap-3">
+            <CardHeader className={isCompact ? "p-2.5" : "p-3"}>
+              <div className="flex items-center gap-2.5">
                 <div className={cn(
-                  "rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center",
+                  "rounded-md bg-green-50 dark:bg-green-950/30 flex items-center justify-center flex-shrink-0",
                   isCompact ? "h-6 w-6" : "h-8 w-8"
                 )}>
                   <Music className={cn(
@@ -109,28 +109,29 @@ export function ProjectCard({
                   )} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className={cn(
-                    "font-medium truncate",
-                    isCompact ? "text-xs" : "text-sm"
+                  <div className="flex items-center gap-2">
+                    <CardTitle className={cn(
+                      "font-medium truncate",
+                      isCompact ? "text-xs" : "text-sm"
+                    )}>
+                      {project.name}
+                    </CardTitle>
+                    {project.accessType !== 'private' && (
+                      <Badge variant="secondary" className={cn(
+                        "shrink-0",
+                        isCompact ? "text-[10px] px-1 py-0.5 h-4" : "text-xs px-1.5 py-0.5 h-5"
+                      )}>
+                        {project.accessType}
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription className={cn(
+                    "truncate",
+                    isCompact ? "text-[10px]" : "text-xs"
                   )}>
-                    {project.name}
-                  </CardTitle>
-                  {!isCompact && (
-                    <CardDescription className="text-xs">
-                      {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
-                    </CardDescription>
-                  )}
-                  {isCompact && (
-                    <div className="text-[10px] text-muted-foreground">
-                      {displayTrackCount}
-                    </div>
-                  )}
+                    {isCompact ? displayTrackCount : `${displayTrackCount} ${displayTrackCount === 1 ? 'track' : 'tracks'}`}
+                  </CardDescription>
                 </div>
-                {project.accessType !== 'private' && (
-                  <Badge variant="secondary" className={isCompact ? "text-[10px] px-1.5 py-0.5" : "text-xs"}>
-                    {project.accessType}
-                  </Badge>
-                )}
               </div>
             </CardHeader>
           </Card>
