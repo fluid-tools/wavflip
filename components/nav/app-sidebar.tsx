@@ -30,7 +30,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import {
   DropdownMenu,
@@ -168,10 +167,6 @@ export function AppSidebar() {
       <Sidebar variant="floating" collapsible="icon">
         <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          {/* Trigger button when expanded */}
-          <div className="group-data-[collapsible=icon]:hidden">
-            <SidebarTrigger />
-          </div>
           <div className="flex items-center justify-center">
             <Image src="/logo.svg" alt="WAVFLIP" width={32} height={32} unoptimized />
           </div>

@@ -29,10 +29,7 @@ export default async function ProtectedLayout({
                 <AppSidebar />
                 <SidebarInset className="flex flex-col min-h-screen">
                     <header className="flex items-center gap-2 p-4 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                        {/* Only show trigger when sidebar is collapsed */}
-                        <div className="peer-data-[state=collapsed]:block peer-data-[state=expanded]:hidden">
                             <SidebarTrigger />
-                        </div>
                         <Navbar />
                     </header>
                     <main className="flex-1 w-full">
