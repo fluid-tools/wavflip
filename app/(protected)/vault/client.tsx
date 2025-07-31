@@ -144,7 +144,7 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
               style={{ height: '100%' }}
               totalCount={Math.ceil(vaultItems.length / ITEMS_PER_ROW)}
               itemContent={(rowIndex) => (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+                <div className="flex flex-wrap gap-4 mb-4">
                   {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
                     const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
                     return itemIndex < vaultItems.length ? (

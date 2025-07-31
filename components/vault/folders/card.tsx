@@ -117,7 +117,7 @@ export function FolderCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/folders/${folder.id}`} className="block">
-          <Card className="max-w-[160px] w-full rounded-lg overflow-hidden bg-background border border-muted p-2">
+                      <Card className="w-40 rounded-lg overflow-hidden bg-background border border-muted p-2">
             <div className="relative w-full aspect-square">
               <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full">
                 {folder.projects?.slice(0, 4).map((project) => (
