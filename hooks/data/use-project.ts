@@ -198,13 +198,13 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       return response.json()
     },
     onMutate: async (file: File) => {
-      // Cancel any outgoing refetches
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries({ queryKey })
       
       // Snapshot the previous value
       const previousProject = queryClient.getQueryData<ProjectWithTracks>(queryKey)
       
-      // Create optimistic image URL
+      // Create optimistic image URL - this will be replaced with real URL on success
       const optimisticImageUrl = URL.createObjectURL(file)
       
       // Optimistically update project cache
@@ -218,27 +218,50 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       
       // Optimistically update all folder queries that contain this project
       queryClient.setQueriesData(
-        { predicate: (query) => query.queryKey[0] === 'vault' && query.queryKey[1] === 'folders' },
+        { predicate: (query) => 
+          query.queryKey[0] === 'vault' && 
+          query.queryKey[1] === 'folders' && 
+          query.queryKey.length === 3 // Individual folder: ['vault', 'folders', folderId]
+        },
         (oldData: unknown) => {
           if (!oldData || typeof oldData !== 'object') return oldData
           
-          const folderData = oldData as { projects?: ProjectWithTracks[] }
-          if (!folderData.projects) return oldData
-          
-          return {
-            ...folderData,
-            projects: folderData.projects.map((p) => 
-              p.id === projectId 
-                ? { ...p, image: optimisticImageUrl }
-                : p
-            )
+          const folderData = oldData as { 
+            projects?: ProjectWithTracks[]
+            subFolders?: { projects?: ProjectWithTracks[] }[]
           }
+          
+          // Helper function to update projects recursively
+          const updateProjectsRecursively = (data: any): any => {
+            let updated = { ...data }
+            
+            // Update direct projects
+            if (updated.projects) {
+              updated.projects = updated.projects.map((p: any) => 
+                p.id === projectId 
+                  ? { ...p, image: optimisticImageUrl }
+                  : p
+              )
+            }
+            
+            // Update projects in subfolders
+            if (updated.subFolders) {
+              updated.subFolders = updated.subFolders.map((subfolder: any) =>
+                updateProjectsRecursively(subfolder)
+              )
+            }
+            
+            return updated
+          }
+          
+          return updateProjectsRecursively(folderData)
         }
       )
       
+      // Return context object with snapshotted value and optimistic URL
       return { previousProject, optimisticImageUrl }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousProject) {
         queryClient.setQueryData(queryKey, context.previousProject)
@@ -246,39 +269,51 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       
       // Rollback folder queries
       queryClient.setQueriesData(
-        { predicate: (query) => query.queryKey[0] === 'vault' && query.queryKey[1] === 'folders' },
+        { predicate: (query) => 
+          query.queryKey[0] === 'vault' && 
+          query.queryKey[1] === 'folders' && 
+          query.queryKey.length === 3 // Individual folder: ['vault', 'folders', folderId]
+        },
         (oldData: unknown) => {
-          if (!oldData || typeof oldData !== 'object') return oldData
+          if (!oldData || typeof oldData !== 'object' || !context?.previousProject) return oldData
           
-          const folderData = oldData as { projects?: ProjectWithTracks[] }
-          if (!folderData.projects || !context?.previousProject) return oldData
-          
-          return {
-            ...folderData,
-            projects: folderData.projects.map((p) => 
-              p.id === projectId 
-                ? { ...p, image: context.previousProject?.image || null }
-                : p
-            )
+          const folderData = oldData as { 
+            projects?: ProjectWithTracks[]
+            subFolders?: { projects?: ProjectWithTracks[] }[]
           }
+          
+          // Helper function to rollback projects recursively
+          const rollbackProjectsRecursively = (data: any): any => {
+            let updated = { ...data }
+            
+            // Rollback direct projects
+            if (updated.projects) {
+              updated.projects = updated.projects.map((p: any) => 
+                p.id === projectId 
+                  ? { ...p, image: context.previousProject?.image || null }
+                  : p
+              )
+            }
+            
+            // Rollback projects in subfolders
+            if (updated.subFolders) {
+              updated.subFolders = updated.subFolders.map((subfolder: any) =>
+                rollbackProjectsRecursively(subfolder)
+              )
+            }
+            
+            return updated
+          }
+          
+          return rollbackProjectsRecursively(folderData)
         }
       )
-      
-      // Clean up optimistic URL
-      if (context?.optimisticImageUrl) {
-        URL.revokeObjectURL(context.optimisticImageUrl)
-      }
       
       toast.error(`Failed to upload image: ${error.message}`)
     },
     onSuccess: (data, variables, context) => {
-      // Clean up optimistic URL
-      if (context?.optimisticImageUrl) {
-        URL.revokeObjectURL(context.optimisticImageUrl)
-      }
-      
       if (data.success && data.imageUrl) {
-        // Update the project in cache with real image URL
+        // Update the project cache with real image URL (replacing optimistic data)
         queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
           if (!oldData) return oldData
           return {
@@ -287,27 +322,55 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
           }
         })
         
-        // Update all folder queries that contain this project with real URL
+        // Update all folder queries with real URL (replacing optimistic data)
         queryClient.setQueriesData(
-          { predicate: (query) => query.queryKey[0] === 'vault' && query.queryKey[1] === 'folders' },
+          { predicate: (query) => 
+            query.queryKey[0] === 'vault' && 
+            query.queryKey[1] === 'folders' && 
+            query.queryKey.length === 3 // Individual folder: ['vault', 'folders', folderId]
+          },
           (oldData: unknown) => {
             if (!oldData || typeof oldData !== 'object') return oldData
             
-            const folderData = oldData as { projects?: ProjectWithTracks[] }
-            if (!folderData.projects) return oldData
-            
-            return {
-              ...folderData,
-              projects: folderData.projects.map((p) => 
-                p.id === projectId 
-                  ? { ...p, image: data.imageUrl || null }
-                  : p
-              )
+            const folderData = oldData as { 
+              projects?: ProjectWithTracks[]
+              subFolders?: { projects?: ProjectWithTracks[] }[]
             }
+            
+            // Helper function to update projects recursively with real URL
+            const updateProjectsRecursively = (folderData: any): any => {
+              let updated = { ...folderData }
+              
+              // Update direct projects
+              if (updated.projects) {
+                updated.projects = updated.projects.map((p: any) => 
+                  p.id === projectId 
+                    ? { ...p, image: data.imageUrl || null }
+                    : p
+                )
+              }
+              
+              // Update projects in subfolders
+              if (updated.subFolders) {
+                updated.subFolders = updated.subFolders.map((subfolder: any) =>
+                  updateProjectsRecursively(subfolder)
+                )
+              }
+              
+              return updated
+            }
+            
+            return updateProjectsRecursively(folderData)
           }
         )
         
         toast.success('Project image updated successfully')
+      }
+    },
+    onSettled: (data, error, variables, context) => {
+      // Always clean up the optimistic blob URL after mutation completes
+      if (context?.optimisticImageUrl) {
+        URL.revokeObjectURL(context.optimisticImageUrl)
       }
     },
   })

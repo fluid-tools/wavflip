@@ -30,12 +30,8 @@ export function FolderView({ folder }: FolderViewProps) {
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
   
-  // Use React Query data (seeded from SSR) instead of props directly
-  const { data: currentFolder } = useFolder(folder.id, folder)
-  const folderData = currentFolder || folder
+  const { data: folderData = folder } = useFolder(folder.id, folder)
   
-  // View state is now managed globally via atoms
-
   const handleMoveFolder = async (
     folderId: string, 
     parentFolderId: string | null, 
@@ -70,7 +66,7 @@ export function FolderView({ folder }: FolderViewProps) {
     const formData = new FormData()
     formData.append('sourceProjectId', sourceProjectId)
     formData.append('targetProjectId', targetProjectId)
-    formData.append('parentFolderId', folderData.id) // Use current folder as parent
+    formData.append('parentFolderId', folderData.id)
     
     const result = await createFolderFromProjectsAction({ success: false, error: null }, formData)
     if (result.error) {
