@@ -131,21 +131,21 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
 
 
             {/* Project Hero Section */}
-            <div className="p-6">
-                <div className="flex gap-6 mb-8">
+            <div className="p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row gap-4">
                     {/* Album Art */}
-                    <div className="w-64 h-64 rounded-lg shadow-2xl overflow-hidden">
+                    <div className="relative w-32 h-32 rounded-lg shadow-lg overflow-hidden flex-shrink-0 self-center sm:self-start">
                         {project.image ? (
                             <Image 
                                 src={project.image} 
                                 alt={project.name}
                                 fill
                                 className="object-cover"
-                                sizes="256px"
+                                sizes="128px"
                                 unoptimized
                             />
                         ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center relative">
+                            <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">
                                 {/* Placeholder abstract design */}
                                 <div className="absolute inset-0 opacity-20">
                                     <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -166,11 +166,11 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
                     </div>
 
                     {/* Project Info */}
-                    <div className="flex-1 flex flex-col justify-end">
+                    <div className="flex-1 flex flex-col justify-center sm:justify-end text-center sm:text-left">
                         <div className="space-y-2">
                             <p className="text-sm font-medium text-muted-foreground">PROJECT</p>
-                            <h1 className="text-4xl font-bold">{project.name}</h1>
-                            <div className="flex items-center gap-2 text-muted-foreground">
+                            <h1 className="text-2xl font-bold">{project.name}</h1>
+                            <div className="flex items-center gap-2 text-muted-foreground justify-center sm:justify-start flex-wrap">
                                 <span>{session?.user?.name || session?.user?.email || 'Unknown'}</span>
                                 <span>•</span>
                                 <span>{project.tracks?.length || 0} tracks</span>
@@ -188,10 +188,10 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                     <Button
                         size="lg"
-                        className="rounded-full px-8"
+                        className="rounded-full px-6 sm:px-8"
                         onClick={handlePlayAll}
                         disabled={!project.tracks || project.tracks.length === 0 || isUploading}
                     >
@@ -213,7 +213,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
 
                 {/* Track List - Refactored Table */}
                 {project.tracks && project.tracks.length > 0 ? (
-                    <div className="space-y-4">
+                    <div>
                         <TracksTable
                             tracks={project.tracks}
                             projectId={projectId}
