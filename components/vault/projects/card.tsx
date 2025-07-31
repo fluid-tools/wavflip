@@ -28,12 +28,14 @@ import Link from 'next/link'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from '@/components/vault/folders/picker'
+import { cn } from '@/lib/utils'
 
 interface ProjectCardProps {
   project: Project | ProjectWithTracks
   folderId?: string | null
   trackCount?: number
   isDragAndDropEnabled?: boolean
+  isCompact?: boolean
 }
 
 export function ProjectCard({ 
