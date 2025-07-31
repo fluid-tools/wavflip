@@ -93,14 +93,16 @@ export function ProjectCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/projects/${project.id}`} className="block">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="group hover:shadow-lg hover:shadow-green-500/10 transition-all duration-200 cursor-pointer border-0 bg-gradient-to-br from-background to-muted/20 hover:from-green-50/50 hover:to-green-100/30 dark:hover:from-green-950/20 dark:hover:to-green-900/20">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                  <Music className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+                  <Music className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-sm truncate">{project.name}</CardTitle>
+                  <CardTitle className="text-sm font-medium truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                    {project.name}
+                  </CardTitle>
                   <CardDescription className="text-xs">
                     {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
                   </CardDescription>

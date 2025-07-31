@@ -1,10 +1,9 @@
 'use client'
 
 import { useMemo, startTransition, useState } from 'react'
-import { Folder, Music } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Folder } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
-import type { VaultStats } from '@/lib/server/vault'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { FolderCard } from '@/components/vault/folders/card'
@@ -17,14 +16,13 @@ import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-a
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
   initialProjects: ProjectWithTracks[]
-  initialStats: VaultStats
 }
 
 type VaultItem = 
   | { type: 'folder'; data: FolderWithProjects }
   | { type: 'project'; data: ProjectWithTracks }
 
-export function VaultView({ initialFolders, initialProjects, initialStats }: VaultViewProps) {
+export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
@@ -72,19 +70,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
       throw new Error(result.error)
     }
   }
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
 
   // Combine folders and projects into a single array for virtualization
   const vaultItems = useMemo((): VaultItem[] => {
@@ -125,75 +111,25 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
   }
 
   return (
-    <DndLayout
-      droppableId="vault"
-      droppableData={{ type: 'vault' }}
-      onMoveFolder={handleMoveFolder}
-      onMoveProject={handleMoveProject}
-      onCombineProjects={handleCombineProjects}
-      onCreateFolder={() => setShowCreateFolderDialog(true)}
-      onCreateProject={() => setShowCreateProjectDialog(true)}
-      className="space-y-6 min-h-screen"
-    >
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Folders</CardTitle>
-            <Folder className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{initialStats.totalFolders}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projects</CardTitle>
-            <Music className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{initialStats.totalProjects}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tracks</CardTitle>
-            <Music className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{initialStats.totalTracks}</div>
-            <p className="text-xs text-muted-foreground">
-              {initialStats.totalVersions} versions
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Storage</CardTitle>
-            <Music className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatBytes(initialStats.totalSize)}</div>
-            <p className="text-xs text-muted-foreground">
-              {formatDuration(initialStats.totalDuration)} total
-            </p>
-          </CardContent>
-        </Card>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">Vault Contents</h2>
+        <div className="flex gap-2">
+          <CreateFolderDialog />
+          <CreateProjectDialog />
+        </div>
       </div>
 
-      {/* Content Grid */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Vault Contents</h2>
-          <div className="flex gap-2">
-            <CreateFolderDialog />
-            <CreateProjectDialog />
-          </div>
-        </div>
-
+      <DndLayout
+        droppableId="vault"
+        droppableData={{ type: 'vault' }}
+        onMoveFolder={handleMoveFolder}
+        onMoveProject={handleMoveProject}
+        onCombineProjects={handleCombineProjects}
+        onCreateFolder={() => setShowCreateFolderDialog(true)}
+        onCreateProject={() => setShowCreateProjectDialog(true)}
+        className="space-y-4"
+      >
         {vaultItems.length > 0 ? (
           <div style={{ height: '600px' }}>
             <Virtuoso
@@ -215,7 +151,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
           </div>
         ) : (
           /* Empty state */
-          <Card className="border-dashed">
+          <Card className="border-dashed border-2">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Folder className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="font-semibold mb-2">No folders or projects yet</h3>
@@ -229,7 +165,7 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
             </CardContent>
           </Card>
         )}
-      </div>
+      </DndLayout>
 
       {/* Context Menu Dialogs */}
       <CreateFolderDialog 
@@ -242,6 +178,6 @@ export function VaultView({ initialFolders, initialProjects, initialStats }: Vau
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
-    </DndLayout>
+    </div>
   )
 } 

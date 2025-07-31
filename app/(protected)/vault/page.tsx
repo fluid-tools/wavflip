@@ -2,6 +2,7 @@ import { requireAuth } from '@/lib/server/auth'
 import { getVaultData } from '@/lib/server/vault/data'
 import { getUserFolders, getVaultProjects } from '@/lib/server/vault'
 import { VaultView } from '@/app/(protected)/vault/client'
+import { VaultStats } from '@/components/vault/stats-cards'
 
 export default async function VaultPage() {
   const session = await requireAuth()
@@ -14,11 +15,11 @@ export default async function VaultPage() {
   ])
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full p-6 space-y-6">
+      <VaultStats stats={vaultData.stats!} />
       <VaultView 
         initialFolders={folders}
         initialProjects={projects}
-        initialStats={vaultData.stats!}
       />
     </div>
   )

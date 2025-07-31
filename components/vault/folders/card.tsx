@@ -112,14 +112,16 @@ export function FolderCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/folders/${folder.id}`} className="block">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="group hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-200 cursor-pointer border-0 bg-gradient-to-br from-background to-muted/20 hover:from-blue-50/50 hover:to-blue-100/30 dark:hover:from-blue-950/20 dark:hover:to-blue-900/20">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <Folder className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+                  <Folder className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-sm truncate">{folder.name}</CardTitle>
+                  <CardTitle className="text-sm font-medium truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {folder.name}
+                  </CardTitle>
                   <CardDescription className="text-xs">
                     {getContentDescription()}
                   </CardDescription>
