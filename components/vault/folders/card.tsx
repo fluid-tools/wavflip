@@ -34,7 +34,6 @@ interface FolderCardProps {
   showProjectCount?: boolean
   parentFolderId?: string | null
   isDragAndDropEnabled?: boolean
-  isCompact?: boolean
 }
 
 export function FolderCard({ 
@@ -43,6 +42,7 @@ export function FolderCard({
   parentFolderId = null,
   isDragAndDropEnabled = false
 }: FolderCardProps) {
+  // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)

@@ -13,7 +13,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { createFolderFromProjectsAction } from '@/actions/vault'
 import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
-import { useVaultView } from '@/hooks/use-vault-view'
+
 
 interface VaultViewProps {
   initialFolders: FolderWithProjects[]
@@ -29,7 +29,7 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
   const [, moveProjectAction] = useMoveProjectAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
-  const { isCompact, toggleView } = useVaultView()
+  // View state is now managed globally via atoms
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -98,7 +98,6 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
           folder={item.data} 
           parentFolderId={null}
           isDragAndDropEnabled={true}
-          isCompact={isCompact}
         />
       )
     } else {
@@ -109,7 +108,6 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
           folderId={null}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
-          isCompact={isCompact}
         />
       )
     }
@@ -120,7 +118,7 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Vault Contents</h2>
         <div className="flex items-center gap-3">
-          <ViewToggle isCompact={isCompact} onToggle={toggleView} />
+          <ViewToggle />
           <div className="flex gap-2">
             <CreateFolderDialog />
             <CreateProjectDialog />

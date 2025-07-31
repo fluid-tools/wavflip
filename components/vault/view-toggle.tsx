@@ -1,15 +1,14 @@
 'use client'
 
+import { useAtom } from 'jotai'
 import { Grid3X3, Grid } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { vaultViewCompactAtom, toggleVaultViewAtom } from '@/state/ui-atoms'
 
-interface ViewToggleProps {
-  isCompact: boolean
-  onToggle: (compact: boolean) => void
-}
-
-export function ViewToggle({ isCompact, onToggle }: ViewToggleProps) {
+export function ViewToggle() {
+  const [isCompact] = useAtom(vaultViewCompactAtom)
+  const [, onToggle] = useAtom(toggleVaultViewAtom)
   return (
     <div className="flex items-center gap-1">
       <Button

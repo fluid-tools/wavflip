@@ -13,7 +13,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { createFolderFromProjectsAction } from '@/actions/vault'
 import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
-import { useVaultView } from '@/hooks/use-vault-view'
+
 
 interface FolderViewProps {
   folder: FolderWithProjects
@@ -28,7 +28,7 @@ export function FolderView({ folder }: FolderViewProps) {
   const [, moveProjectAction] = useMoveProjectAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
-  const { isCompact, toggleView } = useVaultView()
+  // View state is now managed globally via atoms
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -95,7 +95,6 @@ export function FolderView({ folder }: FolderViewProps) {
           showProjectCount={false}
           parentFolderId={folder.id}
           isDragAndDropEnabled={true}
-          isCompact={isCompact}
         />
       )
     } else {
@@ -106,7 +105,6 @@ export function FolderView({ folder }: FolderViewProps) {
           folderId={folder.id}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
-          isCompact={isCompact}
         />
       )
     }
@@ -131,7 +129,7 @@ export function FolderView({ folder }: FolderViewProps) {
             {folder.subFolders?.length || 0} {(folder.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folder.projects.length} {folder.projects.length === 1 ? 'project' : 'projects'}
           </p>
         </div>
-        <ViewToggle isCompact={isCompact} onToggle={toggleView} />
+        <ViewToggle />
       </div>
 
       {/* Folders and Projects Grid */}

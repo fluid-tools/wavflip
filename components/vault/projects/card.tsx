@@ -36,7 +36,6 @@ interface ProjectCardProps {
   folderId?: string | null
   trackCount?: number
   isDragAndDropEnabled?: boolean
-  isCompact?: boolean
 }
 
 export function ProjectCard({ 
@@ -45,6 +44,7 @@ export function ProjectCard({
   trackCount, 
   isDragAndDropEnabled = false
 }: ProjectCardProps) {
+  // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
   const displayTrackCount = trackCount ?? ('trackCount' in project ? project.trackCount : 0)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
