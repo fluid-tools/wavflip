@@ -171,41 +171,41 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
                                         <Upload className="h-6 w-6 text-white animate-spin" />
                                     </div>
                                 )}
-                                {project.image ? (
-                                    <Image 
-                                        src={project.image} 
-                                        alt={project.name}
-                                        fill
-                                        className="object-cover"
-                                        sizes="128px"
-                                        unoptimized
-                                    />
-                                ) : (
+                        {project.image ? (
+                            <Image 
+                                src={project.image} 
+                                alt={project.name}
+                                fill
+                                className="object-cover"
+                                sizes="128px"
+                                unoptimized
+                            />
+                        ) : (
                                     <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">
-                                        {/* Placeholder abstract design */}
-                                        <div className="absolute inset-0 opacity-20">
-                                            <svg viewBox="0 0 200 200" className="w-full h-full">
-                                                <path
-                                                    d="M20,180 Q50,20 100,100 T180,80 L180,180 Z"
-                                                    fill="currentColor"
-                                                    className="text-yellow-400"
-                                                />
-                                                <path
-                                                    d="M0,160 Q40,40 80,120 T160,100 L160,200 Z"
-                                                    fill="currentColor"
-                                                    className="text-orange-400"
-                                                />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                )}
+                                {/* Placeholder abstract design */}
+                                <div className="absolute inset-0 opacity-20">
+                                    <svg viewBox="0 0 200 200" className="w-full h-full">
+                                        <path
+                                            d="M20,180 Q50,20 100,100 T180,80 L180,180 Z"
+                                            fill="currentColor"
+                                            className="text-yellow-400"
+                                        />
+                                        <path
+                                            d="M0,160 Q40,40 80,120 T160,100 L160,200 Z"
+                                            fill="currentColor"
+                                            className="text-orange-400"
+                                        />
+                                    </svg>
+                                </div>
+                            </div>
+                        )}
                                 {/* Overlay on hover */}
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                                     <div className="bg-black/60 rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <ImageIcon className="h-6 w-6 text-white" />
                                     </div>
                                 </div>
-                            </div>
+                    </div>
                         </ContextMenuTrigger>
                         <ContextMenuContent className="w-48">
                             <ContextMenuItem

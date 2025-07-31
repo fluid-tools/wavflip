@@ -197,9 +197,88 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
 
       return response.json()
     },
-    onSuccess: (data) => {
+    onMutate: async (file: File) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey })
+      
+      // Snapshot the previous value
+      const previousProject = queryClient.getQueryData<ProjectWithTracks>(queryKey)
+      
+      // Create optimistic image URL
+      const optimisticImageUrl = URL.createObjectURL(file)
+      
+      // Optimistically update project cache
+      queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
+        if (!oldData) return oldData
+        return {
+          ...oldData,
+          image: optimisticImageUrl
+        }
+      })
+      
+      // Optimistically update all folder queries that contain this project
+      queryClient.setQueriesData(
+        { predicate: (query) => query.queryKey[0] === 'vault' && query.queryKey[1] === 'folders' },
+        (oldData: unknown) => {
+          if (!oldData || typeof oldData !== 'object') return oldData
+          
+          const folderData = oldData as { projects?: ProjectWithTracks[] }
+          if (!folderData.projects) return oldData
+          
+          return {
+            ...folderData,
+            projects: folderData.projects.map((p) => 
+              p.id === projectId 
+                ? { ...p, image: optimisticImageUrl }
+                : p
+            )
+          }
+        }
+      )
+      
+      return { previousProject, optimisticImageUrl }
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousProject) {
+        queryClient.setQueryData(queryKey, context.previousProject)
+      }
+      
+      // Rollback folder queries
+      queryClient.setQueriesData(
+        { predicate: (query) => query.queryKey[0] === 'vault' && query.queryKey[1] === 'folders' },
+        (oldData: unknown) => {
+          if (!oldData || typeof oldData !== 'object') return oldData
+          
+          const folderData = oldData as { projects?: ProjectWithTracks[] }
+          if (!folderData.projects || !context?.previousProject) return oldData
+          
+          return {
+            ...folderData,
+            projects: folderData.projects.map((p) => 
+              p.id === projectId 
+                ? { ...p, image: context.previousProject?.image || null }
+                : p
+            )
+          }
+        }
+      )
+      
+      // Clean up optimistic URL
+      if (context?.optimisticImageUrl) {
+        URL.revokeObjectURL(context.optimisticImageUrl)
+      }
+      
+      toast.error(`Failed to upload image: ${error.message}`)
+    },
+    onSuccess: (data, variables, context) => {
+      // Clean up optimistic URL
+      if (context?.optimisticImageUrl) {
+        URL.revokeObjectURL(context.optimisticImageUrl)
+      }
+      
       if (data.success && data.imageUrl) {
-        // Update the project in cache with new image
+        // Update the project in cache with real image URL
         queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
           if (!oldData) return oldData
           return {
@@ -208,15 +287,28 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
           }
         })
         
-        // Invalidate vault queries to update cards instantly
-        // This invalidates all vault-related queries since they all start with ['vault']
-        queryClient.invalidateQueries({ queryKey: vaultKeys.base })
+        // Update all folder queries that contain this project with real URL
+        queryClient.setQueriesData(
+          { predicate: (query) => query.queryKey[0] === 'vault' && query.queryKey[1] === 'folders' },
+          (oldData: unknown) => {
+            if (!oldData || typeof oldData !== 'object') return oldData
+            
+            const folderData = oldData as { projects?: ProjectWithTracks[] }
+            if (!folderData.projects) return oldData
+            
+            return {
+              ...folderData,
+              projects: folderData.projects.map((p) => 
+                p.id === projectId 
+                  ? { ...p, image: data.imageUrl || null }
+                  : p
+              )
+            }
+          }
+        )
         
         toast.success('Project image updated successfully')
       }
-    },
-    onError: (error) => {
-      toast.error(`Failed to upload image: ${error.message}`)
     },
   })
 

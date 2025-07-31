@@ -13,6 +13,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { createFolderFromProjectsAction } from '@/actions/vault'
 import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useFolder } from '@/hooks/data/use-vault'
 
 
 interface FolderViewProps {
@@ -28,6 +29,11 @@ export function FolderView({ folder }: FolderViewProps) {
   const [, moveProjectAction] = useMoveProjectAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
+  
+  // Use React Query data (seeded from SSR) instead of props directly
+  const { data: currentFolder } = useFolder(folder.id, folder)
+  const folderData = currentFolder || folder
+  
   // View state is now managed globally via atoms
 
   const handleMoveFolder = async (
@@ -64,7 +70,7 @@ export function FolderView({ folder }: FolderViewProps) {
     const formData = new FormData()
     formData.append('sourceProjectId', sourceProjectId)
     formData.append('targetProjectId', targetProjectId)
-    formData.append('parentFolderId', folder.id) // Use current folder as parent
+    formData.append('parentFolderId', folderData.id) // Use current folder as parent
     
     const result = await createFolderFromProjectsAction({ success: false, error: null }, formData)
     if (result.error) {
@@ -74,11 +80,11 @@ export function FolderView({ folder }: FolderViewProps) {
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {
     const items: FolderItem[] = [
-      ...(folder.subFolders || []).map(subFolder => ({ type: 'folder' as const, data: subFolder })),
-      ...folder.projects.map(project => ({ type: 'project' as const, data: project }))
+      ...(folderData.subFolders || []).map(subFolder => ({ type: 'folder' as const, data: subFolder })),
+      ...folderData.projects.map(project => ({ type: 'project' as const, data: project }))
     ]
     return items
-  }, [folder.subFolders, folder.projects])
+  }, [folderData.subFolders, folderData.projects])
 
   // Calculate grid columns based on screen size
   const ITEMS_PER_ROW = 4
@@ -93,7 +99,7 @@ export function FolderView({ folder }: FolderViewProps) {
           key={item.data.id} 
           folder={item.data} 
           showProjectCount={false}
-          parentFolderId={folder.id}
+          parentFolderId={folderData.id}
           isDragAndDropEnabled={true}
         />
       )
@@ -102,7 +108,7 @@ export function FolderView({ folder }: FolderViewProps) {
         <ProjectCard 
           key={item.data.id} 
           project={item.data} 
-          folderId={folder.id}
+          folderId={folderData.id}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
         />
