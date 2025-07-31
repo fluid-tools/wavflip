@@ -40,7 +40,8 @@ export function ProjectCard({
   project, 
   folderId, 
   trackCount, 
-  isDragAndDropEnabled = false 
+  isDragAndDropEnabled = false,
+  isCompact = false
 }: ProjectCardProps) {
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
   const displayTrackCount = trackCount ?? ('trackCount' in project ? project.trackCount : 0)
@@ -93,22 +94,38 @@ export function ProjectCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/projects/${project.id}`} className="block">
-          <Card className="group hover:shadow-lg hover:shadow-green-500/10 transition-all duration-200 cursor-pointer border-0 bg-gradient-to-br from-background to-muted/20 hover:from-green-50/50 hover:to-green-100/30 dark:hover:from-green-950/20 dark:hover:to-green-900/20">
-            <CardHeader className="pb-3">
+          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader className={isCompact ? "pb-2" : "pb-3"}>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
-                  <Music className="h-5 w-5 text-white" />
+                <div className={cn(
+                  "rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center",
+                  isCompact ? "h-6 w-6" : "h-8 w-8"
+                )}>
+                  <Music className={cn(
+                    "text-green-600 dark:text-green-400",
+                    isCompact ? "h-3 w-3" : "h-4 w-4"
+                  )} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-sm font-medium truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                  <CardTitle className={cn(
+                    "font-medium truncate",
+                    isCompact ? "text-xs" : "text-sm"
+                  )}>
                     {project.name}
                   </CardTitle>
-                  <CardDescription className="text-xs">
-                    {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
-                  </CardDescription>
+                  {!isCompact && (
+                    <CardDescription className="text-xs">
+                      {displayTrackCount} {displayTrackCount === 1 ? 'track' : 'tracks'}
+                    </CardDescription>
+                  )}
+                  {isCompact && (
+                    <div className="text-[10px] text-muted-foreground">
+                      {displayTrackCount}
+                    </div>
+                  )}
                 </div>
                 {project.accessType !== 'private' && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className={isCompact ? "text-[10px] px-1.5 py-0.5" : "text-xs"}>
                     {project.accessType}
                   </Badge>
                 )}

@@ -13,7 +13,7 @@ import { UploadTrackDialog } from '@/components/vault/tracks/upload-dialog'
 import { TracksTable } from '@/components/vault/tracks/table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
-import { useProject } from '@/hooks/use-project'
+import { useProject } from '@/hooks/data/use-project'
 import { useSession } from '@/lib/auth-client'
 
 interface ProjectViewProps {

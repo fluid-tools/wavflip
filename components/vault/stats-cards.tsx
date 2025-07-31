@@ -39,7 +39,7 @@ export function VaultStats({ stats }: VaultStatsProps) {
     },
     {
       label: 'Tracks',
-      value: `${stats.totalTracks} (${stats.totalVersions}v)`,
+      value: `${stats.totalTracks} • ${stats.totalVersions} versions`,
       icon: FileAudio,
       color: 'text-purple-500',
       bgColor: 'bg-purple-50 dark:bg-purple-950/20'

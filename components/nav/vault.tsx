@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import React from 'react'
-import { useVaultSidebar } from '@/hooks/use-vault'
+import { useVaultSidebar } from '@/hooks/data/use-vault'
 import Link from "next/link"
 import { 
   FolderOpen, 

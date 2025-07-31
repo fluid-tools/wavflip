@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { toast } from 'sonner'
-import { useVaultInvalidation } from '@/hooks/use-vault'
+import { useVaultInvalidation } from '@/hooks/data/use-vault'
 
 type BaseActionState = {
   success: boolean

@@ -27,19 +27,22 @@ import Link from 'next/link'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from './picker'
+import { cn } from '@/lib/utils'
 
 interface FolderCardProps {
   folder: FolderWithProjects
   showProjectCount?: boolean
   parentFolderId?: string | null
   isDragAndDropEnabled?: boolean
+  isCompact?: boolean
 }
 
 export function FolderCard({ 
   folder, 
   showProjectCount = true, 
   parentFolderId = null,
-  isDragAndDropEnabled = false 
+  isDragAndDropEnabled = false,
+  isCompact = false
 }: FolderCardProps) {
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -112,19 +115,35 @@ export function FolderCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <Link href={`/vault/folders/${folder.id}`} className="block">
-          <Card className="group hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-200 cursor-pointer border-0 bg-gradient-to-br from-background to-muted/20 hover:from-blue-50/50 hover:to-blue-100/30 dark:hover:from-blue-950/20 dark:hover:to-blue-900/20">
-            <CardHeader className="pb-3">
+          <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader className={isCompact ? "pb-2" : "pb-3"}>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
-                  <Folder className="h-5 w-5 text-white" />
+                <div className={cn(
+                  "rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center",
+                  isCompact ? "h-6 w-6" : "h-8 w-8"
+                )}>
+                  <Folder className={cn(
+                    "text-blue-600 dark:text-blue-400",
+                    isCompact ? "h-3 w-3" : "h-4 w-4"
+                  )} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-sm font-medium truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <CardTitle className={cn(
+                    "font-medium truncate",
+                    isCompact ? "text-xs" : "text-sm"
+                  )}>
                     {folder.name}
                   </CardTitle>
-                  <CardDescription className="text-xs">
-                    {getContentDescription()}
-                  </CardDescription>
+                  {!isCompact && (
+                    <CardDescription className="text-xs">
+                      {getContentDescription()}
+                    </CardDescription>
+                  )}
+                  {isCompact && (
+                    <div className="text-[10px] text-muted-foreground">
+                      {getContentDescription()}
+                    </div>
+                  )}
                 </div>
               </div>
             </CardHeader>
