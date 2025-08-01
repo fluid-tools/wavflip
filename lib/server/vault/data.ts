@@ -45,6 +45,13 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
         .select({
           id: project.id,
           name: project.name,
+          image: project.image,
+          folderId: project.folderId,
+          accessType: project.accessType,
+          userId: project.userId,
+          order: project.order,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
           trackCount: count(track.id)
         })
         .from(project)
@@ -99,6 +106,13 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
     .select({
       id: project.id,
       name: project.name,
+      image: project.image,
+      folderId: project.folderId,
+      accessType: project.accessType,
+      userId: project.userId,
+      order: project.order,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
       trackCount: count(track.id)
     })
     .from(project)

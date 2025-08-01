@@ -150,4 +150,17 @@ export function useMoveProjectAction(options: Omit<UseVaultActionOptions, 'succe
       ...options
     }
   )
+}
+
+export function useCombineProjectsAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
+  const { createFolderFromProjectsAction } = require('@/actions/vault')
+  
+  return useVaultAction(
+    createFolderFromProjectsAction,
+    { success: false, error: null },
+    {
+      successMessage: 'Projects combined successfully',
+      ...options
+    }
+  )
 } 

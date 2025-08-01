@@ -35,13 +35,13 @@ interface ProjectViewProps {
 }
 
 export function ProjectView({ projectId, initialProject, availableProjects = [] }: ProjectViewProps) {
-    const { project: queryProject, uploadTracks, isUploading, uploadImage, isUploadingImage } = useProject({
+    const { project, uploadTracks, isUploading, uploadImage, isUploadingImage } = useProject({
         projectId,
         initialData: initialProject
     })
 
-    // Use query data or fallback to initial data
-    const project = queryProject || initialProject
+    // project will now be reactive to mutations thanks to placeholderData
+    if (!project) return null
 
     // // Debug: Log when project data changes
     // useEffect(() => {

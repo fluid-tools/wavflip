@@ -11,8 +11,7 @@ import { ProjectCard } from '@/components/vault/projects/card'
 import { ViewToggle } from '@/components/vault/view-toggle'
 import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
-import { createFolderFromProjectsAction } from '@/actions/vault'
-import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/use-vault-action'
 import { useFolder } from '@/hooks/data/use-vault'
 
 
@@ -27,6 +26,7 @@ type FolderItem =
 export function FolderView({ folder }: FolderViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
+  const [, combineProjectsAction] = useCombineProjectsAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
   
@@ -68,10 +68,9 @@ export function FolderView({ folder }: FolderViewProps) {
     formData.append('targetProjectId', targetProjectId)
     formData.append('parentFolderId', folderData.id)
     
-    const result = await createFolderFromProjectsAction({ success: false, error: null }, formData)
-    if (result.error) {
-      throw new Error(result.error)
-    }
+    startTransition(() => {
+      combineProjectsAction(formData)
+    })
   }
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {

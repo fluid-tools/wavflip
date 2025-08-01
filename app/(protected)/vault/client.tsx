@@ -11,8 +11,7 @@ import { ProjectCard } from '@/components/vault/projects/card'
 import { ViewToggle } from '@/components/vault/view-toggle'
 import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
-import { createFolderFromProjectsAction } from '@/actions/vault'
-import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/use-vault-action'
 import { useRootFolders, useVaultProjects } from '@/hooks/data/use-vault'
 
 
@@ -28,6 +27,7 @@ type VaultItem =
 export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
+  const [, combineProjectsAction] = useCombineProjectsAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   
   // Use React Query with SSR data as placeholderData for reactivity
@@ -73,10 +73,9 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
     // For vault view, combined projects should be created at root level (null parent)
     formData.append('parentFolderId', '')
     
-    const result = await createFolderFromProjectsAction({ success: false, error: null }, formData)
-    if (result.error) {
-      throw new Error(result.error)
-    }
+    startTransition(() => {
+      combineProjectsAction(formData)
+    })
   }
 
 

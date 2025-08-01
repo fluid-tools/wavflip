@@ -33,7 +33,8 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       }
       return response.json()
     },
-    initialData,
+    // Use placeholderData instead of initialData to ensure invalidation works
+    placeholderData: initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   })

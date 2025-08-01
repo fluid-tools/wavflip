@@ -96,22 +96,6 @@ export function useRootFolders(initialData?: FolderWithProjects[]) {
 // PROJECT HOOKS
 // ================================
 
-export function useProject(projectId: string, initialData?: ProjectWithTracks) {
-  const queryKey = vaultKeys.project(projectId)
-  
-  return useQuery({
-    queryKey,
-    queryFn: async (): Promise<ProjectWithTracks> => {
-      const response = await fetch(`/api/projects/${projectId}`)
-      if (!response.ok) throw new Error('Failed to fetch project')
-      return response.json()
-    },
-    initialData,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  })
-}
-
 export function useVaultProjects(initialData?: ProjectWithTracks[]) {
   return useQuery({
     queryKey: vaultKeys.vaultProjects(),

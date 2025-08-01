@@ -9,6 +9,7 @@ import { ChevronRight, Plus, FolderPlus, Music } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { CreateProjectDialog } from './projects/create-dialog'
 import { CreateFolderDialog } from './folders/create-dialog'
+import { vaultKeys } from '@/hooks/data/use-vault'
 
 interface FolderPathItem {
   id: string
@@ -34,9 +35,9 @@ export function VaultBreadcrumbs({ showActions = true }: VaultBreadcrumbsProps) 
   const folderId = isFolder ? pathname.split('/')[3] : null
   const projectId = isProject ? pathname.split('/')[3] : null
 
-  // Fetch folder path for breadcrumbs (including parent folders)
+  // Fetch folder path for breadcrumbs (including parent folders) 
   const { data: folderPathData } = useQuery({
-    queryKey: ['folder-path', folderId],
+    queryKey: [...vaultKeys.folder(folderId!), 'path'],
     queryFn: async () => {
       if (!folderId) return null
       const response = await fetch(`/api/folders/${folderId}/path`)
@@ -50,9 +51,9 @@ export function VaultBreadcrumbs({ showActions = true }: VaultBreadcrumbsProps) 
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Fetch project data for breadcrumbs
+  // Fetch project data for breadcrumbs using vault query keys (synced with mutations)
   const { data: projectData } = useQuery({
-    queryKey: ['project-data', projectId],
+    queryKey: vaultKeys.project(projectId!),
     queryFn: async () => {
       if (!projectId) return null
       const response = await fetch(`/api/projects/${projectId}`)
@@ -66,16 +67,16 @@ export function VaultBreadcrumbs({ showActions = true }: VaultBreadcrumbsProps) 
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Fetch parent folder data for project breadcrumbs
+  // Fetch parent folder data for project breadcrumbs using vault query keys (synced with mutations)
   const parentFolderId = projectData?.folderId
   const { data: parentFolderData } = useQuery({
-    queryKey: ['folder-data', parentFolderId],
+    queryKey: vaultKeys.folder(parentFolderId!),
     queryFn: async () => {
       if (!parentFolderId) return null
       const response = await fetch(`/api/folders/${parentFolderId}`)
       if (!response.ok) {
         console.error('Failed to fetch parent folder:', response.status, response.statusText)
-        throw new Error('Failed to fetch folder')
+        throw new Error('Failed to fetch parent folder')
       }
       return response.json()
     },
