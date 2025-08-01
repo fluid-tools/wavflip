@@ -40,9 +40,6 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
         initialData: initialProject
     })
 
-    // project will now be reactive to mutations thanks to placeholderData
-    if (!project) return null
-
     // // Debug: Log when project data changes
     // useEffect(() => {
     //   console.log('🎵 ProjectView project updated:', project.tracks?.length || 0, 'tracks')
@@ -52,6 +49,9 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
     const dropZoneRef = useRef<HTMLDivElement>(null)
 
     const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
+
+    // project will now be reactive to mutations thanks to placeholderData
+    if (!project) return null
 
     const totalDuration = (project.tracks || []).reduce((sum: number, track: TrackWithVersions) => {
         return sum + (track.activeVersion?.duration || 0)
