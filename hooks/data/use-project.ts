@@ -156,6 +156,15 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
       // The server data will replace the optimistic data
       queryClient.invalidateQueries({ queryKey })
     },
+    onSettled: (data, error, variables, context) => {
+      // Clean up optimistic blob URLs from track upload
+      if (context?.optimisticTrack?.activeVersion?.fileUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(context.optimisticTrack.activeVersion.fileUrl)
+      }
+      if (context?.optimisticTrack?.versions?.[0]?.fileUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(context.optimisticTrack.versions[0].fileUrl)
+      }
+    },
   })
 
   // Upload multiple tracks

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ProjectWithTracks } from '@/db/schema/vault'
+import { vaultKeys } from './use-vault'
 
 interface UseTracksProps {
   projectId: string
@@ -12,7 +13,7 @@ export type TrackFromProject = NonNullable<ProjectWithTracks['tracks']>[number]
 
 export function useTracks({ projectId }: UseTracksProps) {
   const queryClient = useQueryClient()
-  const queryKey = ['project', projectId]
+  const queryKey = vaultKeys.project(projectId)
 
   // Delete track mutation with optimistic updates
   const deleteTrackMutation = useMutation({
@@ -51,7 +52,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       return { previousProject, trackId }
     },
-    onError: (error, _trackId, context: { previousProject?: ProjectWithTracks; trackId?: string } | undefined) => {
+    onError: (error, _trackId, context) => {
       // Rollback on error
       if (context?.previousProject) {
         queryClient.setQueryData(queryKey, context.previousProject)
@@ -60,7 +61,9 @@ export function useTracks({ projectId }: UseTracksProps) {
     },
     onSuccess: () => {
       toast.success('Track deleted successfully')
-      // Invalidate to ensure we have the latest server state
+    },
+    onSettled: () => {
+      // Always invalidate to ensure we have the latest server state
       queryClient.invalidateQueries({ queryKey })
     },
   })
@@ -107,7 +110,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       return { previousProject, trackId }
     },
-    onError: (error, _variables, context: { previousProject?: ProjectWithTracks; trackId?: string } | undefined) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousProject) {
         queryClient.setQueryData(queryKey, context.previousProject)
@@ -116,7 +119,9 @@ export function useTracks({ projectId }: UseTracksProps) {
     },
     onSuccess: () => {
       toast.success('Track renamed successfully')
-      // Invalidate to ensure we have the latest server state
+    },
+    onSettled: () => {
+      // Always invalidate to ensure we have the latest server state
       queryClient.invalidateQueries({ queryKey })
     },
   })
@@ -175,7 +180,7 @@ export function useTracks({ projectId }: UseTracksProps) {
 
       return { previousProject, trackId }
     },
-    onError: (error, _variables, context: { previousProject?: ProjectWithTracks; trackId?: string } | undefined) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousProject) {
         queryClient.setQueryData(queryKey, context.previousProject)
@@ -184,10 +189,12 @@ export function useTracks({ projectId }: UseTracksProps) {
     },
     onSuccess: () => {
       toast.success('Track moved successfully')
-      // Invalidate both source and destination projects
+    },
+    onSettled: () => {
+      // Always invalidate both source and destination projects
       queryClient.invalidateQueries({ queryKey })
-      // We might want to invalidate all project queries to be safe
-      queryClient.invalidateQueries({ queryKey: ['project'] })
+      // Invalidate all vault queries to ensure destination project is updated
+      queryClient.invalidateQueries({ queryKey: vaultKeys.base })
     },
   })
 
