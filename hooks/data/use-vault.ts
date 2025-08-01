@@ -78,7 +78,7 @@ export function useFolder(folderId: string, initialData?: FolderWithProjects) {
   })
 }
 
-export function useRootFolders() {
+export function useRootFolders(initialData?: FolderWithProjects[]) {
   return useQuery({
     queryKey: vaultKeys.folders(),
     queryFn: async (): Promise<FolderWithProjects[]> => {
@@ -86,6 +86,7 @@ export function useRootFolders() {
       if (!response.ok) throw new Error('Failed to fetch folders')
       return response.json()
     },
+    placeholderData: initialData,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   })
@@ -111,7 +112,7 @@ export function useProject(projectId: string, initialData?: ProjectWithTracks) {
   })
 }
 
-export function useVaultProjects() {
+export function useVaultProjects(initialData?: ProjectWithTracks[]) {
   return useQuery({
     queryKey: vaultKeys.vaultProjects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
@@ -120,6 +121,7 @@ export function useVaultProjects() {
       const data = await response.json()
       return data.rootProjects || []
     },
+    placeholderData: initialData,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   })

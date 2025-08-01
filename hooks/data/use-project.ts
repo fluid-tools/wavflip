@@ -267,6 +267,16 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
         }
       )
       
+      // Also update root vault projects cache
+      queryClient.setQueryData<ProjectWithTracks[]>(vaultKeys.vaultProjects(), (oldProjects) => {
+        if (!oldProjects) return oldProjects
+        return oldProjects.map(p => 
+          p.id === projectId 
+            ? { ...p, image: optimisticImageUrl }
+            : p
+        )
+      })
+      
       // Return context object with snapshotted value and optimistic URL
       return { previousProject, optimisticImageUrl }
     },
@@ -317,6 +327,18 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
           return rollbackProjectsRecursively(folderData)
         }
       )
+      
+      // Also rollback root vault projects cache
+      if (context?.previousProject) {
+        queryClient.setQueryData<ProjectWithTracks[]>(vaultKeys.vaultProjects(), (oldProjects) => {
+          if (!oldProjects) return oldProjects
+          return oldProjects.map(p => 
+            p.id === projectId 
+              ? { ...p, image: context.previousProject?.image || null }
+              : p
+          )
+        })
+      }
       
       toast.error(`Failed to upload image: ${error.message}`)
     },
@@ -372,6 +394,16 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
             return updateProjectsRecursively(folderData)
           }
         )
+        
+        // Also update root vault projects cache with real URL
+        queryClient.setQueryData<ProjectWithTracks[]>(vaultKeys.vaultProjects(), (oldProjects) => {
+          if (!oldProjects) return oldProjects
+          return oldProjects.map(p => 
+            p.id === projectId 
+              ? { ...p, image: data.imageUrl || null }
+              : p
+          )
+        })
         
         toast.success('Project image updated successfully')
       }

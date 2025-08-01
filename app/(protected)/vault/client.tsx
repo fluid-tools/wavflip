@@ -13,6 +13,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { createFolderFromProjectsAction } from '@/actions/vault'
 import { useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useRootFolders, useVaultProjects } from '@/hooks/data/use-vault'
 
 
 interface VaultViewProps {
@@ -28,6 +29,10 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
+  
+  // Use React Query with SSR data as placeholderData for reactivity
+  const { data: folders = initialFolders } = useRootFolders(initialFolders)
+  const { data: projects = initialProjects } = useVaultProjects(initialProjects)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
   // View state is now managed globally via atoms
 
@@ -78,11 +83,11 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
   // Combine folders and projects into a single array for virtualization
   const vaultItems = useMemo((): VaultItem[] => {
     const items: VaultItem[] = [
-      ...initialFolders.map(folder => ({ type: 'folder' as const, data: folder })),
-      ...initialProjects.map(project => ({ type: 'project' as const, data: project }))
+      ...folders.map(folder => ({ type: 'folder' as const, data: folder })),
+      ...projects.map(project => ({ type: 'project' as const, data: project }))
     ]
     return items
-  }, [initialFolders, initialProjects])
+  }, [folders, projects])
 
   // Calculate grid columns based on screen size
   const ITEMS_PER_ROW = 4
