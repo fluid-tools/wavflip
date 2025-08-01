@@ -12,8 +12,6 @@ type BaseActionState = {
 interface UseVaultActionOptions {
   successMessage?: string
   onSuccess?: (result: any) => void
-  invalidationStrategy?: 'all' | 'sidebar' | 'specific'
-  specificInvalidations?: () => void
 }
 
 export function useVaultAction(
@@ -22,12 +20,7 @@ export function useVaultAction(
   options: UseVaultActionOptions = {}
 ) {
   const invalidate = useVaultInvalidation()
-  const {
-    successMessage,
-    onSuccess,
-    invalidationStrategy = 'all',
-    specificInvalidations
-  } = options
+  const { successMessage, onSuccess } = options
 
   const wrappedAction = async (prevState: any, payload: FormData) => {
     const result = await action(prevState, payload)
@@ -38,20 +31,9 @@ export function useVaultAction(
         toast.success(successMessage)
       }
       
-      // Automatically invalidate React Query cache
-      switch (invalidationStrategy) {
-        case 'sidebar':
-          invalidate.invalidateSidebar()
-          break
-        case 'specific':
-          specificInvalidations?.()
-          break
-        case 'all':
-        default:
-          // This invalidates all vault-related queries since they all start with ['vault']
-          invalidate.invalidateAll()
-          break
-      }
+      // Simple: just invalidate everything vault-related
+      // React Query is smart enough to only refetch what's actually being used
+      invalidate.invalidateAll()
       
       // Call custom success handler
       onSuccess?.(result)
@@ -74,7 +56,6 @@ export function useCreateFolderAction(options: Omit<UseVaultActionOptions, 'succ
     { success: false, error: null },
     {
       successMessage: 'Folder created successfully',
-      invalidationStrategy: 'sidebar',
       ...options
     }
   )
@@ -88,7 +69,6 @@ export function useCreateProjectAction(options: Omit<UseVaultActionOptions, 'suc
     { success: false, error: null },
     {
       successMessage: 'Project created successfully',
-      invalidationStrategy: 'sidebar',
       ...options
     }
   )
@@ -128,7 +108,6 @@ export function useRenameFolderAction(options: Omit<UseVaultActionOptions, 'succ
     { success: false, error: null },
     {
       successMessage: 'Folder renamed successfully',
-      invalidationStrategy: 'all',
       ...options
     }
   )
@@ -142,7 +121,6 @@ export function useRenameProjectAction(options: Omit<UseVaultActionOptions, 'suc
     { success: false, error: null },
     {
       successMessage: 'Project renamed successfully',
-      invalidationStrategy: 'all',
       ...options
     }
   )
