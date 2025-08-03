@@ -4,34 +4,51 @@ import { useAtom, useSetAtom } from 'jotai'
 import { Button } from '@/components/ui/button'
 import { Check, X } from 'lucide-react'
 import { 
-  touchSelectionModeAtom, 
+  isSelectModeActiveAtom,
   enterTouchSelectionModeAtom,
   exitTouchSelectionModeAtom,
+  enterSelectionModeAtom,
+  exitSelectionModeAtom,
   selectedItemsCountAtom
 } from '@/state/vault-selection-atoms'
 import { useTouchDevice } from '@/hooks/use-touch-device'
 import { cn } from '@/lib/utils'
 
 export function SelectionModeToggle() {
-  const [touchSelectionMode] = useAtom(touchSelectionModeAtom)
+  const [isSelectModeActive] = useAtom(isSelectModeActiveAtom)
   const enterTouchSelection = useSetAtom(enterTouchSelectionModeAtom)
   const exitTouchSelection = useSetAtom(exitTouchSelectionModeAtom)
+  const enterSelection = useSetAtom(enterSelectionModeAtom)
+  const exitSelection = useSetAtom(exitSelectionModeAtom)
   const selectedCount = useAtom(selectedItemsCountAtom)[0]
   const { isTouchDevice } = useTouchDevice()
 
-  // Only show on touch devices
-  if (!isTouchDevice) return null
+  const handleEnterSelection = () => {
+    if (isTouchDevice) {
+      enterTouchSelection()
+    } else {
+      enterSelection()
+    }
+  }
 
-  if (touchSelectionMode) {
+  const handleExitSelection = () => {
+    if (isTouchDevice) {
+      exitTouchSelection()
+    } else {
+      exitSelection()
+    }
+  }
+
+  if (isSelectModeActive) {
     return (
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">
-          {selectedCount > 0 ? `${selectedCount} selected` : 'Tap items to select'}
+          {selectedCount > 0 ? `${selectedCount} selected` : (isTouchDevice ? 'Tap items to select' : 'Click items to select')}
         </span>
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => exitTouchSelection()}
+          onClick={handleExitSelection}
           className="h-8"
         >
           <X className="h-4 w-4 mr-1" />
@@ -45,7 +62,7 @@ export function SelectionModeToggle() {
     <Button
       size="sm"
       variant="outline"
-      onClick={() => enterTouchSelection()}
+      onClick={handleEnterSelection}
       className={cn(
         "h-8",
         "hover:bg-accent"

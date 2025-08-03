@@ -9,7 +9,7 @@ import {
   isItemSelectedAtom,
   clearSelectionAtom,
   toggleItemSelectionAtom,
-  selectItemAtom,
+  selectSingleItemAtom,
   selectRangeAtom,
   touchSelectionModeAtom,
   isSelectModeActiveAtom,
@@ -25,7 +25,7 @@ export function useVaultSelection() {
   const selectedCount = useAtomValue(selectedItemsCountAtom)
   const clearSelection = useSetAtom(clearSelectionAtom)
   const toggleItemSelection = useSetAtom(toggleItemSelectionAtom)
-  const selectItem = useSetAtom(selectItemAtom)
+  const selectSingleItem = useSetAtom(selectSingleItemAtom)
   const selectRange = useSetAtom(selectRangeAtom)
   const { isUsingTouch } = useTouchDevice()
 
@@ -34,31 +34,46 @@ export function useVaultSelection() {
     event: React.MouseEvent,
     allItems: VaultItem[]
   ) => {
-    // In touch selection mode, always toggle selection
-    if (touchSelectionMode) {
+    const isSelected = selectedItems.has(itemId)
+    const hasMultipleSelected = selectedItems.size > 1
+
+    // In touch selection mode or any active selection mode, always handle selection
+    if (touchSelectionMode || isSelectModeActive) {
       event.preventDefault()
       event.stopPropagation()
       toggleItemSelection(itemId)
       return
     }
 
-    // Handle selection based on modifier keys
+    // Handle modifier keys
     if (event.shiftKey) {
+      // Shift-click: range selection
       event.preventDefault()
       event.stopPropagation()
       selectRange(itemId, allItems)
     } else if (event.ctrlKey || event.metaKey) {
+      // Cmd/Ctrl-click: toggle selection
       event.preventDefault()
       event.stopPropagation()
       toggleItemSelection(itemId)
-    } else if (selectedItems.has(itemId)) {
-      // If item is already selected and no modifiers, unselect it
-      event.preventDefault()
-      event.stopPropagation()
-      toggleItemSelection(itemId)
+    } else {
+      // Regular click
+      if (isSelected) {
+        if (hasMultipleSelected) {
+          // Clicking on selected item when multiple selected: clear others, keep this one
+          event.preventDefault()
+          event.stopPropagation()
+          selectSingleItem(itemId)
+        }
+        // If single item selected, allow navigation (don't prevent default)
+      } else {
+        // Clicking on unselected item: clear all and select this one
+        event.preventDefault()
+        event.stopPropagation()
+        selectSingleItem(itemId)
+      }
     }
-    // For normal clicks on unselected items, let the default navigation happen
-  }, [selectRange, toggleItemSelection, selectedItems, touchSelectionMode])
+  }, [selectedItems, touchSelectionMode, isSelectModeActive, toggleItemSelection, selectSingleItem, selectRange])
 
   const isItemSelected = useCallback((itemId: string) => {
     return selectedItems.has(itemId)
@@ -97,7 +112,7 @@ export function useVaultSelection() {
     handleKeyDown,
     clearSelection,
     toggleItemSelection,
-    selectItem,
+    selectSingleItem,
     selectRange,
     isUsingTouch
   }

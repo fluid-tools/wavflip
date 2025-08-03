@@ -9,6 +9,7 @@ import { ChevronRight, Plus, FolderPlus, Music } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { CreateProjectDialog } from './projects/create-dialog'
 import { CreateFolderDialog } from './folders/create-dialog'
+import { SelectionModeToggle } from './selection-mode-toggle'
 import { vaultKeys } from '@/hooks/data/use-vault'
 
 interface FolderPathItem {
@@ -90,10 +91,33 @@ export function VaultBreadcrumbs({ showActions = true }: VaultBreadcrumbsProps) 
 
   if (isRoot) {
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between flex-1">
         <div className="text-sm text-muted-foreground">
           Organize your tracks in folders and projects
         </div>
+        {showActions && (
+          <div className="flex items-center gap-2">
+            <SelectionModeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-1" />
+                  New
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowCreateFolderDialog(true)}>
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  Create Folder
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowCreateProjectDialog(true)}>
+                  <Music className="h-4 w-4 mr-2" />
+                  Create Project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
     )
   }
@@ -125,24 +149,27 @@ export function VaultBreadcrumbs({ showActions = true }: VaultBreadcrumbsProps) 
         </div>
         
         {showActions && folderId && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline">
-                <Plus className="h-4 w-4 mr-1" />
-                New
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setShowCreateFolderDialog(true)}>
-                <FolderPlus className="h-4 w-4 mr-2" />
-                Create Folder
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowCreateProjectDialog(true)}>
-                <Music className="h-4 w-4 mr-2" />
-                Create Project
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <SelectionModeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <Plus className="h-4 w-4 mr-1" />
+                  New
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowCreateFolderDialog(true)}>
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  Create Folder
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowCreateProjectDialog(true)}>
+                  <Music className="h-4 w-4 mr-2" />
+                  Create Project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
     )

@@ -195,12 +195,6 @@ export function FolderCard({
               <Link 
                 href={`/vault/folders/${folder.id}`}
                 className="absolute inset-0 z-10"
-                onClick={(e) => {
-                  // Only navigate if no modifier keys are pressed or in selection mode
-                  if (e.shiftKey || e.ctrlKey || e.metaKey || isSelectModeActive) {
-                    e.preventDefault()
-                  }
-                }}
               />
             )}
           </Card>
@@ -298,11 +292,6 @@ export function FolderCard({
           <Link 
             href={`/vault/folders/${folder.id}`}
             className="absolute inset-0 z-10"
-            onClick={(e) => {
-              if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                e.preventDefault()
-              }
-            }}
           />
         )}
       </Card>

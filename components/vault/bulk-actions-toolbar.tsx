@@ -71,7 +71,7 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
     })
     
     setShowDeleteDialog(false)
-    clearSelection()
+    clearSelection() // This will clear both selection and selection mode
   }
 
   const confirmBulkMove = async () => {
@@ -96,7 +96,7 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
     })
     
     setShowMoveDialog(false)
-    clearSelection()
+    clearSelection() // This will clear both selection and selection mode
   }
 
   const getSelectionText = () => {
