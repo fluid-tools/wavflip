@@ -1,48 +1,45 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useAtom } from 'jotai'
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms'
+import { activeContextMenuAtom } from '@/state/ui-atoms'
 import { useTouchDevice } from './use-touch-device'
 
 export function useContextMenuHandler() {
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
+  const [activeContextMenu, setActiveContextMenu] = useAtom(activeContextMenuAtom)
   const { isUsingTouch } = useTouchDevice()
 
-  const handleContextMenu = useCallback((
-    event: React.MouseEvent,
-    options?: {
-      allowInSelectionMode?: boolean
-      isLayoutMenu?: boolean
-    }
+  // Handle context menu open/close state
+  const handleContextMenuOpenChange = useCallback((
+    open: boolean,
+    type: 'layout' | 'item'
   ) => {
-    const { allowInSelectionMode = false, isLayoutMenu = false } = options || {}
+    if (open) {
+      setActiveContextMenu(type)
+    } else if (activeContextMenu === type) {
+      setActiveContextMenu(null)
+    }
+  }, [activeContextMenu, setActiveContextMenu])
 
-    // Prevent context menu in selection mode unless explicitly allowed
-    if (isSelectModeActive && !allowInSelectionMode) {
-      event.preventDefault()
-      event.stopPropagation()
+  // Determine if a context menu should be shown
+  const shouldShowContextMenu = useCallback((type: 'layout' | 'item') => {
+    // Never show context menus in selection mode
+    if (isSelectModeActive) return false
+
+    // On touch devices, prevent layout context menu when item menu is active
+    if (isUsingTouch && type === 'layout' && activeContextMenu === 'item') {
       return false
     }
 
-    // On touch devices, item context menus should stop propagation to prevent layout menu
-    if (isUsingTouch && !isLayoutMenu) {
-      // This is an item context menu on touch - stop propagation to prevent layout menu
-      event.stopPropagation()
-    }
-
     return true
-  }, [isSelectModeActive, isUsingTouch])
-
-  const preventContextMenu = useCallback((event: React.MouseEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
-  }, [])
+  }, [isSelectModeActive, isUsingTouch, activeContextMenu])
 
   return {
-    handleContextMenu,
-    preventContextMenu,
-    shouldShowContextMenu: !isSelectModeActive,
+    shouldShowContextMenu,
+    handleContextMenuOpenChange,
+    activeContextMenu,
     isUsingTouch
   }
 }

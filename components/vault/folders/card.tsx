@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/context-menu'
 import { useAtomValue } from 'jotai'
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms'
+import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
 import {
   Dialog,
   DialogContent,
@@ -57,7 +58,7 @@ export function FolderCard({
   const [newName, setNewName] = useState(folder.name)
   
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
-  const shouldShowContextMenu = !isSelectModeActive
+  const { shouldShowContextMenu, handleContextMenuOpenChange } = useContextMenuHandler()
 
   const [, deleteAction, isDeleting] = useDeleteFolderAction({
     onSuccess: () => {
@@ -120,18 +121,12 @@ export function FolderCard({
     return parts.join(', ')
   }
 
-  const cardContent = shouldShowContextMenu ? (
-    <ContextMenu>
+  const cardContent = shouldShowContextMenu('item') ? (
+    <ContextMenu
+      onOpenChange={(open) => handleContextMenuOpenChange(open, 'item')}
+    >
       <ContextMenuTrigger asChild>
-        <div 
-          className="block"
-          onContextMenu={(e) => {
-            // On touch devices, stop propagation to prevent parent context menus
-            if ('ontouchstart' in window) {
-              e.stopPropagation()
-            }
-          }}
-        >
+        <div className="block">
           <Card 
             className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'

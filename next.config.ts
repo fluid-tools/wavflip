@@ -56,7 +56,7 @@ const nextConfig = {
     ],
   },
   // External packages that should be bundled separately
-  serverExternalPackages: ['@react-email/render'],
+  // serverExternalPackages: ['@react-email/render'],
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
 };

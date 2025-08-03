@@ -53,7 +53,7 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
     const canDrop = active && (!accepts || accepts.includes(active.data.current?.type))
     const isValidDrop = isOver && canDrop
     
-    const { handleContextMenu, shouldShowContextMenu } = useContextMenuHandler()
+    const { shouldShowContextMenu, handleContextMenuOpenChange } = useContextMenuHandler()
 
     const droppableContent = (
       <div
@@ -77,24 +77,16 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
             onClearSelection()
           }
         }}
-        onContextMenu={(e) => {
-          // Only show layout context menu if clicking on the layout itself, not on child items
-          if (e.target === e.currentTarget) {
-            // Handle layout context menu
-            handleContextMenu(e, { isLayoutMenu: true })
-          } else {
-            // Prevent layout context menu when clicking on items
-            e.stopPropagation()
-          }
-        }}
       >
         {children}
       </div>
     )
 
-    if (showContextMenu && shouldShowContextMenu) {
+    if (showContextMenu && shouldShowContextMenu('layout')) {
       return (
-        <ContextMenu>
+        <ContextMenu
+          onOpenChange={(open) => handleContextMenuOpenChange(open, 'layout')}
+        >
           <ContextMenuTrigger asChild>
             {droppableContent}
           </ContextMenuTrigger>

@@ -13,3 +13,6 @@ export const toggleVaultViewAtom = atom(
     set(vaultViewCompactAtom, compact)
   }
 )
+
+// Context menu state - tracks which context menu is currently open
+export const activeContextMenuAtom = atom<'layout' | 'item' | null>(null)
