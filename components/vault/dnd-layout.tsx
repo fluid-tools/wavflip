@@ -14,6 +14,7 @@ interface DndLayoutProps {
   onCombineProjects: (sourceProjectId: string, targetProjectId: string) => Promise<void>
   onCreateFolder?: () => void
   onCreateProject?: () => void
+  onClearSelection?: () => void
   className?: string
 }
 
@@ -26,6 +27,7 @@ export function DndLayout({
   onCombineProjects,
   onCreateFolder,
   onCreateProject,
+  onClearSelection,
   className = "p-6 space-y-6 min-h-screen"
 }: DndLayoutProps) {
   return (
@@ -41,6 +43,7 @@ export function DndLayout({
         showContextMenu={true}
         onCreateFolder={onCreateFolder}
         onCreateProject={onCreateProject}
+        onClearSelection={onClearSelection}
         applyRoundedCorners={false}
       >
         {children}

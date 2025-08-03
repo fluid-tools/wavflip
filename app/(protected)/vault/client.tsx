@@ -187,6 +187,7 @@ export function VaultView({}: VaultViewProps = {}) {
         onCombineProjects={handleCombineProjects}
         onCreateFolder={() => setShowCreateFolderDialog(true)}
         onCreateProject={() => setShowCreateProjectDialog(true)}
+        onClearSelection={clearSelection}
         className="space-y-4"
       >
         {vaultItems.length > 0 ? (

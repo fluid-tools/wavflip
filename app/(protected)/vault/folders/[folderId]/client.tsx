@@ -175,6 +175,7 @@ export function FolderView({ folderId }: FolderViewProps) {
       onCombineProjects={handleCombineProjects}
       onCreateFolder={() => setShowCreateFolderDialog(true)}
       onCreateProject={() => setShowCreateProjectDialog(true)}
+      onClearSelection={clearSelection}
       className="p-6 space-y-6 min-h-screen"
     >
       {/* Folder Info */}

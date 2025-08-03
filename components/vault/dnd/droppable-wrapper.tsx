@@ -19,6 +19,7 @@ interface DroppableWrapperProps {
   onUndo?: () => void
   onDuplicate?: () => void
   onDelete?: () => void
+  onClearSelection?: () => void
   accepts?: ItemType[]
   highlightOnHover?: boolean
   applyRoundedCorners?: boolean
@@ -37,6 +38,7 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
     onUndo,
     onDuplicate,
     onDelete,
+    onClearSelection,
     accepts,
     highlightOnHover = true,
     applyRoundedCorners = true,
@@ -65,6 +67,13 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
           highlightOnHover && isValidDrop && 'opacity-90 shadow-lg border-2 border-primary/50',
           className
         )}
+
+        onClick={(e) => {
+          // Clear selection when clicking on empty space
+          if (e.target === e.currentTarget && onClearSelection) {
+            onClearSelection()
+          }
+        }}
         onContextMenu={(e) => {
           // Only show layout context menu if clicking on the layout itself, not on child items
           if (e.target === e.currentTarget) {

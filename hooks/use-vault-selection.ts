@@ -28,7 +28,7 @@ export function useVaultSelection() {
     event: React.MouseEvent,
     allItems: VaultItem[]
   ) => {
-    // Only handle selection if modifier keys are pressed
+    // Handle selection based on modifier keys
     if (event.shiftKey) {
       event.preventDefault()
       event.stopPropagation()
@@ -37,9 +37,14 @@ export function useVaultSelection() {
       event.preventDefault()
       event.stopPropagation()
       toggleItemSelection(itemId)
+    } else if (selectedItems.has(itemId)) {
+      // If item is already selected and no modifiers, unselect it
+      event.preventDefault()
+      event.stopPropagation()
+      toggleItemSelection(itemId)
     }
-    // For normal clicks without modifiers, let the default navigation happen
-  }, [selectRange, toggleItemSelection])
+    // For normal clicks on unselected items, let the default navigation happen
+  }, [selectRange, toggleItemSelection, selectedItems])
 
   const isItemSelected = useCallback((itemId: string) => {
     return selectedItems.has(itemId)

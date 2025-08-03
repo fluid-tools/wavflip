@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -49,21 +49,23 @@ export function CreateFolderDialog({
       if (selectedItems.length > 0 && result?.folder?.id) {
         const newFolderId = result.folder.id
         
-        for (const item of selectedItems) {
-          const formData = new FormData()
-          
-          if (item.type === 'folder') {
-            formData.append('folderId', item.id)
-            formData.append('parentFolderId', newFolderId)
-            formData.append('sourceParentFolderId', parentFolderId || '')
-            moveFolderAction(formData)
-          } else {
-            formData.append('projectId', item.id)
-            formData.append('folderId', newFolderId)
-            formData.append('sourceFolderId', parentFolderId || '')
-            moveProjectAction(formData)
+        startTransition(() => {
+          for (const item of selectedItems) {
+            const formData = new FormData()
+            
+            if (item.type === 'folder') {
+              formData.append('folderId', item.id)
+              formData.append('parentFolderId', newFolderId)
+              formData.append('sourceParentFolderId', parentFolderId || '')
+              moveFolderAction(formData)
+            } else {
+              formData.append('projectId', item.id)
+              formData.append('folderId', newFolderId)
+              formData.append('sourceFolderId', parentFolderId || '')
+              moveProjectAction(formData)
+            }
           }
-        }
+        })
       }
       
       setOpen(false)

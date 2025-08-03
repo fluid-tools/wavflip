@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import { FolderPlus, Trash2, X, Move } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -54,17 +54,19 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
   }
 
   const confirmBulkDelete = async () => {
-    for (const item of selectedItemsData) {
-      const formData = new FormData()
-      
-      if (item.type === 'folder') {
-        formData.append('folderId', item.id)
-        deleteFolderAction(formData)
-      } else {
-        formData.append('projectId', item.id)
-        deleteProjectAction(formData)
+    startTransition(() => {
+      for (const item of selectedItemsData) {
+        const formData = new FormData()
+        
+        if (item.type === 'folder') {
+          formData.append('folderId', item.id)
+          deleteFolderAction(formData)
+        } else {
+          formData.append('projectId', item.id)
+          deleteProjectAction(formData)
+        }
       }
-    }
+    })
     
     setShowDeleteDialog(false)
     clearSelection()
@@ -73,21 +75,23 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
   const confirmBulkMove = async () => {
     if (!selectedDestinationId) return
 
-    for (const item of selectedItemsData) {
-      const formData = new FormData()
-      
-      if (item.type === 'folder') {
-        formData.append('folderId', item.id)
-        formData.append('parentFolderId', selectedDestinationId)
-        formData.append('sourceParentFolderId', parentFolderId || '')
-        moveFolderAction(formData)
-      } else {
-        formData.append('projectId', item.id)
-        formData.append('folderId', selectedDestinationId)
-        formData.append('sourceFolderId', parentFolderId || '')
-        moveProjectAction(formData)
+    startTransition(() => {
+      for (const item of selectedItemsData) {
+        const formData = new FormData()
+        
+        if (item.type === 'folder') {
+          formData.append('folderId', item.id)
+          formData.append('parentFolderId', selectedDestinationId)
+          formData.append('sourceParentFolderId', parentFolderId || '')
+          moveFolderAction(formData)
+        } else {
+          formData.append('projectId', item.id)
+          formData.append('folderId', selectedDestinationId)
+          formData.append('sourceFolderId', parentFolderId || '')
+          moveProjectAction(formData)
+        }
       }
-    }
+    })
     
     setShowMoveDialog(false)
     clearSelection()
