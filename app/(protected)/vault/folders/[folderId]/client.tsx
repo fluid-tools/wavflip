@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, startTransition, useState } from 'react'
+import { useMemo, startTransition, useState, useEffect, useCallback } from 'react'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects } from '@/db/schema/vault'
@@ -13,6 +13,9 @@ import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/use-vault-action'
 import { useFolder } from '@/hooks/data/use-vault'
+import { useVaultSelection } from '@/hooks/use-vault-selection'
+import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms'
+import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar'
 
 
 interface FolderViewProps {
@@ -31,6 +34,15 @@ export function FolderView({ folderId }: FolderViewProps) {
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
   
   const { data: folderData } = useFolder(folderId)
+  
+  // Selection functionality
+  const { 
+    isItemSelected, 
+    handleItemClick, 
+    handleKeyDown,
+    selectedItems,
+    clearSelection
+  } = useVaultSelection()
 
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {
@@ -42,6 +54,33 @@ export function FolderView({ folderId }: FolderViewProps) {
     ]
     return items
   }, [folderData])
+
+  // Convert to selection format for hooks
+  const selectionItems = useMemo((): SelectionVaultItem[] => {
+    return folderItems.map(item => ({
+      id: item.data.id,
+      type: item.type,
+      name: item.data.name
+    }))
+  }, [folderItems])
+
+  const handleCreateFolderWithSelection = useCallback(() => {
+    setShowCreateFolderDialog(true)
+  }, [])
+
+  const handleBulkDelete = useCallback(() => {
+    clearSelection()
+  }, [clearSelection])
+
+  // Keyboard event handling
+  useEffect(() => {
+    const handleKeyDownEvent = (event: KeyboardEvent) => {
+      handleKeyDown(event, selectionItems, handleCreateFolderWithSelection, handleBulkDelete)
+    }
+
+    document.addEventListener('keydown', handleKeyDownEvent)
+    return () => document.removeEventListener('keydown', handleKeyDownEvent)
+  }, [handleKeyDown, selectionItems, handleCreateFolderWithSelection, handleBulkDelete])
   
   if (!folderData) {
     return <div>Loading...</div>
@@ -95,6 +134,11 @@ export function FolderView({ folderId }: FolderViewProps) {
     const item = folderItems[index]
     if (!item) return null
 
+    const isSelected = isItemSelected(item.data.id)
+    const handleClick = (event: React.MouseEvent) => {
+      handleItemClick(item.data.id, event, selectionItems)
+    }
+
     if (item.type === 'folder') {
       return (
         <FolderCard 
@@ -103,6 +147,8 @@ export function FolderView({ folderId }: FolderViewProps) {
           showProjectCount={false}
           parentFolderId={folderData.id}
           isDragAndDropEnabled={true}
+          isSelected={isSelected}
+          onSelectionClick={handleClick}
         />
       )
     } else {
@@ -113,6 +159,8 @@ export function FolderView({ folderId }: FolderViewProps) {
           folderId={folderData.id}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
+          isSelected={isSelected}
+          onSelectionClick={handleClick}
         />
       )
     }
@@ -179,7 +227,14 @@ export function FolderView({ folderId }: FolderViewProps) {
         parentFolderId={folderData.id}
         open={showCreateFolderDialog}
         onOpenChange={setShowCreateFolderDialog}
-        onSuccess={() => setShowCreateFolderDialog(false)}
+        selectedItems={selectedItems.map(id => {
+          const item = selectionItems.find(item => item.id === id)
+          return item ? { id: item.id, type: item.type } : { id, type: 'project' as const }
+        })}
+        onSuccess={() => {
+          setShowCreateFolderDialog(false)
+          clearSelection()
+        }}
       />
       <CreateProjectDialog 
         folderId={folderData.id}
@@ -187,6 +242,9 @@ export function FolderView({ folderId }: FolderViewProps) {
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
+
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar vaultItems={selectionItems} parentFolderId={folderData.id} />
     </DndLayout>
   )
 } 

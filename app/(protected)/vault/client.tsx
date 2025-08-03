@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, startTransition, useState, useEffect } from 'react'
+import { useMemo, startTransition, useState, useEffect, useCallback } from 'react'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
@@ -42,7 +42,9 @@ export function VaultView({}: VaultViewProps = {}) {
   const { 
     isItemSelected, 
     handleItemClick, 
-    handleKeyDown
+    handleKeyDown,
+    selectedItems,
+    clearSelection
   } = useVaultSelection()
 
   const handleMoveFolder = async (
@@ -106,15 +108,25 @@ export function VaultView({}: VaultViewProps = {}) {
     }))
   }, [vaultItems])
 
+  const handleCreateFolderWithSelection = useCallback(() => {
+    setShowCreateFolderDialog(true)
+  }, [])
+
+  const handleBulkDelete = useCallback(() => {
+    // This would trigger the bulk delete dialog from BulkActionsToolbar
+    // For now, we'll just clear selection
+    clearSelection()
+  }, [clearSelection])
+
   // Keyboard event handling
   useEffect(() => {
     const handleKeyDownEvent = (event: KeyboardEvent) => {
-      handleKeyDown(event, selectionItems)
+      handleKeyDown(event, selectionItems, handleCreateFolderWithSelection, handleBulkDelete)
     }
 
     document.addEventListener('keydown', handleKeyDownEvent)
     return () => document.removeEventListener('keydown', handleKeyDownEvent)
-  }, [handleKeyDown, selectionItems])
+  }, [handleKeyDown, selectionItems, handleCreateFolderWithSelection, handleBulkDelete])
 
   // Calculate grid columns based on screen size
   const ITEMS_PER_ROW = 4
@@ -218,7 +230,14 @@ export function VaultView({}: VaultViewProps = {}) {
       <CreateFolderDialog 
         open={showCreateFolderDialog}
         onOpenChange={setShowCreateFolderDialog}
-        onSuccess={() => setShowCreateFolderDialog(false)}
+        selectedItems={selectedItems.map(id => {
+          const item = selectionItems.find(item => item.id === id)
+          return item ? { id: item.id, type: item.type } : { id, type: 'project' as const }
+        })}
+        onSuccess={() => {
+          setShowCreateFolderDialog(false)
+          clearSelection()
+        }}
       />
       <CreateProjectDialog 
         open={showCreateProjectDialog}

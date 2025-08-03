@@ -45,7 +45,12 @@ export function useVaultSelection() {
     return selectedItems.has(itemId)
   }, [selectedItems])
 
-  const handleKeyDown = useCallback((event: KeyboardEvent, allItems: VaultItem[]) => {
+  const handleKeyDown = useCallback((
+    event: KeyboardEvent, 
+    allItems: VaultItem[],
+    onCreateFolderWithSelection?: () => void,
+    onBulkDelete?: () => void
+  ) => {
     if (event.key === 'Escape') {
       clearSelection()
     } else if (event.key === 'a' && (event.ctrlKey || event.metaKey)) {
@@ -55,13 +60,10 @@ export function useVaultSelection() {
       setSelectionMode(true)
     } else if ((event.key === 'Delete' || event.key === 'Backspace') && selectedItems.size > 0) {
       event.preventDefault()
-      // Trigger bulk delete - this would need to be handled by the parent component
-      // For now, we'll just clear selection as a placeholder
-      console.log('Bulk delete triggered for:', Array.from(selectedItems))
+      onBulkDelete?.()
     } else if (event.key === 'n' && event.shiftKey && selectedItems.size > 0) {
       event.preventDefault()
-      // Trigger create folder with selection
-      console.log('Create folder with selection triggered for:', Array.from(selectedItems))
+      onCreateFolderWithSelection?.()
     }
   }, [clearSelection, setSelectedItems, setSelectionMode, selectedItems])
 

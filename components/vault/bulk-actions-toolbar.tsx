@@ -19,9 +19,10 @@ import { useDeleteFolderAction, useDeleteProjectAction, useMoveFolderAction, use
 
 interface BulkActionsToolbarProps {
   vaultItems: Array<{ id: string; type: 'folder' | 'project'; name: string }>
+  parentFolderId?: string | null
 }
 
-export function BulkActionsToolbar({ vaultItems }: BulkActionsToolbarProps) {
+export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkActionsToolbarProps) {
   const { selectedItems, selectedCount, clearSelection } = useVaultSelection()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
@@ -78,12 +79,12 @@ export function BulkActionsToolbar({ vaultItems }: BulkActionsToolbarProps) {
       if (item.type === 'folder') {
         formData.append('folderId', item.id)
         formData.append('parentFolderId', selectedDestinationId)
-        formData.append('sourceParentFolderId', '') // Root level
+        formData.append('sourceParentFolderId', parentFolderId || '')
         moveFolderAction(formData)
       } else {
         formData.append('projectId', item.id)
         formData.append('folderId', selectedDestinationId)
-        formData.append('sourceFolderId', '') // Root level
+        formData.append('sourceFolderId', parentFolderId || '')
         moveProjectAction(formData)
       }
     }
@@ -155,11 +156,12 @@ export function BulkActionsToolbar({ vaultItems }: BulkActionsToolbarProps) {
 
       {/* Create Folder Dialog */}
       <CreateFolderDialog 
+        parentFolderId={parentFolderId}
         open={showCreateFolderDialog}
         onOpenChange={setShowCreateFolderDialog}
+        selectedItems={selectedItemsData}
         onSuccess={() => {
           setShowCreateFolderDialog(false)
-          // TODO: Move selected items to the newly created folder
           clearSelection()
         }}
       />

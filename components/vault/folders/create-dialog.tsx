@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useCreateFolderAction } from '@/actions/use-vault-action'
+import { useCreateFolderAction, useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
 
 interface CreateFolderDialogProps {
   parentFolderId?: string | null
@@ -22,6 +22,7 @@ interface CreateFolderDialogProps {
   onSuccess?: () => void
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  selectedItems?: Array<{ id: string; type: 'folder' | 'project' }>
 }
 
 export function CreateFolderDialog({ 
@@ -29,7 +30,8 @@ export function CreateFolderDialog({
   triggerText = "New Folder", 
   onSuccess,
   open: controlledOpen,
-  onOpenChange: controlledOnOpenChange
+  onOpenChange: controlledOnOpenChange,
+  selectedItems = []
 }: CreateFolderDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false)
   const [name, setName] = useState('')
@@ -38,8 +40,32 @@ export function CreateFolderDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen
   const setOpen = controlledOnOpenChange || setInternalOpen
   
+  const [, moveFolderAction] = useMoveFolderAction()
+  const [, moveProjectAction] = useMoveProjectAction()
+  
   const [, formAction] = useCreateFolderAction({
-    onSuccess: () => {
+    onSuccess: async (result) => {
+      // Move selected items to the newly created folder
+      if (selectedItems.length > 0 && result?.folder?.id) {
+        const newFolderId = result.folder.id
+        
+        for (const item of selectedItems) {
+          const formData = new FormData()
+          
+          if (item.type === 'folder') {
+            formData.append('folderId', item.id)
+            formData.append('parentFolderId', newFolderId)
+            formData.append('sourceParentFolderId', parentFolderId || '')
+            moveFolderAction(formData)
+          } else {
+            formData.append('projectId', item.id)
+            formData.append('folderId', newFolderId)
+            formData.append('sourceFolderId', parentFolderId || '')
+            moveProjectAction(formData)
+          }
+        }
+      }
+      
       setOpen(false)
       setName('')
       onSuccess?.()
@@ -73,6 +99,11 @@ export function CreateFolderDialog({
             <DialogDescription>
               Create a new folder to organize your {parentFolderId ? 'content' : 'projects'}.
               {parentFolderId && " This folder will be created inside the current folder."}
+              {selectedItems.length > 0 && (
+                <span className="block mt-2 text-sm font-medium">
+                  {selectedItems.length} selected item{selectedItems.length !== 1 ? 's' : ''} will be moved into this folder.
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
