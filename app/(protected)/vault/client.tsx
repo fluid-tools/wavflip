@@ -39,12 +39,14 @@ export function VaultView({}: VaultViewProps = {}) {
   const { data: projects = [] } = useVaultProjects()
   
   // Selection functionality
-  const { 
-    isItemSelected, 
-    handleItemClick, 
-    handleKeyDown,
+  const {
     selectedItems,
-    clearSelection
+    isItemSelected,
+    handleItemClick,
+    handleKeyDown,
+    clearSelection,
+    selectedCount,
+    touchSelectionMode
   } = useVaultSelection()
 
   const handleMoveFolder = async (
@@ -246,8 +248,10 @@ export function VaultView({}: VaultViewProps = {}) {
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
 
-      {/* Bulk Actions Toolbar */}
-      <BulkActionsToolbar vaultItems={selectionItems} />
+      {/* Bulk Actions Toolbar - Always show when touch selection mode is active */}
+      {(selectedCount > 0 || touchSelectionMode) && (
+        <BulkActionsToolbar vaultItems={selectionItems} />
+      )}
     </div>
   )
 } 

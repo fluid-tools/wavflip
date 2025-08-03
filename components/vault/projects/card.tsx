@@ -11,6 +11,9 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
+import { useAtomValue } from 'jotai'
+import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms'
 import {
   Dialog,
   DialogContent,
@@ -56,6 +59,9 @@ export function ProjectCard({
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
+  
+  const { handleContextMenu, shouldShowContextMenu } = useContextMenuHandler()
+  const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
   
   // Use the project hook for image upload functionality
   const { uploadImage, isUploadingImage } = useProject({ projectId: project.id })
@@ -113,10 +119,10 @@ export function ProjectCard({
 
   // State management is now handled by the custom hooks automatically
 
-  const cardContent = (
+  const cardContent = shouldShowContextMenu ? (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className="block">
+        <div className="block" onContextMenu={(e) => handleContextMenu(e)}>
           <Card 
             className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
@@ -145,16 +151,18 @@ export function ProjectCard({
             </div>
             
             {/* Invisible overlay for navigation */}
-            <Link 
-              href={`/vault/projects/${project.id}`}
-              className="absolute inset-0 z-10"
-              onClick={(e) => {
-                // Only navigate if no modifier keys are pressed
-                if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                  e.preventDefault()
-                }
-              }}
-            />
+            {!isSelectModeActive && (
+              <Link 
+                href={`/vault/projects/${project.id}`}
+                className="absolute inset-0 z-10"
+                onClick={(e) => {
+                  // Only navigate if no modifier keys are pressed or in selection mode
+                  if (e.shiftKey || e.ctrlKey || e.metaKey || isSelectModeActive) {
+                    e.preventDefault()
+                  }
+                }}
+              />
+            )}
           </Card>
         </div>
       </ContextMenuTrigger>
@@ -208,6 +216,48 @@ export function ProjectCard({
           </ContextMenuItem>
         </ContextMenuContent>
     </ContextMenu>
+  ) : (
+    <div className="block">
+      <Card 
+        className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
+          isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
+        }`}
+        onClick={onSelectionClick}
+      >
+        <div className="relative w-full aspect-square">
+          {project.image ? (
+            <Image
+              src={project.image}
+              alt={project.name}
+              fill
+              className="object-cover"
+              sizes="160px"
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-muted">
+              <Music className="text-muted-foreground h-8 w-8" />
+            </div>
+          )}
+        </div>
+        <div className="mt-2">
+          <h3 className="text-xs font-medium truncate">{project.name}</h3>
+          <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
+        </div>
+        
+        {!isSelectModeActive && (
+          <Link 
+            href={`/vault/projects/${project.id}`}
+            className="absolute inset-0 z-10"
+            onClick={(e) => {
+              if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                e.preventDefault()
+              }
+            }}
+          />
+        )}
+      </Card>
+    </div>
   )
 
   const dragData = {

@@ -6,6 +6,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 import { FolderPlus, Music, Undo, Copy, Trash2 } from 'lucide-react'
 import { forwardRef, memo } from 'react'
 import type { DropData, ItemType } from './types'
+import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
 
 interface DroppableWrapperProps {
   id: string
@@ -51,6 +52,8 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
 
     const canDrop = active && (!accepts || accepts.includes(active.data.current?.type))
     const isValidDrop = isOver && canDrop
+    
+    const { handleContextMenu, shouldShowContextMenu } = useContextMenuHandler()
 
     const droppableContent = (
       <div
@@ -77,7 +80,8 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
         onContextMenu={(e) => {
           // Only show layout context menu if clicking on the layout itself, not on child items
           if (e.target === e.currentTarget) {
-            // Allow context menu to show
+            // Handle layout context menu
+            handleContextMenu(e, { isLayoutMenu: true })
           } else {
             // Prevent layout context menu when clicking on items
             e.stopPropagation()
@@ -88,7 +92,7 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
       </div>
     )
 
-    if (showContextMenu) {
+    if (showContextMenu && shouldShowContextMenu) {
       return (
         <ContextMenu>
           <ContextMenuTrigger asChild>

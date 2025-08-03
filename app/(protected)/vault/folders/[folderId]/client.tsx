@@ -36,12 +36,14 @@ export function FolderView({ folderId }: FolderViewProps) {
   const { data: folderData } = useFolder(folderId)
   
   // Selection functionality
-  const { 
-    isItemSelected, 
-    handleItemClick, 
-    handleKeyDown,
+  const {
     selectedItems,
-    clearSelection
+    isItemSelected,
+    handleItemClick,
+    handleKeyDown,
+    clearSelection,
+    selectedCount,
+    touchSelectionMode
   } = useVaultSelection()
 
   // Combine subfolders and projects into a single array for virtualization
@@ -244,8 +246,10 @@ export function FolderView({ folderId }: FolderViewProps) {
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
 
-      {/* Bulk Actions Toolbar */}
-      <BulkActionsToolbar vaultItems={selectionItems} parentFolderId={folderData.id} />
+      {/* Bulk Actions Toolbar - Always show when touch selection mode is active */}
+      {(selectedCount > 0 || touchSelectionMode) && (
+        <BulkActionsToolbar vaultItems={selectionItems} parentFolderId={folderData.id} />
+      )}
     </DndLayout>
   )
 } 

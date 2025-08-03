@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useDeleteFolderAction, useDeleteProjectAction, useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { SelectionModeToggle } from '@/components/vault/selection-mode-toggle'
 
 interface BulkActionsToolbarProps {
   vaultItems: Array<{ id: string; type: 'folder' | 'project'; name: string }>
@@ -23,7 +24,7 @@ interface BulkActionsToolbarProps {
 }
 
 export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkActionsToolbarProps) {
-  const { selectedItems, selectedCount, clearSelection } = useVaultSelection()
+  const { selectedItems, selectedCount, clearSelection, touchSelectionMode } = useVaultSelection()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -34,7 +35,8 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
 
-  if (selectedCount === 0) return null
+  // Show selection mode toggle when no items are selected but in touch selection mode
+  if (selectedCount === 0 && !touchSelectionMode) return null
 
   const selectedItemsData = vaultItems.filter(item => selectedItems.includes(item.id))
   const folderCount = selectedItemsData.filter(item => item.type === 'folder').length
@@ -112,9 +114,11 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         <Card className="bg-background border shadow-lg p-4">
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium">{getSelectionText()}</span>
-            
-            <div className="flex items-center gap-2">
+            {selectedCount > 0 ? (
+              <>
+                <span className="text-sm font-medium">{getSelectionText()}</span>
+                
+                <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 variant="outline"
@@ -154,6 +158,10 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
                 <X className="h-4 w-4" />
               </Button>
             </div>
+              </>
+            ) : (
+              <SelectionModeToggle />
+            )}
           </div>
         </Card>
       </div>

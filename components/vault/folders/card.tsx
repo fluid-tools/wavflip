@@ -11,6 +11,9 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
+import { useAtomValue } from 'jotai'
+import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms'
 import {
   Dialog,
   DialogContent,
@@ -53,6 +56,9 @@ export function FolderCard({
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(folder.name)
+  
+  const { handleContextMenu, shouldShowContextMenu } = useContextMenuHandler()
+  const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
 
   const [, deleteAction, isDeleting] = useDeleteFolderAction({
     onSuccess: () => {
@@ -115,10 +121,10 @@ export function FolderCard({
     return parts.join(', ')
   }
 
-  const cardContent = (
+  const cardContent = shouldShowContextMenu ? (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className="block">
+        <div className="block" onContextMenu={(e) => handleContextMenu(e)}>
           <Card 
             className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
@@ -185,16 +191,18 @@ export function FolderCard({
             </div>
             
             {/* Invisible overlay for navigation */}
-            <Link 
-              href={`/vault/folders/${folder.id}`}
-              className="absolute inset-0 z-10"
-              onClick={(e) => {
-                // Only navigate if no modifier keys are pressed
-                if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                  e.preventDefault()
-                }
-              }}
-            />
+            {!isSelectModeActive && (
+              <Link 
+                href={`/vault/folders/${folder.id}`}
+                className="absolute inset-0 z-10"
+                onClick={(e) => {
+                  // Only navigate if no modifier keys are pressed or in selection mode
+                  if (e.shiftKey || e.ctrlKey || e.metaKey || isSelectModeActive) {
+                    e.preventDefault()
+                  }
+                }}
+              />
+            )}
           </Card>
         </div>
       </ContextMenuTrigger>
@@ -233,6 +241,72 @@ export function FolderCard({
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
+  ) : (
+    <div className="block">
+      <Card 
+        className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
+          isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
+        }`}
+        onClick={onSelectionClick}
+      >
+        <div className="relative w-full aspect-square">
+          <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full">
+            {folder.projects && folder.projects.length > 0 ? (
+              <>
+                {folder.projects.slice(0, 4).map((project) => (
+                  <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
+                    {project.image ? (
+                      <Image
+                        src={project.image}
+                        alt={project.name}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
+                        <span className="text-green-600 dark:text-green-400 font-semibold text-xs">
+                          {project.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {Array.from({ length: Math.max(0, 4 - folder.projects.length) }).map((_, idx) => (
+                  <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                ))}
+              </>
+            ) : (
+              <>
+                <div className="w-full h-full rounded-sm bg-muted flex items-center justify-center">
+                  <Folder className="text-muted-foreground h-4 w-4" />
+                </div>
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+        <div className="mt-2">
+          <h3 className="text-xs font-medium truncate">{folder.name}</h3>
+          <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
+        </div>
+        
+        {!isSelectModeActive && (
+          <Link 
+            href={`/vault/folders/${folder.id}`}
+            className="absolute inset-0 z-10"
+            onClick={(e) => {
+              if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                e.preventDefault()
+              }
+            }}
+          />
+        )}
+      </Card>
+    </div>
   )
 
   const dragData = {

@@ -11,23 +11,37 @@ import {
   toggleItemSelectionAtom,
   selectItemAtom,
   selectRangeAtom,
+  touchSelectionModeAtom,
+  isSelectModeActiveAtom,
   type VaultItem
 } from '@/state/vault-selection-atoms'
+import { useTouchDevice } from '@/hooks/use-touch-device'
 
 export function useVaultSelection() {
   const [selectedItems, setSelectedItems] = useAtom(selectedItemsAtom)
   const [selectionMode, setSelectionMode] = useAtom(selectionModeAtom)
+  const touchSelectionMode = useAtomValue(touchSelectionModeAtom)
+  const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
   const selectedCount = useAtomValue(selectedItemsCountAtom)
   const clearSelection = useSetAtom(clearSelectionAtom)
   const toggleItemSelection = useSetAtom(toggleItemSelectionAtom)
   const selectItem = useSetAtom(selectItemAtom)
   const selectRange = useSetAtom(selectRangeAtom)
+  const { isUsingTouch } = useTouchDevice()
 
   const handleItemClick = useCallback((
     itemId: string,
     event: React.MouseEvent,
     allItems: VaultItem[]
   ) => {
+    // In touch selection mode, always toggle selection
+    if (touchSelectionMode) {
+      event.preventDefault()
+      event.stopPropagation()
+      toggleItemSelection(itemId)
+      return
+    }
+
     // Handle selection based on modifier keys
     if (event.shiftKey) {
       event.preventDefault()
@@ -44,7 +58,7 @@ export function useVaultSelection() {
       toggleItemSelection(itemId)
     }
     // For normal clicks on unselected items, let the default navigation happen
-  }, [selectRange, toggleItemSelection, selectedItems])
+  }, [selectRange, toggleItemSelection, selectedItems, touchSelectionMode])
 
   const isItemSelected = useCallback((itemId: string) => {
     return selectedItems.has(itemId)
@@ -76,13 +90,16 @@ export function useVaultSelection() {
     selectedItems: Array.from(selectedItems),
     selectedCount,
     selectionMode,
+    touchSelectionMode,
+    isSelectModeActive,
     isItemSelected,
     handleItemClick,
     handleKeyDown,
     clearSelection,
     toggleItemSelection,
     selectItem,
-    selectRange
+    selectRange,
+    isUsingTouch
   }
 }
 
