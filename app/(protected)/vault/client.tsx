@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo, startTransition, useState, useEffect, useCallback } from 'react'
+
+
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
@@ -33,6 +35,7 @@ export function VaultView({}: VaultViewProps = {}) {
   const [, combineProjectsAction] = useCombineProjectsAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
+
   
   // Use React Query with hydrated data
   const { data: folders = [] } = useRootFolders()
@@ -44,9 +47,7 @@ export function VaultView({}: VaultViewProps = {}) {
     isItemSelected,
     handleItemClick,
     handleKeyDown,
-    clearSelection,
-    selectedCount,
-    touchSelectionMode
+    clearSelection
   } = useVaultSelection()
 
   const handleMoveFolder = async (
@@ -248,10 +249,8 @@ export function VaultView({}: VaultViewProps = {}) {
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
 
-      {/* Bulk Actions Toolbar - Always show when touch selection mode is active */}
-      {(selectedCount > 0 || touchSelectionMode) && (
-        <BulkActionsToolbar vaultItems={selectionItems} />
-      )}
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar vaultItems={selectionItems} />
     </div>
   )
 } 

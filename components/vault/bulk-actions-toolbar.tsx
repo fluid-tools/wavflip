@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import { FolderPlus, Trash2, X, Move } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useVaultSelection } from '@/hooks/use-vault-selection'
+
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { FolderPicker } from '@/components/vault/folders/picker'
 import {
@@ -16,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useDeleteFolderAction, useDeleteProjectAction, useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
-import { SelectionModeToggle } from '@/components/vault/selection-mode-toggle'
+
 
 interface BulkActionsToolbarProps {
   vaultItems: Array<{ id: string; type: 'folder' | 'project'; name: string }>
@@ -24,7 +25,7 @@ interface BulkActionsToolbarProps {
 }
 
 export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkActionsToolbarProps) {
-  const { selectedItems, selectedCount, clearSelection, touchSelectionMode } = useVaultSelection()
+  const { selectedItems, selectedCount, clearSelection } = useVaultSelection()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -52,8 +53,10 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
     }
   })
 
-  // Show selection mode toggle when no items are selected but in touch selection mode
-  if (selectedCount === 0 && !touchSelectionMode) return null
+  // Only show toolbar when we have selected items
+  if (selectedCount === 0) {
+    return null
+  }
 
   const selectedItemsData = vaultItems.filter(item => selectedItems.includes(item.id))
   const folderCount = selectedItemsData.filter(item => item.type === 'folder').length
@@ -74,46 +77,50 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
   }
 
   const confirmBulkDelete = () => {
-    // Process items using the proper action hooks
-    selectedItemsData.forEach(item => {
-      const formData = new FormData()
-      
-      if (item.type === 'folder') {
-        formData.append('folderId', item.id)
-        deleteFolderAction(formData)
-      } else {
-        formData.append('projectId', item.id)
-        deleteProjectAction(formData)
-      }
+    // Process items using the proper action hooks with startTransition
+    startTransition(() => {
+      selectedItemsData.forEach(item => {
+        const formData = new FormData()
+        
+        if (item.type === 'folder') {
+          formData.append('folderId', item.id)
+          deleteFolderAction(formData)
+        } else {
+          formData.append('projectId', item.id)
+          deleteProjectAction(formData)
+        }
+      })
     })
     
     setShowDeleteDialog(false)
-    clearSelection() // This will clear both selection and selection mode
+    clearSelection()
   }
 
   const confirmBulkMove = () => {
     // Don't proceed if no destination has been selected yet
     if (!hasSelectedDestination) return
 
-    // Process items using the proper action hooks
-    selectedItemsData.forEach(item => {
-      const formData = new FormData()
-      
-      if (item.type === 'folder') {
-        formData.append('folderId', item.id)
-        formData.append('parentFolderId', selectedDestinationId || '') // null becomes empty string for root
-        formData.append('sourceParentFolderId', parentFolderId || '')
-        moveFolderAction(formData)
-      } else {
-        formData.append('projectId', item.id)
-        formData.append('folderId', selectedDestinationId || '') // null becomes empty string for root
-        formData.append('sourceFolderId', parentFolderId || '')
-        moveProjectAction(formData)
-      }
+    // Process items using the proper action hooks with startTransition
+    startTransition(() => {
+      selectedItemsData.forEach(item => {
+        const formData = new FormData()
+        
+        if (item.type === 'folder') {
+          formData.append('folderId', item.id)
+          formData.append('parentFolderId', selectedDestinationId || '') // null becomes empty string for root
+          formData.append('sourceParentFolderId', parentFolderId || '')
+          moveFolderAction(formData)
+        } else {
+          formData.append('projectId', item.id)
+          formData.append('folderId', selectedDestinationId || '') // null becomes empty string for root
+          formData.append('sourceFolderId', parentFolderId || '')
+          moveProjectAction(formData)
+        }
+      })
     })
     
     setShowMoveDialog(false)
-    clearSelection() // This will clear both selection and selection mode
+    clearSelection()
   }
 
   const getSelectionText = () => {
@@ -131,11 +138,9 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         <Card className="bg-background border shadow-lg p-4">
           <div className="flex items-center gap-4">
-            {selectedCount > 0 ? (
-              <>
-                <span className="text-sm font-medium">{getSelectionText()}</span>
-                
-                <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{getSelectionText()}</span>
+            
+            <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 variant="outline"
@@ -175,10 +180,6 @@ export function BulkActionsToolbar({ vaultItems, parentFolderId = null }: BulkAc
                 <X className="h-4 w-4" />
               </Button>
             </div>
-              </>
-            ) : (
-              <SelectionModeToggle />
-            )}
           </div>
         </Card>
       </div>

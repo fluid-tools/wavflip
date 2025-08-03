@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateFolderAction, useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+
 
 interface CreateFolderDialogProps {
   parentFolderId?: string | null
@@ -49,21 +50,23 @@ export function CreateFolderDialog({
       if (selectedItems.length > 0 && result?.folder?.id) {
         const newFolderId = result.folder.id
         
-        // Process items using the proper action hooks (they handle invalidation)
-        selectedItems.forEach(item => {
-          const formData = new FormData()
-          
-          if (item.type === 'folder') {
-            formData.append('folderId', item.id)
-            formData.append('parentFolderId', newFolderId)
-            formData.append('sourceParentFolderId', parentFolderId || '')
-            moveFolderAction(formData)
-          } else {
-            formData.append('projectId', item.id)
-            formData.append('folderId', newFolderId)
-            formData.append('sourceFolderId', parentFolderId || '')
-            moveProjectAction(formData)
-          }
+        // Process items using the proper action hooks with startTransition
+        startTransition(() => {
+          selectedItems.forEach(item => {
+            const formData = new FormData()
+            
+            if (item.type === 'folder') {
+              formData.append('folderId', item.id)
+              formData.append('parentFolderId', newFolderId)
+              formData.append('sourceParentFolderId', parentFolderId || '')
+              moveFolderAction(formData)
+            } else {
+              formData.append('projectId', item.id)
+              formData.append('folderId', newFolderId)
+              formData.append('sourceFolderId', parentFolderId || '')
+              moveProjectAction(formData)
+            }
+          })
         })
       }
       

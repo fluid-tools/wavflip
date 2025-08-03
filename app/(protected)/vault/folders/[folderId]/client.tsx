@@ -15,6 +15,8 @@ import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } f
 import { useFolder } from '@/hooks/data/use-vault'
 import { useVaultSelection } from '@/hooks/use-vault-selection'
 import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms'
+
+
 import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar'
 
 
@@ -30,6 +32,7 @@ export function FolderView({ folderId }: FolderViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
   const [, combineProjectsAction] = useCombineProjectsAction()
+
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
   
@@ -41,9 +44,7 @@ export function FolderView({ folderId }: FolderViewProps) {
     isItemSelected,
     handleItemClick,
     handleKeyDown,
-    clearSelection,
-    selectedCount,
-    touchSelectionMode
+    clearSelection
   } = useVaultSelection()
 
   // Combine subfolders and projects into a single array for virtualization
@@ -246,10 +247,8 @@ export function FolderView({ folderId }: FolderViewProps) {
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
 
-      {/* Bulk Actions Toolbar - Always show when touch selection mode is active */}
-      {(selectedCount > 0 || touchSelectionMode) && (
-        <BulkActionsToolbar vaultItems={selectionItems} parentFolderId={folderData.id} />
-      )}
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar vaultItems={selectionItems} parentFolderId={folderData.id} />
     </DndLayout>
   )
 } 

@@ -11,7 +11,6 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
-import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
 import { useAtomValue } from 'jotai'
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms'
 import {
@@ -60,8 +59,8 @@ export function ProjectCard({
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
   
-  const { handleContextMenu, shouldShowContextMenu } = useContextMenuHandler()
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
+  const shouldShowContextMenu = !isSelectModeActive
   
   // Use the project hook for image upload functionality
   const { uploadImage, isUploadingImage } = useProject({ projectId: project.id })
@@ -123,11 +122,10 @@ export function ProjectCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div 
-          className="block" 
+          className="block"
           onContextMenu={(e) => {
-            const shouldShow = handleContextMenu(e)
-            if (!shouldShow) {
-              e.preventDefault()
+            // On touch devices, stop propagation to prevent parent context menus
+            if ('ontouchstart' in window) {
               e.stopPropagation()
             }
           }}

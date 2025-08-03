@@ -5,45 +5,32 @@ import { Button } from '@/components/ui/button'
 import { Check, X } from 'lucide-react'
 import { 
   isSelectModeActiveAtom,
-  enterTouchSelectionModeAtom,
-  exitTouchSelectionModeAtom,
   enterSelectionModeAtom,
-  exitSelectionModeAtom,
+  clearSelectionAtom,
   selectedItemsCountAtom
 } from '@/state/vault-selection-atoms'
-import { useTouchDevice } from '@/hooks/use-touch-device'
+
 import { cn } from '@/lib/utils'
 
 export function SelectionModeToggle() {
   const [isSelectModeActive] = useAtom(isSelectModeActiveAtom)
-  const enterTouchSelection = useSetAtom(enterTouchSelectionModeAtom)
-  const exitTouchSelection = useSetAtom(exitTouchSelectionModeAtom)
   const enterSelection = useSetAtom(enterSelectionModeAtom)
-  const exitSelection = useSetAtom(exitSelectionModeAtom)
+  const clearSelection = useSetAtom(clearSelectionAtom)
   const selectedCount = useAtom(selectedItemsCountAtom)[0]
-  const { isTouchDevice } = useTouchDevice()
 
   const handleEnterSelection = () => {
-    if (isTouchDevice) {
-      enterTouchSelection()
-    } else {
-      enterSelection()
-    }
+    enterSelection()
   }
 
   const handleExitSelection = () => {
-    if (isTouchDevice) {
-      exitTouchSelection()
-    } else {
-      exitSelection()
-    }
+    clearSelection()
   }
 
   if (isSelectModeActive) {
     return (
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">
-          {selectedCount > 0 ? `${selectedCount} selected` : (isTouchDevice ? 'Tap items to select' : 'Click items to select')}
+          {selectedCount > 0 ? `${selectedCount} selected` : 'Click items to select'}
         </span>
         <Button
           size="sm"
