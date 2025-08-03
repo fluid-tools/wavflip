@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import {
   ContextMenu,
@@ -23,7 +24,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/actions/use-vault-action'
 import type { FolderWithProjects } from '@/db/schema/vault'
-import Link from 'next/link'
+
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from './picker'
@@ -34,13 +35,17 @@ interface FolderCardProps {
   showProjectCount?: boolean
   parentFolderId?: string | null
   isDragAndDropEnabled?: boolean
+  isSelected?: boolean
+  onSelectionClick?: (event: React.MouseEvent) => void
 }
 
 export function FolderCard({ 
   folder, 
   showProjectCount = true, 
   parentFolderId = null,
-  isDragAndDropEnabled = false
+  isDragAndDropEnabled = false,
+  isSelected = false,
+  onSelectionClick
 }: FolderCardProps) {
   // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
   const [showRenameDialog, setShowRenameDialog] = useState(false)
@@ -113,8 +118,13 @@ export function FolderCard({
   const cardContent = (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <Link href={`/vault/folders/${folder.id}`} className="block">
-                      <Card className="w-40 rounded-lg overflow-hidden bg-background border border-muted p-2">
+        <div className="block">
+          <Card 
+            className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
+              isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
+            }`}
+            onClick={onSelectionClick}
+          >
             <div className="relative w-full aspect-square">
               <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full">
                 {/* 
@@ -173,8 +183,20 @@ export function FolderCard({
               <h3 className="text-xs font-medium truncate">{folder.name}</h3>
               <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
             </div>
+            
+            {/* Invisible overlay for navigation */}
+            <Link 
+              href={`/vault/folders/${folder.id}`}
+              className="absolute inset-0 z-10"
+              onClick={(e) => {
+                // Only navigate if no modifier keys are pressed
+                if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                  e.preventDefault()
+                }
+              }}
+            />
           </Card>
-        </Link>
+        </div>
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-48">

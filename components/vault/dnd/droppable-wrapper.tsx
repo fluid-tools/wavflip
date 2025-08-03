@@ -65,7 +65,15 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
           highlightOnHover && isValidDrop && 'opacity-90 shadow-lg border-2 border-primary/50',
           className
         )}
-        aria-dropeffect={canDrop ? 'move' : 'none'}
+        onContextMenu={(e) => {
+          // Only show layout context menu if clicking on the layout itself, not on child items
+          if (e.target === e.currentTarget) {
+            // Allow context menu to show
+          } else {
+            // Prevent layout context menu when clicking on items
+            e.stopPropagation()
+          }
+        }}
       >
         {children}
       </div>

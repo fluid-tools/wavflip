@@ -16,21 +16,36 @@ import { useFolder } from '@/hooks/data/use-vault'
 
 
 interface FolderViewProps {
-  folder: FolderWithProjects
+  folderId: string
 }
 
 type FolderItem = 
   | { type: 'folder'; data: NonNullable<FolderWithProjects['subFolders']>[number] }
   | { type: 'project'; data: FolderWithProjects['projects'][number] }
 
-export function FolderView({ folder }: FolderViewProps) {
+export function FolderView({ folderId }: FolderViewProps) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
   const [, combineProjectsAction] = useCombineProjectsAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
   
-  const { data: folderData = folder } = useFolder(folder.id, folder)
+  const { data: folderData } = useFolder(folderId)
+
+  // Combine subfolders and projects into a single array for virtualization
+  const folderItems = useMemo((): FolderItem[] => {
+    if (!folderData) return []
+    
+    const items: FolderItem[] = [
+      ...(folderData.subFolders || []).map(subFolder => ({ type: 'folder' as const, data: subFolder })),
+      ...folderData.projects.map(project => ({ type: 'project' as const, data: project }))
+    ]
+    return items
+  }, [folderData])
+  
+  if (!folderData) {
+    return <div>Loading...</div>
+  }
   
   const handleMoveFolder = async (
     folderId: string, 
@@ -72,14 +87,6 @@ export function FolderView({ folder }: FolderViewProps) {
       combineProjectsAction(formData)
     })
   }
-  // Combine subfolders and projects into a single array for virtualization
-  const folderItems = useMemo((): FolderItem[] => {
-    const items: FolderItem[] = [
-      ...(folderData.subFolders || []).map(subFolder => ({ type: 'folder' as const, data: subFolder })),
-      ...folderData.projects.map(project => ({ type: 'project' as const, data: project }))
-    ]
-    return items
-  }, [folderData.subFolders, folderData.projects])
 
   // Calculate grid columns based on screen size
   const ITEMS_PER_ROW = 4
@@ -113,8 +120,8 @@ export function FolderView({ folder }: FolderViewProps) {
 
   return (
     <DndLayout
-      droppableId={`folder-${folder.id}`}
-      droppableData={{ type: 'folder', id: folder.id }}
+      droppableId={`folder-${folderData.id}`}
+      droppableData={{ type: 'folder', id: folderData.id }}
       onMoveFolder={handleMoveFolder}
       onMoveProject={handleMoveProject}
       onCombineProjects={handleCombineProjects}
@@ -125,9 +132,9 @@ export function FolderView({ folder }: FolderViewProps) {
       {/* Folder Info */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">{folder.name}</h1>
+          <h1 className="text-2xl font-semibold">{folderData.name}</h1>
           <p className="text-muted-foreground">
-            {folder.subFolders?.length || 0} {(folder.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folder.projects.length} {folder.projects.length === 1 ? 'project' : 'projects'}
+            {folderData.subFolders?.length || 0} {(folderData.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folderData.projects.length} {folderData.projects.length === 1 ? 'project' : 'projects'}
           </p>
         </div>
         <ViewToggle />
@@ -162,20 +169,20 @@ export function FolderView({ folder }: FolderViewProps) {
             <p className="text-sm text-muted-foreground mb-4">
               Create folders or projects to organize your content
             </p>
-            <CreateProjectDialog folderId={folder.id} triggerText="Create Project" />
+            <CreateProjectDialog folderId={folderData.id} triggerText="Create Project" />
           </CardContent>
         </Card>
       )}
 
       {/* Context Menu Dialogs */}
       <CreateFolderDialog 
-        parentFolderId={folder.id}
+        parentFolderId={folderData.id}
         open={showCreateFolderDialog}
         onOpenChange={setShowCreateFolderDialog}
         onSuccess={() => setShowCreateFolderDialog(false)}
       />
       <CreateProjectDialog 
-        folderId={folder.id}
+        folderId={folderData.id}
         open={showCreateProjectDialog}
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}

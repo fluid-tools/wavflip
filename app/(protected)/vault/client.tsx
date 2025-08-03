@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, startTransition, useState } from 'react'
+import { useMemo, startTransition, useState, useEffect } from 'react'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
@@ -13,28 +13,37 @@ import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/use-vault-action'
 import { useRootFolders, useVaultProjects } from '@/hooks/data/use-vault'
+import { useVaultSelection } from '@/hooks/use-vault-selection'
+import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms'
+import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar'
 
 
 interface VaultViewProps {
-  initialFolders: FolderWithProjects[]
-  initialProjects: ProjectWithTracks[]
+  initialFolders?: FolderWithProjects[]
+  initialProjects?: ProjectWithTracks[]
 }
 
 type VaultItem = 
   | { type: 'folder'; data: FolderWithProjects }
   | { type: 'project'; data: ProjectWithTracks }
 
-export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
+export function VaultView({}: VaultViewProps = {}) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
   const [, combineProjectsAction] = useCombineProjectsAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
-  
-  // Use React Query with SSR data as placeholderData for reactivity
-  const { data: folders = initialFolders } = useRootFolders(initialFolders)
-  const { data: projects = initialProjects } = useVaultProjects(initialProjects)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
-  // View state is now managed globally via atoms
+  
+  // Use React Query with hydrated data
+  const { data: folders = [] } = useRootFolders()
+  const { data: projects = [] } = useVaultProjects()
+  
+  // Selection functionality
+  const { 
+    isItemSelected, 
+    handleItemClick, 
+    handleKeyDown
+  } = useVaultSelection()
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -88,12 +97,36 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
     return items
   }, [folders, projects])
 
+  // Convert to selection format for hooks
+  const selectionItems = useMemo((): SelectionVaultItem[] => {
+    return vaultItems.map(item => ({
+      id: item.data.id,
+      type: item.type,
+      name: item.data.name
+    }))
+  }, [vaultItems])
+
+  // Keyboard event handling
+  useEffect(() => {
+    const handleKeyDownEvent = (event: KeyboardEvent) => {
+      handleKeyDown(event, selectionItems)
+    }
+
+    document.addEventListener('keydown', handleKeyDownEvent)
+    return () => document.removeEventListener('keydown', handleKeyDownEvent)
+  }, [handleKeyDown, selectionItems])
+
   // Calculate grid columns based on screen size
   const ITEMS_PER_ROW = 4
 
   const renderItem = (index: number) => {
     const item = vaultItems[index]
     if (!item) return null
+
+    const isSelected = isItemSelected(item.data.id)
+    const handleClick = (event: React.MouseEvent) => {
+      handleItemClick(item.data.id, event, selectionItems)
+    }
 
     if (item.type === 'folder') {
       return (
@@ -102,6 +135,8 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
           folder={item.data} 
           parentFolderId={null}
           isDragAndDropEnabled={true}
+          isSelected={isSelected}
+          onSelectionClick={handleClick}
         />
       )
     } else {
@@ -112,6 +147,8 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
           folderId={null}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
+          isSelected={isSelected}
+          onSelectionClick={handleClick}
         />
       )
     }
@@ -188,6 +225,9 @@ export function VaultView({ initialFolders, initialProjects }: VaultViewProps) {
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
+
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar vaultItems={selectionItems} />
     </div>
   )
 } 

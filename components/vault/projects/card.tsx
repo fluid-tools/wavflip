@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Music, Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon } from 'lucide-react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import {
   ContextMenu,
@@ -23,7 +24,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
 import type { Project, ProjectWithTracks } from '@/db/schema/vault'
-import Link from 'next/link'
+
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from '@/components/vault/folders/picker'
@@ -35,13 +36,17 @@ interface ProjectCardProps {
   folderId?: string | null
   trackCount?: number
   isDragAndDropEnabled?: boolean
+  isSelected?: boolean
+  onSelectionClick?: (event: React.MouseEvent) => void
 }
 
 export function ProjectCard({ 
   project, 
   folderId, 
   trackCount, 
-  isDragAndDropEnabled = false
+  isDragAndDropEnabled = false,
+  isSelected = false,
+  onSelectionClick
 }: ProjectCardProps) {
   // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
@@ -111,8 +116,13 @@ export function ProjectCard({
   const cardContent = (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <Link href={`/vault/projects/${project.id}`} className="block">
-                      <Card className="w-40 rounded-lg overflow-hidden bg-background border border-muted p-2">
+        <div className="block">
+          <Card 
+            className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
+              isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
+            }`}
+            onClick={onSelectionClick}
+          >
             <div className="relative w-full aspect-square">
               {project.image ? (
                 <Image
@@ -133,8 +143,20 @@ export function ProjectCard({
               <h3 className="text-xs font-medium truncate">{project.name}</h3>
               <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
             </div>
+            
+            {/* Invisible overlay for navigation */}
+            <Link 
+              href={`/vault/projects/${project.id}`}
+              className="absolute inset-0 z-10"
+              onClick={(e) => {
+                // Only navigate if no modifier keys are pressed
+                if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                  e.preventDefault()
+                }
+              }}
+            />
           </Card>
-        </Link>
+        </div>
       </ContextMenuTrigger>
 
         <ContextMenuContent className="w-48">
