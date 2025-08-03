@@ -122,7 +122,16 @@ export function ProjectCard({
   const cardContent = shouldShowContextMenu ? (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className="block" onContextMenu={(e) => handleContextMenu(e)}>
+        <div 
+          className="block" 
+          onContextMenu={(e) => {
+            const shouldShow = handleContextMenu(e)
+            if (!shouldShow) {
+              e.preventDefault()
+              e.stopPropagation()
+            }
+          }}
+        >
           <Card 
             className={`w-40 rounded-lg overflow-hidden bg-background border p-2 transition-all cursor-pointer relative ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'

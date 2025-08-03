@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { useAtomValue } from 'jotai'
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms'
 import { useTouchDevice } from './use-touch-device'
@@ -8,6 +8,7 @@ import { useTouchDevice } from './use-touch-device'
 export function useContextMenuHandler() {
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
   const { isUsingTouch } = useTouchDevice()
+  const itemContextMenuActiveRef = useRef(false)
 
   const handleContextMenu = useCallback((
     event: React.MouseEvent,
@@ -25,10 +26,25 @@ export function useContextMenuHandler() {
       return false
     }
 
-    // On touch devices, prevent layout context menu when clicking on items
-    if (isUsingTouch && !isLayoutMenu) {
-      // This is an item context menu, stop propagation to prevent layout menu
-      event.stopPropagation()
+    // On touch devices, handle context menu conflicts
+    if (isUsingTouch) {
+      if (isLayoutMenu) {
+        // This is a layout context menu - only show if no item menu is active
+        if (itemContextMenuActiveRef.current) {
+          event.preventDefault()
+          event.stopPropagation()
+          return false
+        }
+      } else {
+        // This is an item context menu - prevent layout menu and mark as active
+        itemContextMenuActiveRef.current = true
+        event.stopPropagation()
+        
+        // Clear the flag after a short delay to allow for menu interactions
+        setTimeout(() => {
+          itemContextMenuActiveRef.current = false
+        }, 100)
+      }
     }
 
     return true

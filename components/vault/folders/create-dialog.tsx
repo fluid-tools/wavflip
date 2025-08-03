@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, startTransition } from 'react'
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,26 +44,25 @@ export function CreateFolderDialog({
   const [, moveProjectAction] = useMoveProjectAction()
   
   const [, formAction] = useCreateFolderAction({
-    onSuccess: async (result) => {
+    onSuccess: (result) => {
       // Move selected items to the newly created folder
       if (selectedItems.length > 0 && result?.folder?.id) {
         const newFolderId = result.folder.id
         
-        startTransition(() => {
-          for (const item of selectedItems) {
-            const formData = new FormData()
-            
-            if (item.type === 'folder') {
-              formData.append('folderId', item.id)
-              formData.append('parentFolderId', newFolderId)
-              formData.append('sourceParentFolderId', parentFolderId || '')
-              moveFolderAction(formData)
-            } else {
-              formData.append('projectId', item.id)
-              formData.append('folderId', newFolderId)
-              formData.append('sourceFolderId', parentFolderId || '')
-              moveProjectAction(formData)
-            }
+        // Process items using the proper action hooks (they handle invalidation)
+        selectedItems.forEach(item => {
+          const formData = new FormData()
+          
+          if (item.type === 'folder') {
+            formData.append('folderId', item.id)
+            formData.append('parentFolderId', newFolderId)
+            formData.append('sourceParentFolderId', parentFolderId || '')
+            moveFolderAction(formData)
+          } else {
+            formData.append('projectId', item.id)
+            formData.append('folderId', newFolderId)
+            formData.append('sourceFolderId', parentFolderId || '')
+            moveProjectAction(formData)
           }
         })
       }

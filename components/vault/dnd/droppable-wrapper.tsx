@@ -80,10 +80,15 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
         onContextMenu={(e) => {
           // Only show layout context menu if clicking on the layout itself, not on child items
           if (e.target === e.currentTarget) {
-            // Handle layout context menu
-            handleContextMenu(e, { isLayoutMenu: true })
+            // Handle layout context menu - this will check for item menu conflicts on touch
+            const shouldShow = handleContextMenu(e, { isLayoutMenu: true })
+            if (!shouldShow) {
+              e.preventDefault()
+              e.stopPropagation()
+            }
           } else {
             // Prevent layout context menu when clicking on items
+            e.preventDefault()
             e.stopPropagation()
           }
         }}
