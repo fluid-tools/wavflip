@@ -185,12 +185,7 @@ export function VaultView({ }: VaultViewProps = {}) {
   }, [vaultItems, selectedItemsSet, clickHandlers])
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Vault Contents</h2>
-
-      </div>
-
+    <>
       <DndLayout
         droppableId="vault"
         droppableData={{ type: 'vault' }}
@@ -260,6 +255,6 @@ export function VaultView({ }: VaultViewProps = {}) {
 
       {/* Bulk Actions Toolbar */}
       <BulkActionsToolbar vaultItems={selectionItems} />
-    </div>
+    </>
   )
 } 

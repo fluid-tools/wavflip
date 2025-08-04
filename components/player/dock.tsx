@@ -91,14 +91,6 @@ export default function PlayerDock() {
       }
     })
 
-    // Handle play action when track is already loaded
-    if (autoPlay && wavesurfer.getDuration() > 0) {
-      setAutoPlay(false)
-      setTimeout(() => {
-        wavesurfer.play()
-      }, 100)
-    }
-
     wavesurfer.on('timeupdate', (time) => {
       dispatchPlayerAction({ type: 'SET_TIME', payload: time })
     })
@@ -125,7 +117,22 @@ export default function PlayerDock() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTrack, dispatchPlayerAction, autoPlay, setAutoPlay])
+  }, [currentTrack, dispatchPlayerAction])
+
+  // Handle auto-play separately to avoid race conditions
+  useEffect(() => {
+    if (!wavesurferRef.current || !autoPlay) return
+
+    const wavesurfer = wavesurferRef.current
+
+    // If already ready, play immediately
+    if (wavesurfer.getDuration() > 0) {
+      setAutoPlay(false)
+      setTimeout(() => {
+        wavesurfer.play()
+      }, 100)
+    }
+  }, [autoPlay, setAutoPlay])
 
 
 
