@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from "next/link"
 import { ChevronRight } from 'lucide-react'
-import { useFolder, useFolderPath } from '@/hooks/data/use-vault'
+import { useFolderPath } from '@/hooks/data/use-vault'
 import { useProject } from '@/hooks/data/use-project'
 
 interface FolderPathItem {
@@ -34,8 +34,7 @@ export function VaultBreadcrumbs() {
     enabled: isProject && !!projectId
   })
   
-  // Skip parent folder fetch to avoid extra requests on vault page
-  const parentFolderData = null
+
 
   if (!pathname.includes('/vault')) {
     return null

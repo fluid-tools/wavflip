@@ -25,9 +25,6 @@ export function DndLayout({
   onMoveFolder,
   onMoveProject,
   onCombineProjects,
-  onCreateFolder,
-  onCreateProject,
-  onClearSelection,
   className = "p-6 space-y-6 min-h-screen"
 }: DndLayoutProps) {
   return (

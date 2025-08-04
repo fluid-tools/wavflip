@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from 'next/navigation'
-import { useSidebar } from "@/components/ui/sidebar"
+
 import { RecentSheet } from "../gen-ai/recent-sheet"
 import { useAtom } from 'jotai'
 import { generatedSoundsAtom } from '@/state/audio-atoms'
@@ -24,7 +24,6 @@ const VaultActions = dynamic(() => import("../vault/vault-actions").then(mod => 
 
 export function Navbar() {
   const pathname = usePathname()
-  const { open } = useSidebar()
   const [generatedSounds] = useAtom(generatedSoundsAtom)
   const isVaultPage = pathname.includes('/vault')
   const isStudioPage = pathname.includes('/studio')
