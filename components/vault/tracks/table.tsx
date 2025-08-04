@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useAtom } from 'jotai'
+import { useIsMobile } from '@/hooks/use-mobile'
 import {
   flexRender,
   getCoreRowModel,
@@ -35,6 +36,7 @@ import type { AudioTrack } from '@/types/audio'
 import { createTracksTableColumns } from './table-columns'
 import { useTracks, type TrackFromProject } from '../../../hooks/data/use-tracks'
 import { ProjectPicker } from '../projects/picker'
+import { MobileTracksList } from './mobile-list'
 import type { ProjectWithTracks } from '@/db/schema/vault'
 
 interface TracksTableProps {
@@ -44,6 +46,7 @@ interface TracksTableProps {
 }
 
 export function TracksTable({ tracks, projectId, availableProjects = [] }: TracksTableProps) {
+  const isMobile = useIsMobile()
   const [sorting, setSorting] = useState<SortingState>([])
   const [selectedTrack, setSelectedTrack] = useState<TrackFromProject | null>(null)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
@@ -158,87 +161,99 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
 
   return (
     <>
-      <div className="rounded-md border">
-        <div className="w-full">
-          {/* Fixed Header - completely separate from scroll area */}
-          <div className="border-b bg-background">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead 
-                        key={header.id}
+      {isMobile ? (
+        <MobileTracksList
+          tracks={memoizedTracks}
+          projectId={projectId}
+          availableProjects={availableProjects}
+          onPlayTrack={handlePlayTrack}
+          onRenameTrack={handleRenameTrack}
+          onDeleteTrack={handleDeleteTrack}
+          onMoveTrack={handleMoveTrack}
+        />
+      ) : (
+        <div className="rounded-md border">
+          <div className="w-full">
+            {/* Fixed Header - completely separate from scroll area */}
+            <div className="border-b bg-background">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead 
+                          key={header.id}
+                          style={{ 
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize()
+                          }}
+                          className="border-0"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+              </Table>
+            </div>
+
+            {/* Scrollable Body - only contains rows */}
+            <TableVirtuoso
+              style={{ height: '400px' }}
+              totalCount={table.getRowModel().rows.length}
+              components={{
+                Table: ({ style, ...props }) => (
+                  <Table {...props} style={{ ...style, width: '100%' }} />
+                ),
+                TableBody: ({ style, ...props }) => (
+                  <TableBody {...props} style={{ ...style }} />
+                ),
+                TableRow: ({ style, ...props }) => {
+                  return (
+                    <TableRow 
+                      {...props} 
+                      style={style}
+                      className="group hover:bg-muted/70 transition-colors even:bg-muted/20 odd:bg-background"
+                    />
+                  )
+                },
+              }}
+              itemContent={(index) => {
+                const row = table.getRowModel().rows[index]
+                if (!row) return null
+                
+                return (
+                  <>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell 
+                        key={cell.id}
                         style={{ 
-                          width: header.getSize(),
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize()
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize()
                         }}
                         className="border-0"
                       >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
                     ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-            </Table>
-          </div>
-
-          {/* Scrollable Body - only contains rows */}
-          <TableVirtuoso
-            style={{ height: '400px' }}
-            totalCount={table.getRowModel().rows.length}
-            components={{
-              Table: ({ style, ...props }) => (
-                <Table {...props} style={{ ...style, width: '100%' }} />
-              ),
-              TableBody: ({ style, ...props }) => (
-                <TableBody {...props} style={{ ...style }} />
-              ),
-              TableRow: ({ style, ...props }) => {
-                return (
-                  <TableRow 
-                    {...props} 
-                    style={style}
-                    className="group hover:bg-muted/70 transition-colors even:bg-muted/20 odd:bg-background"
-                  />
+                  </>
                 )
-              },
-            }}
-            itemContent={(index) => {
-              const row = table.getRowModel().rows[index]
-              if (!row) return null
-              
-              return (
-                <>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id}
-                      style={{ 
-                        width: cell.column.getSize(),
-                        minWidth: cell.column.getSize(),
-                        maxWidth: cell.column.getSize()
-                      }}
-                      className="border-0"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </>
-              )
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Rename Dialog */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
