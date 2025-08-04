@@ -132,7 +132,7 @@ export function FolderCard({
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
-            <div className="relative w-full h-40 overflow-hidden group">
+            <div className="relative w-full h-40 overflow-hidden">
               <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out group-hover:scale-105">
                 {/* 
                   Grid Logic:
@@ -247,7 +247,7 @@ export function FolderCard({
         onClick={onSelectionClick}
       >
         {/* Image/Preview Section - No padding */}
-        <div className="relative w-full h-40 overflow-hidden group">
+        <div className="relative w-full h-40 overflow-hidden">
           <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out group-hover:scale-105">
             {folder.projects && folder.projects.length > 0 ? (
               <>

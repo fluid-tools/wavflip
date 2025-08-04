@@ -124,13 +124,13 @@ export function ProjectCard({
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 
-            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
+            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
             }`}
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
-            <div className="relative w-full h-40 overflow-hidden group">
+            <div className="relative w-full h-40 overflow-hidden">
               {project.image ? (
                 <Image
                   src={project.image}
@@ -215,42 +215,42 @@ export function ProjectCard({
     </ContextMenu>
   ) : (
     <div className="block">
-      <Card 
-        className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
-          isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
-        }`}
-        onClick={onSelectionClick}
-      >
-        {/* Image/Preview Section - No padding */}
-        <div className="relative w-full h-40 overflow-hidden group">
-          {project.image ? (
-            <Image
-              src={project.image}
-              alt={project.name}
-              fill
-              className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-              sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-              unoptimized
+              <Card 
+          className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
+            isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
+          }`}
+          onClick={onSelectionClick}
+        >
+          {/* Image/Preview Section - No padding */}
+          <div className="relative w-full h-40 overflow-hidden">
+            {project.image ? (
+              <Image
+                src={project.image}
+                alt={project.name}
+                fill
+                className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-muted transition-transform duration-300 ease-out group-hover:scale-105">
+                <Music className="text-muted-foreground h-8 w-8" />
+              </div>
+            )}
+          </div>
+          
+          {/* Metadata Section - No top padding */}
+          <div className="px-2 pb-2">
+            <h3 className="text-xs font-medium truncate">{project.name}</h3>
+            <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
+          </div>
+          
+          {!isSelectModeActive && (
+            <Link 
+              href={`/vault/projects/${project.id}`}
+              className="absolute inset-0 z-10"
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-muted transition-transform duration-300 ease-out group-hover:scale-105">
-              <Music className="text-muted-foreground h-8 w-8" />
-            </div>
           )}
-        </div>
-        
-        {/* Metadata Section - No top padding */}
-        <div className="px-2 pb-2">
-          <h3 className="text-xs font-medium truncate">{project.name}</h3>
-          <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
-        </div>
-        
-        {!isSelectModeActive && (
-          <Link 
-            href={`/vault/projects/${project.id}`}
-            className="absolute inset-0 z-10"
-          />
-        )}
       </Card>
     </div>
   )
