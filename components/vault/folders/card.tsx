@@ -126,7 +126,7 @@ export function FolderCard({
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 
-            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
+            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
             }`}
             onClick={onSelectionClick}
@@ -241,7 +241,7 @@ export function FolderCard({
   ) : (
     <div className="block">
       <Card 
-        className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
+        className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
           isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
         }`}
         onClick={onSelectionClick}
