@@ -1,8 +1,10 @@
 'use client'
 
 import { useMemo, startTransition, useState, useEffect, useCallback } from 'react'
+import { useIsMobile, useIsTablet } from '@/hooks/use-mobile'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import type { FolderWithProjects } from '@/db/schema/vault'
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
@@ -29,6 +31,8 @@ type FolderItem =
   | { type: 'project'; data: FolderWithProjects['projects'][number] }
 
 export function FolderView({ folderId }: FolderViewProps) {
+  const isMobile = useIsMobile()
+  const isTablet = useIsTablet()
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
   const [, combineProjectsAction] = useCombineProjectsAction()
@@ -199,16 +203,29 @@ export function FolderView({ folderId }: FolderViewProps) {
               style={{ height: '100%' }}
               totalCount={Math.ceil(folderItems.length / ITEMS_PER_ROW)}
               itemContent={(rowIndex) => (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
-                  {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
-                    const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
-                    return itemIndex < folderItems.length ? (
-                      <div key={itemIndex}>
-                        {renderItem(itemIndex)}
-                      </div>
-                    ) : null
-                  })}
-                </div>
+                isTablet ? (
+                  <div className="flex flex-wrap justify-center gap-4 mb-4 px-4">
+                    {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
+                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                      return itemIndex < folderItems.length ? (
+                        <div key={itemIndex} className="w-40 flex-shrink-0">
+                          {renderItem(itemIndex)}
+                        </div>
+                      ) : null
+                    })}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
+                    {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
+                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                      return itemIndex < folderItems.length ? (
+                        <div key={itemIndex}>
+                          {renderItem(itemIndex)}
+                        </div>
+                      ) : null
+                    })}
+                  </div>
+                )
               )}
             />
         </div>

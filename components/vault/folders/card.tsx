@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
+import { useIsTablet } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -50,6 +52,7 @@ export function FolderCard({
   isSelected = false,
   onSelectionClick
 }: FolderCardProps) {
+  const isTablet = useIsTablet()
   // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -126,9 +129,11 @@ export function FolderCard({
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 
-            className={`w-full max-w-40 aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
-              isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
-            }`}
+            className={cn(
+              "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
+              isTablet ? "w-40" : "w-full max-w-40",
+              isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
+            )}
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
@@ -242,9 +247,11 @@ export function FolderCard({
   ) : (
     <div className="block">
       <Card 
-        className={`w-full max-w-40 aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
-          isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
-        }`}
+        className={cn(
+          "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
+          isTablet ? "w-40" : "w-full max-w-40",
+          isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
+        )}
         onClick={onSelectionClick}
       >
         {/* Image/Preview Section - No padding */}

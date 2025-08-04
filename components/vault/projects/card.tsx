@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Music, Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
+import { useIsTablet } from '@/hooks/use-mobile'
+import { cn } from '@/lib/utils'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -51,6 +53,7 @@ export function ProjectCard({
   isSelected = false,
   onSelectionClick
 }: ProjectCardProps) {
+  const isTablet = useIsTablet()
   // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
   const displayTrackCount = trackCount ?? ('trackCount' in project ? project.trackCount : 0)
@@ -124,9 +127,11 @@ export function ProjectCard({
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 
-            className={`w-full max-w-40 aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
-              isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
-            }`}
+            className={cn(
+              "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
+              isTablet ? "w-40" : "w-full max-w-40",
+              isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
+            )}
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
@@ -217,9 +222,11 @@ export function ProjectCard({
   ) : (
     <div className="block">
               <Card 
-          className={`w-full max-w-40 aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group ${
-            isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
-          }`}
+          className={cn(
+            "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
+            isTablet ? "w-40" : "w-full max-w-40",
+            isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
+          )}
           onClick={onSelectionClick}
         >
           {/* Image/Preview Section - No padding */}
