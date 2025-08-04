@@ -18,6 +18,8 @@ import { useRootFolders, useVaultProjects } from '@/hooks/data/use-vault'
 import { useVaultSelection } from '@/hooks/use-vault-selection'
 import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms'
 import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar'
+import { useAtomValue } from 'jotai'
+import { selectedItemsAtom } from '@/state/vault-selection-atoms'
 
 
 interface VaultViewProps {
@@ -44,11 +46,13 @@ export function VaultView({}: VaultViewProps = {}) {
   // Selection functionality
   const {
     selectedItems,
-    isItemSelected,
     handleItemClick,
     handleKeyDown,
     clearSelection
   } = useVaultSelection()
+  
+  // Get stable selection state directly from atom for O(1) lookups
+  const selectedItemsSet = useAtomValue(selectedItemsAtom)
 
   const handleMoveFolder = async (
     folderId: string, 
@@ -102,7 +106,7 @@ export function VaultView({}: VaultViewProps = {}) {
     return items
   }, [folders, projects])
 
-  // Convert to selection format for hooks
+  // Create stable selection items - only changes when vault items change
   const selectionItems = useMemo((): SelectionVaultItem[] => {
     return vaultItems.map(item => ({
       id: item.data.id,
@@ -110,6 +114,17 @@ export function VaultView({}: VaultViewProps = {}) {
       name: item.data.name
     }))
   }, [vaultItems])
+
+  // Create stable click handlers map - prevents re-renders
+  const clickHandlers = useMemo(() => {
+    const handlers = new Map<string, (event: React.MouseEvent) => void>()
+    vaultItems.forEach(item => {
+      handlers.set(item.data.id, (event: React.MouseEvent) => {
+        handleItemClick(item.data.id, event, selectionItems)
+      })
+    })
+    return handlers
+  }, [vaultItems, handleItemClick, selectionItems])
 
   const handleCreateFolderWithSelection = useCallback(() => {
     setShowCreateFolderDialog(true)
@@ -134,14 +149,14 @@ export function VaultView({}: VaultViewProps = {}) {
   // Calculate grid columns based on screen size
   const ITEMS_PER_ROW = 4
 
-  const renderItem = (index: number) => {
+  const renderItem = useCallback((index: number) => {
     const item = vaultItems[index]
     if (!item) return null
 
-    const isSelected = isItemSelected(item.data.id)
-    const handleClick = (event: React.MouseEvent) => {
-      handleItemClick(item.data.id, event, selectionItems)
-    }
+    // Use stable atom value for O(1) lookup - no function recreation
+    const isSelected = selectedItemsSet.has(item.data.id)
+    // Get stable click handler from map - no function recreation
+    const handleClick = clickHandlers.get(item.data.id)!
 
     if (item.type === 'folder') {
       return (
@@ -167,7 +182,7 @@ export function VaultView({}: VaultViewProps = {}) {
         />
       )
     }
-  }
+  }, [vaultItems, selectedItemsSet, clickHandlers])
 
   return (
     <div className="space-y-4">

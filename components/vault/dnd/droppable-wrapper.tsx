@@ -2,11 +2,10 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { cn } from '@/lib/utils'
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { FolderPlus, Music, Undo, Copy, Trash2 } from 'lucide-react'
+
 import { forwardRef, memo } from 'react'
 import type { DropData, ItemType } from './types'
-import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
+
 
 interface DroppableWrapperProps {
   id: string
@@ -14,13 +13,6 @@ interface DroppableWrapperProps {
   children: React.ReactNode
   className?: string
   disabled?: boolean
-  showContextMenu?: boolean
-  onCreateFolder?: () => void
-  onCreateProject?: () => void
-  onUndo?: () => void
-  onDuplicate?: () => void
-  onDelete?: () => void
-  onClearSelection?: () => void
   accepts?: ItemType[]
   highlightOnHover?: boolean
   applyRoundedCorners?: boolean
@@ -33,13 +25,6 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
     children,
     className,
     disabled = false,
-    showContextMenu = false,
-    onCreateFolder,
-    onCreateProject,
-    onUndo,
-    onDuplicate,
-    onDelete,
-    onClearSelection,
     accepts,
     highlightOnHover = true,
     applyRoundedCorners = true,
@@ -53,7 +38,7 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
     const canDrop = active && (!accepts || accepts.includes(active.data.current?.type))
     const isValidDrop = isOver && canDrop
     
-    const { shouldShowContextMenu, handleContextMenuOpenChange } = useContextMenuHandler()
+
 
     const droppableContent = (
       <div
@@ -71,63 +56,11 @@ export const DroppableWrapper = memo(forwardRef<HTMLDivElement, DroppableWrapper
           className
         )}
 
-        onClick={(e) => {
-          // Clear selection when clicking on empty space
-          if (e.target === e.currentTarget && onClearSelection) {
-            onClearSelection()
-          }
-        }}
+
       >
         {children}
       </div>
     )
-
-    if (showContextMenu && shouldShowContextMenu('layout')) {
-      return (
-        <ContextMenu
-          onOpenChange={(open) => handleContextMenuOpenChange(open, 'layout')}
-        >
-          <ContextMenuTrigger asChild>
-            {droppableContent}
-          </ContextMenuTrigger>
-          <ContextMenuContent className="w-48">
-            {onCreateFolder && (
-              <ContextMenuItem onClick={onCreateFolder}>
-                <FolderPlus className="h-4 w-4 mr-2" />
-                New Folder
-              </ContextMenuItem>
-            )}
-            {onCreateProject && (
-              <ContextMenuItem onClick={onCreateProject}>
-                <Music className="h-4 w-4 mr-2" />
-                New Project
-              </ContextMenuItem>
-            )}
-            {(onCreateFolder || onCreateProject) && (onUndo || onDuplicate || onDelete) && (
-              <div className="h-px bg-border my-1" />
-            )}
-            {onUndo && (
-              <ContextMenuItem onClick={onUndo}>
-                <Undo className="h-4 w-4 mr-2" />
-                Undo Last Move
-              </ContextMenuItem>
-            )}
-            {onDuplicate && (
-              <ContextMenuItem onClick={onDuplicate}>
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate
-              </ContextMenuItem>
-            )}
-            {onDelete && (
-              <ContextMenuItem onClick={onDelete} className="text-destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </ContextMenuItem>
-            )}
-          </ContextMenuContent>
-        </ContextMenu>
-      )
-    }
 
     return droppableContent
   }

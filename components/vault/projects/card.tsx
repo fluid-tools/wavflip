@@ -61,7 +61,7 @@ export function ProjectCard({
   const [newName, setNewName] = useState(project.name)
   
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
-  const { shouldShowContextMenu, handleContextMenuOpenChange } = useContextMenuHandler()
+  const { shouldShowContextMenu } = useContextMenuHandler()
   
   // Use the project hook for image upload functionality
   const { uploadImage, isUploadingImage } = useProject({ projectId: project.id })
@@ -119,10 +119,8 @@ export function ProjectCard({
 
   // State management is now handled by the custom hooks automatically
 
-  const cardContent = shouldShowContextMenu('item') ? (
-    <ContextMenu
-      onOpenChange={(open) => handleContextMenuOpenChange(open, 'item')}
-    >
+  const cardContent = shouldShowContextMenu() ? (
+    <ContextMenu>
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 

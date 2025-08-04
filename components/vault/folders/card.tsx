@@ -58,7 +58,7 @@ export function FolderCard({
   const [newName, setNewName] = useState(folder.name)
   
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
-  const { shouldShowContextMenu, handleContextMenuOpenChange } = useContextMenuHandler()
+  const { shouldShowContextMenu } = useContextMenuHandler()
 
   const [, deleteAction, isDeleting] = useDeleteFolderAction({
     onSuccess: () => {
@@ -121,10 +121,8 @@ export function FolderCard({
     return parts.join(', ')
   }
 
-  const cardContent = shouldShowContextMenu('item') ? (
-    <ContextMenu
-      onOpenChange={(open) => handleContextMenuOpenChange(open, 'item')}
-    >
+  const cardContent = shouldShowContextMenu() ? (
+    <ContextMenu>
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 
