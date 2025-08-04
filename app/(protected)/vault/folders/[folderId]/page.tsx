@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
-import { requireAuth } from '@/lib/server/auth'
 import { getFolderWithContents } from '@/lib/server/vault'
 import { FolderView } from '@/app/(protected)/vault/folders/[folderId]/client'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
+import { requireAuth } from '@/lib/server/auth'
 
 interface FolderPageProps {
   params: Promise<{
@@ -21,7 +21,7 @@ export default async function FolderPage({ params }: FolderPageProps) {
 
   const queryClient = new QueryClient()
 
-  // Prefetch folder data for hydration
+  // Only prefetch folder-specific data (common vault data is handled by layout)
   await queryClient.prefetchQuery({
     queryKey: ['vault', 'folders', folderId],
     queryFn: () => getFolderWithContents(folderId, session.user.id)
