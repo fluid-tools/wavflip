@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from "next/link"
 import { ChevronRight } from 'lucide-react'
-import { useFolder, useFolderPath, vaultKeys } from '@/hooks/data/use-vault'
+import { useFolder, useFolderPath } from '@/hooks/data/use-vault'
 import { useProject } from '@/hooks/data/use-project'
 
 interface FolderPathItem {
