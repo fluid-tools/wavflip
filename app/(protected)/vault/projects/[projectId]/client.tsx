@@ -178,6 +178,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
                                 fill
                                 className="object-cover"
                                 sizes="128px"
+                                priority
                                 // unoptimized
                             />
                         ) : (

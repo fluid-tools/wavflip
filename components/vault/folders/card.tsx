@@ -155,6 +155,7 @@ export function FolderCard({
                             fill
                             className="object-cover"
                             sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
+                            priority
                             // unoptimized
                           />
                         ) : (
@@ -260,6 +261,7 @@ export function FolderCard({
                         fill
                         className="object-cover"
                         sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
+                        priority
                         // unoptimized
                       />
                     ) : (
