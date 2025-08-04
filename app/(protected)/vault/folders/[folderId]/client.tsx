@@ -8,7 +8,7 @@ import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { FolderCard } from '@/components/vault/folders/card'
 import { ProjectCard } from '@/components/vault/projects/card'
-import { ViewToggle } from '@/components/vault/view-toggle'
+
 import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
 import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/use-vault-action'
@@ -189,28 +189,28 @@ export function FolderView({ folderId }: FolderViewProps) {
             {folderData.subFolders?.length || 0} {(folderData.subFolders?.length || 0) === 1 ? 'folder' : 'folders'}, {folderData.projects.length} {folderData.projects.length === 1 ? 'project' : 'projects'}
           </p>
         </div>
-        <ViewToggle />
+
       </div>
 
       {/* Folders and Projects Grid */}
       {folderItems.length > 0 ? (
         <div style={{ height: '600px' }}>
-          <Virtuoso
-            style={{ height: '100%' }}
-            totalCount={Math.ceil(folderItems.length / ITEMS_PER_ROW)}
-            itemContent={(rowIndex) => (
-              <div className="flex flex-wrap gap-4 mb-4">
-                {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
-                  const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
-                  return itemIndex < folderItems.length ? (
-                    <div key={itemIndex}>
-                      {renderItem(itemIndex)}
-                    </div>
-                  ) : null
-                })}
-              </div>
-            )}
-          />
+                      <Virtuoso
+              style={{ height: '100%' }}
+              totalCount={Math.ceil(folderItems.length / ITEMS_PER_ROW)}
+              itemContent={(rowIndex) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
+                  {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
+                    const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                    return itemIndex < folderItems.length ? (
+                      <div key={itemIndex}>
+                        {renderItem(itemIndex)}
+                      </div>
+                    ) : null
+                  })}
+                </div>
+              )}
+            />
         </div>
       ) : (
         /* Empty state */

@@ -11,6 +11,7 @@ import { vaultKeys } from './use-vault'
 interface UseProjectProps {
   projectId: string
   initialData?: ProjectWithTracks
+  enabled?: boolean
 }
 
 interface UploadTrackData {
@@ -19,7 +20,7 @@ interface UploadTrackData {
   duration?: number
 }
 
-export function useProject({ projectId, initialData }: UseProjectProps) {
+export function useProject({ projectId, initialData, enabled = true }: UseProjectProps) {
   const queryClient = useQueryClient()
   const queryKey = vaultKeys.project(projectId)
 
@@ -37,6 +38,7 @@ export function useProject({ projectId, initialData }: UseProjectProps) {
     placeholderData: initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
+    enabled: enabled && !!projectId,
   })
 
   // Helper function to extract audio duration from file

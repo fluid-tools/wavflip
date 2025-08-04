@@ -24,14 +24,18 @@ export function VaultBreadcrumbs() {
   const folderId = isFolder ? pathname.split('/')[3] : null
   const projectId = isProject ? pathname.split('/')[3] : null
 
-  // Use data hooks instead of raw React Query
+  // Only fetch data when actually needed
   const { data: folderPathData } = useFolderPath(folderId)
+  
+  // Only fetch project data when on project page
   const { project: projectData } = useProject({
-    projectId: projectId!,
-    initialData: undefined
+    projectId: projectId || '',
+    initialData: undefined,
+    enabled: isProject && !!projectId
   })
-  const parentFolderId = projectData?.folderId
-  const { data: parentFolderData } = useFolder(parentFolderId!)
+  
+  // Skip parent folder fetch to avoid extra requests on vault page
+  const parentFolderData = null
 
   if (!pathname.includes('/vault')) {
     return null
@@ -74,7 +78,7 @@ export function VaultBreadcrumbs() {
 
   if (isProject) {
     const projectName = projectData?.name || 'Project'
-    const parentFolderName = parentFolderData?.name || 'Folder'
+    const parentFolderId = projectData?.folderId
 
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -85,7 +89,7 @@ export function VaultBreadcrumbs() {
           <>
             <ChevronRight className="h-3 w-3" />
             <Link href={`/vault/folders/${parentFolderId}`} className="hover:text-foreground">
-              {parentFolderName}
+              Folder
             </Link>
           </>
         )}
