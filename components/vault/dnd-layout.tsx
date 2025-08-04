@@ -40,10 +40,6 @@ export function DndLayout({
         id={droppableId}
         data={droppableData}
         className={className}
-        showContextMenu={true}
-        onCreateFolder={onCreateFolder}
-        onCreateProject={onCreateProject}
-        onClearSelection={onClearSelection}
         applyRoundedCorners={false}
       >
         {children}

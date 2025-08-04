@@ -130,27 +130,25 @@ export function ProjectCard({
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
-            <div className="relative w-full h-40 overflow-hidden">
-              <div className="w-full h-full transition-transform duration-300 ease-out hover:scale-105">
-                {project.image ? (
-                  <Image
-                    src={project.image}
-                    alt={project.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted">
-                    <Music className="text-muted-foreground h-8 w-8" />
-                  </div>
-                )}
-              </div>
+            <div className="relative w-full h-40 overflow-hidden group">
+              {project.image ? (
+                <Image
+                  src={project.image}
+                  alt={project.name}
+                  fill
+                  className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                  sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted transition-transform duration-300 ease-out group-hover:scale-105">
+                  <Music className="text-muted-foreground h-8 w-8" />
+                </div>
+              )}
             </div>
             
-            {/* Metadata Section - Minimal padding */}
-            <div className="px-2 pt-1 pb-2">
+            {/* Metadata Section - No top padding */}
+            <div className="px-2 pb-2">
               <h3 className="text-xs font-medium truncate">{project.name}</h3>
               <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
             </div>
@@ -224,27 +222,25 @@ export function ProjectCard({
         onClick={onSelectionClick}
       >
         {/* Image/Preview Section - No padding */}
-        <div className="relative w-full h-40 overflow-hidden">
-          <div className="w-full h-full transition-transform duration-300 ease-out hover:scale-105">
-            {project.image ? (
-              <Image
-                src={project.image}
-                alt={project.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-                unoptimized
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted">
-                <Music className="text-muted-foreground h-8 w-8" />
-              </div>
-            )}
-          </div>
+        <div className="relative w-full h-40 overflow-hidden group">
+          {project.image ? (
+            <Image
+              src={project.image}
+              alt={project.name}
+              fill
+              className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+              sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-muted transition-transform duration-300 ease-out group-hover:scale-105">
+              <Music className="text-muted-foreground h-8 w-8" />
+            </div>
+          )}
         </div>
         
-        {/* Metadata Section - Minimal padding */}
-        <div className="px-2 pt-1 pb-2">
+        {/* Metadata Section - No top padding */}
+        <div className="px-2 pb-2">
           <h3 className="text-xs font-medium truncate">{project.name}</h3>
           <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
         </div>

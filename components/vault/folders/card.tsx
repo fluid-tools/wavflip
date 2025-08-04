@@ -132,8 +132,8 @@ export function FolderCard({
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
-            <div className="relative w-full h-40 overflow-hidden">
-              <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out hover:scale-105">
+            <div className="relative w-full h-40 overflow-hidden group">
+              <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out group-hover:scale-105">
                 {/* 
                   Grid Logic:
                   1. If folder has projects: Show up to 4 project previews
@@ -187,8 +187,8 @@ export function FolderCard({
               </div>
             </div>
             
-            {/* Metadata Section - Minimal padding */}
-            <div className="px-2 pt-1 pb-2">
+            {/* Metadata Section - No top padding */}
+            <div className="px-2 pb-2">
               <h3 className="text-xs font-medium truncate">{folder.name}</h3>
               <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
             </div>
@@ -247,8 +247,8 @@ export function FolderCard({
         onClick={onSelectionClick}
       >
         {/* Image/Preview Section - No padding */}
-        <div className="relative w-full h-40 overflow-hidden">
-          <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out hover:scale-105">
+        <div className="relative w-full h-40 overflow-hidden group">
+          <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out group-hover:scale-105">
             {folder.projects && folder.projects.length > 0 ? (
               <>
                 {folder.projects.slice(0, 4).map((project) => (
@@ -288,8 +288,8 @@ export function FolderCard({
           </div>
         </div>
         
-        {/* Metadata Section - Minimal padding */}
-        <div className="px-2 pt-1 pb-2">
+        {/* Metadata Section - No top padding */}
+        <div className="px-2 pb-2">
           <h3 className="text-xs font-medium truncate">{folder.name}</h3>
           <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
         </div>
