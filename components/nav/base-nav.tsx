@@ -63,8 +63,7 @@ export function Navbar() {
 
     return (
       <div className={cn(
-        "flex items-center flex-1",
-        !open ? "justify-between" : "justify-end"
+        "flex items-center flex-1 justify-end",
       )}>
         {recentsButton}
       </div>
