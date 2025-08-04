@@ -178,7 +178,7 @@ export function ProjectView({ projectId, initialProject, availableProjects = [] 
                                 fill
                                 className="object-cover"
                                 sizes="128px"
-                                unoptimized
+                                // unoptimized
                             />
                         ) : (
                                     <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">

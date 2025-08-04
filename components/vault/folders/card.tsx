@@ -155,7 +155,7 @@ export function FolderCard({
                             fill
                             className="object-cover"
                             sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
-                            unoptimized
+                            // unoptimized
                           />
                         ) : (
                           // Project has no image: show initial in colored circle
@@ -260,7 +260,7 @@ export function FolderCard({
                         fill
                         className="object-cover"
                         sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
-                        unoptimized
+                        // unoptimized
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
