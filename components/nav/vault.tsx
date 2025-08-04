@@ -16,7 +16,7 @@ import {
   Trash2,
   Move
 } from 'lucide-react'
-import { useState, startTransition } from 'react'
+import { useState } from 'react'
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -46,20 +46,11 @@ import {
 } from '@/components/ui/context-menu'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
-import { FolderPicker } from '@/components/vault/folders/picker'
+import { RenameDialog } from '@/components/vault/dialogs/rename-dialog'
+import { DeleteDialog } from '@/components/vault/dialogs/delete-dialog'
+import { MoveDialog } from '@/components/vault/dialogs/move-dialog'
 import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction, useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
 import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 interface SidebarFolder {
   id: string
@@ -88,8 +79,6 @@ export function VaultSidebarNavigation() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedItem, setSelectedItem] = useState<{ id: string; name: string; type: 'folder' | 'project'; parentId?: string | null } | null>(null)
-  const [newName, setNewName] = useState('')
-  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
 
   // Use the new vault hooks
   const { data: vaultData, isLoading } = useVaultSidebar()
@@ -106,14 +95,12 @@ export function VaultSidebarNavigation() {
     onSuccess: () => {
       setShowRenameDialog(false)
       setSelectedItem(null)
-      setNewName('')
     }
   })
   const [, moveFolderAction, isMovingFolder] = useMoveFolderAction({
     onSuccess: () => {
       setShowMoveDialog(false)
       setSelectedItem(null)
-      setSelectedDestinationId(null)
     }
   })
   const [, deleteProjectAction, isDeletingProject] = useDeleteProjectAction({
@@ -126,16 +113,78 @@ export function VaultSidebarNavigation() {
     onSuccess: () => {
       setShowRenameDialog(false)
       setSelectedItem(null)
-      setNewName('')
     }
   })
   const [, moveProjectAction, isMovingProject] = useMoveProjectAction({
     onSuccess: () => {
       setShowMoveDialog(false)
       setSelectedItem(null)
-      setSelectedDestinationId(null)
     }
   })
+
+  // Context menu handlers
+  const handleRename = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
+    setSelectedItem(item)
+    setShowRenameDialog(true)
+  }
+
+  const handleDelete = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
+    setSelectedItem(item)
+    setShowDeleteDialog(true)
+  }
+
+  const handleMove = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
+    setSelectedItem(item)
+    setShowMoveDialog(true)
+  }
+
+  // Dialog handlers
+  const handleRenameSubmit = (newName: string) => {
+    if (!selectedItem) return
+    
+    const formData = new FormData()
+    formData.append('name', newName)
+    
+    if (selectedItem.type === 'folder') {
+      formData.append('folderId', selectedItem.id)
+      renameFolderAction(formData)
+    } else {
+      formData.append('projectId', selectedItem.id)
+      renameProjectAction(formData)
+    }
+  }
+
+  const handleDeleteConfirm = () => {
+    if (!selectedItem) return
+    
+    const formData = new FormData()
+    
+    if (selectedItem.type === 'folder') {
+      formData.append('folderId', selectedItem.id)
+      deleteFolderAction(formData)
+    } else {
+      formData.append('projectId', selectedItem.id)
+      deleteProjectAction(formData)
+    }
+  }
+
+  const handleMoveSubmit = (destinationFolderId: string | null) => {
+    if (!selectedItem) return
+    
+    const formData = new FormData()
+    
+    if (selectedItem.type === 'folder') {
+      formData.append('folderId', selectedItem.id)
+      formData.append('parentFolderId', destinationFolderId || '')
+      formData.append('sourceParentFolderId', selectedItem.parentId || '')
+      moveFolderAction(formData)
+    } else {
+      formData.append('projectId', selectedItem.id)
+      formData.append('folderId', destinationFolderId || '')
+      formData.append('sourceFolderId', selectedItem.parentId || '')
+      moveProjectAction(formData)
+    }
+  }
 
   const toggleFolder = (folderId: string) => {
     const newExpanded = new Set(expandedFolders)
@@ -147,76 +196,9 @@ export function VaultSidebarNavigation() {
     setExpandedFolders(newExpanded)
   }
 
-  // Context menu handlers
-  const handleRename = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
-    setSelectedItem(item)
-    setNewName(item.name)
-    setShowRenameDialog(true)
-  }
 
-  const handleDelete = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
-    setSelectedItem(item)
-    setShowDeleteDialog(true)
-  }
 
-  const handleMove = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
-    setSelectedItem(item)
-    setSelectedDestinationId(item.parentId || null)
-    setShowMoveDialog(true)
-  }
 
-  // Form handlers
-  const handleRenameSubmit = async (formData: FormData) => {
-    if (!selectedItem) return
-    
-    if (selectedItem.type === 'folder') {
-      formData.append('folderId', selectedItem.id)
-      startTransition(() => {
-        renameFolderAction(formData)
-      })
-    } else {
-      formData.append('projectId', selectedItem.id)
-      startTransition(() => {
-        renameProjectAction(formData)
-      })
-    }
-  }
-
-  const handleDeleteSubmit = async (formData: FormData) => {
-    if (!selectedItem) return
-    
-    if (selectedItem.type === 'folder') {
-      formData.append('folderId', selectedItem.id)
-      startTransition(() => {
-        deleteFolderAction(formData)
-      })
-    } else {
-      formData.append('projectId', selectedItem.id)
-      startTransition(() => {
-        deleteProjectAction(formData)
-      })
-    }
-  }
-
-  const handleMoveSubmit = async (formData: FormData) => {
-    if (!selectedItem) return
-    
-    if (selectedItem.type === 'folder') {
-      formData.append('folderId', selectedItem.id)
-      formData.append('parentFolderId', selectedDestinationId || '')
-      formData.append('sourceParentFolderId', selectedItem.parentId || '')
-      startTransition(() => {
-        moveFolderAction(formData)
-      })
-    } else {
-      formData.append('projectId', selectedItem.id)
-      formData.append('folderId', selectedDestinationId || '')
-      formData.append('sourceFolderId', selectedItem.parentId || '')
-      startTransition(() => {
-        moveProjectAction(formData)
-      })
-    }
-  }
 
   const renderFolder = (folder: SidebarFolder, level = 0) => {
     const isExpanded = expandedFolders.has(folder.id)
@@ -541,119 +523,35 @@ export function VaultSidebarNavigation() {
         onSuccess={() => setShowCreateProjectDialog(false)}
       />
 
-      {/* Context menu dialogs */}
-      {/* Rename Dialog */}
-      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <form action={handleRenameSubmit}>
-            <DialogHeader>
-              <DialogTitle>Rename {selectedItem?.type === 'folder' ? 'Folder' : 'Project'}</DialogTitle>
-              <DialogDescription>
-                Enter a new name for this {selectedItem?.type === 'folder' ? 'folder' : 'project'}.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="col-span-3"
-                  autoFocus
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowRenameDialog(false)}
-                disabled={isRenamingFolder || isRenamingProject}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={(isRenamingFolder || isRenamingProject) || !newName.trim()}>
-                {(isRenamingFolder || isRenamingProject) ? 'Renaming...' : 'Rename'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Consolidated Context Menu Dialogs */}
+      <RenameDialog
+        open={showRenameDialog}
+        onOpenChange={setShowRenameDialog}
+        itemName={selectedItem?.name || ''}
+        itemType={selectedItem?.type || 'folder'}
+        onSubmit={handleRenameSubmit}
+        isLoading={isRenamingFolder || isRenamingProject}
+      />
 
-      {/* Delete Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <form action={handleDeleteSubmit}>
-            <DialogHeader>
-              <DialogTitle>Delete {selectedItem?.type === 'folder' ? 'Folder' : 'Project'}</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete &quot;{selectedItem?.name}&quot;? 
-                {selectedItem?.type === 'folder' 
-                  ? ' This will also delete all projects and tracks inside it.' 
-                  : ' This will also delete all tracks and versions inside it.'
-                } This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowDeleteDialog(false)}
-                disabled={isDeletingFolder || isDeletingProject}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                variant="destructive" 
-                disabled={isDeletingFolder || isDeletingProject}
-              >
-                {(isDeletingFolder || isDeletingProject) ? 'Deleting...' : 'Delete'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <DeleteDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        itemName={selectedItem?.name || ''}
+        itemType={selectedItem?.type || 'folder'}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeletingFolder || isDeletingProject}
+      />
 
-      {/* Move Dialog */}
-      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <form action={handleMoveSubmit}>
-            <DialogHeader>
-              <DialogTitle>Move {selectedItem?.type === 'folder' ? 'Folder' : 'Project'}</DialogTitle>
-              <DialogDescription>
-                Choose where to move &quot;{selectedItem?.name}&quot;.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <FolderPicker
-                selectedFolderId={selectedDestinationId}
-                onFolderSelect={setSelectedDestinationId}
-                excludeFolderId={selectedItem?.type === 'folder' ? selectedItem.id : undefined}
-                allowVaultSelection={true}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowMoveDialog(false)}
-                disabled={isMovingFolder || isMovingProject}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isMovingFolder || isMovingProject}>
-                {(isMovingFolder || isMovingProject) ? 'Moving...' : 'Move'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <MoveDialog
+        open={showMoveDialog}
+        onOpenChange={setShowMoveDialog}
+        itemName={selectedItem?.name || ''}
+        itemType={selectedItem?.type || 'folder'}
+        currentFolderId={selectedItem?.parentId}
+        excludeFolderId={selectedItem?.type === 'folder' ? selectedItem.id : undefined}
+        onSubmit={handleMoveSubmit}
+        isLoading={isMovingFolder || isMovingProject}
+      />
     </SidebarGroup>
   )
 } 
