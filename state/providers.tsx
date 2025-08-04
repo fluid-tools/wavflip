@@ -18,6 +18,7 @@ import type {
   Persister,
 } from '@tanstack/react-query-persist-client';
 import { get, set, del } from 'idb-keyval';
+import { Analytics } from "@vercel/analytics/next";
 
 function ThemeProvider({
   children,
@@ -101,6 +102,7 @@ export function BaseProviders({ children }: { children: ReactNode }) {
           }}
         />
       </JotaiProvider>
+      <Analytics />
     </ThemeProvider>
   );
 }
