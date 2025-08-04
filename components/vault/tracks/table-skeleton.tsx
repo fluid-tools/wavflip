@@ -10,10 +10,48 @@ import {
 
 export function TracksTableSkeleton() {
   return (
-    <div className="rounded-md border">
-      <div className="w-full">
-        {/* Header Skeleton */}
-        <div className="border-b bg-background">
+    <>
+      {/* Mobile Skeleton */}
+      <div className="md:hidden border rounded-lg overflow-hidden">
+        <div style={{ height: '400px' }}>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-3 border-b border-border/50 last:border-b-0 bg-background"
+            >
+              {/* Play Button Skeleton */}
+              <div className="flex items-center justify-center w-8 h-8 flex-shrink-0">
+                <Skeleton className="h-4 w-4" />
+              </div>
+
+              {/* Track Info Skeleton */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <Skeleton className="h-4 w-32" />
+                  {index % 3 === 0 && <Skeleton className="h-3 w-8 rounded-full" />}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-3 w-16" />
+                  <span className="text-muted-foreground">•</span>
+                  <Skeleton className="h-3 w-8 rounded-full" />
+                  <span className="text-muted-foreground">•</span>
+                  <Skeleton className="h-3 w-8" />
+                </div>
+              </div>
+
+              {/* Actions Menu Skeleton */}
+              <Skeleton className="h-8 w-8 flex-shrink-0" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop Skeleton */}
+      <div className="hidden md:block rounded-md border">
+        <div className="w-full">
+          {/* Header Skeleton */}
+          <div className="border-b bg-background">
           <Table>
             <TableHeader>
               <TableRow>
@@ -73,6 +111,7 @@ export function TracksTableSkeleton() {
           </Table>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 } 

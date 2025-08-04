@@ -50,13 +50,24 @@ const formatDate = (date: Date | string | null | undefined) => {
   }).format(dateObj)
 }
 
-const getFileTypeDisplay = (mimeType: string) => {
-  if (mimeType.includes('mp3')) return 'MP3'
-  if (mimeType.includes('wav')) return 'WAV'
-  if (mimeType.includes('flac')) return 'FLAC'
-  if (mimeType.includes('m4a') || mimeType.includes('aac')) return 'AAC'
-  if (mimeType.includes('ogg')) return 'OGG'
-  return 'Audio'
+const getFileTypeDisplay = (mimeType: string): string => {
+  const typeMap: Record<string, string> = {
+    'audio/mpeg': 'MP3',
+    'audio/wav': 'WAV', 
+    'audio/wave': 'WAV',
+    'audio/x-wav': 'WAV',
+    'audio/flac': 'FLAC',
+    'audio/x-flac': 'FLAC',
+    'audio/mp4': 'M4A',
+    'audio/x-m4a': 'M4A',
+    'audio/aac': 'AAC',
+    'audio/ogg': 'OGG',
+    'audio/webm': 'WEBM',
+    'audio/3gpp': '3GP',
+    'audio/amr': 'AMR'
+  }
+  
+  return typeMap[mimeType] || 'UNKNOWN'
 }
 
 export function MobileTracksList({ 
