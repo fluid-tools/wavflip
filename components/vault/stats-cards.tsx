@@ -1,13 +1,12 @@
 'use client'
 
 import { Folder, Music, FileAudio, HardDrive } from 'lucide-react'
-import type { VaultStats } from '@/lib/server/vault'
+import { useVaultStats } from '@/hooks/data/use-vault'
 
-interface VaultStatsProps {
-  stats: VaultStats
-}
-
-export function VaultStats({ stats }: VaultStatsProps) {
+export function VaultStats() {
+  const { data: stats } = useVaultStats()
+  
+  if (!stats) return null
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B'
     const k = 1024

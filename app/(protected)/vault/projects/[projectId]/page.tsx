@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { requireAuth } from '@/lib/server/auth'
 import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/lib/server/vault'
 import { ProjectView } from './client'
+import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
 
 interface ProjectPageProps {
   params: Promise<{
@@ -15,19 +16,35 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     params
   ])
 
-  const [project, folders, vaultProjects] = await Promise.all([
-    getProjectWithTracks(projectId, session.user.id),
-    getAllUserFolders(session.user.id),
-    getVaultProjects(session.user.id)
+  if (!projectId) notFound()
+
+  const queryClient = new QueryClient()
+
+  // Prefetch project data using correct query key
+  await queryClient.prefetchQuery({
+    queryKey: ['vault', 'projects', projectId],
+    queryFn: () => getProjectWithTracks(projectId, session.user.id)
+  })
+
+  // Prefetch additional data for move operations
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: ['vault', 'folders'],
+      queryFn: () => getAllUserFolders(session.user.id)
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['vault', 'vault-projects'],
+      queryFn: () => getVaultProjects(session.user.id)
+    })
   ])
 
+  const project = queryClient.getQueryData(['vault', 'projects', projectId])
+  
   if (!project) notFound()
 
-  // all projects from vault
-  const allProjects = [
-    ...vaultProjects,
-    ...folders.flatMap(folder => folder.projects)
-  ]
-
-  return <ProjectView projectId={projectId} initialProject={project} availableProjects={allProjects} />
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ProjectView projectId={projectId} />
+    </HydrationBoundary>
+  )
 } 

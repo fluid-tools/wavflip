@@ -27,18 +27,25 @@ import { TracksTable } from '@/components/vault/tracks/table'
 import { playerControlsAtom } from '@/state/audio-atoms'
 import { toast } from 'sonner'
 import { useProject } from '@/hooks/data/use-project'
+import { useRootFolders, useVaultProjects } from '@/hooks/data/use-vault'
 
 interface ProjectViewProps {
     projectId: string
-    initialProject: ProjectWithTracks
-    availableProjects?: ProjectWithTracks[]
 }
 
-export function ProjectView({ projectId, initialProject, availableProjects = [] }: ProjectViewProps) {
+export function ProjectView({ projectId }: ProjectViewProps) {
     const { project, uploadTracks, isUploading, uploadImage, isUploadingImage } = useProject({
-        projectId,
-        initialData: initialProject
+        projectId
     })
+    
+    // Get available projects for move operations
+    const { data: folders = [] } = useRootFolders()
+    const { data: vaultProjects = [] } = useVaultProjects()
+    
+    const availableProjects = [
+        ...vaultProjects,
+        ...folders.flatMap(folder => folder.projects)
+    ]
 
     // // Debug: Log when project data changes
     // useEffect(() => {
