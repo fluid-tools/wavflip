@@ -54,7 +54,7 @@ export function MoveDialog({
           <DialogHeader>
             <DialogTitle>Move {itemType === 'folder' ? 'Folder' : 'Project'}</DialogTitle>
             <DialogDescription>
-              Choose where to move "{itemName}".
+              Choose where to move &quot;{itemName}&quot;.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">

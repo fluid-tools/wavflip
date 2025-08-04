@@ -16,7 +16,7 @@ import {
   Trash2,
   Move
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -35,7 +35,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import {
   ContextMenu,
@@ -145,13 +144,15 @@ export function VaultSidebarNavigation() {
     const formData = new FormData()
     formData.append('name', newName)
     
-    if (selectedItem.type === 'folder') {
-      formData.append('folderId', selectedItem.id)
-      renameFolderAction(formData)
-    } else {
-      formData.append('projectId', selectedItem.id)
-      renameProjectAction(formData)
-    }
+    startTransition(() => {
+      if (selectedItem.type === 'folder') {
+        formData.append('folderId', selectedItem.id)
+        renameFolderAction(formData)
+      } else {
+        formData.append('projectId', selectedItem.id)
+        renameProjectAction(formData)
+      }
+    })
   }
 
   const handleDeleteConfirm = () => {
@@ -159,13 +160,15 @@ export function VaultSidebarNavigation() {
     
     const formData = new FormData()
     
-    if (selectedItem.type === 'folder') {
-      formData.append('folderId', selectedItem.id)
-      deleteFolderAction(formData)
-    } else {
-      formData.append('projectId', selectedItem.id)
-      deleteProjectAction(formData)
-    }
+    startTransition(() => {
+      if (selectedItem.type === 'folder') {
+        formData.append('folderId', selectedItem.id)
+        deleteFolderAction(formData)
+      } else {
+        formData.append('projectId', selectedItem.id)
+        deleteProjectAction(formData)
+      }
+    })
   }
 
   const handleMoveSubmit = (destinationFolderId: string | null) => {
@@ -173,17 +176,19 @@ export function VaultSidebarNavigation() {
     
     const formData = new FormData()
     
-    if (selectedItem.type === 'folder') {
-      formData.append('folderId', selectedItem.id)
-      formData.append('parentFolderId', destinationFolderId || '')
-      formData.append('sourceParentFolderId', selectedItem.parentId || '')
-      moveFolderAction(formData)
-    } else {
-      formData.append('projectId', selectedItem.id)
-      formData.append('folderId', destinationFolderId || '')
-      formData.append('sourceFolderId', selectedItem.parentId || '')
-      moveProjectAction(formData)
-    }
+    startTransition(() => {
+      if (selectedItem.type === 'folder') {
+        formData.append('folderId', selectedItem.id)
+        formData.append('parentFolderId', destinationFolderId || '')
+        formData.append('sourceParentFolderId', selectedItem.parentId || '')
+        moveFolderAction(formData)
+      } else {
+        formData.append('projectId', selectedItem.id)
+        formData.append('folderId', destinationFolderId || '')
+        formData.append('sourceFolderId', selectedItem.parentId || '')
+        moveProjectAction(formData)
+      }
+    })
   }
 
   const toggleFolder = (folderId: string) => {
