@@ -124,31 +124,33 @@ export function ProjectCard({
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 
-            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative ${
+            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
             }`}
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
-            <div className="relative w-full aspect-square">
-              {project.image ? (
-                <Image
-                  src={project.image}
-                  alt={project.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-muted">
-                  <Music className="text-muted-foreground h-8 w-8" />
-                </div>
-              )}
+            <div className="relative w-full h-40 overflow-hidden">
+              <div className="w-full h-full transition-transform duration-300 ease-out hover:scale-105">
+                {project.image ? (
+                  <Image
+                    src={project.image}
+                    alt={project.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-muted">
+                    <Music className="text-muted-foreground h-8 w-8" />
+                  </div>
+                )}
+              </div>
             </div>
             
-            {/* Metadata Section - With padding */}
-            <div className="px-2 pt-2 pb-2">
+            {/* Metadata Section - Minimal padding */}
+            <div className="px-2 pt-1 pb-2">
               <h3 className="text-xs font-medium truncate">{project.name}</h3>
               <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
             </div>
@@ -216,31 +218,33 @@ export function ProjectCard({
   ) : (
     <div className="block">
       <Card 
-        className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative ${
+        className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
           isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
         }`}
         onClick={onSelectionClick}
       >
         {/* Image/Preview Section - No padding */}
-        <div className="relative w-full aspect-square">
-          {project.image ? (
-            <Image
-              src={project.image}
-              alt={project.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-muted">
-              <Music className="text-muted-foreground h-8 w-8" />
-            </div>
-          )}
+        <div className="relative w-full h-40 overflow-hidden">
+          <div className="w-full h-full transition-transform duration-300 ease-out hover:scale-105">
+            {project.image ? (
+              <Image
+                src={project.image}
+                alt={project.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-muted">
+                <Music className="text-muted-foreground h-8 w-8" />
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Metadata Section - With padding */}
-        <div className="px-2 pt-2 pb-2">
+        {/* Metadata Section - Minimal padding */}
+        <div className="px-2 pt-1 pb-2">
           <h3 className="text-xs font-medium truncate">{project.name}</h3>
           <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
         </div>

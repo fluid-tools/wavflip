@@ -126,14 +126,14 @@ export function FolderCard({
       <ContextMenuTrigger asChild>
         <div className="block">
           <Card 
-            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative ${
+            className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
               isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
             }`}
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
-            <div className="relative w-full aspect-square">
-              <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full">
+            <div className="relative w-full h-40 overflow-hidden">
+              <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out hover:scale-105">
                 {/* 
                   Grid Logic:
                   1. If folder has projects: Show up to 4 project previews
@@ -187,8 +187,8 @@ export function FolderCard({
               </div>
             </div>
             
-            {/* Metadata Section - With padding */}
-            <div className="px-2 pt-2 pb-2">
+            {/* Metadata Section - Minimal padding */}
+            <div className="px-2 pt-1 pb-2">
               <h3 className="text-xs font-medium truncate">{folder.name}</h3>
               <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
             </div>
@@ -241,14 +241,14 @@ export function FolderCard({
   ) : (
     <div className="block">
       <Card 
-        className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative ${
+        className={`w-40 rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 ${
           isSelected ? 'ring-2 ring-primary border-primary' : 'border-muted hover:border-muted-foreground/20'
         }`}
         onClick={onSelectionClick}
       >
         {/* Image/Preview Section - No padding */}
-        <div className="relative w-full aspect-square">
-          <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full">
+        <div className="relative w-full h-40 overflow-hidden">
+          <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out hover:scale-105">
             {folder.projects && folder.projects.length > 0 ? (
               <>
                 {folder.projects.slice(0, 4).map((project) => (
@@ -288,8 +288,8 @@ export function FolderCard({
           </div>
         </div>
         
-        {/* Metadata Section - With padding */}
-        <div className="px-2 pt-2 pb-2">
+        {/* Metadata Section - Minimal padding */}
+        <div className="px-2 pt-1 pb-2">
           <h3 className="text-xs font-medium truncate">{folder.name}</h3>
           <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
         </div>
