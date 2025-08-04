@@ -138,6 +138,7 @@ export function ProjectCard({
                   fill
                   className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
                   sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                  priority
                   // unoptimized
                 />
               ) : (
@@ -230,6 +231,7 @@ export function ProjectCard({
                 fill
                 className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
                 sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                priority
                 // unoptimized
               />
             ) : (
