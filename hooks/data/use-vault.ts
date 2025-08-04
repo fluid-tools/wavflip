@@ -143,4 +143,29 @@ export function useVaultStats() {
     staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
   })
+}
+
+// ================================
+// FOLDER PATH HOOK
+// ================================
+
+interface FolderPathItem {
+  id: string
+  name: string
+  parentFolderId: string | null
+}
+
+export function useFolderPath(folderId: string | null) {
+  return useQuery({
+    queryKey: [...vaultKeys.folder(folderId!), 'path'],
+    queryFn: async (): Promise<{ path: FolderPathItem[] } | null> => {
+      if (!folderId) return null
+      const response = await fetch(`/api/folders/${folderId}/path`)
+      if (!response.ok) throw new Error('Failed to fetch folder path')
+      return response.json()
+    },
+    enabled: !!folderId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  })
 } 

@@ -1,8 +1,6 @@
 "use client"
 
 import { usePathname } from 'next/navigation'
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Link from "next/link"
 import { useSidebar } from "@/components/ui/sidebar"
 import { RecentSheet } from "../gen-ai/recent-sheet"
 import { useAtom } from 'jotai'
@@ -20,36 +18,30 @@ const VaultBreadcrumbs = dynamic(() => import("../vault/breadcrumbs").then(mod =
   )
 })
 
+const VaultActions = dynamic(() => import("../vault/vault-actions").then(mod => ({ default: mod.VaultActions })), {
+  ssr: false
+})
+
 export function Navbar() {
   const pathname = usePathname()
   const { open } = useSidebar()
   const [generatedSounds] = useAtom(generatedSoundsAtom)
-  const currentTab = pathname.includes('/vault') ? 'vault' : 'studio'
   const isVaultPage = pathname.includes('/vault')
   const isStudioPage = pathname.includes('/studio')
+
+  // Extract folderId for vault actions
+  const isFolder = pathname.startsWith('/vault/folders/') && pathname.split('/').length >= 4
+  const folderId = isFolder ? pathname.split('/')[3] : null
 
   const handlePlaySound = (sound: GeneratedSound) => {
     // This will be passed to the RecentSheet - you can implement the same logic as in SoundGenerator
     console.log('Playing sound from recents:', sound)
   }
 
-  const navigationTabs = !open && (
-    <Tabs value={currentTab} className={isVaultPage ? undefined : "flex-1"}>
-      <TabsList className="gap-2">
-        <TabsTrigger asChild value="studio">
-          <Link href="/studio">Studio</Link>
-        </TabsTrigger>
-        <TabsTrigger asChild value="vault">
-          <Link href="/vault">Vault</Link>
-        </TabsTrigger>
-      </TabsList>
-    </Tabs>
-  )
-
   const recentsButton = isStudioPage && generatedSounds.length > 0 && (
-    <RecentSheet 
-      generatedSounds={generatedSounds} 
-      onPlaySound={handlePlaySound} 
+    <RecentSheet
+      generatedSounds={generatedSounds}
+      onPlaySound={handlePlaySound}
     />
   )
 
@@ -57,21 +49,27 @@ export function Navbar() {
     return (
       <div className="flex items-center justify-between flex-1">
         <div className="flex items-center gap-4 flex-1">
-          {navigationTabs}
-          <VaultBreadcrumbs showActions={true} />
+          <VaultBreadcrumbs />
         </div>
+        <div className="flex items-center gap-2">
+          <VaultActions folderId={folderId} />
+          {recentsButton}
+        </div>
+      </div>
+    )
+  }
+
+  if (isStudioPage) {
+
+    return (
+      <div className={cn(
+        "flex items-center flex-1",
+        !open ? "justify-between" : "justify-end"
+      )}>
         {recentsButton}
       </div>
     )
   }
 
-  return (
-    <div className={cn(
-      "flex items-center flex-1",
-      !open ? "justify-between" : "justify-end"
-    )}>
-      {navigationTabs}
-      {recentsButton}
-    </div>
-  )
+  return null
 } 
