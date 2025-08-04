@@ -6,8 +6,6 @@ import { useMemo, startTransition, useState, useEffect, useCallback } from 'reac
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
-import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
-import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { FolderCard } from '@/components/vault/folders/card'
 import { ProjectCard } from '@/components/vault/projects/card'
 import { ViewToggle } from '@/components/vault/view-toggle'
@@ -20,6 +18,8 @@ import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-at
 import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar'
 import { useAtomValue } from 'jotai'
 import { selectedItemsAtom } from '@/state/vault-selection-atoms'
+import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
+import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 
 
 interface VaultViewProps {
@@ -27,22 +27,22 @@ interface VaultViewProps {
   initialProjects?: ProjectWithTracks[]
 }
 
-type VaultItem = 
+type VaultItem =
   | { type: 'folder'; data: FolderWithProjects }
   | { type: 'project'; data: ProjectWithTracks }
 
-export function VaultView({}: VaultViewProps = {}) {
+export function VaultView({ }: VaultViewProps = {}) {
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
   const [, combineProjectsAction] = useCombineProjectsAction()
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
 
-  
+
   // Use React Query with hydrated data
   const { data: folders = [] } = useRootFolders()
   const { data: projects = [] } = useVaultProjects()
-  
+
   // Selection functionality
   const {
     selectedItems,
@@ -50,35 +50,35 @@ export function VaultView({}: VaultViewProps = {}) {
     handleKeyDown,
     clearSelection
   } = useVaultSelection()
-  
+
   // Get stable selection state directly from atom for O(1) lookups
   const selectedItemsSet = useAtomValue(selectedItemsAtom)
 
   const handleMoveFolder = async (
-    folderId: string, 
-    parentFolderId: string | null, 
+    folderId: string,
+    parentFolderId: string | null,
     sourceParentFolderId: string | null
   ) => {
     const formData = new FormData()
     formData.append('folderId', folderId)
     formData.append('parentFolderId', parentFolderId || '')
     formData.append('sourceParentFolderId', sourceParentFolderId || '')
-    
+
     startTransition(() => {
       moveFolderAction(formData)
     })
   }
 
   const handleMoveProject = async (
-    projectId: string, 
-    folderId: string | null, 
+    projectId: string,
+    folderId: string | null,
     sourceFolderId: string | null
   ) => {
     const formData = new FormData()
     formData.append('projectId', projectId)
     formData.append('folderId', folderId || '')
     formData.append('sourceFolderId', sourceFolderId || '')
-    
+
     startTransition(() => {
       moveProjectAction(formData)
     })
@@ -90,7 +90,7 @@ export function VaultView({}: VaultViewProps = {}) {
     formData.append('targetProjectId', targetProjectId)
     // For vault view, combined projects should be created at root level (null parent)
     formData.append('parentFolderId', '')
-    
+
     startTransition(() => {
       combineProjectsAction(formData)
     })
@@ -160,9 +160,9 @@ export function VaultView({}: VaultViewProps = {}) {
 
     if (item.type === 'folder') {
       return (
-        <FolderCard 
-          key={item.data.id} 
-          folder={item.data} 
+        <FolderCard
+          key={item.data.id}
+          folder={item.data}
           parentFolderId={null}
           isDragAndDropEnabled={true}
           isSelected={isSelected}
@@ -171,9 +171,9 @@ export function VaultView({}: VaultViewProps = {}) {
       )
     } else {
       return (
-        <ProjectCard 
-          key={item.data.id} 
-          project={item.data} 
+        <ProjectCard
+          key={item.data.id}
+          project={item.data}
           folderId={null}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
@@ -190,10 +190,6 @@ export function VaultView({}: VaultViewProps = {}) {
         <h2 className="text-lg font-medium">Vault Contents</h2>
         <div className="flex items-center gap-3">
           <ViewToggle />
-          <div className="flex gap-2">
-            <CreateFolderDialog />
-            <CreateProjectDialog />
-          </div>
         </div>
       </div>
 
@@ -246,7 +242,7 @@ export function VaultView({}: VaultViewProps = {}) {
       </DndLayout>
 
       {/* Context Menu Dialogs */}
-      <CreateFolderDialog 
+      <CreateFolderDialog
         open={showCreateFolderDialog}
         onOpenChange={setShowCreateFolderDialog}
         selectedItems={selectedItems.map(id => {
@@ -258,7 +254,7 @@ export function VaultView({}: VaultViewProps = {}) {
           clearSelection()
         }}
       />
-      <CreateProjectDialog 
+      <CreateProjectDialog
         open={showCreateProjectDialog}
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
