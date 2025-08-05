@@ -66,7 +66,7 @@ export function ChatMessages({
       {/* Chat Messages - Scrollable area */}
       <div className="relative z-10 h-full">
         <ScrollArea className="h-full">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+          <div className="max-w-4xl mx-auto px-4 py-6 space-y-8 sm:space-y-10">
             {messages.map((message) => (
               <ChatMessage
                 key={message.id}
