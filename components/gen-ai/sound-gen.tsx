@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { InputArea } from './input-area'
-import NewInputArea from './new-input-area'
 import type { GeneratedSound } from '@/types/audio'
 
 interface SoundGeneratorProps {
@@ -177,7 +176,6 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
         onDeleteSound={handleDeleteSound}
         onCopyUrl={handleCopyUrl}
       />
-      <NewInputArea />
       <InputArea
         prompt={prompt}
         setPrompt={setPrompt}

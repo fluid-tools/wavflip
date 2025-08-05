@@ -2,10 +2,17 @@
 
 import { useState, useRef } from 'react'
 import { useAtom } from 'jotai'
-import { Play, Shuffle, MoreHorizontal, Share, Upload, Image as ImageIcon } from 'lucide-react'
+import { Play, Shuffle, MoreHorizontal, Share, Upload, Image as ImageIcon, Edit2, Trash2, Copy, ExternalLink, Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { ProjectWithTracks, TrackWithVersions } from '@/db/schema/vault'
 import type { AudioTrack } from '@/types/audio'
 import Image from 'next/image'
@@ -96,6 +103,53 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
     }
 
+    const handleShuffle = () => {
+        if (!project.tracks || project.tracks.length === 0) {
+            toast.error('No tracks to shuffle')
+            return
+        }
+
+        // Create shuffled copy of tracks
+        const shuffledTracks = [...project.tracks].sort(() => Math.random() - 0.5)
+        const firstTrack = shuffledTracks[0]
+        
+        if (!firstTrack.activeVersion) {
+            toast.error('No audio available')
+            return
+        }
+
+        const audioTrack: AudioTrack = {
+            id: firstTrack.id,
+            title: firstTrack.name,
+            url: firstTrack.activeVersion.fileUrl,
+            duration: firstTrack.activeVersion.duration || undefined,
+            createdAt: firstTrack.createdAt,
+            type: 'uploaded'
+        }
+
+        dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
+        toast.success('Playing in shuffle mode')
+    }
+
+    const handleShare = async () => {
+        try {
+            const projectUrl = `${window.location.origin}/vault/projects/${projectId}`
+            await navigator.clipboard.writeText(projectUrl)
+            toast.success('Project link copied to clipboard')
+        } catch (error) {
+            toast.error('Failed to copy link')
+        }
+    }
+
+    const handleCopyProjectId = async () => {
+        try {
+            await navigator.clipboard.writeText(projectId)
+            toast.success('Project ID copied to clipboard')
+        } catch (error) {
+            toast.error('Failed to copy project ID')
+        }
+    }
+
     const handleFileDrop = async (e: React.DragEvent) => {
         e.preventDefault()
         setIsDragOver(false)
@@ -149,7 +203,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
             {/* Project Hero Section */}
             <div className="p-6 space-y-6">
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col md:flex-row gap-6 items-center md:items-end">
                     {/* Album Art */}
                     <TooltipProvider>
                         <Tooltip>
@@ -157,7 +211,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                                 <ContextMenu>
                                     <ContextMenuTrigger asChild>
                                         <div 
-                                            className="relative w-32 h-32 rounded-lg shadow-lg overflow-hidden flex-shrink-0 self-center sm:self-start cursor-pointer group border-2 border-transparent group-hover:border-primary/50 transition-colors"
+                                            className="relative w-48 h-48 md:w-64 md:h-64 rounded-lg shadow-lg overflow-hidden flex-shrink-0 cursor-pointer group border-2 border-transparent group-hover:border-primary/50 transition-colors"
                                             onClick={(e) => {
                                                 e.preventDefault()
                                                 const input = document.createElement('input')
@@ -184,7 +238,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                                 alt={project.name}
                                 fill
                                 className="object-cover"
-                                sizes="128px"
+                                sizes="(max-width: 768px) 192px, 256px"
                                 priority
                                 // unoptimized
                             />
@@ -249,20 +303,20 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                     </TooltipProvider>
 
                     {/* Project Info */}
-                    <div className="flex-1 flex flex-col justify-center sm:justify-end text-center sm:text-left">
+                    <div className="flex-1 flex flex-col justify-center md:justify-end text-center md:text-left space-y-4">
                         <div className="space-y-2">
                             <p className="text-sm font-medium text-muted-foreground">PROJECT</p>
-                            <h1 className="text-2xl font-bold">{project.name}</h1>
-                            <div className="flex items-center gap-2 text-muted-foreground justify-center sm:justify-start flex-wrap">
-                                {/* <span>{project.userId || 'Unknown'}</span> */}
-                                {/* <span>•</span> */}
+                            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{project.name}</h1>
+                            <div className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start flex-wrap">
                                 <span>{project.tracks?.length || 0} tracks</span>
                                 <span>•</span>
                                 <span>{formatTotalDuration(totalDuration)}</span>
                                 {project.accessType !== 'private' && (
                                     <>
                                         <span>•</span>
-                                        <Badge variant="secondary">{project.accessType}</Badge>
+                                        <Badge variant="secondary" className="text-xs">
+                                            {project.accessType}
+                                        </Badge>
                                     </>
                                 )}
                             </div>
@@ -271,7 +325,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+                <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
                     <Button
                         size="lg"
                         className="rounded-full px-6 sm:px-8"
@@ -281,17 +335,68 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                         <Play className="h-5 w-5 mr-2" />
                         Play
                     </Button>
-                    <Button variant="ghost" size="lg" className="rounded-full" disabled={isUploading}>
-                        <Shuffle className="h-5 w-5" />
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button 
+                                    variant="ghost" 
+                                    size="lg" 
+                                    className="rounded-full h-12 w-12 p-0" 
+                                    onClick={handleShuffle}
+                                    disabled={!project.tracks || project.tracks.length === 0 || isUploading}
+                                >
+                                    <Shuffle className="h-5 w-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Shuffle play</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
                     <UploadTrackDialog projectId={projectId} />
-                    <Button variant="ghost" size="sm" disabled={isUploading}>
-                        <Share className="h-4 w-4 mr-2" />
-                        Share
-                    </Button>
-                    <Button variant="ghost" size="sm" disabled={isUploading}>
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" disabled={isUploading}>
+                                <Share className="h-4 w-4 mr-2" />
+                                Share
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={handleShare}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy Link
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleCopyProjectId}>
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Copy Project ID
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" disabled={isUploading}>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem>
+                                <Edit2 className="h-4 w-4 mr-2" />
+                                Rename Project
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Archive className="h-4 w-4 mr-2" />
+                                Archive Project
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Project
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
 
                 {/* Track List - Refactored Table */}
