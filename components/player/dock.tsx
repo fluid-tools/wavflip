@@ -49,22 +49,38 @@ export default function PlayerDock() {
   
   const isPlaying = playerState === 'playing'
 
-  // Check if mobile on mount
+  // Check if mobile on mount and handle resize
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      const newIsMobile = window.innerWidth < 768
+      if (newIsMobile !== isMobile) {
+        setIsMobile(newIsMobile)
+      }
     }
     checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+    
+    // Debounce resize to avoid too many re-renders
+    let resizeTimeout: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(checkMobile, 150)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(resizeTimeout)
+    }
+  }, [isMobile])
 
   // Initialize WaveSurfer
   useEffect(() => {
     const container = isMobile ? mobileWaveformRef.current : desktopWaveformRef.current
     if (!container || !currentTrack) return
 
-    console.log('Initializing WaveSurfer, mobile:', isMobile, 'container:', container)
+    // Store current playback state before destroying
+    const wasPlaying = wavesurferRef.current?.isPlaying() || false
+    const currentProgress = wavesurferRef.current?.getCurrentTime() || 0
 
     // Clean up previous instance
     if (wavesurferRef.current) {
@@ -99,14 +115,19 @@ export default function PlayerDock() {
 
       // Set up event listeners
       wavesurfer.on('ready', () => {
-        console.log('WaveSurfer ready')
         const trackDuration = wavesurfer.getDuration()
         dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
         
-        // Auto-play if requested
-        if (autoPlay) {
+        // Restore playback position
+        if (currentProgress > 0) {
+          wavesurfer.seekTo(currentProgress / trackDuration)
+        }
+        
+        // Resume playback if it was playing
+        if (wasPlaying) {
+          wavesurfer.play()
+        } else if (autoPlay) {
           setAutoPlay(false)
-          // Small delay to ensure everything is ready
           setTimeout(() => {
             wavesurfer.play()
           }, 100)
