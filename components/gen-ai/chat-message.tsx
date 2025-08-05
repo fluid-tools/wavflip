@@ -49,14 +49,14 @@ export function ChatMessage({
       isUser && "justify-end"
     )}>
       <div className={cn(
-        "max-w-md w-fit",
-        isUser && "ml-auto"
+        "max-w-full sm:max-w-md w-full",
+        isUser && "w-fit ml-auto"
       )}>
         {content && (
           <div className={cn(
-            "rounded-lg px-3 py-2 mb-2",
+            "rounded-2xl px-3 py-2 mb-2",
             isUser 
-              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto" 
+              ? "bg-blue-500 rounded-full dark:text-white ml-auto" 
               : "bg-black/5 dark:bg-white/5 border border-border/30"
           )}>
             {isGenerating && (
@@ -81,14 +81,10 @@ export function ChatMessage({
         )}
 
         {sound && (
-          <div className="rounded-lg border border-neutral-800 py-4 bg-neutral-900 max-w-md w-full flex flex-col gap-6">
+          <div className="rounded-2xl border border-neutral-800 py-3 bg-neutral-900 max-w-md w-full flex flex-col gap-4">
             {/* Header */}
-            <div className="flex items-center px-3 gap-2">
-              {sound.metadata?.model?.includes('tts') ? (
-                <Volume2 className="h-3 w-3" />
-              ) : (
-                <Music className="h-3 w-3" />
-              )}
+            <div className="flex items-center px-3 gap-8">
+             
               <h4 className="font-semibold text-xs text-white truncate flex-1">{sound.title}</h4>
               <Badge className="bg-neutral-800 text-neutral-300 border-0 text-xs px-4 py-0.5">
                 {sound.metadata?.model?.includes('tts') ? 'tts' : 'sfx'}
@@ -99,19 +95,20 @@ export function ChatMessage({
               <WaveformPreview url={sound.url} height={32} />
             </div>
             {/* Controls */}
-            <div className="flex px-3 items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 px-3">
                 <Button
-                  size="sm"
-                  onClick={(e) => {
+                  size="icon"
+                  variant="ghost"
+                  onClick={e => {
                     e.stopPropagation()
                     onPlaySound?.(sound)
                   }}
                   className={cn(
-                    "h-6 w-6 rounded-full p-0",
+                    "h-8 w-8 p-0",
                     isCurrentTrack && isPlaying
-                      ? "bg-blue-500 hover:bg-blue-400 dark:bg-blue-400 dark:hover:bg-blue-500 dark:text-white" 
-                      : "bg-white hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
+                      ? "text-primary dark:text-white"
+                      : "text-neutral-900 dark:text-neutral-100"
                   )}
                 >
                   {isPlaying && isCurrentTrack ? (
@@ -122,7 +119,7 @@ export function ChatMessage({
                 </Button>
                 <span className="text-xs text-neutral-400">{sound.duration ? `${Math.round(sound.duration)}s` : ''}</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 px-3">
                 <Button
                   size="icon"
                   variant="ghost"
