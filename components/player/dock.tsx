@@ -6,20 +6,12 @@ import WaveSurfer from 'wavesurfer.js'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { 
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from '@/components/ui/drawer'
-import { 
   Play, 
   Pause, 
   Volume2, 
   VolumeX,
   Download,
-  Heart,
-  ChevronUp
+  Heart
 } from 'lucide-react'
 import { 
   currentTrackAtom,
@@ -32,7 +24,6 @@ import {
   autoPlayAtom
 } from '@/state/audio-atoms'
 import { downloadAndStoreAudio } from '@/lib/storage/local-vault'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
 
 function formatTime(seconds: number): string {
@@ -45,7 +36,6 @@ export default function PlayerDock() {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [currentTime] = useAtom(currentTimeAtom)
   const [duration] = useAtom(durationAtom)
@@ -56,7 +46,6 @@ export default function PlayerDock() {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   
   const isPlaying = playerState === 'playing'
-  const isMobile = useIsMobile()
 
   // Initialize WaveSurfer
   useEffect(() => {
@@ -130,6 +119,24 @@ export default function PlayerDock() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack, dispatchPlayerAction])
 
+  // Handle window resize to redraw waveform
+  useEffect(() => {
+    if (!wavesurferRef.current) return
+
+    const handleResize = () => {
+      // Redraw the waveform on resize
+      if (wavesurferRef.current && waveformRef.current) {
+        // Force a redraw by calling setOptions
+        wavesurferRef.current.setOptions({
+          fillParent: true
+        })
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Handle auto-play separately to avoid race conditions
   useEffect(() => {
     if (!wavesurferRef.current || !autoPlay) return
@@ -144,8 +151,6 @@ export default function PlayerDock() {
       }, 100)
     }
   }, [autoPlay, setAutoPlay])
-
-
 
   // Sync volume changes
   useEffect(() => {
@@ -202,157 +207,12 @@ export default function PlayerDock() {
     return null
   }
 
-  // Mobile Player
-  if (isMobile) {
-    return (
-      <>
-        <div 
-          data-player-dock 
-          className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-900/95 backdrop-blur-md border-t border-neutral-800 shadow-2xl">
-          <div className="px-4 py-3">
-            <div className="flex items-center gap-4">
-              {/* Track Info - Mobile */}
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-md bg-neutral-800 border border-neutral-700 flex items-center justify-center flex-shrink-0">
-                  <span className="text-neutral-300 text-sm font-medium">
-                    {currentTrack.type === 'generated' ? '🎵' : '📁'}
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-sm text-neutral-100 truncate">
-                    {currentTrack.title}
-                  </h4>
-                  <p className="text-xs text-neutral-400 font-mono tabular-nums">
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Play Button */}
-              <Button
-                size="lg"
-                onClick={handlePlayPause}
-                className="w-10 h-10 rounded-md bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 flex-shrink-0"
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4 ml-0.5" />
-                )}
-              </Button>
-
-              {/* Mobile Drawer Trigger */}
-              <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-                <DrawerTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                </DrawerTrigger>
-
-                <DrawerContent className="h-[80vh] bg-neutral-900">
-                  <DrawerHeader>
-                    <DrawerTitle className="text-center">{currentTrack.title}</DrawerTitle>
-                  </DrawerHeader>
-                  
-                  <div className="flex-1 p-6 flex flex-col gap-6">
-                    {/* Waveform in Drawer */}
-                    <div className="h-32 bg-neutral-800 rounded-lg border border-neutral-700 p-4">
-                      <div 
-                        ref={isDrawerOpen ? waveformRef : null}
-                        className="w-full h-full"
-                      />
-                    </div>
-                    
-                    {/* Controls */}
-                    <div className="flex flex-col gap-4">
-                      {/* Time Display */}
-                      <div className="text-center">
-                        <div className="text-2xl text-neutral-100 font-mono tabular-nums">
-                          {formatTime(currentTime)}
-                        </div>
-                        <div className="text-sm text-neutral-400 font-mono tabular-nums">
-                          of {formatTime(duration)}
-                        </div>
-                      </div>
-                      
-                      {/* Volume Control */}
-                      <div className="flex items-center gap-4">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleToggleMute}
-                          className="w-10 h-10 p-0 text-neutral-300 hover:bg-neutral-800"
-                        >
-                          {muted || volume === 0 ? (
-                            <VolumeX className="h-5 w-5" />
-                          ) : (
-                            <Volume2 className="h-5 w-5" />
-                          )}
-                        </Button>
-                        
-                        <Slider
-                          value={[muted ? 0 : volume]}
-                          onValueChange={handleVolumeChange}
-                          max={1}
-                          step={0.01}
-                          className="flex-1"
-                        />
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex items-center justify-center gap-4">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleSaveToVault}
-                          disabled={isSaving}
-                          className="w-10 h-10 p-0 text-neutral-300 hover:bg-neutral-800"
-                        >
-                          <Heart className="h-5 w-5" />
-                        </Button>
-                        
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          asChild
-                          className="w-10 h-10 p-0 text-neutral-300 hover:bg-neutral-800"
-                        >
-                          <a href={currentTrack.url} download>
-                            <Download className="h-5 w-5" />
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </DrawerContent>
-              </Drawer>
-            </div>
-          </div>
-
-          {/* Waveform for mobile when drawer is closed */}
-          {!isDrawerOpen && (
-            <div className="px-4 pb-3">
-              <div 
-                ref={!isDrawerOpen ? waveformRef : null}
-                className="w-full h-10 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
-              />
-            </div>
-          )}
-        </div>
-      </>
-    )
-  }
-
-  // Desktop Player
   return (
     <div 
       data-player-dock 
       className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-900/95 backdrop-blur-md border-t border-neutral-800 shadow-2xl">
-      <div className="px-4 sm:px-6 py-3">
+      {/* Desktop Layout */}
+      <div className="hidden md:block px-4 sm:px-6 py-3">
         <div className="flex items-center gap-4">
           {/* Track Info */}
           <div className="flex items-center gap-3 min-w-0 flex-shrink-0 w-64">
@@ -395,7 +255,7 @@ export default function PlayerDock() {
           </div>
 
           {/* Desktop Controls */}
-          <div className="hidden md:flex items-center gap-4 flex-shrink-0">
+          <div className="flex items-center gap-4 flex-shrink-0">
             {/* Time Display */}
             <div className="text-xs text-neutral-400 font-mono tabular-nums min-w-[80px]">
               {formatTime(currentTime)} / {formatTime(duration)}
@@ -451,39 +311,78 @@ export default function PlayerDock() {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Mobile Controls */}
-          <div className="flex md:hidden items-center gap-2 flex-shrink-0">
+      {/* Mobile Layout - Compact */}
+      <div className="md:hidden">
+        {/* Top Row - Track Info and Controls */}
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            {/* Track Info */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-md bg-neutral-800 border border-neutral-700 flex items-center justify-center flex-shrink-0">
+                <span className="text-neutral-300 text-sm font-medium">
+                  {currentTrack.type === 'generated' ? '🎵' : '📁'}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-medium text-sm text-neutral-100 truncate">
+                  {currentTrack.title}
+                </h4>
+                <p className="text-xs text-neutral-400 font-mono tabular-nums">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </p>
+              </div>
+            </div>
+
+            {/* Play Button */}
             <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleToggleMute}
-              className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
+              size="lg"
+              onClick={handlePlayPause}
+              className="w-12 h-12 rounded-full bg-neutral-800 hover:bg-neutral-700 text-neutral-100 border border-neutral-700 hover:border-neutral-600 transition-all duration-200 flex-shrink-0"
             >
-              {muted || volume === 0 ? (
-                <VolumeX className="h-4 w-4" />
+              {isPlaying ? (
+                <Pause className="h-5 w-5" />
               ) : (
-                <Volume2 className="h-4 w-4" />
+                <Play className="h-5 w-5 ml-0.5" />
               )}
             </Button>
-            
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleSaveToVault}
-              disabled={isSaving}
-              className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
-            >
-              <Heart className="h-4 w-4" />
-            </Button>
+
+            {/* Quick Actions */}
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleToggleMute}
+                className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
+              >
+                {muted || volume === 0 ? (
+                  <VolumeX className="h-4 w-4" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleSaveToVault}
+                disabled={isSaving}
+                className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
+              >
+                <Heart className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Time Display */}
-        <div className="flex md:hidden justify-center mt-2">
-          <div className="text-xs text-neutral-400 font-mono tabular-nums">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </div>
+        {/* Waveform */}
+        <div className="px-4 pb-3">
+          <div 
+            ref={waveformRef}
+            className="w-full h-12 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+          />
         </div>
       </div>
     </div>
