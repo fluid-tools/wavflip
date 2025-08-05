@@ -49,176 +49,127 @@ export function ChatMessage({
       isUser && "justify-end"
     )}>
       <div className={cn(
-        "max-w-[85%]",
+        "max-w-md w-full",
         isUser && "ml-auto"
       )}>
-        <div className={cn(
-          sound || isGenerating ? "rounded-2xl px-4 py-3" : "rounded-2xl px-4 py-3",
-          isUser && "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
-          type === 'assistant' && "bg-muted/40 border border-border/50",
-          isSystem && "bg-muted/40 border border-border/50"
-        )}>
-          {content && (
-            <div className="space-y-2">
-              {isGenerating && (
-                <div className="flex items-center gap-2 text-xs">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Generating... {Math.round(generationProgress * 100)}%
-                </div>
-              )}
-              <p className="text-sm leading-relaxed">
-                {content}
-              </p>
-              {isGenerating && (
-                <Progress value={generationProgress * 100} className="h-1" />
-              )}
-            </div>
-          )}
-
-          {sound && (
-            <ContextMenu>
-              <ContextMenuTrigger>
-                <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl border border-neutral-800 hover:bg-neutral-800/90 transition-all cursor-pointer mt-2">
-                  <div className="flex items-start gap-3 p-3">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-neutral-800 border border-neutral-700 flex-shrink-0">
-                      {sound.metadata?.model?.includes('tts') ? (
-                        <Volume2 className="h-3.5 w-3.5 text-neutral-300" />
-                      ) : (
-                        <Music className="h-3.5 w-3.5 text-neutral-300" />
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h4 className="font-medium text-sm text-neutral-100 truncate">
-                          {sound.title}
-                        </h4>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-6 w-6 p-0 hover:bg-neutral-800 text-neutral-300 flex-shrink-0"
-                            >
-                              <MoreHorizontal className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem onClick={() => onCopyUrl?.(sound.url)}>
-                              <Copy className="h-3.5 w-3.5 mr-2" />
-                              Copy URL
-                            </DropdownMenuItem>
-                            {sound.metadata?.prompt && (
-                              <DropdownMenuItem onClick={() => {
-                                navigator.clipboard.writeText(sound.metadata!.prompt!)
-                                toast.success('Prompt copied to clipboard')
-                              }}>
-                                <Copy className="h-3.5 w-3.5 mr-2" />
-                                Copy Prompt
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem 
-                              onClick={() => onDeleteSound?.(sound.id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="h-3.5 w-3.5 mr-2" />
-                              Remove
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      
-                      {/* Waveform Preview */}
-                      <div className="mb-2">
-                        <WaveformPreview url={sound.url} height={30} />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <Badge variant="outline" className="text-xs h-3.5 px-1.5 border-neutral-700 text-neutral-300">
-                            {sound.metadata?.model?.replace('elevenlabs-', '')}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center gap-0.5">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onPlaySound?.(sound)
-                            }}
-                            className={cn(
-                              "h-6 w-6 p-0 transition-all",
-                              isCurrentTrack 
-                                ? "bg-neutral-700 hover:bg-neutral-600 text-neutral-100" 
-                                : "hover:bg-neutral-800 text-neutral-300"
-                            )}
-                          >
-                            {isPlaying ? (
-                              <Pause className="h-3 w-3" />
-                            ) : (
-                              <Play className="h-3 w-3" />
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            asChild
-                            className="h-6 w-6 p-0 hover:bg-neutral-800 text-neutral-300"
-                          >
-                            <a href={sound.url} download>
-                              <Download className="h-3 w-3" />
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent className="w-40 bg-neutral-900 border border-neutral-800">
-                <ContextMenuItem 
-                  onClick={() => onPlaySound?.(sound)}
-                  className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
-                >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Play className="h-4 w-4 mr-2" />
+        {content && (
+          <div className={cn(
+            "rounded-lg px-3 py-2 mb-2",
+            isUser 
+              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto" 
+              : "bg-black/5 dark:bg-white/5 border border-border/30"
+          )}>
+            {isGenerating && (
+              <div className="flex items-center gap-2 text-xs mb-1 opacity-80">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Generating... {Math.round(generationProgress * 100)}%
+              </div>
+            )}
+            <p className="text-sm leading-relaxed">{content}</p>
+            {isGenerating && (
+              <div className="mt-2">
+                <Progress 
+                  value={generationProgress * 100} 
+                  className={cn(
+                    "h-1",
+                    isUser ? "bg-white/20" : "bg-muted"
                   )}
-                  {isPlaying ? 'Pause' : 'Play'}
-                </ContextMenuItem>
-                <ContextMenuItem 
-                  onClick={() => onCopyUrl?.(sound.url)}
-                  className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {sound && (
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900 max-w-md w-full p-3 flex flex-col gap-2">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-1">
+              {sound.metadata?.model?.includes('tts') ? (
+                <Volume2 className="h-4 w-4 text-blue-400" />
+              ) : (
+                <Music className="h-4 w-4 text-blue-400" />
+              )}
+              <h4 className="font-semibold text-base text-white truncate flex-1">{sound.title}</h4>
+              <Badge className="bg-neutral-800 text-neutral-300 border-0 text-xs px-2 py-0.5">
+                {sound.metadata?.model?.includes('tts') ? 'text-to-speech' : 'sound-effects'}
+              </Badge>
+            </div>
+            {/* Waveform */}
+            <div className="rounded-md border border-neutral-800 bg-neutral-800 px-2 py-1">
+              <WaveformPreview url={sound.url} height={32} />
+            </div>
+            {/* Controls */}
+            <div className="flex items-center justify-between mt-1">
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onPlaySound?.(sound)
+                  }}
+                  className={cn(
+                    "h-8 w-8 rounded-full p-0",
+                    isCurrentTrack && isPlaying
+                      ? "bg-blue-600 hover:bg-blue-500 text-white" 
+                      : "bg-white hover:bg-neutral-100 text-neutral-900"
+                  )}
                 >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy URL
-                </ContextMenuItem>
-                {sound.metadata?.prompt && (
-                  <ContextMenuItem 
-                    onClick={() => {
-                      navigator.clipboard.writeText(sound.metadata!.prompt!)
-                      toast.success('Prompt copied to clipboard')
-                    }}
-                    className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Prompt
-                  </ContextMenuItem>
-                )}
-                <ContextMenuItem 
-                  onClick={() => onDeleteSound?.(sound.id)}
-                  className="text-red-400 hover:bg-neutral-800 focus:bg-neutral-800 hover:text-red-300"
+                  {isPlaying && isCurrentTrack ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4 ml-0.5" />
+                  )}
+                </Button>
+                <span className="text-xs text-neutral-400">{sound.duration ? `${Math.round(sound.duration)}s` : ''}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  asChild
+                  className="h-8 w-8 p-0 text-neutral-400 hover:text-white"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Remove
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
-          )}
-        </div>
+                  <a href={sound.url} download>
+                    <Download className="h-4 w-4" />
+                  </a>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8 p-0 text-neutral-400 hover:text-white"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem onClick={() => onCopyUrl?.(sound.url)}>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy URL
+                    </DropdownMenuItem>
+                    {sound.metadata?.prompt && (
+                      <DropdownMenuItem onClick={() => {
+                        navigator.clipboard.writeText(sound.metadata!.prompt!)
+                        toast.success('Prompt copied to clipboard')
+                      }}>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy Prompt
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem 
+                      onClick={() => onDeleteSound?.(sound.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -85,7 +85,7 @@ export function createTracksTableColumns({
         const track = row.original
         const index = table.getSortedRowModel().rows.findIndex(r => r.id === row.id)
         const isCurrentTrack = currentTrack?.id === track.id
-        const actuallyPlaying = isCurrentTrack && isPlaying
+        const isTrackPlaying = isCurrentTrack && isPlaying
 
         return (
           <div className="flex items-center justify-center w-8 h-8 group">
@@ -97,7 +97,7 @@ export function createTracksTableColumns({
               size="sm"
               className="w-8 h-8 p-0 hidden group-hover:flex opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={() => {
-                if (actuallyPlaying) {
+                if (isTrackPlaying) {
                   dispatchPlayerAction({ type: 'PAUSE' })
                 } else if (isCurrentTrack) {
                   dispatchPlayerAction({ type: 'PLAY' })
@@ -106,7 +106,7 @@ export function createTracksTableColumns({
                 }
               }}
             >
-              {actuallyPlaying ? (
+              {isTrackPlaying ? (
                 <Pause className="h-4 w-4" />
               ) : (
                 <Play className="h-4 w-4" />

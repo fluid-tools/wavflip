@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 
 import { RecentSheet } from "../gen-ai/recent-sheet"
 import { useAtom } from 'jotai'
-import { generatedSoundsAtom } from '@/state/audio-atoms'
+import { generatedSoundsAtom, currentTrackAtom, playerStateAtom, playerControlsAtom } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
@@ -25,6 +25,9 @@ const VaultActions = dynamic(() => import("../vault/vault-actions").then(mod => 
 export function Navbar() {
   const pathname = usePathname()
   const [generatedSounds] = useAtom(generatedSoundsAtom)
+  const [currentTrack] = useAtom(currentTrackAtom)
+  const [playerState] = useAtom(playerStateAtom)
+  const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const isVaultPage = pathname.includes('/vault')
   const isStudioPage = pathname.includes('/studio')
 
@@ -33,8 +36,11 @@ export function Navbar() {
   const folderId = isFolder ? pathname.split('/')[3] : null
 
   const handlePlaySound = (sound: GeneratedSound) => {
-    // This will be passed to the RecentSheet - you can implement the same logic as in SoundGenerator
-    console.log('Playing sound from recents:', sound)
+    if (currentTrack?.id === sound.id && playerState === 'playing') {
+      dispatchPlayerAction({ type: 'PAUSE' })
+    } else {
+      dispatchPlayerAction({ type: 'PLAY_TRACK', payload: sound })
+    }
   }
 
   const recentsButton = isStudioPage && generatedSounds.length > 0 && (

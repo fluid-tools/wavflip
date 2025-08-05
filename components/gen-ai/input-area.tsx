@@ -83,12 +83,12 @@ export function InputArea({
   }
 
   return (
-    <div className={cn("flex-shrink-0", className)}>
-      <div className="w-full max-w-4xl mx-auto px-4 py-4">
-        <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-1.5 pt-4">
+    <div className={cn("flex-shrink-0 w-full flex justify-center", className)}>
+      <div className="w-full max-w-[600px] sm:max-w-[700px] md:max-w-[800px] lg:max-w-[900px] mx-auto px-2 sm:px-4 py-3 sm:py-4">
+        <div className="bg-black/5 dark:bg-white/5 rounded-2xl p-1.5 pt-4 w-full">
           {/* Prompt Suggestions */}
           {prompt === '' && !isTTSMode && (
-            <div className="mb-3 mx-2">
+            <div className="mb-3 mx-1 sm:mx-2">
               <ScrollArea className="w-full">
                 <div className="flex gap-2 pb-2">
                   {MUSIC_PROMPTS.slice(0, 12).map((promptText, index) => (
@@ -108,10 +108,10 @@ export function InputArea({
             </div>
           )}
 
-          <div className="relative">
-            <div className="relative flex flex-col">
+          <div className="relative w-full">
+            <div className="relative flex flex-col w-full">
               <div
-                className="overflow-y-auto"
+                className="overflow-y-auto w-full"
                 style={{ maxHeight: "400px" }}
               >
                 <Textarea
@@ -129,9 +129,9 @@ export function InputArea({
                 />
               </div>
 
-              <div className="h-14 bg-black/5 dark:bg-white/5 rounded-b-xl flex items-center">
-                <div className="absolute left-3 right-3 bottom-3 flex items-center justify-between w-[calc(100%-24px)]">
-                  <div className="flex items-center gap-2">
+              <div className="h-14 bg-black/5 dark:bg-white/5 rounded-b-xl flex items-center w-full">
+                <div className="absolute left-3 right-3 bottom-3 flex flex-wrap items-center justify-between w-[calc(100%-24px)] gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button

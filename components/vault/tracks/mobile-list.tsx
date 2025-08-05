@@ -91,7 +91,7 @@ export function MobileTracksList({
         itemContent={(index) => {
           const track = tracks[index]
           const isCurrentTrack = currentTrack?.id === track.id
-          const actuallyPlaying = isCurrentTrack && isPlaying
+          const isTrackPlaying = isCurrentTrack && isPlaying
           const duration = track.activeVersion?.duration
           const mimeType = track.activeVersion?.mimeType
 
@@ -109,7 +109,7 @@ export function MobileTracksList({
                 size="sm"
                 className="w-8 h-8 p-0"
                 onClick={() => {
-                  if (actuallyPlaying) {
+                  if (isTrackPlaying) {
                     dispatchPlayerAction({ type: 'PAUSE' })
                   } else if (isCurrentTrack) {
                     dispatchPlayerAction({ type: 'PLAY' })
@@ -118,7 +118,7 @@ export function MobileTracksList({
                   }
                 }}
               >
-                {actuallyPlaying ? (
+                {isTrackPlaying ? (
                   <Pause className="h-4 w-4" />
                 ) : (
                   <Play className="h-4 w-4" />
