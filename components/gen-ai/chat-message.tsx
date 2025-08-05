@@ -54,13 +54,13 @@ export function ChatMessage({
       )}>
         {content && (
           <div className={cn(
-            "rounded-2xl px-3 py-2 mb-2",
+            "rounded-2xl px-3 py-2",
             isUser 
-              ? "bg-blue-500 rounded-full dark:text-white ml-auto" 
+              ? "bg-blue-500 text-white rounded-full ml-auto" 
               : "bg-black/5 dark:bg-white/5 border border-border/30"
           )}>
             {isGenerating && (
-              <div className="flex items-center gap-2 text-xs mb-1 opacity-80">
+              <div className="flex items-center gap-2 text-xs opacity-80">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Generating... {Math.round(generationProgress * 100)}%
               </div>
@@ -81,18 +81,17 @@ export function ChatMessage({
         )}
 
         {sound && (
-          <div className="rounded-2xl border border-neutral-800 py-3 bg-neutral-900 max-w-md w-full flex flex-col gap-4">
+          <div className="rounded-2xl border border-border py-3 bg-card max-w-md w-full flex flex-col gap-6">
             {/* Header */}
-            <div className="flex items-center px-3 gap-8">
-             
-              <h4 className="font-semibold text-xs text-white truncate flex-1">{sound.title}</h4>
-              <Badge className="bg-neutral-800 text-neutral-300 border-0 text-xs px-4 py-0.5">
+            <div className="flex px-3 gap-2 justify-between items-center">
+              <h4 className="font-medium font-mono tracking-tight text-xs opacity-75 truncate">{sound.title}</h4>
+              <Badge className="bg-neutral-800 dark:bg-neutral-700 text-neutral-300 border-0 text-xs px-4 py-0.5">
                 {sound.metadata?.model?.includes('tts') ? 'tts' : 'sfx'}
               </Badge>
             </div>
             {/* Waveform */}
-            <div className="border border-neutral-800 bg-neutral-800">
-              <WaveformPreview url={sound.url} height={32} />
+            <div className="border border-border bg-muted">
+              <WaveformPreview url={sound.url} height={48} />
             </div>
             {/* Controls */}
             <div className="flex items-center justify-between">
@@ -119,14 +118,14 @@ export function ChatMessage({
                 </Button>
                 <span className="text-xs text-neutral-400">{sound.duration ? `${Math.round(sound.duration)}s` : ''}</span>
               </div>
-              <div className="flex items-center gap-1 px-3">
+              <div className="flex items-center px-3">
                 <Button
                   size="icon"
                   variant="ghost"
                   asChild
-                  className="h-8 w-8 p-0 text-neutral-400 hover:text-white"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
                 >
-                  <a href={sound.url} download>
+                  <a target="_blank" href={sound.url} download>
                     <Download className="h-4 w-4" />
                   </a>
                 </Button>
