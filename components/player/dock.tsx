@@ -33,9 +33,11 @@ function formatTime(seconds: number): string {
 }
 
 export default function PlayerDock() {
-  const waveformRef = useRef<HTMLDivElement>(null)
+  const desktopWaveformRef = useRef<HTMLDivElement>(null)
+  const mobileWaveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [currentTime] = useAtom(currentTimeAtom)
   const [duration] = useAtom(durationAtom)
@@ -47,9 +49,22 @@ export default function PlayerDock() {
   
   const isPlaying = playerState === 'playing'
 
+  // Check if mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   // Initialize WaveSurfer
   useEffect(() => {
-    if (!waveformRef.current || !currentTrack) return
+    const container = isMobile ? mobileWaveformRef.current : desktopWaveformRef.current
+    if (!container || !currentTrack) return
+
+    console.log('Initializing WaveSurfer, mobile:', isMobile, 'container:', container)
 
     // Clean up previous instance
     if (wavesurferRef.current) {
@@ -57,58 +72,70 @@ export default function PlayerDock() {
       wavesurferRef.current = null
     }
 
-    const wavesurfer = WaveSurfer.create({
-      container: waveformRef.current,
-      height: 60,
-      waveColor: 'rgb(64 64 64)',
-      progressColor: 'rgb(255 255 255)',
-      cursorColor: 'rgb(255 255 255)',
-      cursorWidth: 3,
-      barWidth: 3,
-      barGap: 2,
-      barRadius: 3,
-      fillParent: true,
-      interact: true,
-      dragToSeek: true,
-      normalize: true,
-      url: currentTrack.url
-    })
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      const currentContainer = isMobile ? mobileWaveformRef.current : desktopWaveformRef.current
+      if (!currentContainer) return
 
-    wavesurferRef.current = wavesurfer
+      const wavesurfer = WaveSurfer.create({
+        container: currentContainer,
+        height: isMobile ? 48 : 60,
+        waveColor: 'rgb(64 64 64)',
+        progressColor: 'rgb(255 255 255)',
+        cursorColor: 'rgb(255 255 255)',
+        cursorWidth: 3,
+        barWidth: 3,
+        barGap: 2,
+        barRadius: 3,
+        fillParent: true,
+        interact: true,
+        dragToSeek: true,
+        normalize: true,
+        backend: 'WebAudio',
+        url: currentTrack.url
+      })
 
-    // Set up event listeners
-    wavesurfer.on('ready', () => {
-      const trackDuration = wavesurfer.getDuration()
-      dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
-      
-      // Auto-play if requested
-      if (autoPlay) {
-        setAutoPlay(false)
-        // Small delay to ensure everything is ready
-        setTimeout(() => {
-          wavesurfer.play()
-        }, 100)
-      }
-    })
+      wavesurferRef.current = wavesurfer
 
-    wavesurfer.on('timeupdate', (time) => {
-      dispatchPlayerAction({ type: 'SET_TIME', payload: time })
-    })
+      // Set up event listeners
+      wavesurfer.on('ready', () => {
+        console.log('WaveSurfer ready')
+        const trackDuration = wavesurfer.getDuration()
+        dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
+        
+        // Auto-play if requested
+        if (autoPlay) {
+          setAutoPlay(false)
+          // Small delay to ensure everything is ready
+          setTimeout(() => {
+            wavesurfer.play()
+          }, 100)
+        }
+      })
 
-    wavesurfer.on('play', () => {
-      dispatchPlayerAction({ type: 'PLAY' })
-    })
+      wavesurfer.on('timeupdate', (time) => {
+        dispatchPlayerAction({ type: 'SET_TIME', payload: time })
+      })
 
-    wavesurfer.on('pause', () => {
-      dispatchPlayerAction({ type: 'PAUSE' })
-    })
+      wavesurfer.on('play', () => {
+        dispatchPlayerAction({ type: 'PLAY' })
+      })
 
-    wavesurfer.on('finish', () => {
-      dispatchPlayerAction({ type: 'STOP' })
-    })
+      wavesurfer.on('pause', () => {
+        dispatchPlayerAction({ type: 'PAUSE' })
+      })
 
-    // Set initial volume
-    wavesurfer.setVolume(muted ? 0 : volume)
+      wavesurfer.on('finish', () => {
+        dispatchPlayerAction({ type: 'STOP' })
+      })
+
+      wavesurfer.on('error', (error) => {
+        console.error('WaveSurfer error:', error)
+      })
+
+      // Set initial volume
+      wavesurfer.setVolume(muted ? 0 : volume)
+    }, 100)
 
     return () => {
       if (wavesurferRef.current) {
@@ -117,25 +144,9 @@ export default function PlayerDock() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTrack, dispatchPlayerAction])
+  }, [currentTrack, dispatchPlayerAction, isMobile])
 
-  // Handle window resize to redraw waveform
-  useEffect(() => {
-    if (!wavesurferRef.current) return
 
-    const handleResize = () => {
-      // Redraw the waveform on resize
-      if (wavesurferRef.current && waveformRef.current) {
-        // Force a redraw by calling setOptions
-        wavesurferRef.current.setOptions({
-          fillParent: true
-        })
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Handle auto-play separately to avoid race conditions
   useEffect(() => {
@@ -249,8 +260,8 @@ export default function PlayerDock() {
           {/* Waveform - Takes remaining space */}
           <div className="flex-1 min-w-0 px-4">
             <div 
-              ref={waveformRef}
-              className="w-full rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+              ref={desktopWaveformRef}
+              className="w-full h-[60px] rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
             />
           </div>
 
@@ -380,7 +391,7 @@ export default function PlayerDock() {
         {/* Waveform */}
         <div className="px-4 pb-3">
           <div 
-            ref={waveformRef}
+            ref={mobileWaveformRef}
             className="w-full h-12 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
           />
         </div>
