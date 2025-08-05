@@ -49,7 +49,7 @@ export function ChatMessage({
       isUser && "justify-end"
     )}>
       <div className={cn(
-        "max-w-md w-full",
+        "max-w-md w-fit",
         isUser && "ml-auto"
       )}>
         {content && (
@@ -81,25 +81,25 @@ export function ChatMessage({
         )}
 
         {sound && (
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900 max-w-md w-full p-3 flex flex-col gap-2">
+          <div className="rounded-lg border border-neutral-800 py-4 bg-neutral-900 max-w-md w-full flex flex-col gap-6">
             {/* Header */}
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center px-3 gap-2">
               {sound.metadata?.model?.includes('tts') ? (
-                <Volume2 className="h-4 w-4 text-blue-400" />
+                <Volume2 className="h-3 w-3" />
               ) : (
-                <Music className="h-4 w-4 text-blue-400" />
+                <Music className="h-3 w-3" />
               )}
-              <h4 className="font-semibold text-base text-white truncate flex-1">{sound.title}</h4>
-              <Badge className="bg-neutral-800 text-neutral-300 border-0 text-xs px-2 py-0.5">
-                {sound.metadata?.model?.includes('tts') ? 'text-to-speech' : 'sound-effects'}
+              <h4 className="font-semibold text-xs text-white truncate flex-1">{sound.title}</h4>
+              <Badge className="bg-neutral-800 text-neutral-300 border-0 text-xs px-4 py-0.5">
+                {sound.metadata?.model?.includes('tts') ? 'tts' : 'sfx'}
               </Badge>
             </div>
             {/* Waveform */}
-            <div className="rounded-md border border-neutral-800 bg-neutral-800 px-2 py-1">
+            <div className="border border-neutral-800 bg-neutral-800">
               <WaveformPreview url={sound.url} height={32} />
             </div>
             {/* Controls */}
-            <div className="flex items-center justify-between mt-1">
+            <div className="flex px-3 items-center justify-between">
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
@@ -108,10 +108,10 @@ export function ChatMessage({
                     onPlaySound?.(sound)
                   }}
                   className={cn(
-                    "h-8 w-8 rounded-full p-0",
+                    "h-6 w-6 rounded-full p-0",
                     isCurrentTrack && isPlaying
-                      ? "bg-blue-600 hover:bg-blue-500 text-white" 
-                      : "bg-white hover:bg-neutral-100 text-neutral-900"
+                      ? "bg-blue-500 hover:bg-blue-400 dark:bg-blue-400 dark:hover:bg-blue-500 dark:text-white" 
+                      : "bg-white hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
                   )}
                 >
                   {isPlaying && isCurrentTrack ? (
