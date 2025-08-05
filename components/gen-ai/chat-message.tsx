@@ -81,7 +81,7 @@ export function ChatMessage({
         )}
 
         {sound && (
-          <div className="rounded-2xl border border-border py-3 bg-card max-w-md w-full flex flex-col gap-6">
+          <div className="rounded-2xl border border-border py-3 bg-card max-w-md w-full flex flex-col gap-4 sm:gap-6">
             {/* Header */}
             <div className="flex px-3 gap-2 justify-between items-center">
               <h4 className="font-medium font-mono tracking-tight text-xs opacity-75 truncate">{sound.title}</h4>
