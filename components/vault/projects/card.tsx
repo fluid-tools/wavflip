@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Music, Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { useIsTablet } from '@/hooks/use-mobile'
