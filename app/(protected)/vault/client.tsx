@@ -196,7 +196,7 @@ export function VaultView({ }: VaultViewProps = {}) {
         onCreateFolder={() => setShowCreateFolderDialog(true)}
         onCreateProject={() => setShowCreateProjectDialog(true)}
         onClearSelection={clearSelection}
-        className="space-y-4 p-6 sm:p-4 rounded-lg"
+        className="space-y-4 py-6 sm:py-4 rounded-lg bg-card/5 border border-border backdrop-blur-sm sm:px-4 px-2"
       >
         {vaultItems.length > 0 ? (
           <div style={{ height: '600px' }}>
@@ -205,7 +205,7 @@ export function VaultView({ }: VaultViewProps = {}) {
               totalCount={Math.ceil(vaultItems.length / ITEMS_PER_ROW)}
               itemContent={(rowIndex) => (
                 isTablet ? (
-                  <div className="flex flex-wrap justify-center gap-4 mb-4 px-4">
+                  <div className="flex flex-wrap justify-center gap-4 mb-4">
                     {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
                       const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
                       return itemIndex < vaultItems.length ? (
@@ -216,7 +216,7 @@ export function VaultView({ }: VaultViewProps = {}) {
                     })}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 lg:gap-3 xl:gap-4 mb-4">
                     {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
                       const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
                       return itemIndex < vaultItems.length ? (

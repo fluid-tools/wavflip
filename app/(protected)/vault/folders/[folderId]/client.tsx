@@ -202,7 +202,7 @@ export function FolderView({ folderId }: FolderViewProps) {
             totalCount={Math.ceil(folderItems.length / ITEMS_PER_ROW)}
             itemContent={(rowIndex) => (
               isTablet ? (
-                <div className="flex flex-wrap justify-center gap-4 mb-4 px-4">
+                <div className="flex flex-wrap justify-center gap-4 mb-4">
                   {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
                     const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
                     return itemIndex < folderItems.length ? (
@@ -213,7 +213,7 @@ export function FolderView({ folderId }: FolderViewProps) {
                   })}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 lg:gap-3 xl:gap-4 mb-4">
                   {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
                     const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
                     return itemIndex < folderItems.length ? (
