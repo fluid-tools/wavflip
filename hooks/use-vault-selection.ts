@@ -6,7 +6,6 @@ import {
   selectedItemsAtom,
   selectionModeAtom,
   selectedItemsCountAtom,
-  isItemSelectedAtom,
   clearSelectionAtom,
   toggleItemSelectionAtom,
   selectRangeAtom,
@@ -85,9 +84,4 @@ export function useVaultSelection() {
     toggleItemSelection,
     selectRange
   }
-}
-
-export function useItemSelection(itemId: string) {
-  const isSelected = useAtomValue(isItemSelectedAtom(itemId))
-  return isSelected
 }

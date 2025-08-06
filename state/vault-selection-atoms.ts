@@ -22,9 +22,6 @@ export const selectionAnchorAtom = atom<string | null>(null)
 
 export const selectedItemsCountAtom = atom((get) => get(selectedItemsAtom).size)
 
-export const isItemSelectedAtom = (itemId: string) => 
-  atom((get) => get(selectedItemsAtom).has(itemId))
-
 export const clearSelectionAtom = atom(
   null,
   (_, set) => {
