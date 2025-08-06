@@ -36,7 +36,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   if (project.image) {
     await queryClient.prefetchQuery({
       queryKey: [['vault', 'projects', projectId], 'presigned-image'],
-      queryFn: () => getPresignedImageUrl(project.image!),
+      queryFn: () => getPresignedImageUrl(project.image!, projectId),
       staleTime: 60 * 1000, // 1 minute
     })
   }

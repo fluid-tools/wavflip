@@ -3,7 +3,7 @@ import { db } from '@/db'
 import { project } from '@/db/schema/vault'
 import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/server/auth'
-import { uploadProjectImage, getPresignedImageUrl } from '@/lib/storage/s3-storage'
+import { uploadProjectImage, getPresignedImageUrl, bustPresignedImageCache } from '@/lib/storage/s3-storage'
 
 export async function POST(
   request: NextRequest,
@@ -37,6 +37,9 @@ export async function POST(
     if (!uploadResult.success) {
       return Response.json({ success: false, error: uploadResult.error }, { status: 500 })
     }
+
+    // Bust the Redis cache for this project's presigned URL
+    await bustPresignedImageCache(projectId)
 
     // Store only the S3 key (filename) in the DB
     await db
@@ -85,8 +88,8 @@ export async function GET(
       return Response.json({ success: false, error: 'No image' }, { status: 404 })
     }
     
-    // Use refactored function to get presigned URL
-    const signedUrl = await getPresignedImageUrl(key)
+    // Use refactored function to get presigned URL with caching
+    const signedUrl = await getPresignedImageUrl(key, projectId)
     return Response.json({ success: true, signedUrl })
   } catch (error) {
     console.error('Project image get error:', error)

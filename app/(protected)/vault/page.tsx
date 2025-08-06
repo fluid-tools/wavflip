@@ -34,7 +34,7 @@ export default async function VaultPage() {
       projectsWithImages.map(project => 
         queryClient.prefetchQuery({
           queryKey: [['vault', 'projects', project.id], 'presigned-image'],
-          queryFn: () => getPresignedImageUrl(project.image!),
+          queryFn: () => getPresignedImageUrl(project.image!, project.id),
           staleTime: 60 * 1000, // 1 minute
         })
       )

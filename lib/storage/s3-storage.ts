@@ -4,6 +4,7 @@ import { S3Client, DeleteObjectCommand, ListObjectsV2Command, GetObjectCommand }
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { AudioTrack } from '@/types/audio'
+import { redis, REDIS_KEYS, REDIS_TTL } from '@/lib/redis'
 
 export interface UploadAudioOptions {
   filename?: string
@@ -91,9 +92,50 @@ export async function listAudioFilesS3(prefix = 'generated-audio'): Promise<Audi
   )
 }
 
-export async function getPresignedImageUrl(key: string, expiresIn = 60 * 5): Promise<string> {
+export async function getPresignedImageUrl(key: string, projectId?: string, expiresIn = 60 * 5): Promise<string> {
+  // If projectId is provided, try to get from cache first
+  if (projectId) {
+    try {
+      const cacheKey = REDIS_KEYS.presignedImage(projectId)
+      const cached = await redis.get<string>(cacheKey)
+      
+      if (cached) {
+        console.log(`Cache hit for presigned URL: ${projectId}`)
+        return cached
+      }
+    } catch (error) {
+      console.error('Redis cache read error:', error)
+      // Continue to generate new URL if cache fails
+    }
+  }
+  
+  // Generate new presigned URL
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: key })
-  return getSignedUrl(s3, command, { expiresIn })
+  const presignedUrl = await getSignedUrl(s3, command, { expiresIn })
+  
+  // Cache the presigned URL if projectId is provided
+  if (projectId) {
+    try {
+      const cacheKey = REDIS_KEYS.presignedImage(projectId)
+      await redis.set(cacheKey, presignedUrl, { ex: REDIS_TTL.presignedUrl })
+      console.log(`Cached presigned URL for: ${projectId}`)
+    } catch (error) {
+      console.error('Redis cache write error:', error)
+      // Continue even if caching fails
+    }
+  }
+  
+  return presignedUrl
+}
+
+export async function bustPresignedImageCache(projectId: string): Promise<void> {
+  try {
+    const cacheKey = REDIS_KEYS.presignedImage(projectId)
+    await redis.del(cacheKey)
+    console.log(`Busted cache for: ${projectId}`)
+  } catch (error) {
+    console.error('Redis cache bust error:', error)
+  }
 }
 
 export async function uploadProjectImage(
