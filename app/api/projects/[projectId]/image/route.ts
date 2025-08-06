@@ -46,9 +46,11 @@ export async function POST(
       Conditions: [
         ['content-length-range', 0, 10 * 1024 * 1024],
         ['starts-with', '$Content-Type', 'image/'],
-        { acl: 'public-read' }
+        // { acl: 'public-read' }
       ],
-      Fields: { 'Content-Type': file.type, acl: 'public-read' },
+      Fields: { 'Content-Type': file.type, 
+        // acl: 'public-read' 
+      },
       Expires: 60,
     })
 
@@ -85,6 +87,7 @@ export async function POST(
 }
 
 export async function GET(
+  request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
@@ -107,6 +110,7 @@ export async function GET(
     const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 })
     return Response.json({ success: true, signedUrl })
   } catch (error) {
+    console.error('Project image get error:', error)
     return Response.json({ success: false, error: 'Failed to get presigned URL' }, { status: 500 })
   }
 }

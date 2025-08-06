@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Music, Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon } from 'lucide-react'
+import { Music, Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { useIsTablet } from '@/hooks/use-mobile'
@@ -45,10 +45,10 @@ interface ProjectCardProps {
   onSelectionClick?: (event: React.MouseEvent) => void
 }
 
-export function ProjectCard({ 
-  project, 
-  folderId, 
-  trackCount, 
+export function ProjectCard({
+  project,
+  folderId,
+  trackCount,
   isDragAndDropEnabled = false,
   isSelected = false,
   onSelectionClick
@@ -62,10 +62,10 @@ export function ProjectCard({
   const [showMoveDialog, setShowMoveDialog] = useState(false)
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
   const [newName, setNewName] = useState(project.name)
-  
+
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
   const { shouldShowContextMenu } = useContextMenuHandler()
-  
+
   // Use the project hook for image upload functionality
   const { uploadImage, isUploadingImage, presignedImageUrl } = useProject({ projectId: project.id })
 
@@ -126,7 +126,7 @@ export function ProjectCard({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div className="block">
-          <Card 
+          <Card
             className={cn(
               "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
               isTablet ? "w-40" : "w-full max-w-40",
@@ -136,25 +136,31 @@ export function ProjectCard({
           >
             {/* Image/Preview Section - No padding */}
             <div className="relative w-full h-40 overflow-hidden">
-              <Image
-                src={presignedImageUrl || project.image || '/fallback.png'}
-                alt={project.name}
-                fill
-                className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-                priority
-              />
+              {presignedImageUrl ? (
+                <Image
+                  src={presignedImageUrl}
+                  alt={project.name}
+                  fill
+                  className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                  sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                  priority
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center opacity-40 hover:opacity-100 justify-center">
+                  <ImageIcon className="h-6 w-6 bottom-1/3 absolute" />
+                </div>
+              )}
             </div>
-            
+
             {/* Metadata Section - No top padding */}
             <div className="px-2 pb-2">
               <h3 className="text-xs font-medium truncate">{project.name}</h3>
               <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
             </div>
-            
+
             {/* Invisible overlay for navigation */}
             {!isSelectModeActive && (
-              <Link 
+              <Link
                 href={`/vault/projects/${project.id}`}
                 className="absolute inset-0 z-10"
               />
@@ -163,89 +169,96 @@ export function ProjectCard({
         </div>
       </ContextMenuTrigger>
 
-        <ContextMenuContent className="w-48">
-          <ContextMenuItem
-            onClick={(e) => {
-              e.preventDefault()
-              triggerImageUpload()
-            }}
-            disabled={isUploadingImage}
-          >
-            {isUploadingImage ? (
-              <Upload className="h-4 w-4 animate-spin" />
-            ) : (
-              <ImageIcon className="h-4 w-4" />
-            )}
-            {isUploadingImage ? 'Uploading...' : 'Upload Image'}
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem
-            onClick={(e) => {
-              e.preventDefault()
-              setNewName(project.name)
-              setShowRenameDialog(true)
-            }}
-          >
-            <Edit2 className="h-4 w-4" />
-            Rename
-          </ContextMenuItem>
-          <ContextMenuItem
-            onClick={(e) => {
-              e.preventDefault()
-              setSelectedDestinationId(folderId ?? null)
-              setShowMoveDialog(true)
-            }}
-          >
-            <FolderOpen className="h-4 w-4" />
-            Move to Folder
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem
-            variant="destructive"
-            onClick={(e) => {
-              e.preventDefault()
-              setShowDeleteDialog(true)
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </ContextMenuItem>
-        </ContextMenuContent>
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem
+          onClick={(e) => {
+            e.preventDefault()
+            triggerImageUpload()
+          }}
+          disabled={isUploadingImage}
+        >
+          {isUploadingImage ? (
+            <Upload className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImageIcon className="h-4 w-4" />
+          )}
+          {isUploadingImage ? 'Uploading...' : 'Upload Image'}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem
+          onClick={(e) => {
+            e.preventDefault()
+            setNewName(project.name)
+            setShowRenameDialog(true)
+          }}
+        >
+          <Edit2 className="h-4 w-4" />
+          Rename
+        </ContextMenuItem>
+        <ContextMenuItem
+          onClick={(e) => {
+            e.preventDefault()
+            setSelectedDestinationId(folderId ?? null)
+            setShowMoveDialog(true)
+          }}
+        >
+          <FolderOpen className="h-4 w-4" />
+          Move to Folder
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem
+          variant="destructive"
+          onClick={(e) => {
+            e.preventDefault()
+            setShowDeleteDialog(true)
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
     </ContextMenu>
   ) : (
     <div className="block">
-              <Card 
-          className={cn(
-            "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
-            isTablet ? "w-40" : "w-full max-w-40",
-            isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
-          )}
-          onClick={onSelectionClick}
-        >
-          {/* Image/Preview Section - No padding */}
-          <div className="relative w-full h-40 overflow-hidden">
+      <Card
+        className={cn(
+          "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
+          isTablet ? "w-40" : "w-full max-w-40",
+          isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
+        )}
+        onClick={onSelectionClick}
+      >
+        {/* Image/Preview Section - No padding */}
+        <div className="relative w-full h-40 overflow-hidden">
+          {presignedImageUrl ? (
             <Image
-              src={presignedImageUrl || project.image || '/fallback.png'}
+              src={presignedImageUrl}
               alt={project.name}
               fill
               className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
               sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
               priority
             />
-          </div>
-          
-          {/* Metadata Section - No top padding */}
-          <div className="px-2 pb-2">
-            <h3 className="text-xs font-medium truncate">{project.name}</h3>
-            <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
-          </div>
-          
-          {!isSelectModeActive && (
-            <Link 
-              href={`/vault/projects/${project.id}`}
-              className="absolute inset-0 z-10"
-            />
+          ) : (
+            <div className="absolute inset-0 flex items-center opacity-40 hover:opacity-100 justify-center">
+              <ImageIcon className="h-6 w-6 bottom-1/3 absolute" />
+            </div>
           )}
+        </div>
+
+
+        {/* Metadata Section - No top padding */}
+        <div className="px-2 pb-2">
+          <h3 className="text-xs font-medium truncate">{project.name}</h3>
+          <p className="text-[10px] text-muted-foreground truncate">{displayTrackCount} tracks</p>
+        </div>
+
+        {!isSelectModeActive && (
+          <Link
+            href={`/vault/projects/${project.id}`}
+            className="absolute inset-0 z-10"
+          />
+        )}
       </Card>
     </div>
   )
@@ -337,9 +350,9 @@ export function ProjectCard({
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                variant="destructive" 
+              <Button
+                type="submit"
+                variant="destructive"
                 disabled={isDeleting}
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}

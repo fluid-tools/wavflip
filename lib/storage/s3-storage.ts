@@ -1,3 +1,5 @@
+import 'server-only'
+
 import { S3Client, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import type { AudioTrack } from '@/types/audio'
@@ -75,7 +77,7 @@ export async function listAudioFilesS3(prefix = 'generated-audio'): Promise<Audi
       id: obj.Key!,
       title: obj.Key!.split('/').pop()!,
       url: `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${obj.Key}`,
-      createdAt: obj.LastModified?.toISOString() ?? '',
+      createdAt: obj.LastModified ?? new Date(),
       type: 'generated' as const,
       metadata: { prompt: 'Unknown', model: 's3' },
     })) ?? []
