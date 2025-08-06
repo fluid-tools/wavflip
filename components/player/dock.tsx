@@ -59,84 +59,87 @@ export default function PlayerDock() {
     const wasPlaying = wavesurferRef.current?.isPlaying() || false
     const currentProgress = wavesurferRef.current?.getCurrentTime() || 0
 
-    // Clean up previous instance
+    // Immediately pause and clean up previous instance to prevent overlap
     if (wavesurferRef.current) {
+      try {
+        wavesurferRef.current.pause()
+      } catch (error) {
+        console.warn('Error pausing previous WaveSurfer instance:', error)
+      }
       wavesurferRef.current.destroy()
       wavesurferRef.current = null
     }
 
-    // Small delay to ensure DOM is ready
-    setTimeout(() => {
-      const currentContainer = isMobile ? mobileWaveformRef.current : desktopWaveformRef.current
-      if (!currentContainer) return
+    // Create new instance immediately without setTimeout to prevent race conditions
+    const wavesurfer = WaveSurfer.create({
+      container: container,
+      height: isMobile ? 48 : 60,
+      waveColor: 'rgb(64 64 64)',
+      progressColor: 'rgb(255 255 255)',
+      cursorColor: 'rgb(255 255 255)',
+      cursorWidth: 3,
+      barWidth: 3,
+      barGap: 2,
+      barRadius: 3,
+      fillParent: true,
+      interact: true,
+      dragToSeek: true,
+      normalize: true,
+      backend: 'WebAudio',
+      url: currentTrack.url
+    })
 
-      const wavesurfer = WaveSurfer.create({
-        container: currentContainer,
-        height: isMobile ? 48 : 60,
-        waveColor: 'rgb(64 64 64)',
-        progressColor: 'rgb(255 255 255)',
-        cursorColor: 'rgb(255 255 255)',
-        cursorWidth: 3,
-        barWidth: 3,
-        barGap: 2,
-        barRadius: 3,
-        fillParent: true,
-        interact: true,
-        dragToSeek: true,
-        normalize: true,
-        backend: 'WebAudio',
-        url: currentTrack.url
-      })
+    wavesurferRef.current = wavesurfer
 
-      wavesurferRef.current = wavesurfer
+    // Set up event listeners
+    wavesurfer.on('ready', () => {
+      const trackDuration = wavesurfer.getDuration()
+      dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
+      
+      // Restore playback position
+      if (currentProgress > 0) {
+        wavesurfer.seekTo(currentProgress / trackDuration)
+      }
+      
+      // Resume playback if it was playing
+      if (wasPlaying) {
+        wavesurfer.play()
+      } else if (autoPlay) {
+        setAutoPlay(false)
+        wavesurfer.play()
+      }
+    })
 
-      // Set up event listeners
-      wavesurfer.on('ready', () => {
-        const trackDuration = wavesurfer.getDuration()
-        dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
-        
-        // Restore playback position
-        if (currentProgress > 0) {
-          wavesurfer.seekTo(currentProgress / trackDuration)
-        }
-        
-        // Resume playback if it was playing
-        if (wasPlaying) {
-          wavesurfer.play()
-        } else if (autoPlay) {
-          setAutoPlay(false)
-          setTimeout(() => {
-            wavesurfer.play()
-          }, 100)
-        }
-      })
+    wavesurfer.on('timeupdate', (time) => {
+      dispatchPlayerAction({ type: 'SET_TIME', payload: time })
+    })
 
-      wavesurfer.on('timeupdate', (time) => {
-        dispatchPlayerAction({ type: 'SET_TIME', payload: time })
-      })
+    wavesurfer.on('play', () => {
+      dispatchPlayerAction({ type: 'PLAY' })
+    })
 
-      wavesurfer.on('play', () => {
-        dispatchPlayerAction({ type: 'PLAY' })
-      })
+    wavesurfer.on('pause', () => {
+      dispatchPlayerAction({ type: 'PAUSE' })
+    })
 
-      wavesurfer.on('pause', () => {
-        dispatchPlayerAction({ type: 'PAUSE' })
-      })
+    wavesurfer.on('finish', () => {
+      dispatchPlayerAction({ type: 'STOP' })
+    })
 
-      wavesurfer.on('finish', () => {
-        dispatchPlayerAction({ type: 'STOP' })
-      })
+    wavesurfer.on('error', (error) => {
+      console.error('WaveSurfer error:', error)
+    })
 
-      wavesurfer.on('error', (error) => {
-        console.error('WaveSurfer error:', error)
-      })
-
-      // Set initial volume
-      wavesurfer.setVolume(muted ? 0 : volume)
-    }, 100)
+    // Set initial volume
+    wavesurfer.setVolume(muted ? 0 : volume)
 
     return () => {
       if (wavesurferRef.current) {
+        try {
+          wavesurferRef.current.pause()
+        } catch (error) {
+          console.warn('Error pausing WaveSurfer during cleanup:', error)
+        }
         wavesurferRef.current.destroy()
         wavesurferRef.current = null
       }
@@ -155,9 +158,7 @@ export default function PlayerDock() {
     // If already ready, play immediately
     if (wavesurfer.getDuration() > 0) {
       setAutoPlay(false)
-      setTimeout(() => {
-        wavesurfer.play()
-      }, 100)
+      wavesurfer.play()
     }
   }, [autoPlay, setAutoPlay])
 
