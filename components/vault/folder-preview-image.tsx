@@ -1,9 +1,9 @@
 'use client'
 
 import Image from 'next/image'
-import { usePresignedUrl } from '@/hooks/use-presigned-url'
+import { useProject } from '@/hooks/data/use-project'
 
-interface ProjectPreviewImageProps {
+interface FolderPreviewImageProps {
   projectId: string
   projectName: string
   imageKey: string | null | undefined
@@ -11,14 +11,20 @@ interface ProjectPreviewImageProps {
   className?: string
 }
 
-export function ProjectPreviewImage({ 
+// Component for displaying project images in folder preview grids
+export function FolderPreviewImage({ 
   projectId, 
   projectName, 
   imageKey,
   sizes = "(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px",
   className = "object-cover"
-}: ProjectPreviewImageProps) {
-  const { data: presignedUrl } = usePresignedUrl(projectId, imageKey)
+}: FolderPreviewImageProps) {
+  // Use the same hook as ProjectCard for consistency
+  // We only need the presignedImageUrl, not the full project data
+  const { presignedImageUrl: presignedUrl } = useProject({ 
+    projectId,
+    enabled: !!imageKey // Only fetch if there's an image
+  })
   
   if (!imageKey) {
     // No image: show initial in colored circle

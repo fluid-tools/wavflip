@@ -33,7 +33,7 @@ import type { FolderWithProjects } from '@/db/schema/vault'
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
 import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
 import { FolderPicker } from './picker'
-import { ProjectPreviewImage } from '@/components/vault/project-preview-image'
+import { FolderPreviewImage } from '@/components/vault/folder-preview-image'
 
 interface FolderCardProps {
   folder: FolderWithProjects
@@ -152,7 +152,7 @@ export function FolderCard({
                     {/* Render project previews (up to 4) */}
                     {folder.projects.slice(0, 4).map((project) => (
                       <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
-                        <ProjectPreviewImage
+                        <FolderPreviewImage
                           projectId={project.id}
                           projectName={project.name}
                           imageKey={project.image}
@@ -247,7 +247,7 @@ export function FolderCard({
               <>
                 {folder.projects.slice(0, 4).map((project) => (
                   <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
-                    <ProjectPreviewImage
+                    <FolderPreviewImage
                       projectId={project.id}
                       projectName={project.name}
                       imageKey={project.image}
