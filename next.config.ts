@@ -53,6 +53,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.wavflip.com',
       },
+      {
+        protocol: 'https',
+        hostname: '**.s3.us-east-1.amazonaws.com',
+      },
     ],
   },
   // External packages that should be bundled separately

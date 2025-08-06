@@ -38,7 +38,7 @@ export async function uploadAudioToS3(
     : `${filename}.${extension}`
 
   // Generate presigned POST
-  const presigned = await createPresignedPost({
+  const presigned = await createPresignedPost(s3, {
     Bucket: BUCKET,
     Key: finalFilename,
     Conditions: [

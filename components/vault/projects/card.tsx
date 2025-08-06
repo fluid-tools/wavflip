@@ -150,7 +150,7 @@ export function ProjectCard({
                 <div className="w-full h-full flex items-center justify-center bg-muted transition-transform duration-300 ease-out group-hover:scale-105">
                   <Music className="text-muted-foreground h-8 w-8" />
                 </div>
-              )}
+              )} 
             </div>
             
             {/* Metadata Section - No top padding */}
