@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { ProjectWithTracks, TrackWithVersions } from '@/db/schema/vault'
+import type { TrackWithVersions } from '@/db/schema/vault'
 import type { AudioTrack } from '@/types/audio'
 import Image from 'next/image'
 import {
@@ -136,7 +136,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
             const projectUrl = `${window.location.origin}/vault/projects/${projectId}`
             await navigator.clipboard.writeText(projectUrl)
             toast.success('Project link copied to clipboard')
-        } catch (error) {
+        } catch {
             toast.error('Failed to copy link')
         }
     }
@@ -145,7 +145,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         try {
             await navigator.clipboard.writeText(projectId)
             toast.success('Project ID copied to clipboard')
-        } catch (error) {
+        } catch {
             toast.error('Failed to copy project ID')
         }
     }

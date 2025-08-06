@@ -164,8 +164,6 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       {isMobile ? (
         <MobileTracksList
           tracks={memoizedTracks}
-          projectId={projectId}
-          availableProjects={availableProjects}
           onPlayTrack={handlePlayTrack}
           onRenameTrack={handleRenameTrack}
           onDeleteTrack={handleDeleteTrack}

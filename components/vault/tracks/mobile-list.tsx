@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useAtom } from 'jotai'
 import { Virtuoso } from 'react-virtuoso'
 import { Play, Pause, MoreHorizontal, Edit2, Trash2, Upload, FolderOpen } from 'lucide-react'
@@ -15,13 +14,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
 import type { TrackFromProject } from '../../../hooks/data/use-tracks'
-import type { ProjectWithTracks } from '@/db/schema/vault'
 import { cn } from '@/lib/utils'
 
 interface MobileTracksListProps {
   tracks: TrackFromProject[]
-  projectId: string
-  availableProjects?: ProjectWithTracks[]
   onPlayTrack: (track: TrackFromProject) => void
   onRenameTrack: (track: TrackFromProject) => void
   onDeleteTrack: (track: TrackFromProject) => void
@@ -72,8 +68,6 @@ const getFileTypeDisplay = (mimeType: string): string => {
 
 export function MobileTracksList({ 
   tracks, 
-  projectId, 
-  availableProjects = [],
   onPlayTrack,
   onRenameTrack,
   onDeleteTrack,

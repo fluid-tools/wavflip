@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Loader2, Send, Music, Volume2, ArrowRight, ChevronDown, Check } from 'lucide-react'
+import { Loader2, Music, Volume2, ArrowRight, ChevronDown, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MUSIC_PROMPTS } from '@/lib/constants/prompts'
 import { motion, AnimatePresence } from 'motion/react'

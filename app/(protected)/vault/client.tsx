@@ -1,11 +1,10 @@
 'use client'
 
 import { useMemo, startTransition, useState, useEffect, useCallback } from 'react'
-import { useIsMobile, useIsTablet } from '@/hooks/use-mobile'
+import { useIsTablet } from '@/hooks/use-mobile'
 
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
 import { FolderCard } from '@/components/vault/folders/card'
 import { ProjectCard } from '@/components/vault/projects/card'
@@ -33,7 +32,6 @@ type VaultItem =
   | { type: 'project'; data: ProjectWithTracks }
 
 export function VaultView({ }: VaultViewProps = {}) {
-  const isMobile = useIsMobile()
   const isTablet = useIsTablet()
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Loader2, Play, Pause, Download, MoreHorizontal, Copy, Trash2, Music, Volume2 } from 'lucide-react'
+import { Loader2, Play, Pause, Download, MoreHorizontal, Copy, Trash2 } from 'lucide-react'
 import { WaveformPreview } from '@/components/player/waveform-preview'
 import { cn } from '@/lib/utils'
 import { useAtom } from 'jotai'
@@ -36,7 +36,6 @@ export function ChatMessage({
   onCopyUrl
 }: ChatMessageProps) {
   const isUser = type === 'user'
-  const isSystem = type === 'system'
   
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)

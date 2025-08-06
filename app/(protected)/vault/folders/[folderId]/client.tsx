@@ -1,10 +1,9 @@
 'use client'
 
 import { useMemo, startTransition, useState, useEffect, useCallback } from 'react'
-import { useIsMobile, useIsTablet } from '@/hooks/use-mobile'
+import { useIsTablet } from '@/hooks/use-mobile'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
 import type { FolderWithProjects } from '@/db/schema/vault'
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
@@ -31,7 +30,6 @@ type FolderItem =
   | { type: 'project'; data: FolderWithProjects['projects'][number] }
 
 export function FolderView({ folderId }: FolderViewProps) {
-  const isMobile = useIsMobile()
   const isTablet = useIsTablet()
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
