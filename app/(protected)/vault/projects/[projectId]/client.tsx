@@ -133,7 +133,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
     const handleShare = async () => {
         try {
-            const projectUrl = `${window.location.origin}/vault/projects/${projectId}`
+            const projectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/vault/projects/${projectId}`
             await navigator.clipboard.writeText(projectUrl)
             toast.success('Project link copied to clipboard')
         } catch {
