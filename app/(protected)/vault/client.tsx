@@ -196,7 +196,7 @@ export function VaultView({ }: VaultViewProps = {}) {
         onCreateFolder={() => setShowCreateFolderDialog(true)}
         onCreateProject={() => setShowCreateProjectDialog(true)}
         onClearSelection={clearSelection}
-        className="space-y-4"
+        className="space-y-4 p-6 sm:p-4 rounded-lg"
       >
         {vaultItems.length > 0 ? (
           <div style={{ height: '600px' }}>

@@ -25,7 +25,7 @@ interface FolderViewProps {
   folderId: string
 }
 
-type FolderItem = 
+type FolderItem =
   | { type: 'folder'; data: NonNullable<FolderWithProjects['subFolders']>[number] }
   | { type: 'project'; data: FolderWithProjects['projects'][number] }
 
@@ -37,9 +37,9 @@ export function FolderView({ folderId }: FolderViewProps) {
 
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
-  
+
   const { data: folderData } = useFolder(folderId)
-  
+
   // Selection functionality
   const {
     selectedItems,
@@ -52,7 +52,7 @@ export function FolderView({ folderId }: FolderViewProps) {
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {
     if (!folderData) return []
-    
+
     const items: FolderItem[] = [
       ...(folderData.subFolders || []).map(subFolder => ({ type: 'folder' as const, data: subFolder })),
       ...folderData.projects.map(project => ({ type: 'project' as const, data: project }))
@@ -86,36 +86,36 @@ export function FolderView({ folderId }: FolderViewProps) {
     document.addEventListener('keydown', handleKeyDownEvent)
     return () => document.removeEventListener('keydown', handleKeyDownEvent)
   }, [handleKeyDown, selectionItems, handleCreateFolderWithSelection, handleBulkDelete])
-  
+
   if (!folderData) {
     return <div>Loading...</div>
   }
-  
+
   const handleMoveFolder = async (
-    folderId: string, 
-    parentFolderId: string | null, 
+    folderId: string,
+    parentFolderId: string | null,
     sourceParentFolderId: string | null
   ) => {
     const formData = new FormData()
     formData.append('folderId', folderId)
     formData.append('parentFolderId', parentFolderId || '')
     formData.append('sourceParentFolderId', sourceParentFolderId || '')
-    
+
     startTransition(() => {
       moveFolderAction(formData)
     })
   }
 
   const handleMoveProject = async (
-    projectId: string, 
-    folderId: string | null, 
+    projectId: string,
+    folderId: string | null,
     sourceFolderId: string | null
   ) => {
     const formData = new FormData()
     formData.append('projectId', projectId)
     formData.append('folderId', folderId || '')
     formData.append('sourceFolderId', sourceFolderId || '')
-    
+
     startTransition(() => {
       moveProjectAction(formData)
     })
@@ -126,7 +126,7 @@ export function FolderView({ folderId }: FolderViewProps) {
     formData.append('sourceProjectId', sourceProjectId)
     formData.append('targetProjectId', targetProjectId)
     formData.append('parentFolderId', folderData.id)
-    
+
     startTransition(() => {
       combineProjectsAction(formData)
     })
@@ -146,9 +146,9 @@ export function FolderView({ folderId }: FolderViewProps) {
 
     if (item.type === 'folder') {
       return (
-        <FolderCard 
-          key={item.data.id} 
-          folder={item.data} 
+        <FolderCard
+          key={item.data.id}
+          folder={item.data}
           showProjectCount={false}
           parentFolderId={folderData.id}
           isDragAndDropEnabled={true}
@@ -158,9 +158,9 @@ export function FolderView({ folderId }: FolderViewProps) {
       )
     } else {
       return (
-        <ProjectCard 
-          key={item.data.id} 
-          project={item.data} 
+        <ProjectCard
+          key={item.data.id}
+          project={item.data}
           folderId={folderData.id}
           trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
@@ -181,7 +181,7 @@ export function FolderView({ folderId }: FolderViewProps) {
       onCreateFolder={() => setShowCreateFolderDialog(true)}
       onCreateProject={() => setShowCreateProjectDialog(true)}
       onClearSelection={clearSelection}
-      className="p-6 space-y-6 min-h-screen"
+      className="space-y-4 p-4 border border-border rounded-lg"
     >
       {/* Folder Info */}
       <div className="flex items-center justify-between">
@@ -197,35 +197,35 @@ export function FolderView({ folderId }: FolderViewProps) {
       {/* Folders and Projects Grid */}
       {folderItems.length > 0 ? (
         <div style={{ height: '600px' }}>
-                      <Virtuoso
-              style={{ height: '100%' }}
-              totalCount={Math.ceil(folderItems.length / ITEMS_PER_ROW)}
-              itemContent={(rowIndex) => (
-                isTablet ? (
-                  <div className="flex flex-wrap justify-center gap-4 mb-4 px-4">
-                    {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
-                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
-                      return itemIndex < folderItems.length ? (
-                        <div key={itemIndex} className="w-40 flex-shrink-0">
-                          {renderItem(itemIndex)}
-                        </div>
-                      ) : null
-                    })}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
-                    {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
-                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
-                      return itemIndex < folderItems.length ? (
-                        <div key={itemIndex}>
-                          {renderItem(itemIndex)}
-                        </div>
-                      ) : null
-                    })}
-                  </div>
-                )
-              )}
-            />
+          <Virtuoso
+            style={{ height: '100%' }}
+            totalCount={Math.ceil(folderItems.length / ITEMS_PER_ROW)}
+            itemContent={(rowIndex) => (
+              isTablet ? (
+                <div className="flex flex-wrap justify-center gap-4 mb-4 px-4">
+                  {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
+                    const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                    return itemIndex < folderItems.length ? (
+                      <div key={itemIndex} className="w-40 flex-shrink-0">
+                        {renderItem(itemIndex)}
+                      </div>
+                    ) : null
+                  })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
+                  {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
+                    const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                    return itemIndex < folderItems.length ? (
+                      <div key={itemIndex}>
+                        {renderItem(itemIndex)}
+                      </div>
+                    ) : null
+                  })}
+                </div>
+              )
+            )}
+          />
         </div>
       ) : (
         /* Empty state */
@@ -242,7 +242,7 @@ export function FolderView({ folderId }: FolderViewProps) {
       )}
 
       {/* Context Menu Dialogs */}
-      <CreateFolderDialog 
+      <CreateFolderDialog
         parentFolderId={folderData.id}
         open={showCreateFolderDialog}
         onOpenChange={setShowCreateFolderDialog}
@@ -255,7 +255,7 @@ export function FolderView({ folderId }: FolderViewProps) {
           clearSelection()
         }}
       />
-      <CreateProjectDialog 
+      <CreateProjectDialog
         folderId={folderData.id}
         open={showCreateProjectDialog}
         onOpenChange={setShowCreateProjectDialog}
