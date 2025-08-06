@@ -33,7 +33,8 @@ export default async function ProtectedLayout({
                         <Navbar />
                     </header>
                     <main className="flex-1 w-full max-w-screen-2xl mx-auto flex justify-center bg-background
-                    px-2 sm:px-4  flex-col min-h-[calc(100vh-64px)]">
+                    md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl
+                    px-0 sm:px-4 flex-col min-h-[calc(100vh-64px)]">
                         {children}
                     </main>
                     <PlayerDock />
