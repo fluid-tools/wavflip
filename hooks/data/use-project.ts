@@ -367,74 +367,79 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
     },
     onSuccess: async (data, variables, context) => {
       if (data.success && data.imageUrl) {
-        // Update the project cache with the S3 key
-        queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
-          if (!oldData) return oldData
-          return {
-            ...oldData,
-            image: data.imageUrl || null
-          }
-        })
-        
-        // Update all folder queries with the S3 key
-        queryClient.setQueriesData(
-          { predicate: (query) => 
-            query.queryKey[0] === 'vault' && 
-            query.queryKey[1] === 'folders' && 
-            query.queryKey.length === 3 // Individual folder: ['vault', 'folders', folderId]
-          },
-          (oldData: unknown) => {
-            if (!oldData || typeof oldData !== 'object') return oldData
-            
-            const folderData = oldData as { 
-              projects?: ProjectWithTracks[]
-              subFolders?: { projects?: ProjectWithTracks[] }[]
-            }
-            
-            // Helper function to update projects recursively
-            const updateProjectsRecursively = (folderData: any): any => {
-              let updated = { ...folderData }
-              
-              // Update direct projects
-              if (updated.projects) {
-                updated.projects = updated.projects.map((p: any) => 
-                  p.id === projectId 
-                    ? { ...p, image: data.imageUrl || null }
-                    : p
-                )
-              }
-              
-              // Update projects in subfolders
-              if (updated.subFolders) {
-                updated.subFolders = updated.subFolders.map((subfolder: any) =>
-                  updateProjectsRecursively(subfolder)
-                )
-              }
-              
-              return updated
-            }
-            
-            return updateProjectsRecursively(folderData)
-          }
-        )
-        
-        // Also update root vault projects cache
-        queryClient.setQueryData<ProjectWithTracks[]>(vaultKeys.vaultProjects(), (oldProjects) => {
-          if (!oldProjects) return oldProjects
-          return oldProjects.map(p => 
-            p.id === projectId 
-              ? { ...p, image: data.imageUrl || null }
-              : p
-          )
-        })
-        
-        // Immediately fetch and cache the presigned URL for the new image
+        // First, fetch the presigned URL for the new image
         try {
           const res = await fetch(`/api/projects/${projectId}/image`)
           if (res.ok) {
             const { signedUrl } = await res.json()
-            // Cache the presigned URL - this will make the image appear immediately
+            
+            // Cache the presigned URL
             queryClient.setQueryData([queryKey, 'presigned-image'], signedUrl)
+            
+            // Now that we have the presigned URL, update all caches with the S3 key
+            // The components will use the cached presigned URL
+            queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
+              if (!oldData) return oldData
+              return {
+                ...oldData,
+                image: data.imageUrl || null
+              }
+            })
+            
+            // Update all folder queries with the S3 key
+            queryClient.setQueriesData(
+              { predicate: (query) => 
+                query.queryKey[0] === 'vault' && 
+                query.queryKey[1] === 'folders' && 
+                query.queryKey.length === 3 // Individual folder: ['vault', 'folders', folderId]
+              },
+              (oldData: unknown) => {
+                if (!oldData || typeof oldData !== 'object') return oldData
+                
+                const folderData = oldData as { 
+                  projects?: ProjectWithTracks[]
+                  subFolders?: { projects?: ProjectWithTracks[] }[]
+                }
+                
+                // Helper function to update projects recursively
+                const updateProjectsRecursively = (folderData: any): any => {
+                  let updated = { ...folderData }
+                  
+                  // Update direct projects
+                  if (updated.projects) {
+                    updated.projects = updated.projects.map((p: any) => 
+                      p.id === projectId 
+                        ? { ...p, image: data.imageUrl || null }
+                        : p
+                    )
+                  }
+                  
+                  // Update projects in subfolders
+                  if (updated.subFolders) {
+                    updated.subFolders = updated.subFolders.map((subfolder: any) =>
+                      updateProjectsRecursively(subfolder)
+                    )
+                  }
+                  
+                  return updated
+                }
+                
+                return updateProjectsRecursively(folderData)
+              }
+            )
+            
+            // Also update root vault projects cache
+            queryClient.setQueryData<ProjectWithTracks[]>(vaultKeys.vaultProjects(), (oldProjects) => {
+              if (!oldProjects) return oldProjects
+              return oldProjects.map(p => 
+                p.id === projectId 
+                  ? { ...p, image: data.imageUrl || null }
+                  : p
+              )
+            })
+          } else {
+            // If we couldn't get presigned URL, still update but keep blob URL temporarily
+            console.error('Failed to get presigned URL, keeping blob URL')
           }
         } catch (error) {
           console.error('Failed to fetch presigned URL after upload:', error)

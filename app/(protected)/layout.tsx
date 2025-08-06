@@ -27,13 +27,13 @@ export default async function ProtectedLayout({
         <AppProviders>
             <SidebarProvider defaultOpen={defaultOpen}>
                 <AppSidebar />
-                <SidebarInset className="flex flex-col max-w-screen-2xl mx-auto min-h-screen">
+                <SidebarInset className="flex flex-col lg:max-w-screen-2xl mx-auto min-h-screen">
                     <header className="flex items-center gap-2 p-4 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                         <SidebarTrigger />
                         <Navbar />
                     </header>
-                    <main className="flex-1 w-full max-w-screen-2xl mx-auto flex justify-center bg-background
-                    md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-lg 2xl:max-w-screen-2xl
+                    <main className="flex-1 w-full mx-auto flex justify-center bg-background
+                    xl:max-w-screen-xl 2xl:max-w-screen-2xl
                     px-0 sm:px-4 flex-col min-h-[calc(100vh-64px)]">
                         {children}
                     </main>
