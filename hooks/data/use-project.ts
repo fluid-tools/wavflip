@@ -365,9 +365,9 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       
       toast.error(`Failed to upload image: ${error.message}`)
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: async (data, variables, context) => {
       if (data.success && data.imageUrl) {
-        // Update the project cache with real image URL (replacing optimistic data)
+        // Update the project cache with the S3 key
         queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
           if (!oldData) return oldData
           return {
@@ -376,7 +376,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           }
         })
         
-        // Update all folder queries with real URL (replacing optimistic data)
+        // Update all folder queries with the S3 key
         queryClient.setQueriesData(
           { predicate: (query) => 
             query.queryKey[0] === 'vault' && 
@@ -391,7 +391,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
               subFolders?: { projects?: ProjectWithTracks[] }[]
             }
             
-            // Helper function to update projects recursively with real URL
+            // Helper function to update projects recursively
             const updateProjectsRecursively = (folderData: any): any => {
               let updated = { ...folderData }
               
@@ -418,7 +418,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           }
         )
         
-        // Also update root vault projects cache with real URL
+        // Also update root vault projects cache
         queryClient.setQueryData<ProjectWithTracks[]>(vaultKeys.vaultProjects(), (oldProjects) => {
           if (!oldProjects) return oldProjects
           return oldProjects.map(p => 
@@ -428,9 +428,19 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           )
         })
         
+        // Immediately fetch and cache the presigned URL for the new image
+        try {
+          const res = await fetch(`/api/projects/${projectId}/image`)
+          if (res.ok) {
+            const { signedUrl } = await res.json()
+            // Cache the presigned URL - this will make the image appear immediately
+            queryClient.setQueryData([queryKey, 'presigned-image'], signedUrl)
+          }
+        } catch (error) {
+          console.error('Failed to fetch presigned URL after upload:', error)
+        }
+        
         toast.success('Project image updated successfully')
-        // Invalidate presigned image query so it refetches
-        queryClient.invalidateQueries({ queryKey: [queryKey, 'presigned-image'] })
       }
     },
     onSettled: (data, error, variables, context) => {

@@ -120,9 +120,15 @@ export function ProjectCard({
     input.click()
   }
 
+  // Determine what image source to use:
+  // 1. If it's a blob URL (optimistic update), use it directly
+  // 2. If we have a presigned URL, use that
+  // 3. If we have an image key but no presigned URL yet, show nothing (loading state)
   const imageSrc = project.image?.startsWith('blob:')
     ? project.image
-    : presignedImageUrl
+    : (project.image && presignedImageUrl) 
+      ? presignedImageUrl 
+      : null
 
 
   // State management is now handled by the custom hooks automatically
@@ -150,7 +156,15 @@ export function ProjectCard({
                   sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
                   priority
                 />
+              ) : project.image && !presignedImageUrl ? (
+                // Image exists but presigned URL is loading
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 flex items-center justify-center animate-pulse">
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold text-lg">
+                    {project.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
               ) : (
+                // No image at all
                 <div className="absolute inset-0 flex items-center opacity-40 hover:opacity-100 justify-center">
                   <ImageIcon className="h-6 w-6 bottom-1/3 absolute" />
                 </div>
@@ -244,7 +258,15 @@ export function ProjectCard({
               sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
               priority
             />
+          ) : project.image && !presignedImageUrl ? (
+            // Image exists but presigned URL is loading
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 flex items-center justify-center animate-pulse">
+              <span className="text-blue-600 dark:text-blue-400 font-semibold text-lg">
+                {project.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
           ) : (
+            // No image at all
             <div className="absolute inset-0 flex items-center opacity-40 hover:opacity-100 justify-center">
               <ImageIcon className="h-6 w-6 bottom-1/3 absolute" />
             </div>

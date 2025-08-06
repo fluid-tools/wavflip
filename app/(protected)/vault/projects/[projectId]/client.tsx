@@ -169,7 +169,9 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
     const imageSrc = project.image?.startsWith('blob:')
         ? project.image
-        : presignedImageUrl
+        : (project.image && presignedImageUrl) 
+          ? presignedImageUrl 
+          : null
 
     return (
         <div
@@ -245,7 +247,15 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                                                     sizes="(max-width: 768px) 192px, 256px"
                                                     priority
                                                 />
+                                            ) : project.image && !presignedImageUrl ? (
+                                                // Image exists but presigned URL is loading
+                                                <div className="w-full h-full bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center animate-pulse">
+                                                    <span className="text-white font-bold text-4xl">
+                                                        {project.name.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
                                             ) : (
+                                                // No image at all
                                                 <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">
                                                     {/* Placeholder abstract design */}
                                                     <ImageIcon className="h-6 w-6 text-white" />
