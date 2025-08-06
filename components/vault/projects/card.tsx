@@ -120,6 +120,11 @@ export function ProjectCard({
     input.click()
   }
 
+  const imageSrc = project.image?.startsWith('blob:')
+    ? project.image
+    : presignedImageUrl
+
+
   // State management is now handled by the custom hooks automatically
 
   const cardContent = shouldShowContextMenu() ? (
@@ -136,9 +141,9 @@ export function ProjectCard({
           >
             {/* Image/Preview Section - No padding */}
             <div className="relative w-full h-40 overflow-hidden">
-              {presignedImageUrl ? (
+              {imageSrc ? (
                 <Image
-                  src={presignedImageUrl}
+                  src={imageSrc}
                   alt={project.name}
                   fill
                   className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
@@ -230,9 +235,9 @@ export function ProjectCard({
       >
         {/* Image/Preview Section - No padding */}
         <div className="relative w-full h-40 overflow-hidden">
-          {presignedImageUrl ? (
+          {imageSrc ? (
             <Image
-              src={presignedImageUrl}
+              src={imageSrc}
               alt={project.name}
               fill
               className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"

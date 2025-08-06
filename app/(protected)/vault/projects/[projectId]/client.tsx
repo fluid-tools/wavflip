@@ -167,6 +167,10 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         await uploadTracks(files)
     }
 
+    const imageSrc = project.image?.startsWith('blob:')
+        ? project.image
+        : presignedImageUrl
+
     return (
         <div
             ref={dropZoneRef}
@@ -232,15 +236,14 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                                                     <Upload className="h-6 w-6 text-white animate-spin" />
                                                 </div>
                                             )}
-                                            {presignedImageUrl ? (
+                                            {imageSrc ? (
                                                 <Image
-                                                    src={presignedImageUrl}
+                                                    src={imageSrc}
                                                     alt={project.name}
                                                     fill
                                                     className="object-cover"
                                                     sizes="(max-width: 768px) 192px, 256px"
                                                     priority
-                                                // unoptimized
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center">

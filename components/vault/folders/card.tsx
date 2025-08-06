@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { useIsTablet } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -62,6 +63,7 @@ export function FolderCard({
   
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
   const { shouldShowContextMenu } = useContextMenuHandler()
+  const queryClient = useQueryClient()
 
   const [, deleteAction, isDeleting] = useDeleteFolderAction({
     onSuccess: () => {
@@ -150,29 +152,36 @@ export function FolderCard({
                 {folder.projects && folder.projects.length > 0 ? (
                   <>
                     {/* Render project previews (up to 4) */}
-                    {folder.projects.slice(0, 4).map((project) => (
-                      <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
-                        {project.image ? (
-                          // Project has image: show the image
-                          <Image
-                            src={project.image}
-                            alt={project.name}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
-                            priority
-                            // unoptimized
-                          />
-                        ) : (
-                          // Project has no image: show initial in colored circle
-                          <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
-                            <span className="text-green-600 dark:text-green-400 font-semibold text-xs">
-                              {project.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                    {folder.projects.slice(0, 4).map((project) => {
+                      // Try to get prefetched presigned URL from cache
+                      const presignedUrl = project.image 
+                        ? queryClient.getQueryData<string>([['vault', 'projects', project.id], 'presigned-image'])
+                        : null
+                      
+                      return (
+                        <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
+                          {project.image ? (
+                            // Project has image: show the image with presigned URL if available
+                            <Image
+                              src={presignedUrl || project.image}
+                              alt={project.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
+                              priority
+                              // unoptimized
+                            />
+                          ) : (
+                            // Project has no image: show initial in colored circle
+                            <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
+                              <span className="text-green-600 dark:text-green-400 font-semibold text-xs">
+                                {project.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                     {/* Fill remaining cells with empty placeholders */}
                     {Array.from({ length: Math.max(0, 4 - folder.projects.length) }).map((_, idx) => (
                       <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
@@ -259,27 +268,34 @@ export function FolderCard({
           <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out group-hover:scale-105">
             {folder.projects && folder.projects.length > 0 ? (
               <>
-                {folder.projects.slice(0, 4).map((project) => (
-                  <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
-                    {project.image ? (
-                      <Image
-                        src={project.image}
-                        alt={project.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
-                        priority
-                        // unoptimized
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
-                        <span className="text-green-600 dark:text-green-400 font-semibold text-xs">
-                          {project.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {folder.projects.slice(0, 4).map((project) => {
+                  // Try to get prefetched presigned URL from cache
+                  const presignedUrl = project.image 
+                    ? queryClient.getQueryData<string>([['vault', 'projects', project.id], 'presigned-image'])
+                    : null
+                  
+                  return (
+                    <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
+                      {project.image ? (
+                        <Image
+                          src={presignedUrl || project.image}
+                          alt={project.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px"
+                          priority
+                          // unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 flex items-center justify-center">
+                          <span className="text-green-600 dark:text-green-400 font-semibold text-xs">
+                            {project.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
                 {Array.from({ length: Math.max(0, 4 - folder.projects.length) }).map((_, idx) => (
                   <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
                 ))}

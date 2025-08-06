@@ -46,6 +46,12 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
     queryKey: [queryKey, 'presigned-image'],
     queryFn: async () => {
       if (!query.data?.image) return null
+      
+      // Check if we already have a prefetched presigned URL
+      const cachedUrl = queryClient.getQueryData<string>([queryKey, 'presigned-image'])
+      if (cachedUrl) return cachedUrl
+      
+      // Otherwise fetch from API
       const res = await fetch(`/api/projects/${projectId}/image`)
       if (!res.ok) return null
       const data = await res.json()
