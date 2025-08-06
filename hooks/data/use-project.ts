@@ -41,6 +41,20 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
     enabled: enabled && !!projectId,
   })
 
+  // Fetch presigned image URL if project.image exists
+  const presignedImageQuery = useQuery({
+    queryKey: [queryKey, 'presigned-image'],
+    queryFn: async () => {
+      if (!query.data?.image) return null
+      const res = await fetch(`/api/projects/${projectId}/image`)
+      if (!res.ok) return null
+      const data = await res.json()
+      return data.signedUrl as string
+    },
+    enabled: !!query.data?.image,
+    staleTime: 60 * 1000,
+  })
+
   // Helper function to extract audio duration from file
   const getAudioDuration = (file: File): Promise<number> => {
     return new Promise((resolve) => {
@@ -430,5 +444,6 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
     isUploading: uploadTrackMutation.isPending,
     uploadImage: uploadImageMutation.mutateAsync,
     isUploadingImage: uploadImageMutation.isPending,
+    presignedImageUrl: presignedImageQuery.data,
   }
 } 

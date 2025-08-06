@@ -60,20 +60,19 @@ export async function POST(
     if (!uploadRes.ok) {
       return Response.json({ success: false, error: 'Failed to upload image to S3' }, { status: 500 })
     }
-    const imageUrl = `${presigned.url}/${filename}`
 
-    // Update project with new image URL
+    // Store only the S3 key (filename) in the DB
     await db
       .update(project)
       .set({ 
-        image: imageUrl,
+        image: filename,
         updatedAt: new Date()
       })
       .where(eq(project.id, projectId))
 
     return Response.json({ 
       success: true, 
-      imageUrl
+      imageUrl: filename // return key for client cache update
     })
 
   } catch (error) {
@@ -86,7 +85,6 @@ export async function POST(
 }
 
 export async function GET(
-  request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
@@ -101,14 +99,9 @@ export async function GET(
     if (!existingProject.length || existingProject[0].userId !== session.user.id) {
       return Response.json({ success: false, error: 'Project not found' }, { status: 404 })
     }
-    const imageUrl = existingProject[0].image
-    if (!imageUrl) {
-      return Response.json({ success: false, error: 'No image' }, { status: 404 })
-    }
-    // Extract S3 key from imageUrl
-    const key = imageUrl.split('/').pop()
+    const key = existingProject[0].image
     if (!key) {
-      return Response.json({ success: false, error: 'Invalid image URL' }, { status: 400 })
+      return Response.json({ success: false, error: 'No image' }, { status: 404 })
     }
     const command = new GetObjectCommand({ Bucket: BUCKET, Key: key })
     const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 })

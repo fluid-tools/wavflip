@@ -67,7 +67,7 @@ export function ProjectCard({
   const { shouldShowContextMenu } = useContextMenuHandler()
   
   // Use the project hook for image upload functionality
-  const { uploadImage, isUploadingImage } = useProject({ projectId: project.id })
+  const { uploadImage, isUploadingImage, presignedImageUrl } = useProject({ projectId: project.id })
 
   const [, deleteAction, isDeleting] = useDeleteProjectAction({
     onSuccess: () => {
@@ -136,21 +136,14 @@ export function ProjectCard({
           >
             {/* Image/Preview Section - No padding */}
             <div className="relative w-full h-40 overflow-hidden">
-              {project.image ? (
-                <Image
-                  src={project.image}
-                  alt={project.name}
-                  fill
-                  className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-                  sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-                  priority
-                  // unoptimized
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-muted transition-transform duration-300 ease-out group-hover:scale-105">
-                  <Music className="text-muted-foreground h-8 w-8" />
-                </div>
-              )} 
+              <Image
+                src={presignedImageUrl || project.image || '/fallback.png'}
+                alt={project.name}
+                fill
+                className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+                priority
+              />
             </div>
             
             {/* Metadata Section - No top padding */}
@@ -231,21 +224,14 @@ export function ProjectCard({
         >
           {/* Image/Preview Section - No padding */}
           <div className="relative w-full h-40 overflow-hidden">
-            {project.image ? (
-              <Image
-                src={project.image}
-                alt={project.name}
-                fill
-                className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-                sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
-                priority
-                // unoptimized
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted transition-transform duration-300 ease-out group-hover:scale-105">
-                <Music className="text-muted-foreground h-8 w-8" />
-              </div>
-            )}
+            <Image
+              src={presignedImageUrl || project.image || '/fallback.png'}
+              alt={project.name}
+              fill
+              className="object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+              sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, (max-width: 1024px) 200px, 240px"
+              priority
+            />
           </div>
           
           {/* Metadata Section - No top padding */}
