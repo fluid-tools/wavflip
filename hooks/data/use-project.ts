@@ -423,6 +423,8 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         })
         
         toast.success('Project image updated successfully')
+        // Invalidate presigned image query so it refetches
+        queryClient.invalidateQueries({ queryKey: [queryKey, 'presigned-image'] })
       }
     },
     onSettled: (data, error, variables, context) => {
