@@ -24,6 +24,7 @@ import {
   autoPlayAtom
 } from '@/state/audio-atoms'
 import { downloadAndStoreAudio } from '@/lib/storage/local-vault'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
 
 function formatTime(seconds: number): string {
@@ -37,7 +38,6 @@ export default function PlayerDock() {
   const mobileWaveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [currentTime] = useAtom(currentTimeAtom)
   const [duration] = useAtom(durationAtom)
@@ -48,30 +48,7 @@ export default function PlayerDock() {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   
   const isPlaying = playerState === 'playing'
-
-  // Check if mobile on mount and handle resize
-  useEffect(() => {
-    const checkMobile = () => {
-      const newIsMobile = window.innerWidth < 768
-      if (newIsMobile !== isMobile) {
-        setIsMobile(newIsMobile)
-      }
-    }
-    checkMobile()
-    
-    // Debounce resize to avoid too many re-renders
-    let resizeTimeout: NodeJS.Timeout
-    const handleResize = () => {
-      clearTimeout(resizeTimeout)
-      resizeTimeout = setTimeout(checkMobile, 150)
-    }
-    
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      clearTimeout(resizeTimeout)
-    }
-  }, [isMobile])
+  const isMobile = useIsMobile()
 
   // Initialize WaveSurfer
   useEffect(() => {
