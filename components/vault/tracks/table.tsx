@@ -81,10 +81,20 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       return
     }
 
+    // Use /api/audio/[key] proxy for streaming if not a blob/local url
+    let audioUrl = presignedUrl
+    if (presignedUrl.startsWith('https://') && !presignedUrl.startsWith('blob:')) {
+      // Extract the S3 key from the URL (assuming /<bucket>/<key> or query param)
+      // You may need to adjust this extraction logic based on your S3 URL structure
+      const keyMatch = presignedUrl.match(/(?:[\w-]+\/)\d+\/([\w.-]+)/)
+      const key = keyMatch ? keyMatch[1] : track.id
+      audioUrl = `/api/audio/${key}`
+    }
+
     const audioTrack: AudioTrack = {
       id: track.id,
       title: track.name,
-      url: presignedUrl,
+      url: audioUrl,
       duration: track.activeVersion.duration || undefined,
       createdAt: track.createdAt,
       type: 'uploaded'

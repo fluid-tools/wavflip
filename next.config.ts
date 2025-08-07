@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+import { withBotId } from 'botid/next/config';
+
+const nextConfig = withBotId({
   // async redirects() {
   //   return [
   //     {
@@ -59,10 +61,7 @@ const nextConfig = {
       },
     ],
   },
-  // External packages that should be bundled separately
-  // serverExternalPackages: ['@react-email/render'],
-  // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
-};
+})
 
-export default nextConfig;
+export default nextConfig
