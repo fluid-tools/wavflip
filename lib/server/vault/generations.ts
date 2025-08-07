@@ -2,25 +2,30 @@ import 'server-only'
 
 import { db } from '@/db'
 import { project, track, trackVersion } from '@/db/schema/vault'
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { ProjectWithTracks } from '@/db/schema/vault'
 
-const GENERATIONS_PROJECT_ID = 'system-generations'
 const GENERATIONS_PROJECT_NAME = 'Generations'
+
+/**
+ * Compute a unique project ID for a user's Generations project.
+ * Using a deterministic ID ensures the same project is returned for the same user.
+ */
+function getGenerationsProjectId(userId: string): string {
+  return `system-generations-${userId}`
+}
 
 /**
  * Get or create the special Generations project for a user
  */
 export async function getOrCreateGenerationsProject(userId: string): Promise<ProjectWithTracks> {
-  // Check if generations project exists
+  const projectId = getGenerationsProjectId(userId)
+  // Check if the user's Generations project exists
   const [existingProject] = await db
     .select()
     .from(project)
-    .where(and(
-      eq(project.id, GENERATIONS_PROJECT_ID),
-      eq(project.userId, userId)
-    ))
+    .where(eq(project.id, projectId))
     .limit(1)
 
   if (existingProject) {
@@ -28,7 +33,7 @@ export async function getOrCreateGenerationsProject(userId: string): Promise<Pro
     const tracks = await db
       .select()
       .from(track)
-      .where(eq(track.projectId, GENERATIONS_PROJECT_ID))
+      .where(eq(track.projectId, projectId))
       .orderBy(track.createdAt)
 
     const tracksWithVersions = await Promise.all(
@@ -57,7 +62,7 @@ export async function getOrCreateGenerationsProject(userId: string): Promise<Pro
   // Create the generations project
   const now = new Date()
   const newProject = {
-    id: GENERATIONS_PROJECT_ID,
+    id: projectId,
     name: GENERATIONS_PROJECT_NAME,
     userId,
     folderId: null, // Always at root level
@@ -111,7 +116,7 @@ export async function addGeneratedSound(
   await db.insert(track).values({
     id: trackId,
     name: soundData.name,
-    projectId: GENERATIONS_PROJECT_ID,
+    projectId: getGenerationsProjectId(userId),
     userId,
     activeVersionId: versionId,
     accessType: 'private',
@@ -142,15 +147,9 @@ export async function addGeneratedSound(
 }
 
 /**
- * Check if a project is the system Generations project
+ * Check if a project is a Generations project (per‑user).
+ * The project IDs are of the form `system-generations-<userId>`.
  */
 export function isGenerationsProject(projectId: string): boolean {
-  return projectId === GENERATIONS_PROJECT_ID
-}
-
-/**
- * Get the Generations project ID
- */
-export function getGenerationsProjectId(): string {
-  return GENERATIONS_PROJECT_ID
+  return projectId.startsWith('system-generations-')
 }

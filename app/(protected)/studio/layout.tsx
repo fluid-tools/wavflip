@@ -53,6 +53,7 @@ export default async function StudioLayout({ children }: StudioLayoutProps) {
           // Transform tracks to GeneratedSound format
           return tracksWithUrls.map((track: any) => ({
             id: track.id,
+            key: track.key ?? track.id,
             title: track.name,
             url: track.activeVersion?.presignedUrl || track.activeVersion?.fileUrl || '',
             createdAt: new Date(track.createdAt),
