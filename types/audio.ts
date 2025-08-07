@@ -1,5 +1,6 @@
 export interface AudioTrack {
   id: string
+  key: string
   title: string
   url: string
   duration?: number

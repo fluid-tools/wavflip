@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 
 interface WaveformPreviewProps {
   url: string
+  trackKey?: string
   height?: number
   className?: string
   interact?: boolean
@@ -15,6 +16,7 @@ interface WaveformPreviewProps {
 
 export function WaveformPreview({ 
   url, 
+  trackKey,
   height = 30, 
   className, 
   interact = false,
@@ -33,32 +35,60 @@ export function WaveformPreview({
       wavesurferRef.current = null
     }
 
-    const wavesurfer = WaveSurfer.create({
-      container: waveformRef.current,
-      height,
-      waveColor: 'rgb(148 163 184)',
-      progressColor: 'rgb(59 130 246)',
-      cursorColor: interact ? 'rgb(59 130 246)' : 'transparent',
-      cursorWidth: interact ? 2 : 0,
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 2,
-      fillParent: true,
-      interact,
-      dragToSeek: interact,
-      normalize: true,
-      url
-    })
+    const loadWaveform = async () => {
+      try {
+        let peaks: number[][] | undefined
+        let duration: number | undefined
 
-    wavesurferRef.current = wavesurfer
+        // Try to get pre-decoded waveform data if trackKey is provided
+        if (trackKey) {
+          try {
+            const waveformResponse = await fetch(`/api/waveform/${trackKey}`)
+            if (waveformResponse.ok) {
+              const waveformData = await waveformResponse.json()
+              peaks = waveformData.data.peaks as number[][]
+              duration = waveformData.data.duration as number
+            }
+          } catch (error) {
+            console.warn('Failed to load pre-decoded waveform:', error)
+          }
+        }
 
-    if (onReady) {
-      wavesurfer.on('ready', () => onReady(wavesurfer))
+        const wavesurfer = WaveSurfer.create({
+          container: waveformRef.current!,
+          height,
+          waveColor: peaks ? 'rgb(148 163 184)' : 'rgb(203 213 225)', // Lighter color for placeholder
+          progressColor: 'rgb(59 130 246)',
+          cursorColor: interact ? 'rgb(59 130 246)' : 'transparent',
+          cursorWidth: interact ? 2 : 0,
+          barWidth: 2,
+          barGap: 1,
+          barRadius: 2,
+          fillParent: true,
+          interact,
+          dragToSeek: interact,
+          normalize: true,
+          backend: 'MediaElement', // Use MediaElement for streaming
+          peaks,
+          duration,
+          url
+        })
+
+        wavesurferRef.current = wavesurfer
+
+        if (onReady) {
+          wavesurfer.on('ready', () => onReady(wavesurfer))
+        }
+
+        if (onTimeUpdate) {
+          wavesurfer.on('timeupdate', onTimeUpdate)
+        }
+      } catch (error) {
+        console.error('Error loading waveform:', error)
+      }
     }
 
-    if (onTimeUpdate) {
-      wavesurfer.on('timeupdate', onTimeUpdate)
-    }
+    loadWaveform()
 
     return () => {
       if (wavesurferRef.current) {
@@ -66,7 +96,7 @@ export function WaveformPreview({
         wavesurferRef.current = null
       }
     }
-  }, [url, height, interact, onReady, onTimeUpdate])
+  }, [url, trackKey, height, interact, onReady, onTimeUpdate])
 
   return (
     <div 

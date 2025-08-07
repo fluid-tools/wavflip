@@ -70,68 +70,89 @@ export default function PlayerDock() {
       wavesurferRef.current = null
     }
 
-    // Create new instance immediately without setTimeout to prevent race conditions
-    const wavesurfer = WaveSurfer.create({
-      container: container,
-      height: isMobile ? 48 : 60,
-      waveColor: 'rgb(64 64 64)',
-      progressColor: 'rgb(255 255 255)',
-      cursorColor: 'rgb(255 255 255)',
-      cursorWidth: 3,
-      barWidth: 3,
-      barGap: 2,
-      barRadius: 3,
-      fillParent: true,
-      interact: true,
-      dragToSeek: true,
-      normalize: true,
-      backend: 'WebAudio',
-      url: currentTrack.url
-    })
-
-    wavesurferRef.current = wavesurfer
-
-    // Set up event listeners
-    wavesurfer.on('ready', () => {
-      const trackDuration = wavesurfer.getDuration()
-      dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
-      
-      // Restore playback position
-      if (currentProgress > 0) {
-        wavesurfer.seekTo(currentProgress / trackDuration)
+    // Load waveform data (pre-decoded peaks) and initialize WaveSurfer with streaming support
+    const loadWaveform = async () => {
+      try {
+        let peaks: number[][] | undefined
+        let duration: number | undefined
+        // Attempt to fetch pre-decoded waveform data using track key
+        if (currentTrack.key) {
+          try {
+            const resp = await fetch(`/api/waveform/${currentTrack.key}`)
+            if (resp.ok) {
+              const data = await resp.json()
+              peaks = data.data.peaks as number[][]
+              duration = data.data.duration as number
+            }
+          } catch (e) {
+            console.warn('Failed to fetch waveform data:', e)
+          }
+        }
+        // Create WaveSurfer instance with MediaElement backend and preload metadata
+        // Create an audio element with preload='none' to avoid any download before playback
+        const audioEl = document.createElement('audio') as HTMLAudioElement;
+        audioEl.preload = 'none'; // prevent any automatic loading
+        audioEl.crossOrigin = 'anonymous'; // enable CORS for range requests
+        const wavesurfer = WaveSurfer.create({
+          container: container,
+          height: isMobile ? 48 : 60,
+          waveColor: peaks ? 'rgb(64 64 64)' : 'rgb(200 200 200)', // lighter placeholder if no peaks
+          progressColor: 'rgb(255 255 255)',
+          cursorColor: 'rgb(255 255 255)',
+          cursorWidth: 3,
+          barWidth: 3,
+          barGap: 2,
+          barRadius: 3,
+          fillParent: true,
+          interact: true,
+          dragToSeek: true,
+          normalize: true,
+          backend: 'MediaElement',
+          // No url property to avoid preloading the entire file
+          peaks,
+          duration,
+          media: audioEl, // Use custom audio element with preload='none'
+        });
+        // Assign source after WaveSurfer is initialized to avoid early download
+        audioEl.src = currentTrack.url;
+        
+        wavesurferRef.current = wavesurfer
+        // Set up event listeners
+        wavesurfer.on('ready', () => {
+          const trackDuration = wavesurfer.getDuration()
+          dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
+          if (currentProgress > 0) {
+            wavesurfer.seekTo(currentProgress / trackDuration)
+          }
+          if (wasPlaying) {
+            wavesurfer.play()
+          } else if (autoPlay) {
+            setAutoPlay(false)
+            wavesurfer.play()
+          }
+        })
+        wavesurfer.on('timeupdate', (time: number) => {
+          dispatchPlayerAction({ type: 'SET_TIME', payload: time })
+        })
+        wavesurfer.on('play', () => {
+          dispatchPlayerAction({ type: 'PLAY' })
+        })
+        wavesurfer.on('pause', () => {
+          dispatchPlayerAction({ type: 'PAUSE' })
+        })
+        wavesurfer.on('finish', () => {
+          dispatchPlayerAction({ type: 'STOP' })
+        })
+        wavesurfer.on('error', (error: any) => {
+          console.error('WaveSurfer error:', error)
+        })
+        // Set initial volume
+        wavesurfer.setVolume(muted ? 0 : volume)
+      } catch (e) {
+        console.error('Error initializing WaveSurfer:', e)
       }
-      
-      // Resume playback if it was playing
-      if (wasPlaying) {
-        wavesurfer.play()
-      } else if (autoPlay) {
-        setAutoPlay(false)
-        wavesurfer.play()
-      }
-    })
-
-    wavesurfer.on('timeupdate', (time) => {
-      dispatchPlayerAction({ type: 'SET_TIME', payload: time })
-    })
-
-    wavesurfer.on('play', () => {
-      dispatchPlayerAction({ type: 'PLAY' })
-    })
-
-    wavesurfer.on('pause', () => {
-      dispatchPlayerAction({ type: 'PAUSE' })
-    })
-
-    wavesurfer.on('finish', () => {
-      dispatchPlayerAction({ type: 'STOP' })
-    })
-
-    wavesurfer.on('error', (error) => {
-      console.error('WaveSurfer error:', error)
-    })
-
-    // Set initial volume
-    wavesurfer.setVolume(muted ? 0 : volume)
+    }
+    loadWaveform()
 
     return () => {
       if (wavesurferRef.current) {
