@@ -19,6 +19,7 @@ import type {
 } from '@tanstack/react-query-persist-client';
 import { get, set, del } from 'idb-keyval';
 import { Analytics } from "@vercel/analytics/next";
+import TopLoader from "@/components/nav/toploader";
 
 function ThemeProvider({
   children,
@@ -85,6 +86,7 @@ function getQueryClient() {
 export function BaseProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <TopLoader />
       <JotaiProvider>
         {children}
         <Toaster

@@ -44,7 +44,7 @@ import { Button } from "@/components/ui/button"
 import SettingsDialog from "./settings-dialog"
 import dynamic from 'next/dynamic'
 
-const VaultSidebarNavigation = dynamic(() => import("./vault").then(mod => ({ default: mod.VaultSidebarNavigation })), {
+const VaultSidebarNavigation = dynamic(() => import("./vault-sidebar").then(mod => ({ default: mod.VaultSidebarNavigation })), {
   ssr: false,
   loading: () => (
     <SidebarGroup>
