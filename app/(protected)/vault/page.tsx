@@ -1,4 +1,4 @@
-import { getVaultData, getUserFolders } from '@/lib/server/vault'
+import { getUserFolders } from '@/lib/server/vault'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 import { VaultView } from '@/app/(protected)/vault/client'
 import { requireAuth } from '@/lib/server/auth'
@@ -9,17 +9,17 @@ export default async function VaultPage() {
 
   const queryClient = new QueryClient()
 
-  // Prefetch vault stats using correct query key
-  await queryClient.prefetchQuery({
-    queryKey: ['vault', 'stats'],
-    queryFn: async () => {
-      const vaultData = await getVaultData(session.user.id, {
-        includeStats: true,
-        includeHierarchy: false
-      })
-      return vaultData.stats
-    }
-  })
+  // // Prefetch vault stats using correct query key
+  // await queryClient.prefetchQuery({
+  //   queryKey: ['vault', 'stats'],
+  //   queryFn: async () => {
+  //     const vaultData = await getVaultData(session.user.id, {
+  //       includeStats: true,
+  //       includeHierarchy: false
+  //     })
+  //     return vaultData.stats
+  //   }
+  // })
 
   // Prefetch root folders for the vault view
   const folders = await getUserFolders(session.user.id)

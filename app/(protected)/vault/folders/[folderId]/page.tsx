@@ -27,8 +27,6 @@ export default async function FolderPage({ params }: FolderPageProps) {
     queryFn: () => getFolderWithContents(folderId, session.user.id)
   })
 
-
-
   const folder = queryClient.getQueryData(['vault', 'folders', folderId])
 
   if (!folder) notFound()
