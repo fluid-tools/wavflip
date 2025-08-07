@@ -2,7 +2,6 @@
 
 import { usePathname } from 'next/navigation'
 
-import { RecentSheet } from "../gen-ai/recent-sheet"
 import { useAtom } from 'jotai'
 import { currentTrackAtom, playerStateAtom, playerControlsAtom } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
@@ -20,6 +19,13 @@ const VaultBreadcrumbs = dynamic(() => import("../vault/breadcrumbs").then(mod =
 
 const VaultActions = dynamic(() => import("../vault/vault-actions").then(mod => ({ default: mod.VaultActions })), {
   ssr: false
+})
+
+const RecentSheet = dynamic(() => import("../gen-ai/recent-sheet").then(mod => ({ default: mod.RecentSheet })), {
+  ssr: false,
+  loading: () => (
+    <div className="h-8 w-16 bg-muted rounded animate-pulse" />
+  )
 })
 
 export function Navbar() {
