@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAtom } from 'jotai'
 import WaveSurfer from 'wavesurfer.js'
-import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
+import { generatePlaceholderWaveform, generateWaveformData } from '@/lib/audio/waveform-generator'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { 
@@ -71,69 +71,88 @@ export default function PlayerDock() {
       wavesurferRef.current = null
     }
 
-    // Load waveform data (pre-decoded peaks) and initialize WaveSurfer with streaming support
+    // Load waveform data and initialize WaveSurfer with correct backend (streaming vs offline)
     const loadWaveform = async () => {
       try {
-        let peaks: number[][] | undefined
-        let duration: number | undefined
-        // Attempt to fetch pre-decoded waveform data using track key
-        if (currentTrack.key) {
+        let monoPeaks: number[] | undefined
+        let knownDuration: number | undefined
+
+        const isBlob = currentTrack.url.startsWith('blob:')
+
+        if (isBlob) {
+          // Offline: decode locally for accurate peaks + duration
           try {
-            const resp = await fetch(`/api/waveform/${currentTrack.key}`)
+            const resp = await fetch(currentTrack.url)
+            const buf = await resp.arrayBuffer()
+            const wf = await generateWaveformData(buf)
+            monoPeaks = wf.peaks
+            knownDuration = wf.duration
+          } catch (e) {
+            console.warn('Failed to decode offline audio:', e)
+          }
+        } else if (currentTrack.key) {
+          // Online: fetch placeholder peaks
+          try {
+            const resp = await fetch(`/api/waveform/${encodeURIComponent(currentTrack.key)}`)
             if (resp.ok) {
               const data = await resp.json()
-              peaks = data.data.peaks as number[][]
-              duration = data.data.duration as number
+              monoPeaks = data.data.peaks as number[]
+              knownDuration = data.data.duration as number
             }
           } catch (e) {
             console.warn('Failed to fetch waveform data:', e)
           }
         }
-        // If no peaks were fetched, generate a simple placeholder waveform
-        if (!peaks) {
-          // Use track duration if available, otherwise fallback to 30 seconds
-          const placeholderDuration = duration ?? currentTrack.duration ?? 30
-          // fileSize is unknown; use 0 for placeholder generation
-          const placeholder = generatePlaceholderWaveform(placeholderDuration, 0)
-          peaks = placeholder.peaks as unknown as number[][]
+
+        if (!monoPeaks) {
+          const placeholderDuration = knownDuration ?? currentTrack.duration ?? 30
+          monoPeaks = generatePlaceholderWaveform(placeholderDuration, 0).peaks
         }
-        // Ensure duration is set early
-        if (duration) {
-          dispatchPlayerAction({ type: 'SET_DURATION', payload: duration });
+
+        if (knownDuration) {
+          dispatchPlayerAction({ type: 'SET_DURATION', payload: knownDuration })
         }
-        // Create audio element with metadata preload
-        const audioEl = document.createElement('audio') as HTMLAudioElement;
-        audioEl.preload = 'metadata';
-        audioEl.crossOrigin = 'anonymous';
-        audioEl.src = currentTrack.url;
-        audioEl.load();
-        // Dispatch duration when metadata is loaded (fallback if not provided by waveform API)
-        audioEl.addEventListener('loadedmetadata', () => {
-          const metaDuration = audioEl.duration;
-          if (metaDuration && !duration) {
-            dispatchPlayerAction({ type: 'SET_DURATION', payload: metaDuration });
-          }
-        });
+
+        // Backend + media configuration
+        let backend: 'WebAudio' | 'MediaElement' = isBlob ? 'WebAudio' : 'MediaElement'
+        let media: HTMLAudioElement | undefined
+
+        if (!isBlob) {
+          media = document.createElement('audio') as HTMLAudioElement
+          media.preload = 'metadata'
+          media.crossOrigin = 'anonymous'
+          media.src = currentTrack.url
+          media.load()
+          media.addEventListener('loadedmetadata', () => {
+            const metaDuration = media!.duration
+            if (metaDuration && !knownDuration) {
+              dispatchPlayerAction({ type: 'SET_DURATION', payload: metaDuration })
+            }
+          })
+        }
+
         const wavesurfer = WaveSurfer.create({
-          container: container,
+          container,
           height: isMobile ? 48 : 60,
-          waveColor: peaks ? 'rgb(64 64 64)' : 'rgb(200 200 200)',
+          waveColor: monoPeaks ? 'rgb(64 64 64)' : 'rgb(200 200 200)',
           progressColor: 'rgb(255 255 255)',
           cursorColor: 'rgb(255 255 255)',
           cursorWidth: 3,
           barWidth: 3,
           barGap: 2,
           barRadius: 3,
+          barAlign: 'top',
           fillParent: true,
           interact: true,
           dragToSeek: true,
           normalize: true,
-          backend: 'MediaElement',
-          // No url property to avoid preloading the entire file
-          peaks,
-          duration,
-          media: audioEl,
-        });
+          backend,
+          peaks: monoPeaks ? [monoPeaks] : undefined,
+          duration: knownDuration,
+          media,
+          // For blob + WebAudio we will pass url to let WS decode/play
+          url: isBlob ? currentTrack.url : undefined,
+        })
         wavesurferRef.current = wavesurfer;
         // Set up event listeners
         wavesurfer.on('ready', () => {

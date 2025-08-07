@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import { cn } from '@/lib/utils'
+import { generateWaveformData } from '@/lib/audio/waveform-generator'
 
 interface WaveformPreviewProps {
   url: string
@@ -37,16 +38,45 @@ export function WaveformPreview({
 
     const loadWaveform = async () => {
       try {
-        let peaks: number[][] | undefined
+        let monoPeaks: number[] | undefined
         let duration: number | undefined
 
-        // Try to get pre-decoded waveform data if trackKey is provided
-        if (trackKey) {
+        const isBlob = url.startsWith('blob:')
+        const isSameOriginAudio = url.startsWith('/api/audio/') || url.startsWith(location.origin)
+
+        // Prefer local decode for blob/offline
+        if (isBlob) {
           try {
-            const waveformResponse = await fetch(`/api/waveform/${trackKey}`)
+            const resp = await fetch(url)
+            const buf = await resp.arrayBuffer()
+            const wf = await generateWaveformData(buf)
+            monoPeaks = wf.peaks
+            duration = wf.duration
+          } catch (error) {
+            console.warn('Failed to decode blob for waveform preview:', error)
+          }
+        } else if (isSameOriginAudio) {
+          // Try full local decode for accurate peaks
+          try {
+            const resp = await fetch(url)
+            if (resp.ok && resp.body) {
+              const buf = await resp.arrayBuffer()
+              const wf = await generateWaveformData(buf)
+              monoPeaks = wf.peaks
+              duration = wf.duration
+            }
+          } catch (error) {
+            console.warn('Failed to decode streaming audio for preview, will fallback:', error)
+          }
+        }
+
+        if (!monoPeaks && trackKey) {
+          // Fallback to placeholder when streaming
+          try {
+            const waveformResponse = await fetch(`/api/waveform/${encodeURIComponent(trackKey)}`)
             if (waveformResponse.ok) {
               const waveformData = await waveformResponse.json()
-              peaks = waveformData.data.peaks as number[][]
+              monoPeaks = waveformData.data.peaks as number[]
               duration = waveformData.data.duration as number
             }
           } catch (error) {
@@ -57,19 +87,22 @@ export function WaveformPreview({
         const wavesurfer = WaveSurfer.create({
           container: waveformRef.current!,
           height,
-          waveColor: peaks ? 'rgb(148 163 184)' : 'rgb(203 213 225)', // Lighter color for placeholder
+          waveColor: monoPeaks ? 'rgb(148 163 184)' : 'rgb(203 213 225)',
           progressColor: 'rgb(59 130 246)',
           cursorColor: interact ? 'rgb(59 130 246)' : 'transparent',
           cursorWidth: interact ? 2 : 0,
           barWidth: 2,
           barGap: 1,
           barRadius: 2,
+          barAlign: 'top',
           fillParent: true,
           interact,
           dragToSeek: interact,
           normalize: true,
-          backend: 'MediaElement', // Use MediaElement for streaming
-          peaks,
+          // Prefer WebAudio when we have local peaks
+          backend: monoPeaks || url.startsWith('blob:') ? 'WebAudio' : 'MediaElement',
+          // Single-lane look: pass mono only
+          peaks: monoPeaks ? [monoPeaks] : undefined,
           duration,
           url
         })
