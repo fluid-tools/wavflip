@@ -69,6 +69,7 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
     // Create the generated sound object with presigned URL for immediate use
     const generatedSound: GeneratedSound = {
       id: key,
+      key,
       title: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
       url: presignedUrl, // Return presigned URL for immediate playback
       createdAt: new Date(),
@@ -177,6 +178,7 @@ export async function generateTextToSpeech(
     // Create the generated sound object with presigned URL
     const generatedSound: GeneratedSound = {
       id: key,
+      key,
       title: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
       url: presignedUrl, // Return presigned URL for immediate playback
       createdAt: new Date(),

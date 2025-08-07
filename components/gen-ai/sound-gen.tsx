@@ -144,10 +144,8 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   const handlePlaySound = (sound: GeneratedSound) => {
     // Route through /api/audio/[key] if not offline/local
     let url = sound.url
-    if (url.startsWith('https://') && !url.startsWith('blob:')) {
-      const keyMatch = url.match(/(?:[\w-]+\/)\d+\/([\w.-]+)/)
-      const key = keyMatch ? keyMatch[1] : sound.id
-      url = `/api/audio/${key}`
+    if (!url || (url.startsWith('https://') && !url.startsWith('blob:'))) {
+      url = `/api/audio/${encodeURIComponent((sound as any).key)}`
     }
     // Play the track with the correct url
     const track = { ...sound, url }

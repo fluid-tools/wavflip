@@ -6,7 +6,7 @@ import { eq, and } from 'drizzle-orm'
 import { getPresignedUrl } from '@/lib/storage/s3-storage'
 import { REDIS_KEYS } from '@/lib/redis'
 
-interface RouteParams {
+  interface RouteParams {
   params: Promise<{
     trackId: string
   }>

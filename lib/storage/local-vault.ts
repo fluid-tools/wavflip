@@ -16,8 +16,17 @@ export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
     const tracks: LocalVaultTrack[] = []
     
     for (const trackId of trackIds) {
-      const track = await get(`${VAULT_KEY_PREFIX}${trackId}`)
+      const track = await get(`${VAULT_KEY_PREFIX}${trackId}`) as LocalVaultTrack | undefined
       if (track) {
+        // Ensure we have a blobUrl if audioData exists
+        if (track.audioData && !track.blobUrl) {
+          try {
+            track.blobUrl = createBlobUrlFromAudioData(track.audioData)
+            await set(`${VAULT_KEY_PREFIX}${track.id}`, track)
+          } catch (e) {
+            // Best effort; skip if it fails
+          }
+        }
         tracks.push(track)
       }
     }
@@ -35,7 +44,8 @@ export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer
   try {
     const vaultTrack: LocalVaultTrack = {
       ...track,
-      audioData
+      audioData,
+      blobUrl: audioData ? createBlobUrlFromAudioData(audioData) : undefined
     }
     
     // Store the track
@@ -56,6 +66,11 @@ export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer
 // Remove track from vault
 export async function removeTrackFromVault(trackId: string): Promise<void> {
   try {
+    // Revoke blob URL if present
+    const existing = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as LocalVaultTrack | undefined
+    if (existing?.blobUrl) {
+      try { revokeBlobUrl(existing.blobUrl) } catch {}
+    }
     // Remove the track data
     await del(`${VAULT_KEY_PREFIX}${trackId}`)
     
@@ -106,9 +121,11 @@ export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVau
     }
     
     const audioData = await response.arrayBuffer()
+    const blobUrl = createBlobUrlFromAudioData(audioData)
     const vaultTrack: LocalVaultTrack = {
       ...track,
-      audioData
+      audioData,
+      blobUrl
     }
     
     await addTrackToVault(vaultTrack, audioData)
