@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAtom } from 'jotai'
 import WaveSurfer from 'wavesurfer.js'
+import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { 
@@ -88,15 +89,35 @@ export default function PlayerDock() {
             console.warn('Failed to fetch waveform data:', e)
           }
         }
-        // Create WaveSurfer instance with MediaElement backend and preload metadata
-        // Create an audio element with preload='none' to avoid any download before playback
+        // If no peaks were fetched, generate a simple placeholder waveform
+        if (!peaks) {
+          // Use track duration if available, otherwise fallback to 30 seconds
+          const placeholderDuration = duration ?? currentTrack.duration ?? 30
+          // fileSize is unknown; use 0 for placeholder generation
+          const placeholder = generatePlaceholderWaveform(placeholderDuration, 0)
+          peaks = placeholder.peaks as unknown as number[][]
+        }
+        // Ensure duration is set early
+        if (duration) {
+          dispatchPlayerAction({ type: 'SET_DURATION', payload: duration });
+        }
+        // Create audio element with metadata preload
         const audioEl = document.createElement('audio') as HTMLAudioElement;
-        audioEl.preload = 'none'; // prevent any automatic loading
-        audioEl.crossOrigin = 'anonymous'; // enable CORS for range requests
+        audioEl.preload = 'metadata';
+        audioEl.crossOrigin = 'anonymous';
+        audioEl.src = currentTrack.url;
+        audioEl.load();
+        // Dispatch duration when metadata is loaded (fallback if not provided by waveform API)
+        audioEl.addEventListener('loadedmetadata', () => {
+          const metaDuration = audioEl.duration;
+          if (metaDuration && !duration) {
+            dispatchPlayerAction({ type: 'SET_DURATION', payload: metaDuration });
+          }
+        });
         const wavesurfer = WaveSurfer.create({
           container: container,
           height: isMobile ? 48 : 60,
-          waveColor: peaks ? 'rgb(64 64 64)' : 'rgb(200 200 200)', // lighter placeholder if no peaks
+          waveColor: peaks ? 'rgb(64 64 64)' : 'rgb(200 200 200)',
           progressColor: 'rgb(255 255 255)',
           cursorColor: 'rgb(255 255 255)',
           cursorWidth: 3,
@@ -111,48 +132,45 @@ export default function PlayerDock() {
           // No url property to avoid preloading the entire file
           peaks,
           duration,
-          media: audioEl, // Use custom audio element with preload='none'
+          media: audioEl,
         });
-        // Assign source after WaveSurfer is initialized to avoid early download
-        audioEl.src = currentTrack.url;
-        
-        wavesurferRef.current = wavesurfer
+        wavesurferRef.current = wavesurfer;
         // Set up event listeners
         wavesurfer.on('ready', () => {
-          const trackDuration = wavesurfer.getDuration()
-          dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
+          const trackDuration = wavesurfer.getDuration();
+          dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration });
           if (currentProgress > 0) {
-            wavesurfer.seekTo(currentProgress / trackDuration)
+            wavesurfer.seekTo(currentProgress / trackDuration);
           }
           if (wasPlaying) {
-            wavesurfer.play()
+            wavesurfer.play();
           } else if (autoPlay) {
-            setAutoPlay(false)
-            wavesurfer.play()
+            setAutoPlay(false);
+            wavesurfer.play();
           }
-        })
+        });
         wavesurfer.on('timeupdate', (time: number) => {
-          dispatchPlayerAction({ type: 'SET_TIME', payload: time })
-        })
+          dispatchPlayerAction({ type: 'SET_TIME', payload: time });
+        });
         wavesurfer.on('play', () => {
-          dispatchPlayerAction({ type: 'PLAY' })
-        })
+          dispatchPlayerAction({ type: 'PLAY' });
+        });
         wavesurfer.on('pause', () => {
-          dispatchPlayerAction({ type: 'PAUSE' })
-        })
+          dispatchPlayerAction({ type: 'PAUSE' });
+        });
         wavesurfer.on('finish', () => {
-          dispatchPlayerAction({ type: 'STOP' })
-        })
+          dispatchPlayerAction({ type: 'STOP' });
+        });
         wavesurfer.on('error', (error: any) => {
-          console.error('WaveSurfer error:', error)
-        })
+          console.error('WaveSurfer error:', error);
+        });
         // Set initial volume
-        wavesurfer.setVolume(muted ? 0 : volume)
+        wavesurfer.setVolume(muted ? 0 : volume);
       } catch (e) {
-        console.error('Error initializing WaveSurfer:', e)
+        console.error('Error initializing WaveSurfer:', e);
       }
-    }
-    loadWaveform()
+    };
+    loadWaveform();
 
     return () => {
       if (wavesurferRef.current) {
@@ -167,7 +185,6 @@ export default function PlayerDock() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack, dispatchPlayerAction, isMobile])
-
 
 
   // Handle auto-play separately to avoid race conditions
