@@ -10,21 +10,34 @@ interface VaultLayoutProps {
 
 export default async function VaultLayout({ children }: VaultLayoutProps) {
   const session = await requireAuth()
-  const queryClient = new QueryClient()
+  
+  // Create query client with proper default options
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchOnWindowFocus: false,
+        refetchOnMount: true, // Ensure data is fresh when navigating
+      }
+    }
+  })
 
   // Prefetch common vault data for all vault pages
   await Promise.all([
     queryClient.prefetchQuery({
       queryKey: ['vault', 'folders'],
-      queryFn: () => getUserFolders(session.user.id)
+      queryFn: () => getUserFolders(session.user.id),
+      staleTime: 5 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ['vault', 'vault-projects'],
-      queryFn: () => getVaultProjects(session.user.id)
+      queryFn: () => getVaultProjects(session.user.id),
+      staleTime: 5 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ['vault', 'sidebar'],
-      queryFn: () => getSidebarData(session.user.id)
+      queryFn: () => getSidebarData(session.user.id),
+      staleTime: 5 * 60 * 1000,
     })
   ])
 

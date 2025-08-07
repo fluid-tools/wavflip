@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
-import { requireAuth } from '@/lib/server/auth'
-import { getProjectWithTracks, getVaultProjects, getAllUserFolders } from '@/lib/server/vault'
+import { getServerSession } from '@/lib/server/auth'
+import { getProjectWithTracks } from '@/lib/server/vault'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 import { ProjectView } from './client'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
@@ -13,12 +13,14 @@ interface ProjectPageProps {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
+  // Parallelize session check and params extraction for better performance
   const [session, { projectId }] = await Promise.all([
-    requireAuth(),
+    getServerSession(),
     params
   ])
 
   if (!projectId) notFound()
+  if (!session?.user?.id) notFound()
 
   const queryClient = new QueryClient()
 
@@ -41,17 +43,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     })
   }
 
-  // Prefetch additional data for move operations
-  await Promise.all([
-    queryClient.prefetchQuery({
-      queryKey: ['vault', 'folders'],
-      queryFn: () => getAllUserFolders(session.user.id)
-    }),
-    queryClient.prefetchQuery({
-      queryKey: ['vault', 'vault-projects'],
-      queryFn: () => getVaultProjects(session.user.id)
-    })
-  ])
+  // Note: Additional data for move operations is already prefetched in the layout
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getFolderWithContents } from '@/lib/server/vault'
 import { FolderView } from '@/app/(protected)/vault/folders/[folderId]/client'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
-import { requireAuth } from '@/lib/server/auth'
+import { getServerSession } from '@/lib/server/auth'
 
 interface FolderPageProps {
   params: Promise<{
@@ -11,13 +11,14 @@ interface FolderPageProps {
 }
 
 export default async function FolderPage({ params }: FolderPageProps) {
-  // Parallelize auth check and params extraction
+  // Parallelize session check and params extraction for better performance
   const [session, { folderId }] = await Promise.all([
-    requireAuth(),
+    getServerSession(),
     params
   ])
 
   if (!folderId) notFound()
+  if (!session?.user?.id) notFound()
 
   const queryClient = new QueryClient()
 
