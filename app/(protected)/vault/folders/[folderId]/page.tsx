@@ -17,8 +17,7 @@ export default async function FolderPage({ params }: FolderPageProps) {
     params
   ])
 
-  if (!folderId) notFound()
-  if (!session?.user?.id) notFound()
+  if (!folderId || !session?.user?.id) notFound()
 
   const queryClient = new QueryClient()
 

@@ -19,8 +19,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     params
   ])
 
-  if (!projectId) notFound()
-  if (!session?.user?.id) notFound()
+  if (!projectId || !session?.user?.id) notFound()
 
   const queryClient = new QueryClient()
 
