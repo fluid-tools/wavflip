@@ -147,6 +147,7 @@ export default function PlayerDock() {
           dragToSeek: true,
           normalize: true,
           backend,
+          splitChannels: undefined,
           peaks: monoPeaks ? [monoPeaks] : undefined,
           duration: knownDuration,
           media,

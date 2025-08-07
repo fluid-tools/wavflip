@@ -94,17 +94,36 @@ export function WaveformPreview({
           barWidth: 2,
           barGap: 1,
           barRadius: 2,
-          barAlign: 'top',
           fillParent: true,
           interact,
           dragToSeek: interact,
           normalize: true,
-          // Prefer WebAudio when we have local peaks
+          // Per docs: MediaElement default; use WebAudio when decoding locally
           backend: monoPeaks || url.startsWith('blob:') ? 'WebAudio' : 'MediaElement',
-          // Single-lane look: pass mono only
+          // Single-lane look: pass mono only; explicitly disable splitChannels
+          splitChannels: undefined,
           peaks: monoPeaks ? [monoPeaks] : undefined,
           duration,
-          url
+          url,
+          // Custom renderer to ensure a single-lane (top) waveform consistently
+          renderFunction: (p, ctx) => {
+            const channel = Array.isArray(p[0]) ? (p[0] as number[]) : (p as unknown as number[])
+            const { width, height } = ctx.canvas
+            ctx.clearRect(0, 0, width, height)
+            const bars = Math.min(channel.length, width)
+            const step = channel.length / bars
+            const barW = 2
+            const gap = 1
+            let x = 0
+            for (let i = 0; i < bars; i++) {
+              const v = Math.max(0, Math.min(1, channel[Math.floor(i * step)] || 0))
+              const h = v * height
+              ctx.fillStyle = 'rgb(148 163 184)'
+              ctx.fillRect(x, height - h, barW, h)
+              x += barW + gap
+              if (x > width) break
+            }
+          }
         })
 
         wavesurferRef.current = wavesurfer

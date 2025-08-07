@@ -154,7 +154,7 @@ export function ChatMessage({
                 </div>
                 {/* Waveform */}
                 <div className="border border-border bg-muted">
-                  <WaveformPreview url={sound.url} height={waveformHeight} />
+                  <WaveformPreview url={sound.url} trackKey={(sound as any).key} height={waveformHeight} />
                 </div>
                 {/* Controls */}
                 <div className="flex items-center justify-between">
