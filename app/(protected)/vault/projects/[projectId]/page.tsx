@@ -5,7 +5,7 @@ import { getPresignedImageUrl, getPresignedUrl } from '@/lib/storage/s3-storage'
 import { ProjectView } from './client'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import type { ProjectWithTracks } from '@/db/schema/vault'
-import { trackUrlKeys } from '@/hooks/data/use-track-url'
+// Remove client-only import
 import { REDIS_KEYS } from '@/lib/redis'
 
 interface ProjectPageProps {
@@ -49,7 +49,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
         if (track.activeVersion?.fileUrl) {
           // Prefetch presigned URL for each track
           await queryClient.prefetchQuery({
-            queryKey: trackUrlKeys.single(track.id),
+            queryKey: ['track-urls', track.id] as const,
             queryFn: async () => {
               const cacheKey = REDIS_KEYS.presignedTrack(track.id)
               return getPresignedUrl(track.activeVersion!.fileUrl, cacheKey, 60 * 60)

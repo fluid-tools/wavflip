@@ -18,8 +18,9 @@ export interface GeneratedSound extends AudioTrack {
   metadata: {
     prompt: string
     model: string
-    generationTime: number
+    generationTime?: number
   }
+  isOffline?: boolean // Added to track offline availability
 }
 
 export type PlayerState = 'idle' | 'loading' | 'playing' | 'paused' | 'error'

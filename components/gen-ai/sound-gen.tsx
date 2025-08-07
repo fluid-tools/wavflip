@@ -10,7 +10,7 @@ import {
   currentTrackAtom,
   playerStateAtom
 } from '@/state/audio-atoms'
-import { useSessionGenerations } from '@/hooks/data/use-generations'
+import { useGenerations } from '@/hooks/data/use-generations'
 import { WELCOME_MESSAGE } from '@/lib/constants/prompts'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -49,7 +49,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
-  const { addToSession } = useSessionGenerations()
+  const { addToSession } = useGenerations()
 
   const handleGenerate = () => {
     if (!prompt.trim()) {

@@ -1,54 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { HardDrive } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-interface StorageInfo {
-  usage: number
-  quota: number
-  usageDetails?: {
-    indexedDB?: number
-    caches?: number
-    serviceWorker?: number
-  }
-}
+import { useStorageEstimate } from '@/hooks/data/use-vault'
 
 export function StorageIndicator({ className }: { className?: string }) {
-  const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    async function checkStorage() {
-      if ('storage' in navigator && 'estimate' in navigator.storage) {
-        try {
-          const estimate = await navigator.storage.estimate()
-          setStorageInfo({
-            usage: estimate.usage || 0,
-            quota: estimate.quota || 0,
-            usageDetails: 'usageDetails' in estimate ? (estimate as StorageEstimate & { usageDetails?: Record<string, number> }).usageDetails : undefined
-          })
-        } catch (error) {
-          console.error('Failed to estimate storage:', error)
-        }
-      }
-      setIsLoading(false)
-    }
-
-    checkStorage()
-    // Check every 30 seconds
-    const interval = setInterval(checkStorage, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  const { data: storageInfo, isLoading } = useStorageEstimate()
 
   if (isLoading || !storageInfo) {
     return null
   }
 
-  const usagePercentage = (storageInfo.usage / storageInfo.quota) * 100
-  const usageMB = storageInfo.usage / (1024 * 1024)
-  const quotaMB = storageInfo.quota / (1024 * 1024)
+  const { usagePercentage, usageMB, quotaMB, usageDetails } = storageInfo
 
   // Format storage size
   const formatSize = (mb: number) => {
@@ -98,13 +62,13 @@ export function StorageIndicator({ className }: { className?: string }) {
         </p>
       )}
 
-      {storageInfo.usageDetails && (
+      {usageDetails && (
         <div className="text-xs text-muted-foreground space-y-0.5 mt-2">
-          {storageInfo.usageDetails.indexedDB && (
-            <div>IndexedDB: {formatSize(storageInfo.usageDetails.indexedDB / (1024 * 1024))}</div>
+          {usageDetails.indexedDB && (
+            <div>IndexedDB: {formatSize(usageDetails.indexedDB / (1024 * 1024))}</div>
           )}
-          {storageInfo.usageDetails.caches && (
-            <div>Caches: {formatSize(storageInfo.usageDetails.caches / (1024 * 1024))}</div>
+          {usageDetails.caches && (
+            <div>Caches: {formatSize(usageDetails.caches / (1024 * 1024))}</div>
           )}
         </div>
       )}

@@ -16,6 +16,7 @@ export const vaultKeys = {
   project: (id: string) => [...vaultKeys.projects(), id] as const,
   vaultProjects: () => [...vaultKeys.base, 'vault-projects'] as const,
   stats: () => [...vaultKeys.base, 'stats'] as const,
+  storage: () => ['storage-estimate'] as const,
 }
 
 // ================================
@@ -167,4 +168,64 @@ export function useFolderPath(folderId: string | null) {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   })
+}
+
+// ================================
+// STORAGE HOOK
+// ================================
+
+interface StorageInfo {
+  usage: number
+  quota: number
+  usagePercentage: number
+  usageMB: number
+  quotaMB: number
+  usageDetails?: {
+    indexedDB?: number
+    caches?: number
+    serviceWorker?: number
+  }
+}
+
+export function useStorageEstimate() {
+  return useQuery({
+    queryKey: vaultKeys.storage(),
+    queryFn: async (): Promise<StorageInfo | null> => {
+      if (!('storage' in navigator) || !('estimate' in navigator.storage)) {
+        return null
+      }
+      
+      try {
+        const estimate = await navigator.storage.estimate()
+        const usage = estimate.usage || 0
+        const quota = estimate.quota || 0
+        
+        return {
+          usage,
+          quota,
+          usagePercentage: quota > 0 ? (usage / quota) * 100 : 0,
+          usageMB: usage / (1024 * 1024),
+          quotaMB: quota / (1024 * 1024),
+          usageDetails: 'usageDetails' in estimate 
+            ? (estimate as StorageEstimate & { usageDetails?: Record<string, number> }).usageDetails 
+            : undefined
+        }
+      } catch (error) {
+        console.error('Failed to estimate storage:', error)
+        return null
+      }
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 30 * 1000, // Auto-refetch every 30 seconds
+    refetchOnWindowFocus: true,
+  })
+}
+
+// Helper to invalidate storage when we know it changed
+export function useInvalidateStorage() {
+  const queryClient = useQueryClient()
+  
+  return () => {
+    queryClient.invalidateQueries({ queryKey: vaultKeys.storage() })
+  }
 } 

@@ -3,17 +3,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData } from '@/lib/storage/local-vault'
 import type { GeneratedSound } from '@/types/audio'
+import type { LocalVaultTrack } from '@/lib/storage/local-vault'
 
 // Query keys
 export const generationsKeys = {
   all: ['generations'] as const,
   online: () => [...generationsKeys.all, 'online'] as const,
-  offline: () => [...generationsKeys.all, 'offline'] as const,
-  session: () => [...generationsKeys.all, 'session'] as const,
+  localCache: () => [...generationsKeys.all, 'local-cache'] as const,
 }
 
-// Hook to fetch generations from the Generations project (online)
-export function useOnlineGenerations() {
+// Hook to fetch generations from the Generations project (online) - SINGLE SOURCE OF TRUTH
+function useOnlineGenerations() {
   return useQuery({
     queryKey: generationsKeys.online(),
     queryFn: async (): Promise<GeneratedSound[]> => {
@@ -47,71 +47,47 @@ export function useOnlineGenerations() {
   })
 }
 
-// Hook to fetch offline generations from IndexedDB
-export function useOfflineGenerations() {
+// Hook to check which tracks are available offline
+function useLocalCache() {
   return useQuery({
-    queryKey: generationsKeys.offline(),
-    queryFn: async (): Promise<GeneratedSound[]> => {
+    queryKey: generationsKeys.localCache(),
+    queryFn: async (): Promise<Map<string, LocalVaultTrack>> => {
       const tracks = await getVaultTracks()
+      const cacheMap = new Map<string, LocalVaultTrack>()
       
-      // Convert LocalVaultTrack to GeneratedSound
-      return tracks
-        .filter(track => track.type === 'generated')
-        .map(track => {
-          // Create blob URL if we have audio data
-          let url = track.url
-          if (track.audioData && !track.blobUrl) {
-            url = createBlobUrlFromAudioData(track.audioData)
-          } else if (track.blobUrl) {
-            url = track.blobUrl
-          }
-          
-          return {
-            id: track.id,
-            title: track.title,
-            url,
-            createdAt: track.createdAt,
-            type: 'generated' as const,
-            duration: track.duration,
-            metadata: track.metadata as any
-          } as GeneratedSound
-        })
+      // Create a map of track ID to local track data
+      tracks.forEach(track => {
+        if (track.type === 'generated') {
+          cacheMap.set(track.id, track)
+        }
+      })
+      
+      return cacheMap
     },
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 30 * 1000, // 30 seconds
     refetchOnWindowFocus: false,
   })
 }
 
-// Hook to manage session generations (current session only)
-export function useSessionGenerations() {
+// Main hook that combines online data with offline availability
+export function useGenerations() {
   const queryClient = useQueryClient()
+  const online = useOnlineGenerations()
+  const localCache = useLocalCache()
   
-  // Session storage for current session tracks
-  const sessionKey = 'wavflip-session-generations'
-  
-  const query = useQuery({
-    queryKey: generationsKeys.session(),
-    queryFn: async (): Promise<GeneratedSound[]> => {
-      const sessionData = sessionStorage.getItem(sessionKey)
-      if (!sessionData) return []
-      
-      try {
-        return JSON.parse(sessionData)
-      } catch {
-        return []
-      }
-    },
-    staleTime: 0, // Always fresh
+  // Mutation to save a track offline
+  const saveOffline = useMutation({
+    mutationFn: async (sound: GeneratedSound) => {
+      await downloadAndStoreAudio(sound)
+      // Invalidate local cache to reflect the new offline track
+      queryClient.invalidateQueries({ queryKey: generationsKeys.localCache() })
+    }
   })
   
-  // Mutation to add a generation to the session
+  // Mutation to handle new generation (auto-save offline)
   const addToSession = useMutation({
     mutationFn: async (sound: GeneratedSound) => {
-      const current = query.data || []
-      const updated = [...current, sound]
-      sessionStorage.setItem(sessionKey, JSON.stringify(updated))
-      
-      // Also save to IndexedDB for offline access during this session
+      // Save to IndexedDB for offline access
       if (sound.url.startsWith('http')) {
         try {
           await downloadAndStoreAudio(sound)
@@ -120,52 +96,45 @@ export function useSessionGenerations() {
         }
       }
       
-      return updated
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(generationsKeys.session(), data)
-      // Also invalidate offline query to show the new cached track
-      queryClient.invalidateQueries({ queryKey: generationsKeys.offline() })
+      // Invalidate queries to refetch
+      await queryClient.invalidateQueries({ queryKey: generationsKeys.online() })
+      await queryClient.invalidateQueries({ queryKey: generationsKeys.localCache() })
+      
+      return sound
     }
   })
   
-  return {
-    sessionGenerations: query.data || [],
-    addToSession: addToSession.mutate,
-    isLoading: query.isLoading
-  }
-}
-
-// Combined hook for all generations
-export function useGenerations() {
-  const online = useOnlineGenerations()
-  const offline = useOfflineGenerations()
-  const { sessionGenerations, addToSession } = useSessionGenerations()
-  
-  // Merge and deduplicate generations
-  const allGenerations = [
-    ...(online.data || []),
-    ...(offline.data || []),
-    ...sessionGenerations
-  ].reduce((acc, sound) => {
-    if (!acc.find(s => s.id === sound.id)) {
-      acc.push(sound)
+  // Process generations with offline availability
+  const generations = (online.data || []).map(sound => {
+    const localTrack = localCache.data?.get(sound.id)
+    
+    // If available offline, use local URL
+    let url = sound.url
+    if (localTrack) {
+      if (localTrack.audioData && !localTrack.blobUrl) {
+        url = createBlobUrlFromAudioData(localTrack.audioData)
+      } else if (localTrack.blobUrl) {
+        url = localTrack.blobUrl
+      }
     }
-    return acc
-  }, [] as GeneratedSound[])
+    
+    return {
+      ...sound,
+      url,
+      isOffline: !!localTrack
+    }
+  })
   
   // Sort by creation date (newest first)
-  allGenerations.sort((a, b) => 
+  generations.sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
   
   return {
-    generations: allGenerations,
-    onlineGenerations: online.data || [],
-    offlineGenerations: offline.data || [],
-    sessionGenerations,
-    addToSession,
-    isLoading: online.isLoading || offline.isLoading,
+    generations,
+    saveOffline: saveOffline.mutate,
+    addToSession: addToSession.mutate,
+    isLoading: online.isLoading || localCache.isLoading,
     isOnline: navigator.onLine
   }
 }

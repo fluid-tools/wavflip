@@ -1,10 +1,11 @@
 'use client'
 
+import { useState, memo, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { History, Play, Pause, Music, Volume2, MoreHorizontal, Copy, Download, WifiOff } from 'lucide-react'
+import { History, Play, Pause, Music, Volume2, MoreHorizontal, Copy, Download, WifiOff, HardDrive, Check } from 'lucide-react'
 import { WaveformPreview } from '@/components/player/waveform-preview'
 import { useAtom } from 'jotai'
 import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
@@ -19,10 +20,16 @@ interface RecentSheetProps {
   onPlaySound: (sound: GeneratedSound) => void
 }
 
+// Memoized waveform component to prevent re-renders
+const MemoizedWaveform = memo(function MemoizedWaveform({ url }: { url: string }) {
+  return <WaveformPreview url={url} height={24} />
+})
+
 export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
-  const { generations, isOnline, isLoading } = useGenerations()
+  const { generations, isOnline, isLoading, saveOffline } = useGenerations()
+  const [savingOffline, setSavingOffline] = useState<string | null>(null)
   
   if (generations.length === 0 && !isLoading) return null
 
@@ -31,10 +38,23 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
     toast.success('URL copied to clipboard')
   }
 
+  const handleSaveOffline = async (sound: GeneratedSound & { isOffline?: boolean }) => {
+    setSavingOffline(sound.id)
+    try {
+      saveOffline(sound)
+      toast.success('Saved for offline access')
+    } catch (error) {
+      console.error('Failed to save offline:', error)
+      toast.error('Failed to save offline')
+    } finally {
+      setSavingOffline(null)
+    }
+  }
+
   // Generations are already sorted by newest first
   const recentSounds = generations
 
-  const renderSoundCard = (sound: GeneratedSound) => {
+  const renderSoundCard = (sound: GeneratedSound & { isOffline?: boolean }) => {
     const isCurrentTrack = currentTrack?.id === sound.id
     const isPlaying = playerState === 'playing' && isCurrentTrack
     
@@ -91,6 +111,30 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                               Download
                             </a>
                           </DropdownMenuItem>
+                          {!sound.isOffline && isOnline && (
+                            <DropdownMenuItem 
+                              onClick={() => handleSaveOffline(sound)}
+                              disabled={savingOffline === sound.id}
+                            >
+                              {savingOffline === sound.id ? (
+                                <>
+                                  <div className="h-3.5 w-3.5 mr-2 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <HardDrive className="h-3.5 w-3.5 mr-2" />
+                                  Save Offline
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                          )}
+                          {sound.isOffline && (
+                            <DropdownMenuItem disabled>
+                              <Check className="h-3.5 w-3.5 mr-2 text-green-500" />
+                              Saved Offline
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -122,13 +166,21 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                 
                 {/* Waveform Preview */}
                 <div className="mb-2">
-                  <WaveformPreview url={sound.url} height={24} />
+                  <MemoizedWaveform url={sound.url} />
                 </div>
                 
                 {/* Metadata */}
                 <div className="flex items-center justify-between text-xs text-neutral-400">
-                  <div className="px-2 py-0.5 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs">
-                    {sound.metadata?.model?.replace('elevenlabs-', '')}
+                  <div className="flex items-center gap-2">
+                    <div className="px-2 py-0.5 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs">
+                      {sound.metadata?.model?.replace('elevenlabs-', '')}
+                    </div>
+                    {sound.isOffline && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-900/20 border border-green-800/30">
+                        <HardDrive className="h-3 w-3 text-green-500" />
+                        <span className="text-green-500 text-xs">Offline</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -171,6 +223,34 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                 Download
               </a>
             </ContextMenuItem>
+            {!sound.isOffline && isOnline && (
+              <ContextMenuItem 
+                onClick={() => handleSaveOffline(sound)}
+                disabled={savingOffline === sound.id}
+                className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
+              >
+                {savingOffline === sound.id ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <HardDrive className="h-4 w-4 mr-2" />
+                    Save Offline
+                  </>
+                )}
+              </ContextMenuItem>
+            )}
+            {sound.isOffline && (
+              <ContextMenuItem 
+                disabled
+                className="text-neutral-100"
+              >
+                <Check className="h-4 w-4 mr-2 text-green-500" />
+                Saved Offline
+              </ContextMenuItem>
+            )}
           </ContextMenuContent>
         </ContextMenu>
       </div>
