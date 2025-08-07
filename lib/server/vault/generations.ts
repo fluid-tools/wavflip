@@ -97,7 +97,7 @@ export async function addGeneratedSound(
   userId: string,
   soundData: {
     name: string
-    fileUrl: string
+    fileKey: string
     duration?: number
     size?: number
     mimeType?: string
@@ -135,7 +135,7 @@ export async function addGeneratedSound(
     id: versionId,
     trackId,
     version: 1,
-    fileUrl: soundData.fileUrl,
+    fileKey: soundData.fileKey,
     size: soundData.size,
     duration: soundData.duration,
     mimeType: soundData.mimeType || 'audio/mpeg',

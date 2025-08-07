@@ -46,13 +46,13 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   if (project.tracks && project.tracks.length > 0) {
     await Promise.all(
       project.tracks.map(async (track) => {
-        if (track.activeVersion?.fileUrl) {
+        if (track.activeVersion?.fileKey) {
           // Prefetch presigned URL for each track
           await queryClient.prefetchQuery({
             queryKey: ['track-urls', track.id] as const,
             queryFn: async () => {
               const cacheKey = REDIS_KEYS.presignedTrack(track.id)
-              return getPresignedUrl(track.activeVersion!.fileUrl, cacheKey, 60 * 60)
+              return getPresignedUrl(track.activeVersion!.fileKey, cacheKey, 60 * 60)
             },
             staleTime: 50 * 60 * 1000,
           })

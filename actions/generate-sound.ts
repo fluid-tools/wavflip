@@ -83,7 +83,7 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
     // Save to Generations project
     await addGeneratedSound(session.user.id, {
       name: generatedSound.title,
-      fileUrl: key, // Store S3 key, not URL
+      fileKey: key, // Store S3 key
       duration: undefined,
       size: soundResponse.audio.byteLength,
       mimeType: soundResponse.contentType,
@@ -191,7 +191,7 @@ export async function generateTextToSpeech(
     // Save to Generations project
     await addGeneratedSound(session.user.id, {
       name: generatedSound.title,
-      fileUrl: key, // Store S3 key
+      fileKey: key, // Store S3 key
       duration: undefined,
       size: speechResponse.audio.byteLength,
       mimeType: speechResponse.contentType,

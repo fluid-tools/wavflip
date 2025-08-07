@@ -48,16 +48,16 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       .where(eq(trackVersion.id, trackData.activeVersionId))
       .limit(1)
 
-    if (!version || !version.fileUrl) {
+    if (!version || !version.fileKey) {
       return NextResponse.json(
         { error: 'Track version not found' },
         { status: 404 }
       )
     }
 
-    // Generate presigned URL (fileUrl contains the S3 key)
+    // Generate presigned URL (fileKey contains the S3 key)
     const cacheKey = REDIS_KEYS.presignedTrack(trackId)
-    const presignedUrl = await getPresignedUrl(version.fileUrl, cacheKey, 60 * 60) // 1 hour expiry
+    const presignedUrl = await getPresignedUrl(version.fileKey, cacheKey, 60 * 60) // 1 hour expiry
 
     return NextResponse.json({ url: presignedUrl })
   } catch (error) {

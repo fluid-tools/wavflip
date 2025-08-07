@@ -116,7 +116,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         throw new Error('Failed to upload file to S3')
       }
 
-      // Create track in database - store S3 key, not URL
+      // Create track in database - store S3 key
       const response = await fetch('/api/tracks', {
         method: 'POST',
         headers: {
@@ -126,7 +126,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           id: trackId,
           name: name.trim(),
           projectId,
-          fileUrl: key, // Store the S3 key, not a URL
+          fileKey: key,
           fileSize: file.size,
           mimeType: file.type,
           duration: duration || 0
@@ -148,6 +148,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       const previousProject = queryClient.getQueryData<ProjectWithTracks>(queryKey)
 
       // Create optimistic track
+      const tempBlobUrl = URL.createObjectURL(file)
       const optimisticTrack = {
         id: `temp-${nanoid()}`, // Temporary ID
         name: name.trim(),
@@ -163,23 +164,23 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           id: `temp-version-${nanoid()}`,
           trackId: `temp-${nanoid()}`,
           version: 1,
-          fileUrl: URL.createObjectURL(file), // Temporary blob URL for preview
+          fileKey: `blob:${file.name}`,
           size: file.size,
           duration: duration || 0,
           mimeType: file.type,
           createdAt: new Date(),
-          metadata: null,
+          metadata: { tempBlobUrl },
         },
         versions: [{
           id: `temp-version-${nanoid()}`,
           trackId: `temp-${nanoid()}`,
           version: 1,
-          fileUrl: URL.createObjectURL(file),
+          fileKey: `blob:${file.name}`,
           size: file.size,
           duration: duration || 0,
           mimeType: file.type,
           createdAt: new Date(),
-          metadata: null,
+          metadata: { tempBlobUrl },
         }],
         project: previousProject!
       }
@@ -192,7 +193,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         })
       }
 
-      return { previousProject, optimisticTrack }
+      return { previousProject, optimisticTrack, tempBlobUrl }
     },
     onError: (error, variables, context) => {
       // Rollback on error
@@ -207,12 +208,9 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       queryClient.invalidateQueries({ queryKey })
     },
     onSettled: (data, error, variables, context) => {
-      // Clean up optimistic blob URLs from track upload
-      if (context?.optimisticTrack?.activeVersion?.fileUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(context.optimisticTrack.activeVersion.fileUrl)
-      }
-      if (context?.optimisticTrack?.versions?.[0]?.fileUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(context.optimisticTrack.versions[0].fileUrl)
+      // Clean up optimistic blob URL from track upload
+      if (context?.tempBlobUrl) {
+        URL.revokeObjectURL(context.tempBlobUrl)
       }
     },
   })

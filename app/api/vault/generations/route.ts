@@ -21,11 +21,11 @@ export async function GET() {
     // Generate presigned URLs for all tracks
     const tracksWithUrls = await Promise.all(
       (generationsProject.tracks || []).map(async (track) => {
-        if (track.activeVersion?.fileUrl) {
+        if (track.activeVersion?.fileKey) {
           try {
             const cacheKey = REDIS_KEYS.presignedTrack(track.id)
             const presignedUrl = await getPresignedUrl(
-              track.activeVersion.fileUrl, 
+              track.activeVersion.fileKey, 
               cacheKey, 
               60 * 60 // 1 hour
             )

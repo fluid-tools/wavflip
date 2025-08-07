@@ -74,9 +74,8 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       return
     }
 
-    // For streaming, we need to use the S3 key to construct the streaming URL
-    // The activeVersion.fileUrl contains the S3 key (not a full URL)
-    const s3Key = track.activeVersion.fileUrl
+    // Build streaming URL from S3 key (stored in activeVersion.fileKey)
+    const s3Key = track.activeVersion.fileKey
     if (!s3Key) {
       toast.error('Track file not available')
       return
@@ -93,7 +92,7 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       duration: track.activeVersion.duration || undefined,
       createdAt: track.createdAt,
       type: 'uploaded',
-      key: track.activeVersion.fileUrl,
+      key: track.activeVersion.fileKey,
     }
 
     dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })

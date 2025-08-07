@@ -31,7 +31,7 @@ function useOnlineGenerations() {
       return data.tracks.map((track: any) => ({
         id: track.id,
         title: track.name,
-        url: track.activeVersion?.presignedUrl || track.activeVersion?.fileUrl || '', // Use presigned URL if available
+        url: track.activeVersion?.presignedUrl || '',
         createdAt: new Date(track.createdAt),
         type: 'generated' as const,
         duration: track.activeVersion?.duration,

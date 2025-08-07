@@ -26,11 +26,11 @@ export default async function StudioLayout({ children }: StudioLayoutProps) {
           // Generate presigned URLs for all tracks
           const tracksWithUrls = await Promise.all(
             (generationsProject.tracks || []).map(async (track) => {
-              if (track.activeVersion?.fileUrl) {
+              if (track.activeVersion?.fileKey) {
                 try {
                   const cacheKey = REDIS_KEYS.presignedTrack(track.id)
                   const presignedUrl = await getPresignedUrl(
-                    track.activeVersion.fileUrl, 
+                    track.activeVersion.fileKey, 
                     cacheKey, 
                     60 * 60 // 1 hour
                   )
@@ -53,9 +53,9 @@ export default async function StudioLayout({ children }: StudioLayoutProps) {
           // Transform tracks to GeneratedSound format
           return tracksWithUrls.map((track: any) => ({
             id: track.id,
-            key: track.key ?? track.id,
+            key: track.activeVersion?.fileKey || track.id,
             title: track.name,
-            url: track.activeVersion?.presignedUrl || track.activeVersion?.fileUrl || '',
+            url: track.activeVersion?.presignedUrl || '',
             createdAt: new Date(track.createdAt),
             type: 'generated' as const,
             duration: track.activeVersion?.duration,
