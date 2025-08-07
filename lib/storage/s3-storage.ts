@@ -233,14 +233,23 @@ export async function getPresignedImageUrl(key: string, projectId?: string, expi
   return presignedUrl
 }
 
-export async function bustPresignedImageCache(projectId: string): Promise<void> {
+export async function bustPresignedCache(cacheKey: string): Promise<void> {
   try {
-    const cacheKey = REDIS_KEYS.presignedImage(projectId)
     await redis.del(cacheKey)
-    console.log(`Busted cache for: ${projectId}`)
+    console.log(`Busted cache for key: ${cacheKey}`)
   } catch (error) {
     console.error('Redis cache bust error:', error)
   }
+}
+
+export async function bustPresignedImageCache(projectId: string): Promise<void> {
+  const cacheKey = REDIS_KEYS.presignedImage(projectId)
+  return bustPresignedCache(cacheKey)
+}
+
+export async function bustPresignedTrackCache(trackId: string): Promise<void> {
+  const cacheKey = REDIS_KEYS.presignedTrack(trackId)
+  return bustPresignedCache(cacheKey)
 }
 
 export async function uploadProjectImage(

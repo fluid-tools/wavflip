@@ -243,7 +243,7 @@ export function VaultSidebarNavigation() {
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
-            variant="destructive"
+            className="text-destructive"
             onClick={(e) => {
               e.preventDefault()
               handleDelete({ id: folder.id, name: folder.name, type: 'folder', parentId: folder.parentFolderId })
@@ -320,7 +320,7 @@ export function VaultSidebarNavigation() {
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
-                      variant="destructive"
+                      className="text-destructive"
                       onClick={(e) => {
                         e.preventDefault()
                         handleDelete({ id: project.id, name: project.name, type: 'project', parentId: folder.id })
@@ -468,7 +468,7 @@ export function VaultSidebarNavigation() {
                   </ContextMenuItem>
                   <ContextMenuSeparator />
                   <ContextMenuItem
-                    variant="destructive"
+                    className="text-destructive"
                     onClick={(e) => {
                       e.preventDefault()
                       handleDelete({ id: project.id, name: project.name, type: 'project', parentId: null })

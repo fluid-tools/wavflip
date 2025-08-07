@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { createTrack, createTrackVersion, deleteTrack, renameTrack, setActiveVersion } from '@/lib/server/vault'
+import { bustPresignedTrackCache } from '@/lib/storage/s3-storage'
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,6 +61,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteTrack(trackId, session.user.id)
+    
+    // Bust the cache for this track
+    await bustPresignedTrackCache(trackId)
 
     return NextResponse.json({ success: true })
   } catch (error) {
