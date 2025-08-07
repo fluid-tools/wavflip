@@ -114,7 +114,14 @@ export async function getVaultProjects(userId: string): Promise<ProjectWithTrack
     .groupBy(project.id)
     .orderBy(project.order, project.createdAt)
   
-  return projects.map(p => ({ ...p, tracks: [] }))
+  // Sort to ensure Generations project appears first if it exists
+  const sortedProjects = projects.sort((a, b) => {
+    if (a.id === 'system-generations') return -1
+    if (b.id === 'system-generations') return 1
+    return a.order - b.order || a.createdAt.getTime() - b.createdAt.getTime()
+  })
+  
+  return sortedProjects.map(p => ({ ...p, tracks: [] }))
 }
 
 export async function getProjectWithTracks(projectId: string, userId: string): Promise<ProjectWithTracks | null> {

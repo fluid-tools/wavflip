@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { History, Play, Pause, Music, Volume2, MoreHorizontal, Copy, Download } from 'lucide-react'
+import { History, Play, Pause, Music, Volume2, MoreHorizontal, Copy, Download, WifiOff } from 'lucide-react'
 import { WaveformPreview } from '@/components/player/waveform-preview'
 import { useAtom } from 'jotai'
 import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
@@ -12,25 +12,27 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Virtuoso } from 'react-virtuoso'
 import type { GeneratedSound } from '@/types/audio'
+import { useGenerations } from '@/hooks/data/use-generations'
+import { StorageIndicator } from './storage-indicator'
 
 interface RecentSheetProps {
-  generatedSounds: GeneratedSound[]
   onPlaySound: (sound: GeneratedSound) => void
 }
 
-export function RecentSheet({ generatedSounds, onPlaySound }: RecentSheetProps) {
+export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
+  const { generations, isOnline, isLoading } = useGenerations()
   
-  if (generatedSounds.length === 0) return null
+  if (generations.length === 0 && !isLoading) return null
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url)
     toast.success('URL copied to clipboard')
   }
 
-  // Show all recent sounds (newest first)
-  const recentSounds = [...generatedSounds].reverse()
+  // Generations are already sorted by newest first
+  const recentSounds = generations
 
   const renderSoundCard = (sound: GeneratedSound) => {
     const isCurrentTrack = currentTrack?.id === sound.id
@@ -180,14 +182,21 @@ export function RecentSheet({ generatedSounds, onPlaySound }: RecentSheetProps) 
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
           <History className="h-3.5 w-3.5" />
-          Recent ({generatedSounds.length})
+          Recent ({generations.length})
+          {!isOnline && <WifiOff className="h-3 w-3 ml-1 text-orange-500" />}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[420px] p-0">
+      <SheetContent side="right" className="w-[420px] p-0 flex flex-col">
         <SheetHeader className="px-6 py-4 border-b border-neutral-800">
           <SheetTitle className="text-lg font-semibold text-neutral-100">Recent Generations</SheetTitle>
           <p className="text-sm text-neutral-400 mt-1">Your latest sound creations</p>
         </SheetHeader>
+        
+        {/* Storage Indicator */}
+        <div className="px-6 py-3 border-b border-neutral-800">
+          <StorageIndicator />
+        </div>
+        
         <div className="flex-1 min-h-0">
           <Virtuoso
             style={{ height: '100%' }}

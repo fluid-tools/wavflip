@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { upload } from '@vercel/blob/client'
 import type { ProjectWithTracks } from '@/db/schema/vault'
 import type { ProjectImageResponse } from '@/types/project'
 import { nanoid } from 'nanoid'
@@ -84,11 +83,38 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
   // Upload track mutation with optimistic updates
   const uploadTrackMutation = useMutation({
     mutationFn: async ({ name, file, duration }: UploadTrackData) => {
-      // Upload to Vercel Blob
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/vault/upload',
+      // Get presigned URL from server
+      const presignedResponse = await fetch('/api/tracks/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          projectId
+        })
       })
+
+      if (!presignedResponse.ok) {
+        throw new Error('Failed to get upload URL')
+      }
+
+      const { presigned, trackId, url } = await presignedResponse.json()
+
+      // Upload directly to S3 using presigned POST
+      const formData = new FormData()
+      Object.entries(presigned.fields).forEach(([k, v]) => {
+        formData.append(k, v as string)
+      })
+      formData.append('file', file)
+
+      const uploadResponse = await fetch(presigned.url, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file to S3')
+      }
 
       // Create track in database
       const response = await fetch('/api/tracks', {
@@ -97,9 +123,10 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          id: trackId,
           name: name.trim(),
           projectId,
-          fileUrl: blob.url,
+          fileUrl: url,
           fileSize: file.size,
           mimeType: file.type,
           duration: duration || 0

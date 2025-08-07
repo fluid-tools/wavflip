@@ -2,6 +2,8 @@
 
 import { getElevenLabsClient } from '@/lib/gen-ai/elevenlabs'
 import { uploadAudioToBlob, generateAudioFilename } from '@/lib/storage/blob-storage'
+import { addGeneratedSound } from '@/lib/server/vault/generations'
+import { getServerSession } from '@/lib/server/auth'
 import type { GeneratedSound } from '@/types/audio'
 import type { GenerationError } from '@/types/elevenlabs'
 
@@ -59,6 +61,25 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
         model: 'elevenlabs-sound-effects',
         generationTime
       }
+    }
+
+    // Save to Generations project if user is authenticated
+    try {
+      const session = await getServerSession()
+      if (session?.user?.id) {
+        await addGeneratedSound(session.user.id, {
+          name: generatedSound.title,
+          fileUrl: url,
+          duration: undefined, // We don't have duration from ElevenLabs yet
+          size: soundResponse.audio.byteLength,
+          mimeType: soundResponse.contentType,
+          prompt: prompt.trim(),
+          model: 'elevenlabs-sound-effects'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to save to Generations project:', error)
+      // Don't fail the generation if saving to project fails
     }
 
     return {
@@ -140,6 +161,24 @@ export async function generateTextToSpeech(
         model: 'elevenlabs-tts',
         generationTime
       }
+    }
+
+    // Save to Generations project if user is authenticated
+    try {
+      const session = await getServerSession()
+      if (session?.user?.id) {
+        await addGeneratedSound(session.user.id, {
+          name: generatedSound.title,
+          fileUrl: url,
+          duration: undefined,
+          size: speechResponse.audio.byteLength,
+          mimeType: speechResponse.contentType,
+          prompt: text.trim(),
+          model: 'elevenlabs-tts'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to save TTS to Generations project:', error)
     }
 
     return {

@@ -10,7 +10,7 @@ import {
   currentTrackAtom,
   playerStateAtom
 } from '@/state/audio-atoms'
-import { downloadAndStoreAudio } from '@/lib/storage/local-vault'
+import { useSessionGenerations } from '@/hooks/data/use-generations'
 import { WELCOME_MESSAGE } from '@/lib/constants/prompts'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -49,6 +49,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
+  const { addToSession } = useSessionGenerations()
 
   const handleGenerate = () => {
     if (!prompt.trim()) {
@@ -94,11 +95,8 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
             payload: result.data 
           })
           
-          try {
-            await downloadAndStoreAudio(result.data)
-          } catch (error) {
-            console.error('Failed to save to vault:', error)
-          }
+          // Add to session for offline access
+          addToSession(result.data)
 
           // Replace loading message with result
           setMessages(prev => prev.map(msg => 
@@ -156,7 +154,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   }
 
   const handleDeleteSound = (soundId: string) => {
-    dispatchPlayerAction({ type: 'REMOVE_FROM_PLAYLIST', payload: soundId })
+    dispatchPlayerAction({ type: 'REMOVE_FROM_QUEUE', payload: soundId })
     toast.success('Sound removed')
   }
 
