@@ -92,7 +92,8 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       url: streamingUrl,
       duration: track.activeVersion.duration || undefined,
       createdAt: track.createdAt,
-      type: 'uploaded'
+      type: 'uploaded',
+      key: track.activeVersion.fileUrl,
     }
 
     dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
