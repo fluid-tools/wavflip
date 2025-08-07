@@ -30,6 +30,7 @@ function useOnlineGenerations() {
       // Transform tracks to GeneratedSound format
       return data.tracks.map((track: any) => ({
         id: track.id,
+        key: track.activeVersion?.fileKey || track.id,
         title: track.name,
         url: track.activeVersion?.presignedUrl || '',
         createdAt: new Date(track.createdAt),
@@ -116,12 +117,10 @@ export function useGenerations() {
       } else if (localTrack.blobUrl) {
         url = localTrack.blobUrl
       }
-    } else if (url.startsWith('https://') && !url.startsWith('blob:')) {
-      // Extract the S3 key from the URL (assuming /<bucket>/<key> or query param)
-      // You may need to adjust this extraction logic based on your S3 URL structure
-      const keyMatch = url.match(/(?:[\w-]+\/)\d+\/([\w.-]+)/)
-      const key = keyMatch ? keyMatch[1] : sound.id
-      url = `/api/audio/${key}`
+    } else if (!url || (url.startsWith('https://') && !url.startsWith('blob:'))) {
+      // Prefer our same-origin streaming proxy using the stored key
+      // @ts-ignore key is set in mapping above in useOnlineGenerations
+      url = `/api/audio/${encodeURIComponent((sound as any).key || sound.id)}`
     }
     
     return {

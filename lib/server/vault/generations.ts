@@ -137,7 +137,7 @@ export async function addGeneratedSound(
     version: 1,
     fileKey: soundData.fileKey,
     size: soundData.size,
-    duration: soundData.duration,
+    duration: soundData.duration ?? null,
     mimeType: soundData.mimeType || 'audio/mpeg',
     createdAt: now,
     metadata: {

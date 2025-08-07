@@ -21,8 +21,8 @@ interface RecentSheetProps {
 }
 
 // Memoized waveform component to prevent re-renders
-const MemoizedWaveform = memo(function MemoizedWaveform({ url }: { url: string }) {
-  return <WaveformPreview url={url} height={24} />
+const MemoizedWaveform = memo(function MemoizedWaveform({ url, trackKey }: { url: string; trackKey?: string }) {
+  return <WaveformPreview url={url} trackKey={trackKey} height={24} />
 })
 
 export function RecentSheet({ onPlaySound }: RecentSheetProps) {
@@ -166,7 +166,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                 
                 {/* Waveform Preview */}
                 <div className="mb-2">
-                  <MemoizedWaveform url={sound.url} />
+                  <MemoizedWaveform url={sound.url} trackKey={(sound as any).key} />
                 </div>
                 
                 {/* Metadata */}
