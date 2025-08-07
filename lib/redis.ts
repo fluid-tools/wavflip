@@ -11,6 +11,7 @@ export const redis = new Redis({
 // Cache key patterns
 export const REDIS_KEYS = {
   presignedImage: (projectId: string) => `presigned:image:${projectId}`,
+  presignedTrack: (trackId: string) => `presigned:track:${trackId}`,
 } as const
 
 // TTL values (in seconds)

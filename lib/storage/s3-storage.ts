@@ -5,6 +5,7 @@ import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { AudioTrack } from '@/types/audio'
 import { redis, REDIS_KEYS, REDIS_TTL } from '@/lib/redis'
+import { nanoid } from 'nanoid'
 
 export interface UploadAudioOptions {
   filename?: string
@@ -16,6 +17,19 @@ export interface UploadImageOptions {
   projectId: string
   file?: File
   contentType?: string
+}
+
+export interface TrackUploadConfig {
+  userId: string
+  projectId: string
+  filename: string
+  contentType: string
+}
+
+export interface GenerationUploadConfig {
+  userId: string
+  filename: string
+  contentType: string
 }
 
 const s3 = new S3Client({ region: process.env.AWS_REGION })
@@ -32,44 +46,101 @@ function getExtensionFromContentType(contentType: string): string {
   return typeMap[contentType] || 'mp3'
 }
 
-export async function uploadAudioToS3(
+/**
+ * Generate presigned POST for track upload
+ * This is the source of truth for track upload logic
+ */
+export async function generateTrackUploadPresignedPost(config: TrackUploadConfig) {
+  const { userId, projectId, filename, contentType } = config
+  
+  // Generate unique track ID and S3 key
+  const trackId = nanoid()
+  const extension = getExtensionFromContentType(contentType)
+  const key = `tracks/${userId}/${projectId}/${trackId}.${extension}`
+
+  // Generate presigned POST URL for direct browser upload
+  const presigned = await createPresignedPost(s3, {
+    Bucket: BUCKET,
+    Key: key,
+    Conditions: [
+      ['content-length-range', 0, 100 * 1024 * 1024], // Max 100MB
+      ['starts-with', '$Content-Type', 'audio/'],
+    ],
+    Fields: {
+      'Content-Type': contentType,
+      'x-amz-meta-user-id': userId,
+      'x-amz-meta-project-id': projectId,
+      'x-amz-meta-track-id': trackId,
+      'x-amz-meta-filename': filename,
+    },
+    Expires: 300, // 5 minutes
+  })
+
+  return {
+    presigned,
+    trackId,
+    key,
+  }
+}
+
+/**
+ * Generate presigned POST for generation upload
+ * This is the source of truth for generation upload logic
+ */
+export async function generateGenerationUploadPresignedPost(config: GenerationUploadConfig) {
+  const { userId, filename, contentType } = config
+  
+  const timestamp = Date.now()
+  const extension = getExtensionFromContentType(contentType)
+  const baseFilename = `${filename}-${timestamp}.${extension}`
+  const key = `generations/${userId}/${baseFilename}`
+
+  const presigned = await createPresignedPost(s3, {
+    Bucket: BUCKET,
+    Key: key,
+    Conditions: [
+      ['content-length-range', 0, 50 * 1024 * 1024], // Max 50MB
+      ['starts-with', '$Content-Type', 'audio/'],
+    ],
+    Fields: {
+      'Content-Type': contentType,
+      'x-amz-meta-user-id': userId,
+      'x-amz-meta-filename': filename,
+    },
+    Expires: 60, // 1 minute
+  })
+
+  return {
+    presigned,
+    key,
+  }
+}
+
+export async function uploadGeneratedAudioToS3(
   audioBuffer: ArrayBuffer,
+  userId: string,
   options: UploadAudioOptions = {}
-): Promise<{ url: string; pathname: string }> {
+): Promise<{ key: string }> {
   const {
     filename = 'generated-audio',
     contentType = 'audio/mpeg',
-    addRandomSuffix = true,
   } = options
-  const timestamp = Date.now()
-  const extension = getExtensionFromContentType(contentType)
-  const finalFilename = addRandomSuffix
-    ? `${filename}-${timestamp}.${extension}`
-    : `${filename}.${extension}`
 
-  // Generate presigned POST
-  const presigned = await createPresignedPost(s3, {
-    Bucket: BUCKET,
-    Key: finalFilename,
-    Conditions: [
-      ['content-length-range', 0, 50 * 1024 * 1024],
-      ['starts-with', '$Content-Type', 'audio/'],
-    ],
-    Fields: { 'Content-Type': contentType },
-    Expires: 60,
+  // Use centralized function
+  const { presigned, key } = await generateGenerationUploadPresignedPost({
+    userId,
+    filename,
+    contentType,
   })
 
   // Upload file to S3 using presigned POST
   const formData = new FormData()
   Object.entries(presigned.fields).forEach(([k, v]) => formData.append(k, v))
-  formData.append('file', new Blob([audioBuffer], { type: contentType }), finalFilename)
+  formData.append('file', new Blob([audioBuffer], { type: contentType }), filename)
   const res = await fetch(presigned.url, { method: 'POST', body: formData })
   if (!res.ok) throw new Error('S3 upload failed')
 
-  return {
-    url: `${presigned.url}/${finalFilename}`,
-    pathname: finalFilename,
-  }
+  return { key }
 }
 
 export async function deleteAudioFromS3(pathname: string): Promise<void> {
@@ -90,6 +161,40 @@ export async function listAudioFilesS3(prefix = 'generated-audio'): Promise<Audi
       metadata: { prompt: 'Unknown', model: 's3' },
     })) ?? []
   )
+}
+
+export async function getPresignedUrl(key: string, cacheKey?: string, expiresIn = 60 * 5): Promise<string> {
+  // If cacheKey is provided, try to get from cache first
+  if (cacheKey) {
+    try {
+      const cached = await redis.get<string>(cacheKey)
+      
+      if (cached) {
+        console.log(`Cache hit for presigned URL: ${cacheKey}`)
+        return cached
+      }
+    } catch (error) {
+      console.error('Redis cache read error:', error)
+      // Continue to generate new URL if cache fails
+    }
+  }
+  
+  // Generate new presigned URL
+  const command = new GetObjectCommand({ Bucket: BUCKET, Key: key })
+  const presignedUrl = await getSignedUrl(s3, command, { expiresIn })
+  
+  // Cache the presigned URL if cacheKey is provided
+  if (cacheKey) {
+    try {
+      await redis.set(cacheKey, presignedUrl, { ex: expiresIn - 60 }) // Cache for slightly less than expiry
+      console.log(`Cached presigned URL for: ${cacheKey}`)
+    } catch (error) {
+      console.error('Redis cache write error:', error)
+      // Continue even if caching fails
+    }
+  }
+  
+  return presignedUrl
 }
 
 export async function getPresignedImageUrl(key: string, projectId?: string, expiresIn = 60 * 5): Promise<string> {

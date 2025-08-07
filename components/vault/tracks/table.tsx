@@ -38,6 +38,7 @@ import { useTracks, type TrackFromProject } from '../../../hooks/data/use-tracks
 import { ProjectPicker } from '../projects/picker'
 import { MobileTracksList } from './mobile-list'
 import type { ProjectWithTracks } from '@/db/schema/vault'
+import { useProjectTrackUrls } from '@/hooks/data/use-track-url'
 
 interface TracksTableProps {
   tracks: TrackFromProject[]
@@ -60,6 +61,9 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
   const [isPlaying] = useAtom(isPlayingAtom)
 
   const { deleteTrack, renameTrack, moveTrack, isDeleting, isRenaming, isMoving } = useTracks({ projectId })
+  
+  // Get presigned URLs for all tracks
+  const { urlMap } = useProjectTrackUrls(tracks)
 
   // Memoize the tracks data to prevent unnecessary re-renders
   const memoizedTracks = useMemo(() => tracks, [tracks])
@@ -70,10 +74,17 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       return
     }
 
+    // Use presigned URL from React Query cache
+    const presignedUrl = urlMap.get(track.id)
+    if (!presignedUrl) {
+      toast.error('Track URL not available yet')
+      return
+    }
+
     const audioTrack: AudioTrack = {
       id: track.id,
       title: track.name,
-      url: track.activeVersion.fileUrl,
+      url: presignedUrl,
       duration: track.activeVersion.duration || undefined,
       createdAt: track.createdAt,
       type: 'uploaded'

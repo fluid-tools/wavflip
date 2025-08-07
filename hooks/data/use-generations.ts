@@ -1,9 +1,8 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getVaultTracks, addTrackToVault, downloadAndStoreAudio, createBlobUrlFromAudioData } from '@/lib/storage/local-vault'
+import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData } from '@/lib/storage/local-vault'
 import type { GeneratedSound } from '@/types/audio'
-import type { LocalVaultTrack } from '@/lib/storage/local-vault'
 
 // Query keys
 export const generationsKeys = {
@@ -32,7 +31,7 @@ export function useOnlineGenerations() {
       return data.tracks.map((track: any) => ({
         id: track.id,
         title: track.name,
-        url: track.activeVersion?.fileUrl || '',
+        url: track.activeVersion?.presignedUrl || track.activeVersion?.fileUrl || '', // Use presigned URL if available
         createdAt: new Date(track.createdAt),
         type: 'generated' as const,
         duration: track.activeVersion?.duration,

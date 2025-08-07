@@ -98,7 +98,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         throw new Error('Failed to get upload URL')
       }
 
-      const { presigned, trackId, url } = await presignedResponse.json()
+      const { presigned, trackId, key } = await presignedResponse.json()
 
       // Upload directly to S3 using presigned POST
       const formData = new FormData()
@@ -116,7 +116,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         throw new Error('Failed to upload file to S3')
       }
 
-      // Create track in database
+      // Create track in database - store S3 key, not URL
       const response = await fetch('/api/tracks', {
         method: 'POST',
         headers: {
@@ -126,7 +126,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           id: trackId,
           name: name.trim(),
           projectId,
-          fileUrl: url,
+          fileUrl: key, // Store the S3 key, not a URL
           fileSize: file.size,
           mimeType: file.type,
           duration: duration || 0
