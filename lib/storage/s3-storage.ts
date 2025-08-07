@@ -286,3 +286,25 @@ export async function uploadProjectImage(
     return { success: false, error: 'Failed to upload image' }
   }
 }
+
+/**
+ * Get S3 audio stream for a given key and optional range header
+ * Returns null if not found or error
+ */
+export async function getS3AudioStream(key: string, range?: string) {
+  if (!key) return null
+  try {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Range: range || undefined,
+    })
+    const s3Res = await s3.send(command)
+    const { Body, ContentLength, ContentRange, ContentType, AcceptRanges } = s3Res
+    return { Body, ContentLength, ContentRange, ContentType, AcceptRanges }
+  } catch (err: any) {
+    if (err?.$metadata?.httpStatusCode === 404 || err?.name === 'NoSuchKey') return null
+    console.error('getS3AudioStream error:', err)
+    return null
+  }
+}

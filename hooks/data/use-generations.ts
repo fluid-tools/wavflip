@@ -116,6 +116,12 @@ export function useGenerations() {
       } else if (localTrack.blobUrl) {
         url = localTrack.blobUrl
       }
+    } else if (url.startsWith('https://') && !url.startsWith('blob:')) {
+      // Extract the S3 key from the URL (assuming /<bucket>/<key> or query param)
+      // You may need to adjust this extraction logic based on your S3 URL structure
+      const keyMatch = url.match(/(?:[\w-]+\/)\d+\/([\w.-]+)/)
+      const key = keyMatch ? keyMatch[1] : sound.id
+      url = `/api/audio/${key}`
     }
     
     return {

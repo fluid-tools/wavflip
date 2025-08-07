@@ -74,27 +74,22 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       return
     }
 
-    // Use presigned URL from React Query cache
-    const presignedUrl = urlMap.get(track.id)
-    if (!presignedUrl) {
-      toast.error('Track URL not available yet')
+    // For streaming, we need to use the S3 key to construct the streaming URL
+    // The activeVersion.fileUrl contains the S3 key (not a full URL)
+    const s3Key = track.activeVersion.fileUrl
+    if (!s3Key) {
+      toast.error('Track file not available')
       return
     }
 
-    // Use /api/audio/[key] proxy for streaming if not a blob/local url
-    let audioUrl = presignedUrl
-    if (presignedUrl.startsWith('https://') && !presignedUrl.startsWith('blob:')) {
-      // Extract the S3 key from the URL (assuming /<bucket>/<key> or query param)
-      // You may need to adjust this extraction logic based on your S3 URL structure
-      const keyMatch = presignedUrl.match(/(?:[\w-]+\/)\d+\/([\w.-]+)/)
-      const key = keyMatch ? keyMatch[1] : track.id
-      audioUrl = `/api/audio/${key}`
-    }
+    // Always use the /api/audio/[key] proxy route for proper HTTP range request streaming
+    // This allows progressive download instead of waiting for the entire file
+    const streamingUrl = `/api/audio/${encodeURIComponent(s3Key)}`
 
     const audioTrack: AudioTrack = {
       id: track.id,
       title: track.name,
-      url: audioUrl,
+      url: streamingUrl,
       duration: track.activeVersion.duration || undefined,
       createdAt: track.createdAt,
       type: 'uploaded'

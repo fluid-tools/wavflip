@@ -142,14 +142,19 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   }
 
   const handlePlaySound = (sound: GeneratedSound) => {
-    console.log('Playing sound:', sound)
-    // Check if this is the current track and it's playing
+    // Route through /api/audio/[key] if not offline/local
+    let url = sound.url
+    if (url.startsWith('https://') && !url.startsWith('blob:')) {
+      const keyMatch = url.match(/(?:[\w-]+\/)\d+\/([\w.-]+)/)
+      const key = keyMatch ? keyMatch[1] : sound.id
+      url = `/api/audio/${key}`
+    }
+    // Play the track with the correct url
+    const track = { ...sound, url }
     if (currentTrack?.id === sound.id && playerState === 'playing') {
-      // If it's the same track and playing, pause it
       dispatchPlayerAction({ type: 'PAUSE' })
     } else {
-      // Otherwise, play the track
-      dispatchPlayerAction({ type: 'PLAY_TRACK', payload: sound })
+      dispatchPlayerAction({ type: 'PLAY_TRACK', payload: track })
     }
   }
 
