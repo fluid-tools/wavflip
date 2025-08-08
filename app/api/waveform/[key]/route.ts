@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getS3AudioStream } from '@/lib/storage/s3-storage'
 import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
-import { Redis } from '@upstash/redis'
+import { redis, REDIS_KEYS, REDIS_TTL } from '@/lib/redis'
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
+// use shared redis client
 
 export async function GET(
   req: NextRequest,
@@ -19,9 +16,10 @@ export async function GET(
     }
 
     // Check cache first
-    const cacheKey = `waveform:${key}`
+    const cacheKey = REDIS_KEYS.waveform(key)
     const cached = await redis.get(cacheKey)
     if (cached) {
+      console.log('cache hit', cacheKey)
       return NextResponse.json(cached)
     }
 
@@ -57,7 +55,7 @@ export async function GET(
       key
     }
     
-    await redis.setex(cacheKey, 3600, response)
+    await redis.setex(cacheKey, REDIS_TTL.waveform, response)
 
     return NextResponse.json(response)
   } catch (error) {

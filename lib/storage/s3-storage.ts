@@ -154,6 +154,7 @@ export async function listAudioFilesS3(prefix = 'generated-audio'): Promise<Audi
   return (
     Contents?.map((obj) => ({
       id: obj.Key!,
+      key: obj.Key!,
       title: obj.Key!.split('/').pop()!,
       url: `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${obj.Key}`,
       createdAt: obj.LastModified ?? new Date(),

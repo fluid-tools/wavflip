@@ -24,6 +24,7 @@ import {
   playerControlsAtom,
   autoPlayAtom
 } from '@/state/audio-atoms'
+import { waveformCacheAtom } from '@/state/audio-atoms'
 import { downloadAndStoreAudio } from '@/lib/storage/local-vault'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
@@ -47,6 +48,7 @@ export default function PlayerDock() {
   const [muted] = useAtom(mutedAtom)
   const [autoPlay, setAutoPlay] = useAtom(autoPlayAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
+  const [wfCache, setWfCache] = useAtom(waveformCacheAtom)
   
   const isPlaying = playerState === 'playing'
   const isMobile = useIsMobile()
@@ -91,13 +93,19 @@ export default function PlayerDock() {
             console.warn('Failed to decode offline audio:', e)
           }
         } else if (currentTrack.key) {
-          // Online: fetch placeholder peaks
+          // Online: try to reuse already-fetched preview peaks via a global cache first
+          const cached = wfCache[currentTrack.key]
+          if (cached && cached.length) {
+            monoPeaks = cached
+          }
+          // If no cached peaks, fetch placeholder
           try {
             const resp = await fetch(`/api/waveform/${encodeURIComponent(currentTrack.key)}`)
             if (resp.ok) {
               const data = await resp.json()
               monoPeaks = data.data.peaks as number[]
               knownDuration = data.data.duration as number
+              setWfCache({ ...wfCache, [currentTrack.key]: monoPeaks })
             }
           } catch (e) {
             console.warn('Failed to fetch waveform data:', e)

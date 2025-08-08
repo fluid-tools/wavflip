@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import { cn } from '@/lib/utils'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
+import { useAtom } from 'jotai'
+import { waveformCacheAtom } from '@/state/audio-atoms'
 
 interface WaveformPreviewProps {
   url: string
@@ -26,6 +28,7 @@ export function WaveformPreview({
 }: WaveformPreviewProps) {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
+  const [wfCache, setWfCache] = useAtom(waveformCacheAtom)
 
   useEffect(() => {
     if (!waveformRef.current) return
@@ -71,6 +74,10 @@ export function WaveformPreview({
         }
 
         if (!monoPeaks && trackKey) {
+          // try atom cache
+          if (wfCache[trackKey]) {
+            monoPeaks = wfCache[trackKey]
+          }
           // Fallback to placeholder when streaming
           try {
             const waveformResponse = await fetch(`/api/waveform/${encodeURIComponent(trackKey)}`)
@@ -78,6 +85,7 @@ export function WaveformPreview({
               const waveformData = await waveformResponse.json()
               monoPeaks = waveformData.data.peaks as number[]
               duration = waveformData.data.duration as number
+              setWfCache({ ...wfCache, [trackKey]: monoPeaks })
             }
           } catch (error) {
             console.warn('Failed to load pre-decoded waveform:', error)
@@ -104,29 +112,14 @@ export function WaveformPreview({
           splitChannels: undefined,
           peaks: monoPeaks ? [monoPeaks] : undefined,
           duration,
-          url,
-          // Custom renderer to ensure a single-lane (top) waveform consistently
-          renderFunction: (p, ctx) => {
-            const channel = Array.isArray(p[0]) ? (p[0] as number[]) : (p as unknown as number[])
-            const { width, height } = ctx.canvas
-            ctx.clearRect(0, 0, width, height)
-            const bars = Math.min(channel.length, width)
-            const step = channel.length / bars
-            const barW = 2
-            const gap = 1
-            let x = 0
-            for (let i = 0; i < bars; i++) {
-              const v = Math.max(0, Math.min(1, channel[Math.floor(i * step)] || 0))
-              const h = v * height
-              ctx.fillStyle = 'rgb(148 163 184)'
-              ctx.fillRect(x, height - h, barW, h)
-              x += barW + gap
-              if (x > width) break
-            }
-          }
+          url
         })
 
         wavesurferRef.current = wavesurfer
+
+        if (monoPeaks && trackKey) {
+          setWfCache({ ...wfCache, [trackKey]: monoPeaks })
+        }
 
         if (onReady) {
           wavesurfer.on('ready', () => onReady(wavesurfer))
