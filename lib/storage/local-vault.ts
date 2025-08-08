@@ -46,7 +46,7 @@ export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer
   try {
     // Persist audioData; do NOT persist blobUrl (ephemeral)
     const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl: undefined, mimeType }
-    const vaultId = (track as any).key ?? track.id
+    const vaultId = (track as unknown as { key?: string; id: string }).key ?? track.id
     
     // Store the track
     await set(`${VAULT_KEY_PREFIX}${vaultId}`, vaultTrack)
