@@ -1,5 +1,6 @@
 export interface AudioTrack {
   id: string
+  // S3 object key for streaming and caching
   key: string
   title: string
   url: string
