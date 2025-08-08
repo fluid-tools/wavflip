@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon } from 'lucide-react'
+import { Edit2, Trash2, FolderOpen, Upload, Image as ImageIcon, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { useIsTablet } from '@/hooks/use-mobile'
@@ -57,6 +57,15 @@ export function ProjectCard({
   // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
   // Use trackCount from props if provided, otherwise try to get from project if it has trackCount
   const displayTrackCount = trackCount ?? ('trackCount' in project ? project.trackCount : 0)
+  
+  // Check if this is the special Generations project
+  const isGenerationsProject = project.id === 'system-generations'
+  const isSystemProject = Boolean(
+    project.metadata && 
+    typeof project.metadata === 'object' && 
+    'isSystem' in project.metadata && 
+    (project.metadata as Record<string, unknown>).isSystem === true
+  )
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showMoveDialog, setShowMoveDialog] = useState(false)
@@ -147,7 +156,12 @@ export function ProjectCard({
           >
             {/* Image/Preview Section - No padding */}
             <div className="relative w-full h-40 overflow-hidden">
-              {imageSrc ? (
+              {isGenerationsProject ? (
+                // Special design for Generations project
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                  <Sparkles className="h-12 w-12 text-white" />
+                </div>
+              ) : imageSrc ? (
                 <Image
                   src={imageSrc}
                   alt={project.name}
@@ -194,7 +208,7 @@ export function ProjectCard({
             e.preventDefault()
             triggerImageUpload()
           }}
-          disabled={isUploadingImage}
+          disabled={isUploadingImage || isSystemProject}
         >
           {isUploadingImage ? (
             <Upload className="h-4 w-4 animate-spin" />
@@ -210,6 +224,7 @@ export function ProjectCard({
             setNewName(project.name)
             setShowRenameDialog(true)
           }}
+          disabled={isSystemProject}
         >
           <Edit2 className="h-4 w-4" />
           Rename
@@ -220,6 +235,7 @@ export function ProjectCard({
             setSelectedDestinationId(folderId ?? null)
             setShowMoveDialog(true)
           }}
+          disabled={isSystemProject}
         >
           <FolderOpen className="h-4 w-4" />
           Move to Folder
@@ -231,6 +247,7 @@ export function ProjectCard({
             e.preventDefault()
             setShowDeleteDialog(true)
           }}
+          disabled={isSystemProject}
         >
           <Trash2 className="h-4 w-4" />
           Delete
@@ -249,7 +266,12 @@ export function ProjectCard({
       >
         {/* Image/Preview Section - No padding */}
         <div className="relative w-full h-40 overflow-hidden">
-          {imageSrc ? (
+          {isGenerationsProject ? (
+            // Special design for Generations project
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <Sparkles className="h-12 w-12 text-white" />
+            </div>
+          ) : imageSrc ? (
             <Image
               src={imageSrc}
               alt={project.name}

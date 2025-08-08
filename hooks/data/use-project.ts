@@ -2,11 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { upload } from '@vercel/blob/client'
 import type { ProjectWithTracks } from '@/db/schema/vault'
 import type { ProjectImageResponse } from '@/types/project'
 import { nanoid } from 'nanoid'
 import { vaultKeys } from './use-vault'
+import { generateWaveformData } from '@/lib/audio/waveform-generator'
 
 interface UseProjectProps {
   projectId: string
@@ -84,22 +84,50 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
   // Upload track mutation with optimistic updates
   const uploadTrackMutation = useMutation({
     mutationFn: async ({ name, file, duration }: UploadTrackData) => {
-      // Upload to Vercel Blob
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/vault/upload',
+      // Get presigned URL from server
+      const presignedResponse = await fetch('/api/tracks/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          projectId
+        })
       })
 
-      // Create track in database
+      if (!presignedResponse.ok) {
+        throw new Error('Failed to get upload URL')
+      }
+
+      const { presigned, trackId, key } = await presignedResponse.json()
+
+      // Upload directly to S3 using presigned POST
+      const formData = new FormData()
+      Object.entries(presigned.fields).forEach(([k, v]) => {
+        formData.append(k, v as string)
+      })
+      formData.append('file', file)
+
+      const uploadResponse = await fetch(presigned.url, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file to S3')
+      }
+
+      // Create track in database - store S3 key
       const response = await fetch('/api/tracks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          id: trackId,
           name: name.trim(),
           projectId,
-          fileUrl: blob.url,
+          fileKey: key,
           fileSize: file.size,
           mimeType: file.type,
           duration: duration || 0
@@ -111,6 +139,26 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         throw new Error(error)
       }
 
+      // Fire-and-forget: compute real peaks using shared generator and POST to Redis
+      ;(async () => {
+        try {
+          const arrayBuf = await file.arrayBuffer()
+          const wf = await generateWaveformData(arrayBuf)
+          await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              peaks: wf.peaks,
+              duration: wf.duration,
+              sampleRate: wf.sampleRate,
+              channels: wf.channels,
+            })
+          })
+        } catch (err) {
+          console.warn('Failed to persist real waveform for upload:', err)
+        }
+      })()
+
       return response.json()
     },
     onMutate: async ({ name, file, duration }) => {
@@ -121,6 +169,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       const previousProject = queryClient.getQueryData<ProjectWithTracks>(queryKey)
 
       // Create optimistic track
+      const tempBlobUrl = URL.createObjectURL(file)
       const optimisticTrack = {
         id: `temp-${nanoid()}`, // Temporary ID
         name: name.trim(),
@@ -136,23 +185,23 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
           id: `temp-version-${nanoid()}`,
           trackId: `temp-${nanoid()}`,
           version: 1,
-          fileUrl: URL.createObjectURL(file), // Temporary blob URL for preview
+          fileKey: `blob:${file.name}`,
           size: file.size,
           duration: duration || 0,
           mimeType: file.type,
           createdAt: new Date(),
-          metadata: null,
+          metadata: { tempBlobUrl },
         },
         versions: [{
           id: `temp-version-${nanoid()}`,
           trackId: `temp-${nanoid()}`,
           version: 1,
-          fileUrl: URL.createObjectURL(file),
+          fileKey: `blob:${file.name}`,
           size: file.size,
           duration: duration || 0,
           mimeType: file.type,
           createdAt: new Date(),
-          metadata: null,
+          metadata: { tempBlobUrl },
         }],
         project: previousProject!
       }
@@ -165,7 +214,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         })
       }
 
-      return { previousProject, optimisticTrack }
+      return { previousProject, optimisticTrack, tempBlobUrl }
     },
     onError: (error, variables, context) => {
       // Rollback on error
@@ -180,12 +229,9 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       queryClient.invalidateQueries({ queryKey })
     },
     onSettled: (data, error, variables, context) => {
-      // Clean up optimistic blob URLs from track upload
-      if (context?.optimisticTrack?.activeVersion?.fileUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(context.optimisticTrack.activeVersion.fileUrl)
-      }
-      if (context?.optimisticTrack?.versions?.[0]?.fileUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(context.optimisticTrack.versions[0].fileUrl)
+      // Clean up optimistic blob URL from track upload
+      if (context?.tempBlobUrl) {
+        URL.revokeObjectURL(context.tempBlobUrl)
       }
     },
   })

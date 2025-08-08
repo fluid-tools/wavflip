@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAtom } from 'jotai'
 import WaveSurfer from 'wavesurfer.js'
+import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { 
@@ -18,14 +19,21 @@ import {
   currentTimeAtom,
   durationAtom,
   playerStateAtom,
+    isBufferingAtom,
+    isLoadingAtom,
   volumeAtom,
   mutedAtom,
   playerControlsAtom,
   autoPlayAtom
 } from '@/state/audio-atoms'
-import { downloadAndStoreAudio } from '@/lib/storage/local-vault'
+import { waveformCacheAtom } from '@/state/audio-atoms'
+import { downloadAndStoreAudio, getTrackFromVault } from '@/lib/storage/local-vault'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
+
+interface MutableHTMLAudioElement extends HTMLAudioElement {
+  _cleanupListeners?: () => void
+}
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60)
@@ -37,6 +45,7 @@ export default function PlayerDock() {
   const desktopWaveformRef = useRef<HTMLDivElement>(null)
   const mobileWaveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
+  const mediaRef = useRef<HTMLAudioElement | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [currentTime] = useAtom(currentTimeAtom)
@@ -45,7 +54,10 @@ export default function PlayerDock() {
   const [volume] = useAtom(volumeAtom)
   const [muted] = useAtom(mutedAtom)
   const [autoPlay, setAutoPlay] = useAtom(autoPlayAtom)
+  const [isBuffering, setIsBuffering] = useAtom(isBufferingAtom)
+  const [isLoading] = useAtom(isLoadingAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
+  const [wfCache, setWfCache] = useAtom(waveformCacheAtom)
   
   const isPlaying = playerState === 'playing'
   const isMobile = useIsMobile()
@@ -70,68 +82,163 @@ export default function PlayerDock() {
       wavesurferRef.current = null
     }
 
-    // Create new instance immediately without setTimeout to prevent race conditions
-    const wavesurfer = WaveSurfer.create({
-      container: container,
-      height: isMobile ? 48 : 60,
-      waveColor: 'rgb(64 64 64)',
-      progressColor: 'rgb(255 255 255)',
-      cursorColor: 'rgb(255 255 255)',
-      cursorWidth: 3,
-      barWidth: 3,
-      barGap: 2,
-      barRadius: 3,
-      fillParent: true,
-      interact: true,
-      dragToSeek: true,
-      normalize: true,
-      backend: 'WebAudio',
-      url: currentTrack.url
-    })
+    // Load waveform data and initialize WaveSurfer with correct backend (streaming vs offline)
+    const loadWaveform = async () => {
+      try {
+        setIsBuffering(true)
+        let monoPeaks: number[] | undefined
+        let knownDuration: number | undefined
 
-    wavesurferRef.current = wavesurfer
+        // Prefer local vault blob if available
+        let playbackUrl = currentTrack.url
+        if (!playbackUrl.startsWith('blob:')) {
+          try {
+            const local = await getTrackFromVault(currentTrack.id)
+            if (local?.blobUrl) playbackUrl = local.blobUrl
+          } catch {}
+        }
 
-    // Set up event listeners
-    wavesurfer.on('ready', () => {
-      const trackDuration = wavesurfer.getDuration()
-      dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration })
-      
-      // Restore playback position
-      if (currentProgress > 0) {
-        wavesurfer.seekTo(currentProgress / trackDuration)
+        const isBlob = playbackUrl.startsWith('blob:')
+
+        if (isBlob) {
+          // Offline: let WebAudio decode; do not fetch /api/waveform
+          // We keep peaks optional here; WS will decode & render without peaks.
+        } else if (currentTrack.key) {
+          // Online: try to reuse already-fetched preview peaks via a global cache first
+          const cached = wfCache[currentTrack.key]
+          if (cached && cached.length) {
+            monoPeaks = cached
+          }
+          // If no cached peaks, fetch placeholder
+          if (!monoPeaks) {
+            try {
+              const resp = await fetch(`/api/waveform/${encodeURIComponent(currentTrack.key)}`)
+              if (resp.ok) {
+                const data = await resp.json()
+                monoPeaks = data.data.peaks as number[]
+                knownDuration = data.data.duration as number
+                setWfCache({ ...wfCache, [currentTrack.key]: monoPeaks })
+              }
+            } catch (e) {
+              console.warn('Failed to fetch waveform data:', e)
+            }
+          }
+        }
+
+        if (!monoPeaks && !isBlob) {
+          const placeholderDuration = knownDuration ?? currentTrack.duration ?? 30
+          monoPeaks = generatePlaceholderWaveform(placeholderDuration).peaks
+        }
+
+        if (knownDuration) {
+          dispatchPlayerAction({ type: 'SET_DURATION', payload: knownDuration })
+        }
+
+        // Backend + media configuration
+        const backend: 'WebAudio' | 'MediaElement' = isBlob ? 'WebAudio' : 'MediaElement'
+        let media: HTMLAudioElement | undefined
+
+        if (!isBlob) {
+          media = document.createElement('audio') as HTMLAudioElement
+          media.preload = 'metadata'
+          media.crossOrigin = 'anonymous'
+          media.src = playbackUrl
+          media.load()
+          // Buffering-related events
+          const handleWaiting = () => setIsBuffering(true)
+          const handleStalled = () => setIsBuffering(true)
+          const handleCanPlay = () => setIsBuffering(false)
+          const handlePlaying = () => setIsBuffering(false)
+          const handleEnded = () => {
+            setIsBuffering(false);
+            dispatchPlayerAction({ type: 'NEXT' });
+          }
+          media.addEventListener('waiting', handleWaiting)
+          media.addEventListener('stalled', handleStalled)
+          media.addEventListener('canplay', handleCanPlay)
+          media.addEventListener('playing', handlePlaying)
+          media.addEventListener('ended', handleEnded)
+          media.addEventListener('loadedmetadata', () => {
+            const metaDuration = media!.duration
+            if (metaDuration && !knownDuration) {
+              dispatchPlayerAction({ type: 'SET_DURATION', payload: metaDuration })
+            }
+          })
+          // Cleanup on destroy of WS
+          const cleanupMediaListeners = () => {
+            media?.removeEventListener('waiting', handleWaiting)
+            media?.removeEventListener('stalled', handleStalled)
+            media?.removeEventListener('canplay', handleCanPlay)
+            media?.removeEventListener('playing', handlePlaying)
+            media?.removeEventListener('ended', handleEnded)
+          }
+          // Attach to instance for later cleanup
+          ;(media as MutableHTMLAudioElement)._cleanupListeners = cleanupMediaListeners
+          mediaRef.current = media
+        }
+
+        const wavesurfer = WaveSurfer.create({
+          container,
+          height: isMobile ? 48 : 60,
+          waveColor: monoPeaks ? 'rgb(64 64 64)' : 'rgb(200 200 200)',
+          progressColor: 'rgb(255 255 255)',
+          cursorColor: 'rgb(255 255 255)',
+          cursorWidth: 3,
+          barWidth: 3,
+          barGap: 2,
+          barRadius: 3,
+          fillParent: true,
+          interact: true,
+          dragToSeek: true,
+          normalize: true,
+          backend,
+          splitChannels: undefined,
+          peaks: monoPeaks ? [monoPeaks] : undefined,
+          duration: knownDuration,
+          media,
+          // For blob + WebAudio we will pass url to let WS decode/play
+          url: isBlob ? playbackUrl : undefined,
+        })
+        wavesurferRef.current = wavesurfer;
+        // Set up event listeners
+        wavesurfer.on('ready', () => {
+          const trackDuration = wavesurfer.getDuration();
+          dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration });
+          setIsBuffering(false)
+          if (currentProgress > 0) {
+            wavesurfer.seekTo(currentProgress / trackDuration);
+          }
+          if (wasPlaying) {
+            wavesurfer.play();
+          } else if (autoPlay) {
+            setAutoPlay(false);
+            wavesurfer.play();
+          }
+        });
+        wavesurfer.on('timeupdate', (time: number) => {
+          dispatchPlayerAction({ type: 'SET_TIME', payload: time });
+        });
+        wavesurfer.on('play', () => {
+          setIsBuffering(false)
+          dispatchPlayerAction({ type: 'PLAY' });
+        });
+        wavesurfer.on('pause', () => {
+          dispatchPlayerAction({ type: 'PAUSE' });
+        });
+        wavesurfer.on('finish', () => {
+          setIsBuffering(false)
+          dispatchPlayerAction({ type: 'STOP' });
+        });
+        wavesurfer.on('error', (error: unknown) => {
+          console.error('WaveSurfer error:', error);
+        });
+        // Set initial volume
+        wavesurfer.setVolume(muted ? 0 : volume);
+      } catch (e) {
+        console.error('Error initializing WaveSurfer:', e);
       }
-      
-      // Resume playback if it was playing
-      if (wasPlaying) {
-        wavesurfer.play()
-      } else if (autoPlay) {
-        setAutoPlay(false)
-        wavesurfer.play()
-      }
-    })
-
-    wavesurfer.on('timeupdate', (time) => {
-      dispatchPlayerAction({ type: 'SET_TIME', payload: time })
-    })
-
-    wavesurfer.on('play', () => {
-      dispatchPlayerAction({ type: 'PLAY' })
-    })
-
-    wavesurfer.on('pause', () => {
-      dispatchPlayerAction({ type: 'PAUSE' })
-    })
-
-    wavesurfer.on('finish', () => {
-      dispatchPlayerAction({ type: 'STOP' })
-    })
-
-    wavesurfer.on('error', (error) => {
-      console.error('WaveSurfer error:', error)
-    })
-
-    // Set initial volume
-    wavesurfer.setVolume(muted ? 0 : volume)
+    };
+    loadWaveform();
 
     return () => {
       if (wavesurferRef.current) {
@@ -143,10 +250,18 @@ export default function PlayerDock() {
         wavesurferRef.current.destroy()
         wavesurferRef.current = null
       }
+      // Ensure media event listeners are cleaned up
+      try {
+        const m = mediaRef.current as MutableHTMLAudioElement | null
+        if (m && typeof m._cleanupListeners === 'function') {
+          m._cleanupListeners()
+        }
+        mediaRef.current = null
+      } catch {}
+      setIsBuffering(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack, dispatchPlayerAction, isMobile])
-
 
 
   // Handle auto-play separately to avoid race conditions
@@ -256,12 +371,19 @@ export default function PlayerDock() {
             )}
           </Button>
 
-          {/* Waveform - Takes remaining space */}
+          {/* Waveform - Takes remaining space with buffering overlay */}
           <div className="flex-1 min-w-0 px-4">
-            <div 
-              ref={desktopWaveformRef}
-              className="w-full h-[60px] rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
-            />
+            <div className="relative">
+              <div 
+                ref={desktopWaveformRef}
+                className="w-full h-[60px] rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+              />
+              {(isLoading || isBuffering) && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-neutral-900/30">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Desktop Controls */}
@@ -389,10 +511,17 @@ export default function PlayerDock() {
 
         {/* Waveform */}
         <div className="px-4 pb-3">
-          <div 
-            ref={mobileWaveformRef}
-            className="w-full h-12 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
-          />
+          <div className="relative">
+            <div 
+              ref={mobileWaveformRef}
+              className="w-full h-12 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+            />
+            {(isLoading || isBuffering) && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-neutral-900/30">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

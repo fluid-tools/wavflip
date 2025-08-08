@@ -87,7 +87,7 @@ export const trackVersion = pgTable("track_version", {
     .notNull()
     .references(() => track.id, { onDelete: "cascade" }),
   version: integer("version").notNull(), // Auto-increment per track
-  fileUrl: text("file_url").notNull(), // Points to storage (Vercel Blob, S3, etc.)
+  fileKey: text("file_key").notNull(), // S3/R2 key (not a URL)
   size: bigint("size", { mode: "number" }), // File size in bytes
   duration: real("duration"), // Duration in seconds
   mimeType: text("mime_type"), // audio/mpeg, audio/wav, etc.

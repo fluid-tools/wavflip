@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useAtom } from 'jotai'
 import { Play, Shuffle, MoreHorizontal, Share, Upload, Image as ImageIcon, Edit2, Trash2, Copy, ExternalLink, Archive } from 'lucide-react'
+import { useProjectTrackUrls } from '@/hooks/data/use-track-url'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -45,6 +46,9 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         projectId
     })
 
+    // Get presigned URLs for all tracks
+    const { urlMap } = useProjectTrackUrls(project?.tracks)
+
     // Get available projects for move operations
     const { data: folders = [] } = useRootFolders()
     const { data: vaultProjects = [] } = useVaultProjects()
@@ -85,22 +89,34 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     const handlePlayAll = () => {
         if (!project.tracks || project.tracks.length === 0) return
 
-        const firstTrack = project.tracks[0]
-        if (!firstTrack.activeVersion) {
-            toast.error('No audio available')
+        // Convert tracks to AudioTrack format with presigned URLs
+        const audioTracks: AudioTrack[] = project.tracks
+            .filter(track => track.activeVersion && urlMap.get(track.id))
+            .map(track => ({
+                id: track.id,
+                key: track.activeVersion!.fileKey,
+                title: track.name,
+                url: urlMap.get(track.id)!,
+                duration: track.activeVersion?.duration || undefined,
+                createdAt: track.createdAt,
+                type: 'uploaded' as const
+            }))
+
+        if (audioTracks.length === 0) {
+            toast.error('No tracks available to play')
             return
         }
 
-        const audioTrack: AudioTrack = {
-            id: firstTrack.id,
-            title: firstTrack.name,
-            url: firstTrack.activeVersion.fileUrl,
-            duration: firstTrack.activeVersion.duration || undefined,
-            createdAt: firstTrack.createdAt,
-            type: 'uploaded'
-        }
-
-        dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
+        // Play the entire project as a queue
+        dispatchPlayerAction({ 
+            type: 'PLAY_PROJECT', 
+            payload: {
+                tracks: audioTracks,
+                startIndex: 0,
+                projectId: project.id,
+                projectName: project.name
+            }
+        })
     }
 
     const handleShuffle = () => {
@@ -109,25 +125,37 @@ export function ProjectView({ projectId }: ProjectViewProps) {
             return
         }
 
-        // Create shuffled copy of tracks
-        const shuffledTracks = [...project.tracks].sort(() => Math.random() - 0.5)
-        const firstTrack = shuffledTracks[0]
+        // Convert tracks to AudioTrack format with presigned URLs
+        const audioTracks: AudioTrack[] = project.tracks
+            .filter(track => track.activeVersion && urlMap.get(track.id))
+            .map(track => ({
+                id: track.id,
+                key: track.activeVersion!.fileKey,
+                title: track.name,
+                url: urlMap.get(track.id)!,
+                duration: track.activeVersion?.duration || undefined,
+                createdAt: track.createdAt,
+                type: 'uploaded' as const
+            }))
 
-        if (!firstTrack.activeVersion) {
-            toast.error('No audio available')
+        if (audioTracks.length === 0) {
+            toast.error('No tracks available to shuffle')
             return
         }
 
-        const audioTrack: AudioTrack = {
-            id: firstTrack.id,
-            title: firstTrack.name,
-            url: firstTrack.activeVersion.fileUrl,
-            duration: firstTrack.activeVersion.duration || undefined,
-            createdAt: firstTrack.createdAt,
-            type: 'uploaded'
-        }
-
-        dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
+        // Play project with shuffle enabled
+        dispatchPlayerAction({ 
+            type: 'PLAY_PROJECT', 
+            payload: {
+                tracks: audioTracks,
+                startIndex: 0,
+                projectId: project.id,
+                projectName: project.name
+            }
+        })
+        
+        // Enable shuffle mode
+        dispatchPlayerAction({ type: 'TOGGLE_SHUFFLE' })
         toast.success('Playing in shuffle mode')
     }
 

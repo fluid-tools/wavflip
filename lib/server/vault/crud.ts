@@ -114,7 +114,14 @@ export async function getVaultProjects(userId: string): Promise<ProjectWithTrack
     .groupBy(project.id)
     .orderBy(project.order, project.createdAt)
   
-  return projects.map(p => ({ ...p, tracks: [] }))
+  // Sort to ensure Generations project appears first if it exists
+  const sortedProjects = projects.sort((a, b) => {
+    if (a.id === 'system-generations') return -1
+    if (b.id === 'system-generations') return 1
+    return a.order - b.order || a.createdAt.getTime() - b.createdAt.getTime()
+  })
+  
+  return sortedProjects.map(p => ({ ...p, tracks: [] }))
 }
 
 export async function getProjectWithTracks(projectId: string, userId: string): Promise<ProjectWithTracks | null> {
@@ -330,11 +337,11 @@ export async function createTrack(data: Omit<NewTrack, 'id' | 'createdAt' | 'upd
 
   // Create initial version if file data is provided
   if (data.activeVersionId) {
-    const initialVersion: NewTrackVersion = {
+      const initialVersion: NewTrackVersion = {
       id: data.activeVersionId,
       trackId: createdTrack.id,
       version: 1,
-      fileUrl: '', // Will be set by the caller
+        fileKey: '', // Will be set by the caller
       size: 0,     // Will be set by the caller  
       duration: 0, // Will be set by the caller
       mimeType: '', // Will be set by the caller

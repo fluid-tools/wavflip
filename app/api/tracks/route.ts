@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { createTrack, createTrackVersion, deleteTrack, renameTrack, setActiveVersion } from '@/lib/server/vault'
+import { bustPresignedTrackCache } from '@/lib/storage/s3-storage'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
-    const { name, projectId, fileUrl, fileSize, mimeType, duration } = await request.json()
+    const { name, projectId, fileKey, fileSize, mimeType, duration } = await request.json()
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json({ error: 'Track name is required' }, { status: 400 })
@@ -15,8 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
     }
 
-    if (!fileUrl) {
-      return NextResponse.json({ error: 'File URL is required' }, { status: 400 })
+    if (!fileKey) {
+      return NextResponse.json({ error: 'File key is required' }, { status: 400 })
     }
 
     // Create track
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Create first version with the uploaded file
     const version = await createTrackVersion({
       trackId: track.id,
-      fileUrl,
+      fileKey,
       size: parseInt(fileSize) || 0,
       duration: parseFloat(duration) || 0,
       mimeType: mimeType || 'audio/mpeg',
@@ -60,6 +61,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteTrack(trackId, session.user.id)
+    
+    // Bust the cache for this track
+    await bustPresignedTrackCache(trackId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -2,9 +2,8 @@
 
 import { usePathname } from 'next/navigation'
 
-import { RecentSheet } from "../gen-ai/recent-sheet"
 import { useAtom } from 'jotai'
-import { generatedSoundsAtom, currentTrackAtom, playerStateAtom, playerControlsAtom } from '@/state/audio-atoms'
+import { currentTrackAtom, playerStateAtom, playerControlsAtom } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
@@ -22,9 +21,15 @@ const VaultActions = dynamic(() => import("../vault/vault-actions").then(mod => 
   ssr: false
 })
 
+const RecentSheet = dynamic(() => import("../gen-ai/recent-sheet").then(mod => ({ default: mod.RecentSheet })), {
+  ssr: false,
+  loading: () => (
+    <div className="h-8 w-16 bg-muted rounded animate-pulse" />
+  )
+})
+
 export function Navbar() {
   const pathname = usePathname()
-  const [generatedSounds] = useAtom(generatedSoundsAtom)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
@@ -43,9 +48,8 @@ export function Navbar() {
     }
   }
 
-  const recentsButton = isStudioPage && generatedSounds.length > 0 && (
+  const recentsButton = isStudioPage && (
     <RecentSheet
-      generatedSounds={generatedSounds}
       onPlaySound={handlePlaySound}
     />
   )

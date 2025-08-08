@@ -1,5 +1,7 @@
 export interface AudioTrack {
   id: string
+  // S3 object key for streaming and caching
+  key: string
   title: string
   url: string
   duration?: number
@@ -18,8 +20,9 @@ export interface GeneratedSound extends AudioTrack {
   metadata: {
     prompt: string
     model: string
-    generationTime: number
+    generationTime?: number
   }
+  isOffline?: boolean // Added to track offline availability
 }
 
 export type PlayerState = 'idle' | 'loading' | 'playing' | 'paused' | 'error'

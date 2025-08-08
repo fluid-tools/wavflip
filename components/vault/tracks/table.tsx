@@ -38,6 +38,7 @@ import { useTracks, type TrackFromProject } from '../../../hooks/data/use-tracks
 import { ProjectPicker } from '../projects/picker'
 import { MobileTracksList } from './mobile-list'
 import type { ProjectWithTracks } from '@/db/schema/vault'
+import { useProjectTrackUrls } from '@/hooks/data/use-track-url'
 
 interface TracksTableProps {
   tracks: TrackFromProject[]
@@ -60,6 +61,9 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
   const [isPlaying] = useAtom(isPlayingAtom)
 
   const { deleteTrack, renameTrack, moveTrack, isDeleting, isRenaming, isMoving } = useTracks({ projectId })
+  
+  // Get presigned URLs for all tracks
+  useProjectTrackUrls(tracks)
 
   // Memoize the tracks data to prevent unnecessary re-renders
   const memoizedTracks = useMemo(() => tracks, [tracks])
@@ -70,13 +74,25 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       return
     }
 
+    // Build streaming URL from S3 key (stored in activeVersion.fileKey)
+    const s3Key = track.activeVersion.fileKey
+    if (!s3Key) {
+      toast.error('Track file not available')
+      return
+    }
+
+    // Always use the /api/audio/[key] proxy route for proper HTTP range request streaming
+    // This allows progressive download instead of waiting for the entire file
+    const streamingUrl = `/api/audio/${encodeURIComponent(s3Key)}`
+
     const audioTrack: AudioTrack = {
       id: track.id,
       title: track.name,
-      url: track.activeVersion.fileUrl,
+      url: streamingUrl,
       duration: track.activeVersion.duration || undefined,
       createdAt: track.createdAt,
-      type: 'uploaded'
+      type: 'uploaded',
+      key: track.activeVersion.fileKey,
     }
 
     dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
