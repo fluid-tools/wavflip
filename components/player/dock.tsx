@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAtom } from 'jotai'
 import WaveSurfer from 'wavesurfer.js'
-import { generatePlaceholderWaveform, generateWaveformData } from '@/lib/audio/waveform-generator'
+import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { 
