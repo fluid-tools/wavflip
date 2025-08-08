@@ -138,6 +138,43 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         throw new Error(error)
       }
 
+      // Fire-and-forget: compute real peaks from the local File and POST to Redis
+      ;(async () => {
+        try {
+          const arrayBuf = await file.arrayBuffer()
+          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+          const decoded = await audioContext.decodeAudioData(arrayBuf.slice(0))
+          const channel = decoded.getChannelData(0)
+          const peaksCount = 1000
+          const samplesPerPeak = Math.max(1, Math.floor(channel.length / peaksCount))
+          const peaks: number[] = []
+          for (let i = 0; i < peaksCount; i++) {
+            const start = i * samplesPerPeak
+            const end = Math.min(start + samplesPerPeak, channel.length)
+            let max = 0
+            for (let j = start; j < end; j++) {
+              const v = Math.abs(channel[j])
+              if (v > max) max = v
+            }
+            peaks.push(max)
+          }
+          audioContext.close()
+
+          await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              peaks,
+              duration: decoded.duration,
+              sampleRate: decoded.sampleRate,
+              channels: decoded.numberOfChannels,
+            })
+          })
+        } catch (err) {
+          console.warn('Failed to persist real waveform for upload:', err)
+        }
+      })()
+
       return response.json()
     },
     onMutate: async ({ name, file, duration }) => {

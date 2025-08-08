@@ -44,20 +44,14 @@ export async function GET(
       estimatedDuration = fileSizeMB * 30 // Rough estimate for FLAC
     }
 
-    // Generate placeholder waveform
+    // No real waveform found; return placeholder but DO NOT cache long-term.
     const placeholderWaveform = generatePlaceholderWaveform(estimatedDuration, ContentLength || 0)
-    
-    // Cache the placeholder for 1 hour
-    const response = {
+    return NextResponse.json({
       data: placeholderWaveform,
       isPlaceholder: true,
       generatedAt: new Date().toISOString(),
       key
-    }
-    
-    await redis.setex(cacheKey, REDIS_TTL.waveform, response)
-
-    return NextResponse.json(response)
+    })
   } catch (error) {
     console.error('Waveform generation error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -75,11 +69,48 @@ export async function POST(
       return NextResponse.json({ error: 'Missing or invalid key' }, { status: 400 })
     }
 
-    // This would be called in background to generate actual waveform
-    // For now, return placeholder
-    return NextResponse.json({ message: 'Background generation started' })
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+    }
+
+    const { peaks, duration, sampleRate, channels } = body as {
+      peaks: unknown
+      duration: unknown
+      sampleRate?: unknown
+      channels?: unknown
+    }
+
+    if (!Array.isArray(peaks) || peaks.length === 0 || typeof duration !== 'number') {
+      return NextResponse.json({ error: 'Invalid waveform payload' }, { status: 400 })
+    }
+
+    // Clamp and sanitize peaks
+    const sanitized = (peaks as number[]).slice(0, 4000).map((v) => {
+      const n = Number(v)
+      if (!Number.isFinite(n)) return 0
+      return Math.max(0, Math.min(1, n))
+    })
+
+    const payload = {
+      data: {
+        peaks: sanitized,
+        duration,
+        sampleRate: typeof sampleRate === 'number' ? sampleRate : 44100,
+        channels: typeof channels === 'number' ? channels : 1,
+        bits: 16,
+      },
+      isPlaceholder: false,
+      generatedAt: new Date().toISOString(),
+      key,
+      source: 'client-upload',
+    }
+
+    await redis.set(REDIS_KEYS.waveform(key), payload)
+
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Background waveform generation error:', error)
+    console.error('Waveform POST error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
