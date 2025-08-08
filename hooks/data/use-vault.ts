@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
+import { getVaultTracks } from '@/lib/storage/local-vault'
 
 // ================================
 // QUERY KEYS
@@ -229,3 +230,20 @@ export function useInvalidateStorage() {
     queryClient.invalidateQueries({ queryKey: vaultKeys.storage() })
   }
 } 
+
+// ================================
+// OFFLINE VAULT SIZE (IDB sum)
+// ================================
+
+export function useOfflineVaultSize() {
+  return useQuery({
+    queryKey: ['vault-offline-size'],
+    queryFn: async () => {
+      const tracks = await getVaultTracks()
+      const totalBytes = tracks.reduce((sum, t) => sum + (t.audioData?.byteLength ?? 0), 0)
+      return { totalBytes, totalMB: totalBytes / (1024 * 1024) }
+    },
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  })
+}

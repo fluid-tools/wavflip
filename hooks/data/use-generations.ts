@@ -144,59 +144,45 @@ export function useGenerations() {
   // Mutation to handle new generation (auto-save offline)
   const addToSession = useMutation({
     mutationFn: async (sound: GeneratedSound) => {
-      // Save to IndexedDB for offline access
-      if (sound.url.startsWith('http')) {
+      // Streaming-first: do not auto-save. Just refresh lists and persist peaks in background.
+      const id = sound.key || sound.id
+      // Background: fetch audio bytes via same-origin proxy, decode, and POST real peaks
+      void (async () => {
         try {
-          const normalized: GeneratedSound = { ...sound, id: sound.key || sound.id }
-          const local = await downloadAndStoreAudio(normalized)
-          // Optimistically mark offline
-          queryClient.setQueryData(generationsKeys.localCache(), (prev: Map<string, LocalVaultTrack> | undefined) => {
-            const next = new Map(prev || [])
-            next.set(normalized.id, local)
-            return next
+          const sourceUrl = `/api/audio/${encodeURIComponent(id)}`
+          const res = await fetch(sourceUrl)
+          if (!res.ok) return
+          const buf = await res.arrayBuffer()
+          const wf = await generateWaveformData(buf)
+          // Optimistically hydrate query so cards show correct waveform immediately
+          queryClient.setQueryData(waveformKeys.byKey(id), {
+            data: {
+              peaks: wf.peaks,
+              duration: wf.duration,
+              sampleRate: wf.sampleRate,
+              channels: wf.channels,
+              bits: 16,
+            },
+            isPlaceholder: false,
+            generatedAt: new Date().toISOString(),
+            key: id,
           })
-          // Persist real waveform peaks to Redis after we have the blob (non-blocking)
-          void (async () => {
-            try {
-              const key = sound.key as string | undefined
-              if (!key || !local?.audioData) return
-              const wf = await generateWaveformData(local.audioData)
-              // Hydrate waveform with real peaks from blob decode
-              queryClient.setQueryData(waveformKeys.byKey(key), {
-                data: {
-                  peaks: wf.peaks,
-                  duration: wf.duration,
-                  sampleRate: wf.sampleRate,
-                  channels: wf.channels,
-                  bits: 16,
-                },
-                isPlaceholder: false,
-                generatedAt: new Date().toISOString(),
-                key,
-              })
-              const res = await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  peaks: wf.peaks,
-                  duration: wf.duration,
-                  sampleRate: wf.sampleRate,
-                  channels: wf.channels,
-                })
-              })
-              if (res.ok) {
-                queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(key) })
-              }
-            } catch (err) {
-              console.warn('Failed to persist waveform for generated sound:', err)
-            }
-          })()
-        } catch (error) {
-          console.error('Failed to cache for offline:', error)
+          await fetch(`/api/waveform/${encodeURIComponent(id)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              peaks: wf.peaks,
+              duration: wf.duration,
+              sampleRate: wf.sampleRate,
+              channels: wf.channels,
+            })
+          })
+          queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(id) })
+        } catch (e) {
+          console.warn('Background waveform persist failed:', e)
         }
-      }
-      
-      // Invalidate queries to refetch
+      })()
+
       await queryClient.invalidateQueries({ queryKey: generationsKeys.online() })
       await queryClient.invalidateQueries({ queryKey: generationsKeys.localCache() })
       

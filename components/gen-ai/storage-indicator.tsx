@@ -3,16 +3,21 @@
 import { Progress } from '@/components/ui/progress'
 import { HardDrive } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useStorageEstimate } from '@/hooks/data/use-vault'
+import { useStorageEstimate, useOfflineVaultSize } from '@/hooks/data/use-vault'
 
 export function StorageIndicator({ className }: { className?: string }) {
   const { data: storageInfo, isLoading } = useStorageEstimate()
+  const { data: vaultSize } = useOfflineVaultSize()
 
   if (isLoading || !storageInfo) {
     return null
   }
 
-  const { usagePercentage, usageMB, quotaMB, usageDetails } = storageInfo
+  const { quotaMB, usageDetails } = storageInfo
+  const offlineMB = vaultSize?.totalMB ?? 0
+  const browserMB = storageInfo.usageMB
+  const usedMB = Math.max(browserMB, offlineMB)
+  const usagePercentage = quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0
 
   // Format storage size
   const formatSize = (mb: number) => {
@@ -38,7 +43,7 @@ export function StorageIndicator({ className }: { className?: string }) {
           <span>Browser Storage</span>
         </div>
         <span className="font-mono">
-          {formatSize(usageMB)} / {formatSize(quotaMB)}
+          {formatSize(usedMB)} / {formatSize(quotaMB)}
         </span>
       </div>
       
@@ -70,6 +75,12 @@ export function StorageIndicator({ className }: { className?: string }) {
           {usageDetails.caches && (
             <div>Caches: {formatSize(usageDetails.caches / (1024 * 1024))}</div>
           )}
+        </div>
+      )}
+
+      {vaultSize && (
+        <div className="text-xs text-muted-foreground">
+          Offline vault: {formatSize(vaultSize.totalMB)}
         </div>
       )}
     </div>
