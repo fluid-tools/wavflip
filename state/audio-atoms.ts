@@ -131,10 +131,11 @@ export const playerControlsAtom = atom(
         const trackIndex = queue.tracks.findIndex(t => t.id === action.payload.id)
 
         if (trackIndex !== -1) {
-          // Track is in queue, just update index and play
+          // Track is in queue; mark loading and auto-play so the dock starts it when ready
           set(queueAtom, { ...queue, currentIndex: trackIndex })
           set(currentTrackAtom, action.payload)
-          set(playerStateAtom, 'playing')
+          set(playerStateAtom, 'loading')
+          set(autoPlayAtom, true)
         } else {
           // Add single track to queue and play
           set(queueAtom, {

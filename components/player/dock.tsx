@@ -88,7 +88,6 @@ export default function PlayerDock() {
         setIsBuffering(true)
         let monoPeaks: number[] | undefined
         let knownDuration: number | undefined
-        let retryBlobOnce = false
 
         // Prefer local vault blob if available
         let playbackUrl = currentTrack.url
@@ -155,18 +154,12 @@ export default function PlayerDock() {
           const handleError = async () => {
             const err = (media && (media as any).error) || null
             console.error('MediaElement error', err)
-            // Retry once for blob sources by regenerating the blob URL
-            if (playbackUrl.startsWith('blob:') && !retryBlobOnce) {
-              retryBlobOnce = true
+            // If blob fails and we're online with a key, fall back to streaming
+            if (playbackUrl.startsWith('blob:') && currentTrack.key && typeof navigator !== 'undefined' && navigator.onLine) {
               try {
-                const local = (await getTrackFromVault(currentTrack.id)) || (currentTrack.key ? await getTrackFromVault(currentTrack.key) : null)
-                if (local?.audioData) {
-                  const { createBlobUrlFromAudioData } = await import('@/lib/storage/local-vault')
-                  const fresh = createBlobUrlFromAudioData(local.audioData)
-                  media.src = fresh
-                  media.load()
-                  return
-                }
+                media.src = `/api/audio/${encodeURIComponent(currentTrack.key)}`
+                media.load()
+                return
               } catch {}
             }
             setIsBuffering(false)
@@ -232,11 +225,22 @@ export default function PlayerDock() {
           if (currentProgress > 0) {
             wavesurfer.seekTo(currentProgress / trackDuration);
           }
-          if (wasPlaying) {
-            wavesurfer.play();
-          } else if (autoPlay) {
-            setAutoPlay(false);
-            wavesurfer.play();
+          const shouldAutoPlay = wasPlaying || autoPlay
+          if (shouldAutoPlay) {
+            setAutoPlay(false)
+            // Ensure media is interactable before play
+            const tryPlay = async () => {
+              try {
+                await wavesurfer.play()
+              } catch (err) {
+                // As a fallback, toggle play/pause quickly to kick-start
+                try {
+                  await wavesurfer.pause()
+                  await wavesurfer.play()
+                } catch {}
+              }
+            }
+            void tryPlay()
           }
         });
         wavesurfer.on('timeupdate', (time: number) => {
