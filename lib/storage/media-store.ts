@@ -64,9 +64,9 @@ async function opfsSize(): Promise<number> {
     let total = 0
     // Prefer entries() which yields [name, handle]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const iterator: AsyncIterable<[string, FileSystemHandle]> = (root as any).entries
-      ? // @ts-expect-error: entries() is not yet in TS lib for FileSystemDirectoryHandle
-        root.entries()
+    const iterator: AsyncIterable<[string, FileSystemHandle]> =
+      typeof (root as unknown as { entries?: () => AsyncIterable<[string, FileSystemHandle]> }).entries === 'function'
+        ? ((root as unknown as { entries: () => AsyncIterable<[string, FileSystemHandle]> }).entries())
       : (async function* () {
           // Fallback to iterating root directly
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,9 +77,11 @@ async function opfsSize(): Promise<number> {
     for await (const [, handle] of iterator) {
       try {
         if (handle.kind === 'file') {
-          // @ts-expect-error: getFile() missing on TS lib type in some versions
-          const file = await (handle as FileSystemFileHandle).getFile()
-          total += file.size || 0
+          const fh = handle as unknown as { getFile?: () => Promise<File> }
+          if (typeof fh.getFile === 'function') {
+            const file = await fh.getFile()
+            total += file.size || 0
+          }
         }
       } catch {}
     }
