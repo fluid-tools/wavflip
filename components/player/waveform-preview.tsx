@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import { cn } from '@/lib/utils'
-// We intentionally do not predecode blobs here; WebAudio backend will decode and render.
+import { generateWaveformData } from '@/lib/audio/waveform-generator'
 import { useAtom } from 'jotai'
 import { waveformCacheAtom } from '@/state/audio-atoms'
 
@@ -45,9 +45,19 @@ export function WaveformPreview({
         let duration: number | undefined
         const isBlob = url.startsWith('blob:')
 
-        // Offline blob: never hit /api/waveform; let WebAudio decode & render
+        // Offline blob: try local pre-decode for reliable bars; no API calls
         // Streaming: use placeholder peaks (cache first)
-        if (!isBlob && trackKey) {
+        if (isBlob) {
+          try {
+            const resp = await fetch(url)
+            if (resp.ok) {
+              const buf = await resp.arrayBuffer()
+              const wf = await generateWaveformData(buf)
+              peaks = wf.peaks
+              duration = wf.duration
+            }
+          } catch {}
+        } else if (trackKey) {
           const cached = wfCache[trackKey]
           if (cached) peaks = cached
           if (!peaks) {
