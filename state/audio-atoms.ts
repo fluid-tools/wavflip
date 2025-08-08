@@ -94,6 +94,9 @@ export const isBufferingAtom = atom<boolean>(false)
 
 // Helper function to generate shuffle order
 function generateShuffleOrder(length: number, currentIndex: number): number[] {
+  if (length <= 0) {
+    return [];
+  }
   const order = Array.from({ length }, (_, i) => i)
   // Remove current index to keep it first
   if (currentIndex >= 0 && currentIndex < length) {
