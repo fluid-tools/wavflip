@@ -22,9 +22,10 @@ import {
   volumeAtom,
   mutedAtom,
   playerControlsAtom,
-  autoPlayAtom
+  autoPlayAtom,
+  isBufferingAtom,
+  waveformCacheAtom,
 } from '@/state/audio-atoms'
-import { waveformCacheAtom } from '@/state/audio-atoms'
 import { downloadAndStoreAudio, getTrackFromVault } from '@/lib/storage/local-vault'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
@@ -49,6 +50,7 @@ export default function PlayerDock() {
   const [autoPlay, setAutoPlay] = useAtom(autoPlayAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [wfCache, setWfCache] = useAtom(waveformCacheAtom)
+  const [isBuffering, setIsBuffering] = useAtom(isBufferingAtom)
   
   const isPlaying = playerState === 'playing'
   const isMobile = useIsMobile()
@@ -85,6 +87,10 @@ export default function PlayerDock() {
           try {
             const local = await getTrackFromVault(currentTrack.id)
             if (local?.blobUrl) playbackUrl = local.blobUrl
+            // If we're offline with cached peaks, use them immediately
+            if (local?.waveform?.[0]?.length) {
+              monoPeaks = local.waveform[0]
+            }
           } catch {}
         }
 
@@ -134,12 +140,19 @@ export default function PlayerDock() {
           media.crossOrigin = 'anonymous'
           media.src = playbackUrl
           media.load()
+          setIsBuffering(true)
           media.addEventListener('loadedmetadata', () => {
             const metaDuration = media!.duration
             if (metaDuration && !knownDuration) {
               dispatchPlayerAction({ type: 'SET_DURATION', payload: metaDuration })
             }
           })
+          media.addEventListener('waiting', () => setIsBuffering(true))
+          media.addEventListener('stalled', () => setIsBuffering(true))
+          media.addEventListener('suspend', () => setIsBuffering(true))
+          media.addEventListener('canplay', () => setIsBuffering(false))
+          media.addEventListener('playing', () => setIsBuffering(false))
+          media.addEventListener('ended', () => setIsBuffering(false))
         }
 
         const wavesurfer = WaveSurfer.create({
@@ -169,6 +182,7 @@ export default function PlayerDock() {
         wavesurfer.on('ready', () => {
           const trackDuration = wavesurfer.getDuration();
           dispatchPlayerAction({ type: 'SET_DURATION', payload: trackDuration });
+          setIsBuffering(false)
           if (currentProgress > 0) {
             wavesurfer.seekTo(currentProgress / trackDuration);
           }
@@ -184,16 +198,22 @@ export default function PlayerDock() {
         });
         wavesurfer.on('play', () => {
           dispatchPlayerAction({ type: 'PLAY' });
+          setIsBuffering(false)
         });
         wavesurfer.on('pause', () => {
           dispatchPlayerAction({ type: 'PAUSE' });
         });
         wavesurfer.on('finish', () => {
           dispatchPlayerAction({ type: 'STOP' });
+          setIsBuffering(false)
         });
         wavesurfer.on('error', (error: any) => {
           console.error('WaveSurfer error:', error);
+          setIsBuffering(false)
         });
+        wavesurfer.on('loading', (percent: number) => {
+          setIsBuffering(percent < 100)
+        })
         // Set initial volume
         wavesurfer.setVolume(muted ? 0 : volume);
       } catch (e) {
@@ -211,6 +231,7 @@ export default function PlayerDock() {
         }
         wavesurferRef.current.destroy()
         wavesurferRef.current = null
+        setIsBuffering(false)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -271,7 +292,8 @@ export default function PlayerDock() {
     
     setIsSaving(true)
     try {
-      await downloadAndStoreAudio(currentTrack)
+      const peaks = currentTrack.key ? wfCache[currentTrack.key] : undefined
+      await downloadAndStoreAudio(currentTrack, peaks)
       toast.success('Track saved to vault!')
     } catch (error) {
       console.error('Failed to save track:', error)
@@ -326,10 +348,17 @@ export default function PlayerDock() {
 
           {/* Waveform - Takes remaining space */}
           <div className="flex-1 min-w-0 px-4">
-            <div 
-              ref={desktopWaveformRef}
-              className="w-full h-[60px] rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
-            />
+            <div className="relative">
+              <div 
+                ref={desktopWaveformRef}
+                className="w-full h-[60px] rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+              />
+              {isBuffering && (
+                <div className="absolute inset-0 grid place-items-center bg-neutral-900/20">
+                  <div className="h-4 w-4 rounded-full border-2 border-neutral-500 border-t-transparent animate-spin" />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Desktop Controls */}
@@ -457,10 +486,17 @@ export default function PlayerDock() {
 
         {/* Waveform */}
         <div className="px-4 pb-3">
-          <div 
-            ref={mobileWaveformRef}
-            className="w-full h-12 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
-          />
+          <div className="relative">
+            <div 
+              ref={mobileWaveformRef}
+              className="w-full h-12 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+            />
+            {isBuffering && (
+              <div className="absolute inset-0 grid place-items-center bg-neutral-900/20">
+                <div className="h-4 w-4 rounded-full border-2 border-neutral-500 border-t-transparent animate-spin" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

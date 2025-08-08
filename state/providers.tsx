@@ -12,6 +12,7 @@ import {
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/sonner";
 import { Provider as JotaiProvider } from "jotai";
+import { jotaiStore } from '@/state/jotai-store'
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import type {
   PersistedClient,
@@ -87,7 +88,7 @@ export function BaseProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <TopLoader />
-      <JotaiProvider>
+      <JotaiProvider store={jotaiStore}>
         {children}
         <Toaster
           position="top-right"

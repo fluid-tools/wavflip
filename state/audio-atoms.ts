@@ -89,6 +89,9 @@ export const generationProgressAtom = atom<number>(0)
 // Waveform peaks cache keyed by fileKey (mono array for now)
 export const waveformCacheAtom = atomWithStorage<Record<string, number[]>>('wf-peaks-cache', {})
 
+// Buffering state for UI (distinct from general 'loading' which is for track setup)
+export const isBufferingAtom = atom<boolean>(false)
+
 // Helper function to generate shuffle order
 function generateShuffleOrder(length: number, currentIndex: number): number[] {
   const order = Array.from({ length }, (_, i) => i)
