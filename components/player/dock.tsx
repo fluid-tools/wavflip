@@ -149,7 +149,13 @@ export default function PlayerDock() {
           const handleStalled = () => setIsBuffering(true)
           const handleCanPlay = () => setIsBuffering(false)
           const handlePlaying = () => setIsBuffering(false)
-          const handleEnded = () => setIsBuffering(false)
+          const handleEnded = () => {
+            setIsBuffering(false);
+            // Advance to next track or repeat according to repeat mode
+            if (playerControls && typeof playerControls.next === 'function') {
+              playerControls.next();
+            }
+          }
           media.addEventListener('waiting', handleWaiting)
           media.addEventListener('stalled', handleStalled)
           media.addEventListener('canplay', handleCanPlay)
