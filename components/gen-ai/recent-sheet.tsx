@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, memo, useCallback } from 'react'
+import { useState, memo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
@@ -166,7 +166,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                 
                 {/* Waveform Preview */}
                 <div className="mb-2">
-                  <MemoizedWaveform url={sound.url} trackKey={(sound as any).key} />
+                  <MemoizedWaveform url={sound.url} trackKey={sound.key} />
                 </div>
                 
                 {/* Metadata */}

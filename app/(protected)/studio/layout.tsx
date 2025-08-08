@@ -4,6 +4,7 @@ import { getOrCreateGenerationsProject } from '@/lib/server/vault/generations'
 import { getPresignedUrl } from '@/lib/storage/s3-storage'
 import { REDIS_KEYS } from '@/lib/redis'
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query'
+import type { TrackVersion, TrackWithVersions } from '@/db/schema/vault'
 import type { GeneratedSound } from '@/types/audio'
 
 interface StudioLayoutProps {
@@ -51,7 +52,7 @@ export default async function StudioLayout({ children }: StudioLayoutProps) {
           )
           
           // Transform tracks to GeneratedSound format
-          return tracksWithUrls.map((track: any) => ({
+          return tracksWithUrls.map((track: TrackWithVersions & { activeVersion?: (TrackVersion & { presignedUrl?: string }) }) => ({
             id: track.id,
             key: track.activeVersion?.fileKey || track.id,
             title: track.name,

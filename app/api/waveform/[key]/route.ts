@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getS3AudioStream } from '@/lib/storage/s3-storage'
 import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
-import { redis, REDIS_KEYS, REDIS_TTL } from '@/lib/redis'
+import { redis, REDIS_KEYS } from '@/lib/redis'
 import { db } from '@/db'
 import { trackVersion } from '@/db/schema/vault'
 import { eq } from 'drizzle-orm'
@@ -48,7 +48,7 @@ export async function GET(
     }
 
     // No real waveform found; return placeholder but DO NOT cache long-term.
-    const placeholderWaveform = generatePlaceholderWaveform(estimatedDuration, ContentLength || 0)
+    const placeholderWaveform = generatePlaceholderWaveform(estimatedDuration)
     return NextResponse.json({
       data: placeholderWaveform,
       isPlaceholder: true,

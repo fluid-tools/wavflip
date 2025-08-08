@@ -63,7 +63,7 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
   const { deleteTrack, renameTrack, moveTrack, isDeleting, isRenaming, isMoving } = useTracks({ projectId })
   
   // Get presigned URLs for all tracks
-  const { urlMap } = useProjectTrackUrls(tracks)
+  useProjectTrackUrls(tracks)
 
   // Memoize the tracks data to prevent unnecessary re-renders
   const memoizedTracks = useMemo(() => tracks, [tracks])

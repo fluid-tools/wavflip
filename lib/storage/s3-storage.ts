@@ -303,8 +303,9 @@ export async function getS3AudioStream(key: string, range?: string) {
     const s3Res = await s3.send(command)
     const { Body, ContentLength, ContentRange, ContentType, AcceptRanges } = s3Res
     return { Body, ContentLength, ContentRange, ContentType, AcceptRanges }
-  } catch (err: any) {
-    if (err?.$metadata?.httpStatusCode === 404 || err?.name === 'NoSuchKey') return null
+  } catch (err: unknown) {
+    const error = err as { $metadata?: { httpStatusCode?: number }; name?: string }
+    if (error?.$metadata?.httpStatusCode === 404 || error?.name === 'NoSuchKey') return null
     console.error('getS3AudioStream error:', err)
     return null
   }

@@ -124,7 +124,7 @@ export function WaveformPreview({
         wavesurferRef.current = null
       }
     }
-  }, [url, trackKey, height, interact, onReady, onTimeUpdate])
+  }, [url, trackKey, height, interact, onReady, onTimeUpdate, wfCache, setWfCache])
 
   return (
     <div 

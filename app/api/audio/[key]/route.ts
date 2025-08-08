@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
       return new Response('Not found', { status: 404 })
     }
     
-    const { Body, ContentLength, ContentRange, ContentType, AcceptRanges } = result
+    const { Body, ContentLength, ContentRange, ContentType } = result
     
     // Ensure we're actually streaming and not buffering
     const headers = new Headers({

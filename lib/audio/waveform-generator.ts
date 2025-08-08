@@ -21,7 +21,10 @@ export interface CachedWaveformData {
  */
 export async function generateWaveformData(audioBuffer: ArrayBuffer): Promise<WaveformData> {
   // Decode
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+  type AudioContextCtor = new (contextOptions?: AudioContextOptions) => AudioContext
+  const w = window as unknown as { AudioContext?: AudioContextCtor; webkitAudioContext?: AudioContextCtor }
+  const AudioContextClass: AudioContextCtor = (w.AudioContext || w.webkitAudioContext) as AudioContextCtor
+  const audioContext = new AudioContextClass()
   const decoded = await audioContext.decodeAudioData(audioBuffer.slice(0))
   const sampleRate = decoded.sampleRate
   const duration = decoded.duration
@@ -65,9 +68,9 @@ export async function generateWaveformData(audioBuffer: ArrayBuffer): Promise<Wa
 }
 
 /**
- * Generate simple placeholder waveform data based on file metadata
+ * Generate simple placeholder waveform data
  */
-export function generatePlaceholderWaveform(duration: number, fileSize: number): WaveformData {
+export function generatePlaceholderWaveform(duration: number): WaveformData {
   // Create a simple sine wave pattern as placeholder
   const peaksCount = 1000
   const peaks: number[] = []
