@@ -81,10 +81,10 @@ export function useGenerations() {
   const saveOffline = useMutation({
     mutationFn: async (sound: GeneratedSound) => {
       const local = await downloadAndStoreAudio(sound)
-      // Persist real waveform peaks to Redis (non-blocking)
+      // Persist real waveform peaks to Redis after we have the blob (non-blocking)
       void (async () => {
         try {
-          const key = (sound as any).key as string | undefined
+          const key = sound.key as string | undefined
           if (!key || !local?.audioData) return
           const wf = await generateWaveformData(local.audioData)
           await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
@@ -113,10 +113,10 @@ export function useGenerations() {
       if (sound.url.startsWith('http')) {
         try {
           const local = await downloadAndStoreAudio(sound)
-          // Persist real waveform peaks to Redis (non-blocking)
+          // Persist real waveform peaks to Redis after we have the blob (non-blocking)
           void (async () => {
             try {
-              const key = (sound as any).key as string | undefined
+              const key = sound.key as string | undefined
               if (!key || !local?.audioData) return
               const wf = await generateWaveformData(local.audioData)
               await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
