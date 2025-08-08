@@ -92,18 +92,30 @@ export const waveformCacheAtom = atomWithStorage<Record<string, number[]>>('wf-p
 // Buffering state for UI (distinct from general 'loading' which is for track setup)
 export const isBufferingAtom = atom<boolean>(false)
 
-// Helper function to generate shuffle order
+/**
+ * Generate a shuffle playback order that keeps the current track first.
+ *
+ * Strategy:
+ * - Build the list of indices [0..length-1]
+ * - Remove the current index (when in-bounds) so we can place it at the front
+ * - Fisher–Yates shuffle the remainder for an unbiased permutation
+ * - Prepend the current index back to the front (when present)
+ */
 function generateShuffleOrder(length: number, currentIndex: number): number[] {
+  // Build an ordered list of indices
   const order = Array.from({ length }, (_, i) => i)
   const hasCurrent = currentIndex >= 0 && currentIndex < length
 
+  // Exclude the current index so it can be placed first later
   if (hasCurrent) order.splice(currentIndex, 1)
 
+  // Unbiased shuffle of the remaining indices (Fisher–Yates)
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
       ;[order[i], order[j]] = [order[j], order[i]]
   }
 
+  // Put the current track first if it exists
   if (hasCurrent) order.unshift(currentIndex)
   return order
 }
