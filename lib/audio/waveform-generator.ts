@@ -23,7 +23,10 @@ export async function generateWaveformData(audioBuffer: ArrayBuffer): Promise<Wa
   // Decode
   type AudioContextCtor = new (contextOptions?: AudioContextOptions) => AudioContext
   const w = window as unknown as { AudioContext?: AudioContextCtor; webkitAudioContext?: AudioContextCtor }
-  const AudioContextClass: AudioContextCtor = (w.AudioContext || w.webkitAudioContext) as AudioContextCtor
+  const AudioContextClass: AudioContextCtor | undefined = (w.AudioContext || w.webkitAudioContext) as AudioContextCtor | undefined
+  if (!AudioContextClass) {
+    throw new Error('Web Audio API is not supported in this browser/environment.');
+  }
   const audioContext = new AudioContextClass()
   const decoded = await audioContext.decodeAudioData(audioBuffer.slice(0))
   const sampleRate = decoded.sampleRate
