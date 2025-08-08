@@ -232,7 +232,7 @@ export default function PlayerDock() {
             const tryPlay = async () => {
               try {
                 await wavesurfer.play()
-              } catch (err) {
+              } catch {
                 // As a fallback, toggle play/pause quickly to kick-start
                 try {
                   await wavesurfer.pause()
