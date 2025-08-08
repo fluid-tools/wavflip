@@ -59,12 +59,13 @@ export async function listAudioFiles(prefix?: string): Promise<AudioTrack[]> {
 
     return blobs.map(blob => ({
       id: blob.pathname,
+      key: blob.pathname,
       title: extractTitleFromPathname(blob.pathname),
       url: blob.url,
       createdAt: blob.uploadedAt,
       type: 'generated' as const,
       metadata: {
-        prompt: 'Unknown', // We'll need to store this separately or in filename
+        prompt: 'Unknown',
         model: 'elevenlabs'
       }
     }))

@@ -52,20 +52,23 @@ export default async function StudioLayout({ children }: StudioLayoutProps) {
           )
           
           // Transform tracks to GeneratedSound format
-          return tracksWithUrls.map((track: TrackWithVersions & { activeVersion?: (TrackVersion & { presignedUrl?: string }) }) => ({
-            id: track.id,
-            key: track.activeVersion?.fileKey || track.id,
-            title: track.name,
-            url: track.activeVersion?.presignedUrl || '',
-            createdAt: new Date(track.createdAt),
-            type: 'generated' as const,
-            duration: track.activeVersion?.duration,
-            metadata: {
-              prompt: track.metadata?.prompt || '',
-              model: track.metadata?.model || 'unknown',
-              generationTime: track.metadata?.generationTime
+          return tracksWithUrls.map((track: TrackWithVersions & { activeVersion?: (TrackVersion & { presignedUrl?: string }) }) => {
+            const meta = (track.metadata ?? {}) as Record<string, unknown>
+            return {
+              id: track.id,
+              key: track.activeVersion?.fileKey || track.id,
+              title: track.name,
+              url: track.activeVersion?.presignedUrl || '',
+              createdAt: new Date(track.createdAt),
+              type: 'generated' as const,
+              duration: track.activeVersion?.duration ?? undefined,
+              metadata: {
+                prompt: typeof meta.prompt === 'string' ? meta.prompt : '',
+                model: typeof meta.model === 'string' ? meta.model : 'unknown',
+                generationTime: typeof meta.generationTime === 'number' ? meta.generationTime : undefined,
+              }
             }
-          }))
+          })
         } catch (error) {
           console.error('Failed to prefetch generations:', error)
           return []

@@ -94,6 +94,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
             .filter(track => track.activeVersion && urlMap.get(track.id))
             .map(track => ({
                 id: track.id,
+                key: track.activeVersion!.fileKey,
                 title: track.name,
                 url: urlMap.get(track.id)!,
                 duration: track.activeVersion?.duration || undefined,
@@ -129,6 +130,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
             .filter(track => track.activeVersion && urlMap.get(track.id))
             .map(track => ({
                 id: track.id,
+                key: track.activeVersion!.fileKey,
                 title: track.name,
                 url: urlMap.get(track.id)!,
                 duration: track.activeVersion?.duration || undefined,
