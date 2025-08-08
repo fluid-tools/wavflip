@@ -6,6 +6,7 @@ import type { ProjectWithTracks } from '@/db/schema/vault'
 import type { ProjectImageResponse } from '@/types/project'
 import { nanoid } from 'nanoid'
 import { vaultKeys } from './use-vault'
+import { generateWaveformData } from '@/lib/audio/waveform-generator'
 
 interface UseProjectProps {
   projectId: string
@@ -138,36 +139,19 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         throw new Error(error)
       }
 
-      // Fire-and-forget: compute real peaks from the local File and POST to Redis
+      // Fire-and-forget: compute real peaks using shared generator and POST to Redis
       ;(async () => {
         try {
           const arrayBuf = await file.arrayBuffer()
-          const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-          const decoded = await audioContext.decodeAudioData(arrayBuf.slice(0))
-          const channel = decoded.getChannelData(0)
-          const peaksCount = 1000
-          const samplesPerPeak = Math.max(1, Math.floor(channel.length / peaksCount))
-          const peaks: number[] = []
-          for (let i = 0; i < peaksCount; i++) {
-            const start = i * samplesPerPeak
-            const end = Math.min(start + samplesPerPeak, channel.length)
-            let max = 0
-            for (let j = start; j < end; j++) {
-              const v = Math.abs(channel[j])
-              if (v > max) max = v
-            }
-            peaks.push(max)
-          }
-          audioContext.close()
-
+          const wf = await generateWaveformData(arrayBuf)
           await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              peaks,
-              duration: decoded.duration,
-              sampleRate: decoded.sampleRate,
-              channels: decoded.numberOfChannels,
+              peaks: wf.peaks,
+              duration: wf.duration,
+              sampleRate: wf.sampleRate,
+              channels: wf.channels,
             })
           })
         } catch (err) {

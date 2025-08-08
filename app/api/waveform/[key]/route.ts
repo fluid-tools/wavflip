@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getS3AudioStream } from '@/lib/storage/s3-storage'
 import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
 import { redis, REDIS_KEYS, REDIS_TTL } from '@/lib/redis'
+import { db } from '@/db'
+import { trackVersion } from '@/db/schema/vault'
+import { eq } from 'drizzle-orm'
 
 // use shared redis client
 
@@ -107,6 +110,19 @@ export async function POST(
     }
 
     await redis.set(REDIS_KEYS.waveform(key), payload)
+
+    // Best-effort: update track_version.duration for this file key
+    const numericDuration = typeof duration === 'number' ? duration : Number(duration)
+    if (Number.isFinite(numericDuration) && numericDuration > 0) {
+      try {
+        await db
+          .update(trackVersion)
+          .set({ duration: numericDuration })
+          .where(eq(trackVersion.fileKey, key))
+      } catch (e) {
+        console.warn('Failed to update track duration for key', key, e)
+      }
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
