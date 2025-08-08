@@ -26,7 +26,7 @@ import {
   playerControlsAtom,
   autoPlayAtom
 } from '@/state/audio-atoms'
-import { waveformCacheAtom } from '@/state/audio-atoms'
+import { useWaveform } from '@/hooks/data/use-waveform'
 import { downloadAndStoreAudio, getTrackFromVault } from '@/lib/storage/local-vault'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
@@ -57,7 +57,7 @@ export default function PlayerDock() {
   const [isBuffering, setIsBuffering] = useAtom(isBufferingAtom)
   const [isLoading] = useAtom(isLoadingAtom)
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
-  const [wfCache, setWfCache] = useAtom(waveformCacheAtom)
+  const wf = useWaveform(currentTrack?.key)
   
   const isPlaying = playerState === 'playing'
   const isMobile = useIsMobile()
@@ -104,24 +104,10 @@ export default function PlayerDock() {
           // Offline: let WebAudio decode; do not fetch /api/waveform
           // We keep peaks optional here; WS will decode & render without peaks.
         } else if (currentTrack.key) {
-          // Online: try to reuse already-fetched preview peaks via a global cache first
-          const cached = wfCache[currentTrack.key]
-          if (cached && cached.length) {
-            monoPeaks = cached
-          }
-          // If no cached peaks, fetch placeholder
-          if (!monoPeaks) {
-            try {
-              const resp = await fetch(`/api/waveform/${encodeURIComponent(currentTrack.key)}`)
-              if (resp.ok) {
-                const data = await resp.json()
-                monoPeaks = data.data.peaks as number[]
-                knownDuration = data.data.duration as number
-                setWfCache({ ...wfCache, [currentTrack.key]: monoPeaks })
-              }
-            } catch (e) {
-              console.warn('Failed to fetch waveform data:', e)
-            }
+          const data = wf.data
+          if (data?.peaks?.length) {
+            monoPeaks = data.peaks
+            knownDuration = data.duration
           }
         }
 
@@ -135,7 +121,8 @@ export default function PlayerDock() {
         }
 
         // Backend + media configuration
-        const backend: 'WebAudio' | 'MediaElement' = isBlob ? 'WebAudio' : 'MediaElement'
+        // Use MediaElement for both streaming and blob to avoid fetch(blob) issues in WS
+        const backend: 'WebAudio' | 'MediaElement' = 'MediaElement'
         let media: HTMLAudioElement | undefined
 
         if (!isBlob) {
@@ -196,7 +183,7 @@ export default function PlayerDock() {
           peaks: monoPeaks ? [monoPeaks] : undefined,
           duration: knownDuration,
           media,
-          // For blob + WebAudio we will pass url to let WS decode/play
+          // For blob we pass the URL directly; for streaming we attach media element above
           url: isBlob ? playbackUrl : undefined,
         })
         wavesurferRef.current = wavesurfer;

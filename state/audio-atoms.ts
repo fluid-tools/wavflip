@@ -86,8 +86,7 @@ export const isGeneratingAtom = atom<boolean>(false)
 // Generation progress (0-1)
 export const generationProgressAtom = atom<number>(0)
 
-// Waveform peaks cache keyed by fileKey (mono array for now)
-export const waveformCacheAtom = atomWithStorage<Record<string, number[]>>('wf-peaks-cache', {})
+// (Deprecated) waveform peaks cache removed in favor of React Query persistence
 
 // Buffering state for UI (distinct from general 'loading' which is for track setup)
 export const isBufferingAtom = atom<boolean>(false)

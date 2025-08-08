@@ -4,8 +4,7 @@ import { useEffect, useRef } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import { cn } from '@/lib/utils'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
-import { useAtom } from 'jotai'
-import { waveformCacheAtom } from '@/state/audio-atoms'
+import { useWaveform } from '@/hooks/data/use-waveform'
 
 interface WaveformPreviewProps {
   url: string
@@ -28,7 +27,7 @@ export function WaveformPreview({
 }: WaveformPreviewProps) {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
-  const [wfCache, setWfCache] = useAtom(waveformCacheAtom)
+  const waveform = useWaveform(trackKey)
 
   useEffect(() => {
     if (!waveformRef.current) return
@@ -58,18 +57,10 @@ export function WaveformPreview({
             }
           } catch {}
         } else if (trackKey) {
-          const cached = wfCache[trackKey]
-          if (cached) peaks = cached
-          if (!peaks) {
-            try {
-              const res = await fetch(`/api/waveform/${encodeURIComponent(trackKey)}`)
-              if (res.ok) {
-                const data = await res.json()
-                peaks = data.data.peaks as number[]
-                duration = data.data.duration as number
-                setWfCache({ ...wfCache, [trackKey]: peaks })
-              }
-            } catch {}
+          const wf = waveform.data
+          if (wf?.peaks?.length) {
+            peaks = wf.peaks
+            duration = wf.duration
           }
         }
 
@@ -90,11 +81,11 @@ export function WaveformPreview({
           interact,
           dragToSeek: interact,
           normalize: true,
-          backend: isBlob ? 'WebAudio' : 'MediaElement',
+          backend: 'MediaElement',
           splitChannels: undefined,
           peaks: peaks ? [peaks] : undefined,
           duration,
-          url
+          url: isBlob ? url : undefined
         })
 
         wavesurferRef.current = wavesurfer
@@ -124,7 +115,7 @@ export function WaveformPreview({
         wavesurferRef.current = null
       }
     }
-  }, [url, trackKey, height, interact, onReady, onTimeUpdate, wfCache, setWfCache])
+  }, [url, trackKey, height, interact, onReady, onTimeUpdate, waveform.data])
 
   return (
     <div 

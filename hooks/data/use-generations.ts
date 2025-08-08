@@ -5,6 +5,9 @@ import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData } fro
 import type { GeneratedSound } from '@/types/audio'
 import type { LocalVaultTrack } from '@/lib/storage/local-vault'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
+import { waveformKeys } from '@/hooks/data/use-waveform'
+import { jotaiStore } from '@/state/jotai-store'
+import { currentTrackAtom } from '@/state/audio-atoms'
 
 // Query keys
 export const generationsKeys = {
@@ -80,14 +83,43 @@ export function useGenerations() {
   // Mutation to save a track offline
   const saveOffline = useMutation({
     mutationFn: async (sound: GeneratedSound) => {
-      const local = await downloadAndStoreAudio(sound)
+      // Ensure consistent id for vault: prefer key when present
+      const normalized: GeneratedSound = { ...sound, id: sound.key || sound.id }
+      const local = await downloadAndStoreAudio(normalized)
+      // If this is the current track, switch player to blob immediately
+      try {
+        const current = jotaiStore.get(currentTrackAtom)
+        if (current?.id === normalized.id && local.blobUrl && !current.url.startsWith('blob:')) {
+          jotaiStore.set(currentTrackAtom, { ...current, url: local.blobUrl })
+        }
+      } catch {}
+      // Optimistically mark offline in cache map
+      queryClient.setQueryData(generationsKeys.localCache(), (prev: Map<string, LocalVaultTrack> | undefined) => {
+        const next = new Map(prev || [])
+        next.set(normalized.id, local)
+        return next
+      })
       // Persist real waveform peaks to Redis after we have the blob (non-blocking)
       void (async () => {
         try {
           const key = sound.key as string | undefined
           if (!key || !local?.audioData) return
           const wf = await generateWaveformData(local.audioData)
-          await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
+          // DO NOT store placeholder: we have real peaks from blob decode here
+          // We still hydrate the query with real peaks immediately
+          queryClient.setQueryData(waveformKeys.byKey(key), {
+            data: {
+              peaks: wf.peaks,
+              duration: wf.duration,
+              sampleRate: wf.sampleRate,
+              channels: wf.channels,
+              bits: 16,
+            },
+            isPlaceholder: false,
+            generatedAt: new Date().toISOString(),
+            key,
+          })
+          const res = await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -97,6 +129,9 @@ export function useGenerations() {
               channels: wf.channels,
             })
           })
+          if (res.ok) {
+            queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(key) })
+          }
         } catch (err) {
           console.warn('Failed to persist waveform for offline save:', err)
         }
@@ -112,14 +147,34 @@ export function useGenerations() {
       // Save to IndexedDB for offline access
       if (sound.url.startsWith('http')) {
         try {
-          const local = await downloadAndStoreAudio(sound)
+          const normalized: GeneratedSound = { ...sound, id: sound.key || sound.id }
+          const local = await downloadAndStoreAudio(normalized)
+          // Optimistically mark offline
+          queryClient.setQueryData(generationsKeys.localCache(), (prev: Map<string, LocalVaultTrack> | undefined) => {
+            const next = new Map(prev || [])
+            next.set(normalized.id, local)
+            return next
+          })
           // Persist real waveform peaks to Redis after we have the blob (non-blocking)
           void (async () => {
             try {
               const key = sound.key as string | undefined
               if (!key || !local?.audioData) return
               const wf = await generateWaveformData(local.audioData)
-              await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
+              // Hydrate waveform with real peaks from blob decode
+              queryClient.setQueryData(waveformKeys.byKey(key), {
+                data: {
+                  peaks: wf.peaks,
+                  duration: wf.duration,
+                  sampleRate: wf.sampleRate,
+                  channels: wf.channels,
+                  bits: 16,
+                },
+                isPlaceholder: false,
+                generatedAt: new Date().toISOString(),
+                key,
+              })
+              const res = await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -129,6 +184,9 @@ export function useGenerations() {
                   channels: wf.channels,
                 })
               })
+              if (res.ok) {
+                queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(key) })
+              }
             } catch (err) {
               console.warn('Failed to persist waveform for generated sound:', err)
             }
@@ -147,8 +205,10 @@ export function useGenerations() {
   })
   
   // Process generations with offline availability
-  const generations = (online.data || []).map(sound => {
-    const localTrack = localCache.data?.get(sound.id)
+  const generations = (online.data || []).map((sound: GeneratedSound) => {
+    // Normalize id to key for consistent offline lookup
+    const id = sound.key || sound.id
+    const localTrack = localCache.data?.get(id)
     
     // If available offline, use local URL
     let url = sound.url
@@ -160,12 +220,12 @@ export function useGenerations() {
       }
     } else if (!url || (url.startsWith('https://') && !url.startsWith('blob:'))) {
       // Prefer our same-origin streaming proxy using the stored key
-      // @ts-ignore key is set in mapping above in useOnlineGenerations
-      url = `/api/audio/${encodeURIComponent((sound as any).key || sound.id)}`
+      url = `/api/audio/${encodeURIComponent(id)}`
     }
     
     return {
       ...sound,
+      id,
       url,
       isOffline: !!localTrack
     }

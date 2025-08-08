@@ -43,14 +43,15 @@ export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer
   try {
     // Persist audioData; do NOT persist blobUrl (ephemeral)
     const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl: undefined }
+    const vaultId = (track as any).key ?? track.id
     
     // Store the track
-    await set(`${VAULT_KEY_PREFIX}${track.id}`, vaultTrack)
+    await set(`${VAULT_KEY_PREFIX}${vaultId}`, vaultTrack)
     
     // Update the index
     const trackIds = await get(VAULT_INDEX_KEY) || []
-    if (!trackIds.includes(track.id)) {
-      trackIds.push(track.id)
+    if (!trackIds.includes(vaultId)) {
+      trackIds.push(vaultId)
       await set(VAULT_INDEX_KEY, trackIds)
     }
   } catch (error) {
