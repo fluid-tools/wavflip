@@ -7,6 +7,7 @@ const VAULT_INDEX_KEY = 'wavflip-vault-index'
 export interface LocalVaultTrack extends AudioTrack {
   audioData?: ArrayBuffer // Store audio data locally
   blobUrl?: string // Temporary blob URL for playback
+  mimeType?: string // Original content type
 }
 
 // Get all tracks from vault
@@ -21,7 +22,7 @@ export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
         // Blob URLs are ephemeral; always regenerate in-memory if audioData exists
         if (track.audioData) {
           try {
-            track.blobUrl = createBlobUrlFromAudioData(track.audioData)
+            track.blobUrl = createBlobUrlFromAudioData(track.audioData, track.mimeType || 'audio/mpeg')
           } catch {}
         } else {
           track.blobUrl = undefined
@@ -41,10 +42,10 @@ export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
 }
 
 // Add track to vault
-export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer): Promise<void> {
+export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer, mimeType?: string): Promise<void> {
   try {
     // Persist audioData; do NOT persist blobUrl (ephemeral)
-    const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl: undefined }
+    const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl: undefined, mimeType }
     const vaultId = (track as any).key ?? track.id
     
     // Store the track
@@ -89,7 +90,7 @@ export async function getTrackFromVault(trackId: string): Promise<LocalVaultTrac
     const t = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as LocalVaultTrack | undefined
     if (!t) return null
     if (t.audioData) {
-      try { t.blobUrl = createBlobUrlFromAudioData(t.audioData) } catch {}
+      try { t.blobUrl = createBlobUrlFromAudioData(t.audioData, t.mimeType || 'audio/mpeg') } catch {}
     } else {
       t.blobUrl = undefined
     }
@@ -128,10 +129,11 @@ export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVau
     }
     
     const audioData = await response.arrayBuffer()
-    const blobUrl = createBlobUrlFromAudioData(audioData)
-    const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl }
+    const contentType = response.headers.get('Content-Type') || 'audio/mpeg'
+    const blobUrl = createBlobUrlFromAudioData(audioData, contentType)
+    const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl, mimeType: contentType }
     
-    await addTrackToVault(vaultTrack, audioData)
+    await addTrackToVault(vaultTrack, audioData, contentType)
     return vaultTrack
   } catch (error) {
     console.error('Failed to download and store audio:', error)

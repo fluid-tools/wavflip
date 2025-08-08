@@ -88,6 +88,7 @@ export default function PlayerDock() {
         setIsBuffering(true)
         let monoPeaks: number[] | undefined
         let knownDuration: number | undefined
+        let retryBlobOnce = false
 
         // Prefer local vault blob if available
         let playbackUrl = currentTrack.url
@@ -151,9 +152,23 @@ export default function PlayerDock() {
           const handleStalled = () => setIsBuffering(true)
           const handleCanPlay = () => setIsBuffering(false)
           const handlePlaying = () => setIsBuffering(false)
-          const handleError = () => {
+          const handleError = async () => {
             const err = (media && (media as any).error) || null
             console.error('MediaElement error', err)
+            // Retry once for blob sources by regenerating the blob URL
+            if (playbackUrl.startsWith('blob:') && !retryBlobOnce) {
+              retryBlobOnce = true
+              try {
+                const local = (await getTrackFromVault(currentTrack.id)) || (currentTrack.key ? await getTrackFromVault(currentTrack.key) : null)
+                if (local?.audioData) {
+                  const { createBlobUrlFromAudioData } = await import('@/lib/storage/local-vault')
+                  const fresh = createBlobUrlFromAudioData(local.audioData)
+                  media.src = fresh
+                  media.load()
+                  return
+                }
+              } catch {}
+            }
             setIsBuffering(false)
           }
           const handleEnded = () => {
