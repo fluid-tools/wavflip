@@ -89,7 +89,7 @@ export async function POST(
     }
 
     // Clamp and sanitize peaks
-    const sanitized = (peaks as number[]).slice(0, 4000).map((v) => {
+    const sanitized = (peaks as number[]).slice(0, MAX_WAVEFORM_PEAKS).map((v) => {
       const n = Number(v)
       if (!Number.isFinite(n)) return 0
       return Math.max(0, Math.min(1, n))
