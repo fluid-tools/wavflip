@@ -152,7 +152,7 @@ export default function PlayerDock() {
           const handleCanPlay = () => setIsBuffering(false)
           const handlePlaying = () => setIsBuffering(false)
           const handleError = async () => {
-            const err = (media && (media as any).error) || null
+            const err: MediaError | null = (media && (media as HTMLMediaElement).error) || null
             console.error('MediaElement error', err)
             // If blob fails and we're online with a key, fall back to streaming
             if (playbackUrl.startsWith('blob:') && currentTrack.key && typeof navigator !== 'undefined' && navigator.onLine) {

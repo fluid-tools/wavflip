@@ -28,7 +28,7 @@ export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
           track.blobUrl = undefined
         }
         // Normalize id to stored key to keep consistent
-        const id = (track as any).key || track.id
+        const id = (track as unknown as { key?: string; id: string }).key || track.id
         tracks.push({ ...track, id })
       }
     }
@@ -94,7 +94,7 @@ export async function getTrackFromVault(trackId: string): Promise<LocalVaultTrac
     } else {
       t.blobUrl = undefined
     }
-    const id = (t as any).key || t.id
+    const id = (t as unknown as { key?: string; id: string }).key || t.id
     return { ...t, id }
   } catch (error) {
     console.error('Failed to get track from vault:', error)
