@@ -16,7 +16,7 @@ export interface QueueState {
 }
 
 // Player action types
-export type PlayerAction = 
+export type PlayerAction =
   | { type: 'PLAY_TRACK'; payload: AudioTrack }
   | { type: 'PLAY_PROJECT'; payload: { tracks: AudioTrack[]; startIndex: number; projectId: string; projectName: string } }
   | { type: 'PLAY' }
@@ -94,26 +94,17 @@ export const isBufferingAtom = atom<boolean>(false)
 
 // Helper function to generate shuffle order
 function generateShuffleOrder(length: number, currentIndex: number): number[] {
-  if (length <= 0) {
-    return [];
-  }
   const order = Array.from({ length }, (_, i) => i)
-  // Remove current index to keep it first
-  if (currentIndex >= 0 && currentIndex < length) {
-    order.splice(currentIndex, 1)
-  }
-  
-  // Fisher-Yates shuffle for the rest
+  const hasCurrent = currentIndex >= 0 && currentIndex < length
+
+  if (hasCurrent) order.splice(currentIndex, 1)
+
   for (let i = order.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]]
+    const j = Math.floor(Math.random() * (i + 1))
+      ;[order[i], order[j]] = [order[j], order[i]]
   }
-  
-  // Put current track first if it exists
-  if (currentIndex >= 0 && currentIndex < length) {
-    order.unshift(currentIndex)
-  }
-  
+
+  if (hasCurrent) order.unshift(currentIndex)
   return order
 }
 
@@ -124,10 +115,10 @@ export const playerControlsAtom = atom(
     switch (action.type) {
       case 'PLAY_TRACK':
         const queue = get(queueAtom)
-        
+
         // Check if track is already in queue
         const trackIndex = queue.tracks.findIndex(t => t.id === action.payload.id)
-        
+
         if (trackIndex !== -1) {
           // Track is in queue, just update index and play
           set(queueAtom, { ...queue, currentIndex: trackIndex })
@@ -148,7 +139,7 @@ export const playerControlsAtom = atom(
         }
         set(currentTimeAtom, 0)
         break
-        
+
       case 'PLAY_PROJECT':
         // Load entire project as queue
         const { tracks, startIndex, projectId, projectName } = action.payload
@@ -161,7 +152,7 @@ export const playerControlsAtom = atom(
           shuffleOrder: undefined
         }
         set(queueAtom, newQueue)
-        
+
         if (tracks[startIndex]) {
           set(currentTrackAtom, tracks[startIndex])
           set(playerStateAtom, 'loading')
@@ -169,28 +160,28 @@ export const playerControlsAtom = atom(
           set(currentTimeAtom, 0)
         }
         break
-        
+
       case 'PLAY':
         set(playerStateAtom, 'playing')
         break
-        
+
       case 'PAUSE':
         set(playerStateAtom, 'paused')
         break
-        
+
       case 'STOP':
         set(playerStateAtom, 'idle')
         set(currentTimeAtom, 0)
         break
-        
+
       case 'NEXT':
         const queueNext = get(queueAtom)
         const { tracks: tracksNext, currentIndex: currentNext, repeatMode, shuffleOrder } = queueNext
-        
+
         if (tracksNext.length === 0) break
-        
+
         let nextIndex = currentNext
-        
+
         if (shuffleOrder) {
           // Find current position in shuffle order
           const shufflePos = shuffleOrder.indexOf(currentNext)
@@ -207,7 +198,7 @@ export const playerControlsAtom = atom(
             nextIndex = 0
           }
         }
-        
+
         if (nextIndex !== currentNext) {
           set(queueAtom, { ...queueNext, currentIndex: nextIndex })
           set(currentTrackAtom, tracksNext[nextIndex])
@@ -220,22 +211,22 @@ export const playerControlsAtom = atom(
           set(playerStateAtom, 'playing')
         }
         break
-        
+
       case 'PREVIOUS':
         const queuePrev = get(queueAtom)
         const { tracks: tracksPrev, currentIndex: currentPrev, shuffleOrder: shufflePrev } = queuePrev
-        
+
         if (tracksPrev.length === 0) break
-        
+
         // If more than 3 seconds into the track, restart it
         if (get(currentTimeAtom) > 3) {
           set(currentTimeAtom, 0)
           set(playerStateAtom, 'playing')
           break
         }
-        
+
         let prevIndex = currentPrev
-        
+
         if (shufflePrev) {
           // Find current position in shuffle order
           const shufflePos = shufflePrev.indexOf(currentPrev)
@@ -252,7 +243,7 @@ export const playerControlsAtom = atom(
             prevIndex = tracksPrev.length - 1
           }
         }
-        
+
         if (prevIndex !== currentPrev) {
           set(queueAtom, { ...queuePrev, currentIndex: prevIndex })
           set(currentTrackAtom, tracksPrev[prevIndex])
@@ -261,31 +252,31 @@ export const playerControlsAtom = atom(
           set(currentTimeAtom, 0)
         }
         break
-        
+
       case 'SET_TIME':
         set(currentTimeAtom, action.payload)
         break
-        
+
       case 'SET_DURATION':
         set(durationAtom, action.payload)
         break
-        
+
       case 'SET_VOLUME':
         set(volumeAtom, action.payload)
         break
-        
+
       case 'TOGGLE_MUTE':
         set(mutedAtom, (prev) => !prev)
         break
-        
+
       case 'SET_PLAYBACK_RATE':
         set(playbackRateAtom, action.payload)
         break
-        
+
       case 'SET_REPEAT_MODE':
         set(queueAtom, (prev) => ({ ...prev, repeatMode: action.payload }))
         break
-        
+
       case 'TOGGLE_SHUFFLE':
         set(queueAtom, (prev) => {
           if (prev.shuffleOrder) {
@@ -298,19 +289,19 @@ export const playerControlsAtom = atom(
           }
         })
         break
-        
+
       case 'ADD_TO_QUEUE':
         set(queueAtom, (prev) => ({
           ...prev,
           tracks: [...prev.tracks, action.payload]
         }))
         break
-        
+
       case 'REMOVE_FROM_QUEUE':
         set(queueAtom, (prev) => {
           const newTracks = prev.tracks.filter(track => track.id !== action.payload)
           let newIndex = prev.currentIndex
-          
+
           // Adjust current index if needed
           const removedIndex = prev.tracks.findIndex(t => t.id === action.payload)
           if (removedIndex < prev.currentIndex) {
@@ -327,7 +318,7 @@ export const playerControlsAtom = atom(
               set(playerStateAtom, 'idle')
             }
           }
-          
+
           return {
             ...prev,
             tracks: newTracks,
@@ -335,7 +326,7 @@ export const playerControlsAtom = atom(
           }
         })
         break
-        
+
       case 'CLEAR_QUEUE':
         set(queueAtom, {
           tracks: [],
@@ -347,14 +338,14 @@ export const playerControlsAtom = atom(
         set(currentTrackAtom, null)
         set(playerStateAtom, 'idle')
         break
-        
+
       case 'REORDER_QUEUE':
         const { from, to } = action.payload
         set(queueAtom, (prev) => {
           const newTracks = [...prev.tracks]
           const [movedTrack] = newTracks.splice(from, 1)
           newTracks.splice(to, 0, movedTrack)
-          
+
           // Update current index if needed
           let newIndex = prev.currentIndex
           if (prev.currentIndex === from) {
@@ -364,7 +355,7 @@ export const playerControlsAtom = atom(
           } else if (from > prev.currentIndex && to <= prev.currentIndex) {
             newIndex = prev.currentIndex + 1
           }
-          
+
           return {
             ...prev,
             tracks: newTracks,
@@ -372,16 +363,16 @@ export const playerControlsAtom = atom(
           }
         })
         break
-        
+
       case 'START_GENERATION':
         set(isGeneratingAtom, true)
         set(generationProgressAtom, 0)
         break
-        
+
       case 'UPDATE_GENERATION_PROGRESS':
         set(generationProgressAtom, action.payload)
         break
-        
+
       case 'FINISH_GENERATION':
         set(isGeneratingAtom, false)
         set(generationProgressAtom, 0)
@@ -393,7 +384,7 @@ export const playerControlsAtom = atom(
           }))
         }
         break
-        
+
       case 'ERROR':
         set(playerStateAtom, 'error')
         set(isGeneratingAtom, false)
@@ -418,20 +409,20 @@ export const progressPercentageAtom = atom((get) => {
 export const hasNextTrackAtom = atom((get) => {
   const queue = get(queueAtom)
   const { tracks, currentIndex, repeatMode } = queue
-  
+
   if (tracks.length === 0) return false
   if (repeatMode === 'all' || repeatMode === 'one') return true
-  
+
   return currentIndex < tracks.length - 1
 })
 
 export const hasPreviousTrackAtom = atom((get) => {
   const queue = get(queueAtom)
   const { tracks, currentIndex, repeatMode } = queue
-  
+
   if (tracks.length === 0) return false
   if (repeatMode === 'all') return true
-  
+
   return currentIndex > 0
 })
 
