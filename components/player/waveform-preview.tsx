@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import { cn } from '@/lib/utils'
-import { generateWaveformData } from '@/lib/audio/waveform-generator'
+// We intentionally do not predecode blobs here; WebAudio backend will decode and render.
 import { useAtom } from 'jotai'
 import { waveformCacheAtom } from '@/state/audio-atoms'
 
@@ -41,61 +41,35 @@ export function WaveformPreview({
 
     const loadWaveform = async () => {
       try {
-        let monoPeaks: number[] | undefined
+        let peaks: number[] | undefined
         let duration: number | undefined
-
         const isBlob = url.startsWith('blob:')
-        const isSameOriginAudio = url.startsWith('/api/audio/') || url.startsWith(location.origin)
 
-        // Prefer local decode for blob/offline
-        if (isBlob) {
-          try {
-            const resp = await fetch(url)
-            const buf = await resp.arrayBuffer()
-            const wf = await generateWaveformData(buf)
-            monoPeaks = wf.peaks
-            duration = wf.duration
-          } catch (error) {
-            console.warn('Failed to decode blob for waveform preview:', error)
-          }
-        } else if (isSameOriginAudio) {
-          // Try full local decode for accurate peaks
-          try {
-            const resp = await fetch(url)
-            if (resp.ok && resp.body) {
-              const buf = await resp.arrayBuffer()
-              const wf = await generateWaveformData(buf)
-              monoPeaks = wf.peaks
-              duration = wf.duration
-            }
-          } catch (error) {
-            console.warn('Failed to decode streaming audio for preview, will fallback:', error)
+        // Offline blob: never hit /api/waveform; let WebAudio decode & render
+        // Streaming: use placeholder peaks (cache first)
+        if (!isBlob && trackKey) {
+          const cached = wfCache[trackKey]
+          if (cached) peaks = cached
+          if (!peaks) {
+            try {
+              const res = await fetch(`/api/waveform/${encodeURIComponent(trackKey)}`)
+              if (res.ok) {
+                const data = await res.json()
+                peaks = data.data.peaks as number[]
+                duration = data.data.duration as number
+                setWfCache({ ...wfCache, [trackKey]: peaks })
+              }
+            } catch {}
           }
         }
 
-        if (!monoPeaks && trackKey) {
-          // try atom cache
-          if (wfCache[trackKey]) {
-            monoPeaks = wfCache[trackKey]
-          }
-          // Fallback to placeholder when streaming
-          try {
-            const waveformResponse = await fetch(`/api/waveform/${encodeURIComponent(trackKey)}`)
-            if (waveformResponse.ok) {
-              const waveformData = await waveformResponse.json()
-              monoPeaks = waveformData.data.peaks as number[]
-              duration = waveformData.data.duration as number
-              setWfCache({ ...wfCache, [trackKey]: monoPeaks })
-            }
-          } catch (error) {
-            console.warn('Failed to load pre-decoded waveform:', error)
-          }
-        }
+        // Abort guard after async
+        if (!waveformRef.current) return
 
         const wavesurfer = WaveSurfer.create({
-          container: waveformRef.current!,
+          container: waveformRef.current,
           height,
-          waveColor: monoPeaks ? 'rgb(148 163 184)' : 'rgb(203 213 225)',
+          waveColor: peaks ? 'rgb(148 163 184)' : 'rgb(203 213 225)',
           progressColor: 'rgb(59 130 246)',
           cursorColor: interact ? 'rgb(59 130 246)' : 'transparent',
           cursorWidth: interact ? 2 : 0,
@@ -106,20 +80,14 @@ export function WaveformPreview({
           interact,
           dragToSeek: interact,
           normalize: true,
-          // Per docs: MediaElement default; use WebAudio when decoding locally
-          backend: monoPeaks || url.startsWith('blob:') ? 'WebAudio' : 'MediaElement',
-          // Single-lane look: pass mono only; explicitly disable splitChannels
+          backend: isBlob ? 'WebAudio' : 'MediaElement',
           splitChannels: undefined,
-          peaks: monoPeaks ? [monoPeaks] : undefined,
+          peaks: peaks ? [peaks] : undefined,
           duration,
           url
         })
 
         wavesurferRef.current = wavesurfer
-
-        if (monoPeaks && trackKey) {
-          setWfCache({ ...wfCache, [trackKey]: monoPeaks })
-        }
 
         if (onReady) {
           wavesurfer.on('ready', () => onReady(wavesurfer))
@@ -133,9 +101,14 @@ export function WaveformPreview({
       }
     }
 
-    loadWaveform()
+    let cancelled = false
+    ;(async () => {
+      if (cancelled) return
+      await loadWaveform()
+    })()
 
     return () => {
+      cancelled = true
       if (wavesurferRef.current) {
         wavesurferRef.current.destroy()
         wavesurferRef.current = null

@@ -25,7 +25,7 @@ import {
   autoPlayAtom
 } from '@/state/audio-atoms'
 import { waveformCacheAtom } from '@/state/audio-atoms'
-import { downloadAndStoreAudio } from '@/lib/storage/local-vault'
+import { downloadAndStoreAudio, getTrackFromVault } from '@/lib/storage/local-vault'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
 
@@ -79,19 +79,20 @@ export default function PlayerDock() {
         let monoPeaks: number[] | undefined
         let knownDuration: number | undefined
 
-        const isBlob = currentTrack.url.startsWith('blob:')
+        // Prefer local vault blob if available
+        let playbackUrl = currentTrack.url
+        if (!playbackUrl.startsWith('blob:')) {
+          try {
+            const local = await getTrackFromVault(currentTrack.id)
+            if (local?.blobUrl) playbackUrl = local.blobUrl
+          } catch {}
+        }
+
+        const isBlob = playbackUrl.startsWith('blob:')
 
         if (isBlob) {
-          // Offline: decode locally for accurate peaks + duration
-          try {
-            const resp = await fetch(currentTrack.url)
-            const buf = await resp.arrayBuffer()
-            const wf = await generateWaveformData(buf)
-            monoPeaks = wf.peaks
-            knownDuration = wf.duration
-          } catch (e) {
-            console.warn('Failed to decode offline audio:', e)
-          }
+          // Offline: let WebAudio decode; do not fetch /api/waveform
+          // We keep peaks optional here; WS will decode & render without peaks.
         } else if (currentTrack.key) {
           // Online: try to reuse already-fetched preview peaks via a global cache first
           const cached = wfCache[currentTrack.key]
@@ -99,20 +100,22 @@ export default function PlayerDock() {
             monoPeaks = cached
           }
           // If no cached peaks, fetch placeholder
-          try {
-            const resp = await fetch(`/api/waveform/${encodeURIComponent(currentTrack.key)}`)
-            if (resp.ok) {
-              const data = await resp.json()
-              monoPeaks = data.data.peaks as number[]
-              knownDuration = data.data.duration as number
-              setWfCache({ ...wfCache, [currentTrack.key]: monoPeaks })
+          if (!monoPeaks) {
+            try {
+              const resp = await fetch(`/api/waveform/${encodeURIComponent(currentTrack.key)}`)
+              if (resp.ok) {
+                const data = await resp.json()
+                monoPeaks = data.data.peaks as number[]
+                knownDuration = data.data.duration as number
+                setWfCache({ ...wfCache, [currentTrack.key]: monoPeaks })
+              }
+            } catch (e) {
+              console.warn('Failed to fetch waveform data:', e)
             }
-          } catch (e) {
-            console.warn('Failed to fetch waveform data:', e)
           }
         }
 
-        if (!monoPeaks) {
+        if (!monoPeaks && !isBlob) {
           const placeholderDuration = knownDuration ?? currentTrack.duration ?? 30
           monoPeaks = generatePlaceholderWaveform(placeholderDuration, 0).peaks
         }
@@ -129,7 +132,7 @@ export default function PlayerDock() {
           media = document.createElement('audio') as HTMLAudioElement
           media.preload = 'metadata'
           media.crossOrigin = 'anonymous'
-          media.src = currentTrack.url
+          media.src = playbackUrl
           media.load()
           media.addEventListener('loadedmetadata', () => {
             const metaDuration = media!.duration
@@ -149,7 +152,6 @@ export default function PlayerDock() {
           barWidth: 3,
           barGap: 2,
           barRadius: 3,
-          barAlign: 'top',
           fillParent: true,
           interact: true,
           dragToSeek: true,
@@ -160,7 +162,7 @@ export default function PlayerDock() {
           duration: knownDuration,
           media,
           // For blob + WebAudio we will pass url to let WS decode/play
-          url: isBlob ? currentTrack.url : undefined,
+          url: isBlob ? playbackUrl : undefined,
         })
         wavesurferRef.current = wavesurfer;
         // Set up event listeners
