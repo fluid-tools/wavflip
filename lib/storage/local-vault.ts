@@ -1,9 +1,5 @@
-"use client"
-
 import { get, set, del } from 'idb-keyval'
 import type { AudioTrack } from '@/types/audio'
-import { jotaiStore } from '@/state/jotai-store'
-import { waveformCacheAtom } from '@/state/audio-atoms'
 
 const VAULT_KEY_PREFIX = 'wavflip-track-'
 const VAULT_INDEX_KEY = 'wavflip-vault-index'
@@ -11,15 +7,6 @@ const VAULT_INDEX_KEY = 'wavflip-vault-index'
 export interface LocalVaultTrack extends AudioTrack {
   audioData?: ArrayBuffer // Store audio data locally
   blobUrl?: string // Temporary blob URL for playback
-}
-
-function readCachedWaveformPeaks(trackKey: string): number[] | undefined {
-  try {
-    const cache = jotaiStore.get(waveformCacheAtom)
-    const peaks = cache?.[trackKey]
-    if (Array.isArray(peaks) && peaks.length > 0) return peaks
-  } catch {}
-  return undefined
 }
 
 // Get all tracks from vault
@@ -38,14 +25,6 @@ export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
           } catch {}
         } else {
           track.blobUrl = undefined
-        }
-
-        // If waveform is missing but we have a cached peaks entry, hydrate it
-        if ((!track.waveform || track.waveform.length === 0) && track.key) {
-          const peaks = readCachedWaveformPeaks(track.key)
-          if (peaks && peaks.length) {
-            track.waveform = [peaks]
-          }
         }
         tracks.push(track)
       }
@@ -111,12 +90,6 @@ export async function getTrackFromVault(trackId: string): Promise<LocalVaultTrac
     } else {
       t.blobUrl = undefined
     }
-    if ((!t.waveform || t.waveform.length === 0) && t.key) {
-      const peaks = readCachedWaveformPeaks(t.key)
-      if (peaks && peaks.length) {
-        t.waveform = [peaks]
-      }
-    }
     return t
   } catch (error) {
     console.error('Failed to get track from vault:', error)
@@ -143,7 +116,7 @@ export async function clearVault(): Promise<void> {
 }
 
 // Download audio data from URL and store locally
-export async function downloadAndStoreAudio(track: AudioTrack, peaksFromCache?: number[]): Promise<LocalVaultTrack> {
+export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVaultTrack> {
   try {
     const response = await fetch(track.url)
     if (!response.ok) {
@@ -152,16 +125,7 @@ export async function downloadAndStoreAudio(track: AudioTrack, peaksFromCache?: 
     
     const audioData = await response.arrayBuffer()
     const blobUrl = createBlobUrlFromAudioData(audioData)
-
-    // If we already have cached waveform peaks for this track's key, persist them too
-    const chosenPeaks = (peaksFromCache && peaksFromCache.length > 0)
-      ? peaksFromCache
-      : readCachedWaveformPeaks(track.key)
-    const waveform = chosenPeaks && chosenPeaks.length > 0
-      ? [chosenPeaks]
-      : track.waveform
-
-    const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl, waveform }
+    const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl }
     
     await addTrackToVault(vaultTrack, audioData)
     return vaultTrack
