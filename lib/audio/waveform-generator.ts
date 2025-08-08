@@ -20,43 +20,48 @@ export interface CachedWaveformData {
  * Generate waveform data from audio buffer
  */
 export async function generateWaveformData(audioBuffer: ArrayBuffer): Promise<WaveformData> {
-  // Use Web Audio API to decode and generate peaks
+  // Decode
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-  const decodedAudio = await audioContext.decodeAudioData(audioBuffer.slice(0))
-  
-  const channelData = decodedAudio.getChannelData(0) // Mono for now
-  const sampleRate = decodedAudio.sampleRate
-  const duration = decodedAudio.duration
-  const channels = decodedAudio.numberOfChannels
-  const bits = 32 // Float32Array
-  
-  // Generate peaks - we'll use 1000 data points for smooth waveform
+  const decoded = await audioContext.decodeAudioData(audioBuffer.slice(0))
+  const sampleRate = decoded.sampleRate
+  const duration = decoded.duration
+  const channels = decoded.numberOfChannels
+  const bits = 32
+
+  // Pick target resolution similar to our upload flow (1000 bins)
   const peaksCount = 1000
-  const samplesPerPeak = Math.floor(channelData.length / peaksCount)
-  const peaks: number[] = []
-  
+  const totalSamples = decoded.length
+  const samplesPerPeak = Math.max(1, Math.floor(totalSamples / peaksCount))
+
+  // Compute max-absolute envelope across all channels per bin
+  const channelArrays: Float32Array[] = []
+  for (let c = 0; c < channels; c++) channelArrays.push(decoded.getChannelData(c))
+
+  const peaks: number[] = new Array(peaksCount)
   for (let i = 0; i < peaksCount; i++) {
     const start = i * samplesPerPeak
-    const end = start + samplesPerPeak
+    const end = Math.min(start + samplesPerPeak, totalSamples)
     let max = 0
-    
-    for (let j = start; j < end && j < channelData.length; j++) {
-      const sample = Math.abs(channelData[j])
-      if (sample > max) max = sample
+    for (let j = start; j < end; j++) {
+      let abs = 0
+      // combine channels by max abs
+      for (let c = 0; c < channels; c++) {
+        const v = Math.abs(channelArrays[c][j])
+        if (v > abs) abs = v
+      }
+      if (abs > max) max = abs
     }
-    
-    peaks.push(max)
+    peaks[i] = max
   }
-  
+
+  // Light smoothing (3-tap moving average) to reduce spikes
+  for (let i = 1; i < peaks.length - 1; i++) {
+    peaks[i] = (peaks[i - 1] + peaks[i] + peaks[i + 1]) / 3
+  }
+
   audioContext.close()
-  
-  return {
-    peaks,
-    duration,
-    sampleRate,
-    channels,
-    bits
-  }
+
+  return { peaks, duration, sampleRate, channels, bits }
 }
 
 /**

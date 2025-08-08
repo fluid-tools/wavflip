@@ -66,12 +66,3 @@ export function useProjectTrackUrls(tracks: TrackWithVersions[] | undefined) {
   }
 }
 
-// Helper to get presigned URL from cache or fetch
-export async function getTrackPresignedUrl(trackId: string): Promise<string> {
-  const response = await fetch(`/api/tracks/${trackId}/presigned-url`)
-  if (!response.ok) {
-    throw new Error('Failed to get presigned URL')
-  }
-  const data = await response.json()
-  return data.url
-}

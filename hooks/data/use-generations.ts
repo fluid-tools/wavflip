@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData } from '@/lib/storage/local-vault'
 import type { GeneratedSound } from '@/types/audio'
 import type { LocalVaultTrack } from '@/lib/storage/local-vault'
+import { generateWaveformData } from '@/lib/audio/waveform-generator'
 
 // Query keys
 export const generationsKeys = {
@@ -79,7 +80,27 @@ export function useGenerations() {
   // Mutation to save a track offline
   const saveOffline = useMutation({
     mutationFn: async (sound: GeneratedSound) => {
-      await downloadAndStoreAudio(sound)
+      const local = await downloadAndStoreAudio(sound)
+      // Persist real waveform peaks to Redis (non-blocking)
+      void (async () => {
+        try {
+          const key = (sound as any).key as string | undefined
+          if (!key || !local?.audioData) return
+          const wf = await generateWaveformData(local.audioData)
+          await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              peaks: wf.peaks,
+              duration: wf.duration,
+              sampleRate: wf.sampleRate,
+              channels: wf.channels,
+            })
+          })
+        } catch (err) {
+          console.warn('Failed to persist waveform for offline save:', err)
+        }
+      })()
       // Invalidate local cache to reflect the new offline track
       queryClient.invalidateQueries({ queryKey: generationsKeys.localCache() })
     }
@@ -91,7 +112,27 @@ export function useGenerations() {
       // Save to IndexedDB for offline access
       if (sound.url.startsWith('http')) {
         try {
-          await downloadAndStoreAudio(sound)
+          const local = await downloadAndStoreAudio(sound)
+          // Persist real waveform peaks to Redis (non-blocking)
+          void (async () => {
+            try {
+              const key = (sound as any).key as string | undefined
+              if (!key || !local?.audioData) return
+              const wf = await generateWaveformData(local.audioData)
+              await fetch(`/api/waveform/${encodeURIComponent(key)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  peaks: wf.peaks,
+                  duration: wf.duration,
+                  sampleRate: wf.sampleRate,
+                  channels: wf.channels,
+                })
+              })
+            } catch (err) {
+              console.warn('Failed to persist waveform for generated sound:', err)
+            }
+          })()
         } catch (error) {
           console.error('Failed to cache for offline:', error)
         }
