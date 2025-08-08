@@ -7,6 +7,7 @@ import { trackVersion } from '@/db/schema/vault'
 import { eq } from 'drizzle-orm'
 
 // use shared redis client
+const MAX_WAVEFORM_PEAKS = 4000
 
 export async function GET(
   req: NextRequest,
