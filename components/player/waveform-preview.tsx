@@ -5,6 +5,7 @@ import WaveSurfer from 'wavesurfer.js'
 import { cn } from '@/lib/utils'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
 import { useWaveform } from '@/hooks/data/use-waveform'
+import { getTrackFromVault } from '@/lib/storage/local-vault'
 
 interface WaveformPreviewProps {
   url: string
@@ -46,17 +47,20 @@ export function WaveformPreview({
 
         // Offline blob: try local pre-decode for reliable bars; no API calls
         // Streaming: use placeholder peaks (cache first)
-        if (isBlob) {
+        // Prefer decoding from local vault audioData to avoid fetching blob URLs
+        if (trackKey) {
           try {
-            const resp = await fetch(url)
-            if (resp.ok) {
-              const buf = await resp.arrayBuffer()
-              const wf = await generateWaveformData(buf)
+            const local = await getTrackFromVault(trackKey)
+            if (local?.audioData) {
+              const wf = await generateWaveformData(local.audioData)
               peaks = wf.peaks
               duration = wf.duration
             }
           } catch {}
-        } else if (trackKey) {
+        }
+
+        // If still no peaks and we are online streaming, use server waveform
+        if (!peaks && !isBlob && trackKey) {
           const wf = waveform.data
           if (wf?.peaks?.length) {
             peaks = wf.peaks
@@ -85,7 +89,8 @@ export function WaveformPreview({
           splitChannels: undefined,
           peaks: peaks ? [peaks] : undefined,
           duration,
-          url: isBlob ? url : undefined
+          // Avoid passing url for blob to prevent duplicate fetches; peaks-only render is fine for preview
+          url: !isBlob ? url : undefined
         })
 
         wavesurferRef.current = wavesurfer

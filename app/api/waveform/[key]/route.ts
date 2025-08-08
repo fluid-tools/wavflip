@@ -49,7 +49,8 @@ export async function GET(
     }
 
     // No real waveform found; return placeholder but DO NOT cache long-term.
-    const placeholderWaveform = generatePlaceholderWaveform(estimatedDuration)
+    // Placeholder only when S3 metadata exists but no peaks cached yet
+    const placeholderWaveform = generatePlaceholderWaveform(Math.max(1, Math.round(estimatedDuration)))
     return NextResponse.json({
       data: placeholderWaveform,
       isPlaceholder: true,

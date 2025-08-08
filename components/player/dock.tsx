@@ -93,7 +93,8 @@ export default function PlayerDock() {
         let playbackUrl = currentTrack.url
         if (!playbackUrl.startsWith('blob:')) {
           try {
-            const local = await getTrackFromVault(currentTrack.id)
+            // Try id, then key fallback for legacy entries
+            const local = (await getTrackFromVault(currentTrack.id)) || (currentTrack.key ? await getTrackFromVault(currentTrack.key) : null)
             if (local?.blobUrl) playbackUrl = local.blobUrl
           } catch {}
         }
@@ -101,8 +102,16 @@ export default function PlayerDock() {
         const isBlob = playbackUrl.startsWith('blob:')
 
         if (isBlob) {
-          // Offline: let WebAudio decode; do not fetch /api/waveform
-          // We keep peaks optional here; WS will decode & render without peaks.
+          // Offline: compute peaks locally from stored audio data if available
+          try {
+            const local = await getTrackFromVault(currentTrack.id)
+            if (local?.audioData) {
+              const { generateWaveformData } = await import('@/lib/audio/waveform-generator')
+              const wf = await generateWaveformData(local.audioData)
+              monoPeaks = wf.peaks
+              knownDuration = wf.duration
+            }
+          } catch {}
         } else if (currentTrack.key) {
           const data = wf.data
           if (data?.peaks?.length) {
@@ -125,10 +134,16 @@ export default function PlayerDock() {
         const backend: 'WebAudio' | 'MediaElement' = 'MediaElement'
         let media: HTMLAudioElement | undefined
 
-        if (!isBlob) {
+        {
+          // Always drive playback via a media element (works for both blob and streaming)
           media = document.createElement('audio') as HTMLAudioElement
           media.preload = 'metadata'
-          media.crossOrigin = 'anonymous'
+          if (playbackUrl.startsWith('http')) {
+            media.crossOrigin = 'anonymous'
+          } else {
+            // Remove CORS attribute for blob: URLs to avoid security errors
+            try { media.removeAttribute('crossorigin') } catch {}
+          }
           media.src = playbackUrl
           media.load()
           // Buffering-related events
@@ -136,6 +151,11 @@ export default function PlayerDock() {
           const handleStalled = () => setIsBuffering(true)
           const handleCanPlay = () => setIsBuffering(false)
           const handlePlaying = () => setIsBuffering(false)
+          const handleError = () => {
+            const err = (media && (media as any).error) || null
+            console.error('MediaElement error', err)
+            setIsBuffering(false)
+          }
           const handleEnded = () => {
             setIsBuffering(false);
             dispatchPlayerAction({ type: 'NEXT' });
@@ -151,6 +171,7 @@ export default function PlayerDock() {
               dispatchPlayerAction({ type: 'SET_DURATION', payload: metaDuration })
             }
           })
+          media.addEventListener('error', handleError)
           // Cleanup on destroy of WS
           const cleanupMediaListeners = () => {
             media?.removeEventListener('waiting', handleWaiting)
@@ -158,6 +179,7 @@ export default function PlayerDock() {
             media?.removeEventListener('canplay', handleCanPlay)
             media?.removeEventListener('playing', handlePlaying)
             media?.removeEventListener('ended', handleEnded)
+            media?.removeEventListener('error', handleError)
           }
           // Attach to instance for later cleanup
           ;(media as MutableHTMLAudioElement)._cleanupListeners = cleanupMediaListeners
@@ -183,8 +205,8 @@ export default function PlayerDock() {
           peaks: monoPeaks ? [monoPeaks] : undefined,
           duration: knownDuration,
           media,
-          // For blob we pass the URL directly; for streaming we attach media element above
-          url: isBlob ? playbackUrl : undefined,
+          // MediaElement is supplied, we don't need url
+          url: undefined,
         })
         wavesurferRef.current = wavesurfer;
         // Set up event listeners
