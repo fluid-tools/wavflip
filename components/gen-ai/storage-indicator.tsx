@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress'
 import { HardDrive } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStorageEstimate, useOfflineVaultSize } from '@/hooks/data/use-vault'
+import { mediaStore } from '@/lib/storage/media-store'
 
 export function StorageIndicator({ className }: { className?: string }) {
   const { data: storageInfo, isLoading } = useStorageEstimate()
@@ -13,10 +14,9 @@ export function StorageIndicator({ className }: { className?: string }) {
     return null
   }
 
-  const { quotaMB, usageDetails } = storageInfo
+  const { quotaMB } = storageInfo
   const offlineMB = vaultSize?.totalMB ?? 0
-  const browserMB = storageInfo.usageMB
-  const usedMB = Math.max(browserMB, offlineMB)
+  const usedMB = offlineMB
   const usagePercentage = quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0
 
   // Format storage size
@@ -40,7 +40,7 @@ export function StorageIndicator({ className }: { className?: string }) {
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <HardDrive className="h-3.5 w-3.5" />
-          <span>Browser Storage</span>
+          <span>Offline storage</span>
         </div>
         <span className="font-mono">
           {formatSize(usedMB)} / {formatSize(quotaMB)}
@@ -67,22 +67,9 @@ export function StorageIndicator({ className }: { className?: string }) {
         </p>
       )}
 
-      {usageDetails && (
-        <div className="text-xs text-muted-foreground space-y-0.5 mt-2">
-          {usageDetails.indexedDB && (
-            <div>IndexedDB: {formatSize(usageDetails.indexedDB / (1024 * 1024))}</div>
-          )}
-          {usageDetails.caches && (
-            <div>Caches: {formatSize(usageDetails.caches / (1024 * 1024))}</div>
-          )}
-        </div>
-      )}
-
-      {vaultSize && (
-        <div className="text-xs text-muted-foreground">
-          Offline vault: {formatSize(vaultSize.totalMB)}
-        </div>
-      )}
+      <div className="text-[11px] text-muted-foreground">
+        Backend: {mediaStore.isOPFSEnabled() ? 'OPFS (on-device file system)' : 'IndexedDB (fallback)'}
+      </div>
     </div>
   )
 }
