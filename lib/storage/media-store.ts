@@ -11,6 +11,7 @@ export interface MediaStore {
   getUrlForPlayback(key: string): Promise<string | null>
   deleteFile(key: string): Promise<void>
   size(): Promise<number> // bytes
+  sizeByKeys(keys: string[]): Promise<number> // bytes
   isOPFSEnabled(): boolean
 }
 
@@ -102,6 +103,39 @@ async function opfsWriteFile(key: string, data: ArrayBuffer, mimeType?: string):
   })
 }
 
+function createInlineSizerWorker(): Worker {
+  const workerSource = `
+    self.onmessage = async (e) => {
+      const { keys } = e.data || {};
+      if (!Array.isArray(keys)) { self.postMessage({ error: 'Missing keys' }); return; }
+      try {
+        const root = await navigator.storage.getDirectory();
+        const sanitize = (k) => k.replace(/[^a-zA-Z0-9._-]/g, '_');
+        let total = 0;
+        for (const raw of keys) {
+          try {
+            const name = sanitize(raw);
+            const handle = await root.getFileHandle(name);
+            const file = await handle.getFile();
+            total += file.size || 0;
+          } catch {}
+        }
+        self.postMessage({ ok: true, total });
+      } catch (err) {
+        self.postMessage({ error: (err && err.message) ? err.message : String(err) });
+      }
+    };
+  `
+  const blob = new Blob([workerSource], { type: 'text/javascript' })
+  const url = URL.createObjectURL(blob)
+  const worker = new Worker(url, { type: 'module' as unknown as undefined })
+  const revoke = () => URL.revokeObjectURL(url)
+  // @ts-expect-error best-effort cleanup
+  worker.onclose = revoke
+  worker.onerror = () => revoke()
+  return worker
+}
+
 async function opfsReadFile(key: string): Promise<Blob | null> {
   try {
     const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!()
@@ -189,6 +223,19 @@ export const mediaStore: MediaStore = {
   async size() {
     if (supportsOPFS()) return opfsSize()
     return 0
+  },
+  async sizeByKeys(keys: string[]) {
+    if (!supportsOPFS()) return 0
+    return await new Promise<number>((resolve, reject) => {
+      const worker = createInlineSizerWorker()
+      worker.onmessage = (e: MessageEvent) => {
+        const { ok, total, error } = e.data || {}
+        worker.terminate()
+        if (ok) resolve(total || 0)
+        else reject(new Error(error || 'Failed to size keys'))
+      }
+      worker.postMessage({ keys })
+    })
   },
 }
 

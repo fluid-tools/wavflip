@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Progress } from '@/components/ui/progress'
 import { HardDrive } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -14,11 +15,33 @@ export function StorageIndicator({ className }: { className?: string }) {
   }
 
   const { quotaMB } = storageInfo
-  // Prefer fileSystem usage when present; else approximate with total usage
-  const usageFSBytes: number | undefined =
-    (storageInfo.usageDetails && (storageInfo.usageDetails as Record<string, number>).fileSystem) ||
-    undefined
-  const usedMB = usageFSBytes ? usageFSBytes / (1024 * 1024) : storageInfo.usageMB
+  // Safari frequently reports unreliable usage; when OPFS is enabled, compute used bytes by scanning our keys via worker
+  // Keys are our vault index; if not available, fall back to navigator.storage.estimate
+  const [usedMB, setUsedMB] = useState<number>(() => storageInfo.usageMB)
+  useEffect(() => {
+    let cancelled = false
+    const compute = async () => {
+      try {
+        if (!mediaStore.isOPFSEnabled()) {
+          if (!cancelled) setUsedMB(storageInfo.usageMB)
+          return
+        }
+        // Try to read our IDB index of offline tracks to estimate OPFS size precisely
+        const { get } = await import('idb-keyval')
+        const ids: string[] = (await get('wavflip-vault-index')) || []
+        if (ids.length === 0) {
+          if (!cancelled) setUsedMB(0)
+          return
+        }
+        const total = await mediaStore.sizeByKeys(ids)
+        if (!cancelled) setUsedMB(total / (1024 * 1024))
+      } catch {
+        if (!cancelled) setUsedMB(storageInfo.usageMB)
+      }
+    }
+    void compute()
+    return () => { cancelled = true }
+  }, [storageInfo.usageMB])
   const usagePercentage = quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0
 
   // Format storage size
