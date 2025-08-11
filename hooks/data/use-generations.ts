@@ -245,7 +245,9 @@ export function useGenerations() {
   return {
     generations,
     saveOffline: saveOffline.mutate,
+    saveOfflineAsync: saveOffline.mutateAsync,
     removeOffline: removeOffline.mutate,
+    removeOfflineAsync: removeOffline.mutateAsync,
     addToSession: addToSession.mutate,
     isLoading: online.isLoading || localCache.isLoading,
     isOnline: navigator.onLine

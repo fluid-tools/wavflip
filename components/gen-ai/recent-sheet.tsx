@@ -28,7 +28,7 @@ const MemoizedWaveform = memo(function MemoizedWaveform({ url, trackKey }: { url
 export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
-  const { generations, isOnline, isLoading, saveOffline, removeOffline } = useGenerations()
+  const { generations, isOnline, isLoading, saveOfflineAsync, removeOfflineAsync } = useGenerations()
   const [savingOffline, setSavingOffline] = useState<string | null>(null)
   const [removingOffline, setRemovingOffline] = useState<string | null>(null)
   
@@ -47,7 +47,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const handleSaveOffline = async (sound: GeneratedSound & { isOffline?: boolean }) => {
     setSavingOffline(sound.id)
     try {
-      saveOffline(sound)
+      await saveOfflineAsync(sound)
       toast.success('Saved for offline access')
     } catch (error) {
       console.error('Failed to save offline:', error)
@@ -60,7 +60,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const handleRemoveOffline = async (sound: GeneratedSound & { isOffline?: boolean }) => {
     setRemovingOffline(sound.id)
     try {
-      removeOffline(sound)
+      await removeOfflineAsync(sound)
       toast.success('Removed from offline storage')
     } catch (error) {
       console.error('Failed to remove offline:', error)
