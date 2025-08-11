@@ -8,6 +8,9 @@ import { useWaveform } from '@/hooks/data/use-waveform'
 import { getTrackFromVault } from '@/lib/storage/local-vault'
 import { mediaStore } from '@/lib/storage/media-store'
 
+
+// todo: massive refactor of this file + cleanup without breaking functionality
+
 interface WaveformPreviewProps {
   url: string
   trackKey?: string
