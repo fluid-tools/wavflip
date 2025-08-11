@@ -27,13 +27,79 @@ function sanitizeKey(key: string): string {
   return key.replace(/[^a-zA-Z0-9._-]/g, '_')
 }
 
+function createInlineWriterWorker(): Worker {
+  const workerSource = `
+    self.onmessage = async (e) => {
+      const { key, data } = e.data;
+      try {
+        const root = await navigator.storage.getDirectory();
+        const sanitize = (k) => k.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const name = sanitize(key);
+        const handle = await root.getFileHandle(name, { create: true });
+        // Safari path: createSyncAccessHandle available only in workers
+        if (typeof handle.createSyncAccessHandle === 'function') {
+          const access = await handle.createSyncAccessHandle();
+          try {
+            await access.truncate(0);
+            const chunk = new Uint8Array(data);
+            access.write(chunk, { at: 0 });
+            await access.flush();
+          } finally {
+            access.close();
+          }
+          self.postMessage({ ok: true });
+          return;
+        }
+        // Fallback: if createSyncAccessHandle is missing, try createWritable
+        if (typeof handle.createWritable === 'function') {
+          const writable = await handle.createWritable();
+          await writable.write(new Blob([data]));
+          await writable.close();
+          self.postMessage({ ok: true });
+          return;
+        }
+        self.postMessage({ error: 'OPFS write methods unavailable' });
+      } catch (err) {
+        self.postMessage({ error: (err && err.message) ? err.message : String(err) });
+      }
+    };
+  `
+  const blob = new Blob([workerSource], { type: 'text/javascript' })
+  const url = URL.createObjectURL(blob)
+  const worker = new Worker(url, { type: 'module' as unknown as undefined })
+  // Revoke URL when worker terminates
+  const revoke = () => URL.revokeObjectURL(url)
+  // @ts-expect-error - onclose not standard; best-effort cleanup
+  worker.onclose = revoke
+  // Also cleanup on error
+  worker.onerror = () => revoke()
+  return worker
+}
+
 async function opfsWriteFile(key: string, data: ArrayBuffer, mimeType?: string): Promise<void> {
   const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!()
   const filename = sanitizeKey(key)
   const handle = await root.getFileHandle(filename, { create: true })
-  const writable = await handle.createWritable()
-  await writable.write(new Blob([data], { type: mimeType }))
-  await writable.close()
+  // Chrome/Edge path
+  const maybeWritable = handle as unknown as { createWritable?: () => Promise<unknown> }
+  if (typeof maybeWritable.createWritable === 'function') {
+    const writable = (await maybeWritable.createWritable()) as { write: (b: Blob) => Promise<void>; close: () => Promise<void> }
+    await writable.write(new Blob([data], { type: mimeType }))
+    await writable.close()
+    return
+  }
+  // Safari path: use a worker + SyncAccessHandle
+  await new Promise<void>((resolve, reject) => {
+    const worker = createInlineWriterWorker()
+    worker.onmessage = (e: MessageEvent) => {
+      const { ok, error } = e.data || {}
+      worker.terminate()
+      if (ok) resolve()
+      else reject(new Error(error || 'Failed to write via worker'))
+    }
+    // Transfer the ArrayBuffer to avoid copy
+    worker.postMessage({ key: filename, data }, [data])
+  })
 }
 
 async function opfsReadFile(key: string): Promise<Blob | null> {
