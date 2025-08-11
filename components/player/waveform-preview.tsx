@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
 import { useWaveform } from '@/hooks/data/use-waveform'
 import { getTrackFromVault } from '@/lib/storage/local-vault'
+import { mediaStore } from '@/lib/storage/media-store'
 
 interface WaveformPreviewProps {
   url: string
@@ -55,6 +56,16 @@ export function WaveformPreview({
               const wf = await generateWaveformData(local.audioData)
               peaks = wf.peaks
               duration = wf.duration
+            } else {
+              // OPFS-only path: read bytes from OPFS when available
+              try {
+                const buf = await mediaStore.readFile(trackKey)
+                if (buf) {
+                  const wf = await generateWaveformData(buf)
+                  peaks = wf.peaks
+                  duration = wf.duration
+                }
+              } catch {}
             }
           } catch {}
         }
