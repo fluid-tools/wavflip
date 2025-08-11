@@ -38,6 +38,11 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
     navigator.clipboard.writeText(url)
     toast.success('URL copied to clipboard')
   }
+  const stopSelect = (e: Event) => {
+    e.preventDefault()
+    // Cast to any to call stopPropagation when present (Radix onSelect passes a DOM Event)
+    ;(e as unknown as { stopPropagation?: () => void }).stopPropagation?.()
+  }
 
   const handleSaveOffline = async (sound: GeneratedSound & { isOffline?: boolean }) => {
     setSavingOffline(sound.id)
@@ -101,17 +106,20 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                             variant="ghost"
                             className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-neutral-800 text-neutral-300 flex-shrink-0"
                             onClick={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
                           >
                             <MoreHorizontal className="h-3 w-3" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem onClick={() => handleCopyUrl(sound.url)}>
+                          <DropdownMenuItem onSelect={(e) => { stopSelect(e); handleCopyUrl(sound.url) }}>
                             <Copy className="h-3.5 w-3.5 mr-2" />
                             Copy URL
                           </DropdownMenuItem>
                           {sound.metadata?.prompt && (
-                            <DropdownMenuItem onClick={() => {
+                            <DropdownMenuItem onSelect={(e) => {
+                              stopSelect(e);
                               navigator.clipboard.writeText(sound.metadata!.prompt!)
                               toast.success('Prompt copied to clipboard')
                             }}>
@@ -120,14 +128,14 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem asChild>
-                            <a href={sound.url} download>
+                            <a href={sound.url} download onClick={(e) => e.stopPropagation()}>
                               <Download className="h-3.5 w-3.5 mr-2" />
                               Download
                             </a>
                           </DropdownMenuItem>
                           {!sound.isOffline && isOnline && (
                             <DropdownMenuItem 
-                              onClick={() => handleSaveOffline(sound)}
+                              onSelect={(e) => { stopSelect(e); handleSaveOffline(sound) }}
                               disabled={savingOffline === sound.id}
                             >
                               {savingOffline === sound.id ? (
@@ -150,7 +158,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                                 Saved Offline
                               </DropdownMenuItem>
                               <DropdownMenuItem 
-                                onClick={() => handleRemoveOffline(sound)}
+                                onSelect={(e) => { stopSelect(e); handleRemoveOffline(sound) }}
                                 disabled={removingOffline === sound.id}
                               >
                                 {removingOffline === sound.id ? (
