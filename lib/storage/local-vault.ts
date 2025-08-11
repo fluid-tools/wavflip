@@ -136,7 +136,7 @@ export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVau
     if (!mediaStore.isOPFSEnabled()) {
       throw new Error('OPFS is not available; cannot save offline on this browser')
     }
-    await mediaStore.writeFile(track.id, audioData)
+    await mediaStore.writeFile(track.id, audioData, contentType)
     const blobUrl = (await mediaStore.getUrlForPlayback(track.id)) || undefined
     const vaultTrack: LocalVaultTrack = { ...track, audioData: undefined, blobUrl, mimeType: contentType, persistedInOPFS: true }
 

@@ -27,12 +27,12 @@ function sanitizeKey(key: string): string {
   return key.replace(/[^a-zA-Z0-9._-]/g, '_')
 }
 
-async function opfsWriteFile(key: string, data: ArrayBuffer): Promise<void> {
+async function opfsWriteFile(key: string, data: ArrayBuffer, mimeType?: string): Promise<void> {
   const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!()
   const filename = sanitizeKey(key)
   const handle = await root.getFileHandle(filename, { create: true })
   const writable = await handle.createWritable()
-  await writable.write(new Blob([data]))
+  await writable.write(new Blob([data], { type: mimeType }))
   await writable.close()
 }
 
@@ -83,9 +83,9 @@ export const mediaStore: MediaStore = {
   isOPFSEnabled(): boolean {
     return supportsOPFS()
   },
-  async writeFile(key, data) {
+  async writeFile(key, data, mimeType) {
     if (supportsOPFS()) {
-      await opfsWriteFile(key, data)
+      await opfsWriteFile(key, data, mimeType)
       // Best-effort request persistence once
       try {
         const lsKey = 'wavflip-storage-persist'

@@ -91,15 +91,16 @@ export default function PlayerDock() {
         let monoPeaks: number[] | undefined
         let knownDuration: number | undefined
 
-        // Prefer local vault blob if available
+        // Prefer local vault OPFS-backed blob if available; otherwise stream via /api/audio/[key]
         let playbackUrl = currentTrack.url
-        if (!playbackUrl.startsWith('blob:')) {
-          try {
-            // Try id, then key fallback for legacy entries
-            const local = (await getTrackFromVault(currentTrack.id)) || (currentTrack.key ? await getTrackFromVault(currentTrack.key) : null)
-            if (local?.blobUrl) playbackUrl = local.blobUrl
-          } catch {}
-        }
+        try {
+          const local = (await getTrackFromVault(currentTrack.id)) || (currentTrack.key ? await getTrackFromVault(currentTrack.key) : null)
+          if (local?.blobUrl) {
+            playbackUrl = local.blobUrl
+          } else if (currentTrack.key) {
+            playbackUrl = `/api/audio/${encodeURIComponent(currentTrack.key)}`
+          }
+        } catch {}
 
         const isBlob = playbackUrl.startsWith('blob:')
 
@@ -156,13 +157,25 @@ export default function PlayerDock() {
           const handleError = async () => {
             const err: MediaError | null = (media && (media as HTMLMediaElement).error) || null
             console.error('MediaElement error', err)
-            // If blob fails and we're online with a key, fall back to streaming
-            if (playbackUrl.startsWith('blob:') && currentTrack.key && typeof navigator !== 'undefined' && navigator.onLine) {
+            // Fallback chain:
+            // 1) If blob failed and we have a key, load from OPFS again to refresh blob URL
+            // 2) If still failing, and online, stream via /api/audio/[key]
+            if (currentTrack.key) {
               try {
-                media.src = `/api/audio/${encodeURIComponent(currentTrack.key)}`
-                media.load()
-                return
+                const refreshed = await getTrackFromVault(currentTrack.id)
+                if (refreshed?.blobUrl) {
+                  media.src = refreshed.blobUrl
+                  media.load()
+                  return
+                }
               } catch {}
+              if (typeof navigator !== 'undefined' && navigator.onLine) {
+                try {
+                  media.src = `/api/audio/${encodeURIComponent(currentTrack.key)}`
+                  media.load()
+                  return
+                } catch {}
+              }
             }
             setIsBuffering(false)
           }
