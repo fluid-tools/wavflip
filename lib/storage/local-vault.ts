@@ -92,6 +92,8 @@ export async function removeTrackFromVault(trackId: string): Promise<void> {
     if (existing?.blobUrl) {
       try { revokeBlobUrl(existing.blobUrl) } catch {}
     }
+    // Remove OPFS bytes (best-effort)
+    try { await mediaStore.deleteFile(trackId) } catch {}
     // Remove the track data
     await del(`${VAULT_KEY_PREFIX}${trackId}`)
     

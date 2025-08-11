@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData } from '@/lib/storage/local-vault'
+import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData, removeTrackFromVault } from '@/lib/storage/local-vault'
 import type { GeneratedSound } from '@/types/audio'
 import type { LocalVaultTrack } from '@/lib/storage/local-vault'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
@@ -144,6 +144,23 @@ export function useGenerations() {
     }
   })
   
+  // Mutation to remove a track from offline storage
+  const removeOffline = useMutation({
+    mutationFn: async (sound: GeneratedSound) => {
+      const id = sound.key || sound.id
+      await removeTrackFromVault(id)
+      // Optimistically update cache map
+      queryClient.setQueryData(generationsKeys.localCache(), (prev: Map<string, LocalVaultTrack> | undefined) => {
+        const next = new Map(prev || [])
+        next.delete(id)
+        return next
+      })
+      // Invalidate storage estimate
+      queryClient.invalidateQueries({ queryKey: vaultKeys.storage() })
+      return id
+    }
+  })
+  
   // Mutation to handle new generation (auto-save offline)
   const addToSession = useMutation({
     mutationFn: async (sound: GeneratedSound) => {
@@ -228,6 +245,7 @@ export function useGenerations() {
   return {
     generations,
     saveOffline: saveOffline.mutate,
+    removeOffline: removeOffline.mutate,
     addToSession: addToSession.mutate,
     isLoading: online.isLoading || localCache.isLoading,
     isOnline: navigator.onLine

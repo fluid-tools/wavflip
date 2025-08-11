@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { History, Play, Pause, Music, Volume2, MoreHorizontal, Copy, Download, WifiOff, HardDrive, Check } from 'lucide-react'
+import { History, Play, Pause, Music, Volume2, MoreHorizontal, Copy, Download, WifiOff, HardDrive, Check, Trash2 } from 'lucide-react'
 import { WaveformPreview } from '@/components/player/waveform-preview'
 import { useAtom } from 'jotai'
 import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
@@ -28,8 +28,9 @@ const MemoizedWaveform = memo(function MemoizedWaveform({ url, trackKey }: { url
 export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
-  const { generations, isOnline, isLoading, saveOffline } = useGenerations()
+  const { generations, isOnline, isLoading, saveOffline, removeOffline } = useGenerations()
   const [savingOffline, setSavingOffline] = useState<string | null>(null)
+  const [removingOffline, setRemovingOffline] = useState<string | null>(null)
   
   if (generations.length === 0 && !isLoading) return null
 
@@ -48,6 +49,19 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
       toast.error('Failed to save offline')
     } finally {
       setSavingOffline(null)
+    }
+  }
+
+  const handleRemoveOffline = async (sound: GeneratedSound & { isOffline?: boolean }) => {
+    setRemovingOffline(sound.id)
+    try {
+      removeOffline(sound)
+      toast.success('Removed from offline storage')
+    } catch (error) {
+      console.error('Failed to remove offline:', error)
+      toast.error('Failed to remove offline')
+    } finally {
+      setRemovingOffline(null)
     }
   }
 
@@ -130,10 +144,28 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                             </DropdownMenuItem>
                           )}
                           {sound.isOffline && (
-                            <DropdownMenuItem disabled>
-                              <Check className="h-3.5 w-3.5 mr-2 text-green-500" />
-                              Saved Offline
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem disabled>
+                                <Check className="h-3.5 w-3.5 mr-2 text-green-500" />
+                                Saved Offline
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleRemoveOffline(sound)}
+                                disabled={removingOffline === sound.id}
+                              >
+                                {removingOffline === sound.id ? (
+                                  <>
+                                    <div className="h-3.5 w-3.5 mr-2 animate-spin rounded-full border-2 border-neutral-400 border-t-transparent" />
+                                    Removing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                    Remove Offline
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
