@@ -8,6 +8,7 @@ import { generateWaveformData } from '@/lib/audio/waveform-generator'
 import { waveformKeys } from '@/hooks/data/use-waveform'
 import { jotaiStore } from '@/state/jotai-store'
 import { currentTrackAtom } from '@/state/audio-atoms'
+import { vaultKeys } from '@/hooks/data/use-vault'
 
 // Query keys
 export const generationsKeys = {
@@ -138,6 +139,8 @@ export function useGenerations() {
       })()
       // Invalidate local cache to reflect the new offline track
       queryClient.invalidateQueries({ queryKey: generationsKeys.localCache() })
+      // Also refresh storage indicator
+      queryClient.invalidateQueries({ queryKey: vaultKeys.storage() })
     }
   })
   

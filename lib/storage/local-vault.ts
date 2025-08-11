@@ -5,7 +5,7 @@ import { mediaStore } from '@/lib/storage/media-store'
 /**
  * Local vault responsibilities (concise):
  * - Persist track metadata in IDB (index + light fields).
- * - Persist bytes in OPFS when available; IDB stores bytes only as fallback.
+ * - Persist bytes in OPFS only; no IDB fallback for media bytes.
  * - Never persist blobUrl; always regenerate at runtime from OPFS/IDB.
  */
 
@@ -130,19 +130,15 @@ export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVau
     
     const audioData = await response.arrayBuffer()
     const contentType = response.headers.get('Content-Type') || 'audio/mpeg'
-    // Primary: store bytes in OPFS when available
-    let persistedInOPFS = false
-    try {
-      if (mediaStore.isOPFSEnabled()) {
-        await mediaStore.writeFile(track.id, audioData)
-        persistedInOPFS = true
-      }
-    } catch {}
+    // Store bytes in OPFS only. If OPFS is unavailable, throw.
+    if (!mediaStore.isOPFSEnabled()) {
+      throw new Error('OPFS is not available; cannot save offline on this browser')
+    }
+    await mediaStore.writeFile(track.id, audioData)
+    const blobUrl = (await mediaStore.getUrlForPlayback(track.id)) || undefined
+    const vaultTrack: LocalVaultTrack = { ...track, audioData: undefined, blobUrl, mimeType: contentType, persistedInOPFS: true }
 
-    const blobUrl = persistedInOPFS ? (await mediaStore.getUrlForPlayback(track.id)) || undefined : createBlobUrlFromAudioData(audioData, contentType)
-    const vaultTrack: LocalVaultTrack = { ...track, audioData: persistedInOPFS ? undefined : audioData, blobUrl, mimeType: contentType, persistedInOPFS }
-
-    await addTrackToVault(vaultTrack, persistedInOPFS ? undefined : audioData, contentType, persistedInOPFS)
+    await addTrackToVault(vaultTrack, undefined, contentType, true)
     return vaultTrack
   } catch (error) {
     console.error('Failed to download and store audio:', error)

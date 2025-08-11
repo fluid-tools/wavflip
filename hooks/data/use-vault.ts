@@ -222,29 +222,3 @@ export function useStorageEstimate() {
     refetchOnWindowFocus: true,
   })
 }
-
-// Helper to invalidate storage when we know it changed
-export function useInvalidateStorage() {
-  const queryClient = useQueryClient()
-  
-  return () => {
-    queryClient.invalidateQueries({ queryKey: vaultKeys.storage() })
-  }
-} 
-
-// ================================
-// OFFLINE VAULT SIZE (IDB sum)
-// ================================
-
-export function useOfflineVaultSize() {
-  return useQuery({
-    queryKey: ['vault-offline-size'],
-    queryFn: async () => {
-      // Prefer OPFS size when available; fall back to IDB sum
-      const totalBytes = await mediaStore.size()
-      return { totalBytes, totalMB: totalBytes / (1024 * 1024) }
-    },
-    staleTime: 30_000,
-    refetchOnWindowFocus: false,
-  })
-}

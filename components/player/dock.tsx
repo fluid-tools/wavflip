@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import WaveSurfer from 'wavesurfer.js'
 import { generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
@@ -12,7 +13,6 @@ import {
   Volume2, 
   VolumeX,
   Download,
-  Heart
 } from 'lucide-react'
 import { 
   currentTrackAtom,
@@ -30,6 +30,7 @@ import { useWaveform } from '@/hooks/data/use-waveform'
 import { downloadAndStoreAudio, getTrackFromVault } from '@/lib/storage/local-vault'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
+import { vaultKeys } from '@/hooks/data/use-vault'
 
 interface MutableHTMLAudioElement extends HTMLAudioElement {
   _cleanupListeners?: () => void
@@ -61,6 +62,7 @@ export default function PlayerDock() {
   
   const isPlaying = playerState === 'playing'
   const isMobile = useIsMobile()
+  const queryClient = useQueryClient()
 
   // Initialize WaveSurfer
   useEffect(() => {
@@ -341,13 +343,15 @@ export default function PlayerDock() {
     dispatchPlayerAction({ type: 'TOGGLE_MUTE' })
   }
 
-  const handleSaveToVault = async () => {
+  const handleSaveOffline = async () => {
     if (!currentTrack) return
     
     setIsSaving(true)
     try {
       await downloadAndStoreAudio(currentTrack)
-      toast.success('Track saved to vault!')
+      toast.success('Track saved offline!')
+      // Refresh storage estimate
+      queryClient.invalidateQueries({ queryKey: vaultKeys.storage() })
     } catch (error) {
       console.error('Failed to save track:', error)
       toast.error('Failed to save track to vault')
@@ -452,11 +456,11 @@ export default function PlayerDock() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={handleSaveToVault}
+                onClick={handleSaveOffline}
                 disabled={isSaving}
                 className="w-8 h-8 p-0 hover:bg-neutral-800 text-neutral-300"
               >
-                <Heart className="h-4 w-4" />
+                <Download className="h-4 w-4" />
               </Button>
               
               <Button
@@ -527,11 +531,11 @@ export default function PlayerDock() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={handleSaveToVault}
+                onClick={handleSaveOffline}
                 disabled={isSaving}
                 className="w-8 h-8 p-0 text-neutral-300 hover:bg-neutral-800"
               >
-                <Heart className="h-4 w-4" />
+                <Download className="h-4 w-4" />
               </Button>
             </div>
           </div>

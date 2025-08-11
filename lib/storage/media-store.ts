@@ -1,11 +1,9 @@
 /**
  * Media storage abstraction for large audio files.
  *
- * Primary: OPFS (Origin Private File System) when available.
- * Fallback: IndexedDB via existing local-vault helpers.
+ * Policy: OPFS-only for media bytes. No IndexedDB fallback for audio data.
+ * IDB is reserved strictly for lightweight metadata (handled by local-vault).
  */
-
-import { getVaultTracks, createBlobUrlFromAudioData } from '@/lib/storage/local-vault'
 
 export interface MediaStore {
   writeFile(key: string, data: ArrayBuffer, mimeType?: string): Promise<void>
@@ -62,19 +60,9 @@ async function opfsSize(): Promise<number> {
   try {
     const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!()
     let total = 0
-    // Prefer entries() which yields [name, handle]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const iterator: AsyncIterable<[string, FileSystemHandle]> =
-      typeof (root as unknown as { entries?: () => AsyncIterable<[string, FileSystemHandle]> }).entries === 'function'
-        ? ((root as unknown as { entries: () => AsyncIterable<[string, FileSystemHandle]> }).entries())
-      : (async function* () {
-          // Fallback to iterating root directly
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          for await (const item of root as any) {
-            yield item as [string, FileSystemHandle]
-          }
-        })()
-    for await (const [, handle] of iterator) {
+    // Prefer spec entries() which yields [name, handle]
+    const dir = root as unknown as { entries: () => AsyncIterable<[string, FileSystemHandle]> }
+    for await (const [, handle] of dir.entries()) {
       try {
         if (handle.kind === 'file') {
           const fh = handle as unknown as { getFile?: () => Promise<File> }
@@ -109,7 +97,8 @@ export const mediaStore: MediaStore = {
       } catch {}
       return
     }
-    // Fallback: nothing to do here; IDB path is handled by local-vault helpers
+    // OPFS unavailable: offline media storage not supported
+    throw new Error('OPFS is not available; offline media storage is unsupported on this browser')
   },
   async readFile(key) {
     if (supportsOPFS()) {
@@ -118,14 +107,7 @@ export const mediaStore: MediaStore = {
       const buf = await file.arrayBuffer()
       return buf
     }
-    // Fallback: read from IDB
-    try {
-      const tracks = await getVaultTracks()
-      const found = tracks.find((t) => t.id === key || t.key === key)
-      return found?.audioData ?? null
-    } catch {
-      return null
-    }
+    return null
   },
   async getUrlForPlayback(key) {
     if (supportsOPFS()) {
@@ -133,23 +115,14 @@ export const mediaStore: MediaStore = {
       if (!file) return null
       return URL.createObjectURL(file)
     }
-    // Fallback: create a blob URL from IDB
-    try {
-      const tracks = await getVaultTracks()
-      const found = tracks.find((t) => t.id === key || t.key === key)
-      if (found?.audioData) return createBlobUrlFromAudioData(found.audioData)
-      return null
-    } catch {
-      return null
-    }
+    return null
   },
   async deleteFile(key) {
     if (supportsOPFS()) await opfsDeleteFile(key)
   },
   async size() {
     if (supportsOPFS()) return opfsSize()
-    const tracks = await getVaultTracks()
-    return tracks.reduce((sum, t) => sum + (t.audioData?.byteLength ?? 0), 0)
+    return 0
   },
 }
 

@@ -3,20 +3,22 @@
 import { Progress } from '@/components/ui/progress'
 import { HardDrive } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useStorageEstimate, useOfflineVaultSize } from '@/hooks/data/use-vault'
+import { useStorageEstimate } from '@/hooks/data/use-vault'
 import { mediaStore } from '@/lib/storage/media-store'
 
 export function StorageIndicator({ className }: { className?: string }) {
   const { data: storageInfo, isLoading } = useStorageEstimate()
-  const { data: vaultSize } = useOfflineVaultSize()
 
   if (isLoading || !storageInfo) {
     return null
   }
 
   const { quotaMB } = storageInfo
-  const offlineMB = vaultSize?.totalMB ?? 0
-  const usedMB = offlineMB
+  // Prefer fileSystem usage when present; else approximate with total usage
+  const usageFSBytes: number | undefined =
+    (storageInfo.usageDetails && (storageInfo.usageDetails as Record<string, number>).fileSystem) ||
+    undefined
+  const usedMB = usageFSBytes ? usageFSBytes / (1024 * 1024) : storageInfo.usageMB
   const usagePercentage = quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0
 
   // Format storage size
@@ -68,7 +70,7 @@ export function StorageIndicator({ className }: { className?: string }) {
       )}
 
       <div className="text-[11px] text-muted-foreground">
-        Backend: {mediaStore.isOPFSEnabled() ? 'OPFS (on-device file system)' : 'IndexedDB (fallback)'}
+        Backend: {mediaStore.isOPFSEnabled() ? 'OPFS (on-device file system)' : 'Streaming only (no OPFS)'}
       </div>
     </div>
   )
