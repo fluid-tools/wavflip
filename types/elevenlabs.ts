@@ -1,3 +1,5 @@
+import { GeneratedSound } from "./audio"
+
 export interface ElevenLabsConfig {
   apiKey: string
   baseUrl?: string
@@ -30,4 +32,10 @@ export interface GenerationError {
   message: string
   code?: string
   details?: any
+}
+
+export interface GenerateSoundResult {
+  success: boolean
+  data?: GeneratedSound
+  error?: string
 }

@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useAtom } from 'jotai'
-import { generateSoundEffect, generateTextToSpeech } from '@/actions/generate-sound'
+import { generateSoundEffect } from '@/actions/generate/sound'
+import { generateTextToSpeech } from '@/actions/generate/speech'
 import { 
   isGeneratingAtom, 
   generationProgressAtom, 

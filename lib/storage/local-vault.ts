@@ -119,23 +119,6 @@ export async function getTrackFromVault(trackId: string): Promise<LocalVaultTrac
   }
 }
 
-// Clear entire vault
-export async function clearVault(): Promise<void> {
-  try {
-    const trackIds = await get(VAULT_INDEX_KEY) || []
-    
-    // Remove all tracks
-    for (const trackId of trackIds) {
-      await del(`${VAULT_KEY_PREFIX}${trackId}`)
-    }
-    
-    // Clear the index
-    await del(VAULT_INDEX_KEY)
-  } catch (error) {
-    console.error('Failed to clear vault:', error)
-    throw new Error('Failed to clear vault')
-  }
-}
 
 // Download audio data from URL and store locally
 export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVaultTrack> {
@@ -176,57 +159,4 @@ export function createBlobUrlFromAudioData(audioData: ArrayBuffer, contentType =
 // Revoke blob URL to free memory
 export function revokeBlobUrl(url: string): void {
   URL.revokeObjectURL(url)
-}
-
-interface VaultStats {
-  totalTracks: number
-  totalSize: number
-  totalDuration: number
-  generatedTracks: number
-  uploadedTracks: number
-}
-
-// Get vault stats
-export async function getVaultStats(): Promise<VaultStats> {
-  try {
-    const tracks = await getVaultTracks()
-    
-    let totalSize = 0
-    let totalDuration = 0
-    let generatedTracks = 0
-    let uploadedTracks = 0
-    
-    for (const track of tracks) {
-      if (track.audioData) {
-        totalSize += track.audioData.byteLength
-      }
-      
-      if (track.duration) {
-        totalDuration += track.duration
-      }
-      
-      if (track.type === 'generated') {
-        generatedTracks++
-      } else {
-        uploadedTracks++
-      }
-    }
-    
-    return {
-      totalTracks: tracks.length,
-      totalSize,
-      totalDuration,
-      generatedTracks,
-      uploadedTracks
-    }
-  } catch (error) {
-    console.error('Failed to get vault stats:', error)
-    return {
-      totalTracks: 0,
-      totalSize: 0,
-      totalDuration: 0,
-      generatedTracks: 0,
-      uploadedTracks: 0
-    }
-  }
 }

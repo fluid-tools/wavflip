@@ -100,14 +100,3 @@ function extractTitleFromPathname(pathname: string): string {
   
   return parts.join('-').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
-
-export function generateAudioFilename(prompt: string): string {
-  // Create a safe filename from the prompt
-  const safePrompt = prompt
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, '-')
-    .substring(0, 50) // Limit length
-  
-  return `sound-${safePrompt}`
-}
