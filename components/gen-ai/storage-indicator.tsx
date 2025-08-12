@@ -9,19 +9,13 @@ import { mediaStore } from '@/lib/storage/media-store'
 
 export function StorageIndicator({ className }: { className?: string }) {
   const { data: storageInfo, isLoading } = useStorageEstimate()
+  const [usedMB, setUsedMB] = useState<number>(0)
 
-  if (isLoading || !storageInfo) {
-    return null
-  }
-
-  const { quotaMB } = storageInfo
-  // Safari frequently reports unreliable usage; when OPFS is enabled, compute used bytes by scanning our keys via worker
-  // Keys are our vault index; if not available, fall back to navigator.storage.estimate
-  const [usedMB, setUsedMB] = useState<number>(() => storageInfo.usageMB)
   useEffect(() => {
     let cancelled = false
     const compute = async () => {
       try {
+        if (!storageInfo) return
         if (!mediaStore.isOPFSEnabled()) {
           if (!cancelled) setUsedMB(storageInfo.usageMB)
           return
@@ -36,12 +30,18 @@ export function StorageIndicator({ className }: { className?: string }) {
         const total = await mediaStore.sizeByKeys(ids)
         if (!cancelled) setUsedMB(total / (1024 * 1024))
       } catch {
-        if (!cancelled) setUsedMB(storageInfo.usageMB)
+        if (!cancelled && storageInfo) setUsedMB(storageInfo.usageMB)
       }
     }
-    void compute()
+    if (storageInfo && !isLoading) void compute()
     return () => { cancelled = true }
-  }, [storageInfo.usageMB])
+  }, [isLoading, storageInfo?.usageMB])
+
+  if (isLoading || !storageInfo) {
+    return null
+  }
+
+  const { quotaMB } = storageInfo
   const usagePercentage = quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0
 
   // Format storage size

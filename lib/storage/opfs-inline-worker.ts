@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-globals */
+// Worker code is created as a Blob URL. Keep this file typed and simple.
 
 export function isWebKit(): boolean {
   if (typeof navigator === 'undefined') return false
