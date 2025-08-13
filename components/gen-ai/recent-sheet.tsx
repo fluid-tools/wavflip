@@ -83,7 +83,11 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
           <ContextMenuTrigger>
             <div 
               className="group bg-neutral-900/50 backdrop-blur-sm rounded-xl border border-neutral-800 hover:bg-neutral-800/80 transition-all duration-200 cursor-pointer hover:border-neutral-700 shadow-sm hover:shadow-md"
-              onClick={() => onPlaySound(sound)}
+              onClick={(e) => {
+                const target = e.target as HTMLElement
+                if (target.closest('[data-no-play]')) return
+                onPlaySound(sound)
+              }}
             >
               <div className="p-3">
                 <div className="flex items-start gap-3 mb-2">
@@ -108,17 +112,18 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                             onClick={(e) => e.stopPropagation()}
                             onPointerDown={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
+                            data-no-play
                           >
                             <MoreHorizontal className="h-3 w-3" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem onSelect={(e) => { stopSelect(e); handleCopyUrl(sound.url) }}>
+                        <DropdownMenuContent align="end" className="w-40" data-no-play>
+                          <DropdownMenuItem data-no-play onSelect={(e) => { stopSelect(e); handleCopyUrl(sound.url) }}>
                             <Copy className="h-3.5 w-3.5 mr-2" />
                             Copy URL
                           </DropdownMenuItem>
                           {sound.metadata?.prompt && (
-                            <DropdownMenuItem onSelect={(e) => {
+                            <DropdownMenuItem data-no-play onSelect={(e) => {
                               stopSelect(e);
                               navigator.clipboard.writeText(sound.metadata!.prompt!)
                               toast.success('Prompt copied to clipboard')
@@ -128,13 +133,13 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem asChild>
-                            <a href={sound.url} download onClick={(e) => e.stopPropagation()}>
+                            <a href={sound.url} download onClick={(e) => e.stopPropagation()} data-no-play>
                               <Download className="h-3.5 w-3.5 mr-2" />
                               Download
                             </a>
                           </DropdownMenuItem>
                           {!sound.isOffline && isOnline && (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem data-no-play
                               onSelect={(e) => { stopSelect(e); handleSaveOffline(sound) }}
                               disabled={savingOffline === sound.id}
                             >
@@ -157,7 +162,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                                 <Check className="h-3.5 w-3.5 mr-2 text-green-500" />
                                 Saved Offline
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem data-no-play
                                 onSelect={(e) => { stopSelect(e); handleRemoveOffline(sound) }}
                                 disabled={removingOffline === sound.id}
                               >

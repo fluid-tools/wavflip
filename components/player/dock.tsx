@@ -48,6 +48,7 @@ export default function PlayerDock() {
   const wavesurferRef = useRef<WaveSurfer | null>(null)
   const mediaRef = useRef<HTMLAudioElement | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isActuallyPlaying, setIsActuallyPlaying] = useState(false)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [currentTime] = useAtom(currentTimeAtom)
   const [duration] = useAtom(durationAtom)
@@ -60,7 +61,7 @@ export default function PlayerDock() {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const wf = useWaveform(currentTrack?.key)
   
-  const isPlaying = playerState === 'playing'
+  const isPlaying = isActuallyPlaying
   const isMobile = useIsMobile()
   const queryClient = useQueryClient()
 
@@ -153,10 +154,11 @@ export default function PlayerDock() {
           const handleWaiting = () => setIsBuffering(true)
           const handleStalled = () => setIsBuffering(true)
           const handleCanPlay = () => setIsBuffering(false)
-          const handlePlaying = () => setIsBuffering(false)
+          const handlePlaying = () => { setIsBuffering(false); setIsActuallyPlaying(true) }
           const handleError = async () => {
             const err: MediaError | null = (media && (media as HTMLMediaElement).error) || null
             console.error('MediaElement error', err)
+            setIsActuallyPlaying(false)
             // Fallback chain:
             // 1) If blob failed and we have a key, load from OPFS again to refresh blob URL
             // 2) If still failing, and online, stream via /api/audio/[key]
@@ -181,6 +183,7 @@ export default function PlayerDock() {
           }
           const handleEnded = () => {
             setIsBuffering(false);
+            setIsActuallyPlaying(false)
             dispatchPlayerAction({ type: 'NEXT' });
           }
           media.addEventListener('waiting', handleWaiting)
@@ -263,13 +266,16 @@ export default function PlayerDock() {
         });
         wavesurfer.on('play', () => {
           setIsBuffering(false)
+          setIsActuallyPlaying(true)
           dispatchPlayerAction({ type: 'PLAY' });
         });
         wavesurfer.on('pause', () => {
+          setIsActuallyPlaying(false)
           dispatchPlayerAction({ type: 'PAUSE' });
         });
         wavesurfer.on('finish', () => {
           setIsBuffering(false)
+          setIsActuallyPlaying(false)
           dispatchPlayerAction({ type: 'STOP' });
         });
         wavesurfer.on('error', (error: unknown) => {

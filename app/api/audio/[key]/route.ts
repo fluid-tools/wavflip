@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { getS3AudioStream } from '@/lib/storage/s3-storage'
 
+// todo: add authorization check for this route
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
     const { key } = await params
