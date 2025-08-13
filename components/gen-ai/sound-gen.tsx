@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useAtom } from 'jotai'
 import { generateSoundEffect } from '@/actions/generate/sound'
 import { generateTextToSpeech } from '@/actions/generate/speech'
@@ -15,6 +15,7 @@ import { WELCOME_MESSAGE } from '@/lib/constants/prompts'
 import { cn } from '@/lib/utils'
 import { Slider } from '@/components/ui/slider'
 import { Clock, Sparkles } from 'lucide-react'
+import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { InputArea } from './input-area'
@@ -47,8 +48,9 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
       timestamp: new Date()
     }
   ])
-  const [isPending, startTransition] = useTransition()
-  
+  const { executeAsync: executeTTS, isPending: isTTSPending } = useAction(generateTextToSpeech)
+  const { executeAsync: executeSFX, isPending: isSFXPending } = useAction(generateSoundEffect)
+
   const [isGenerating] = useAtom(isGeneratingAtom)
   // generationProgress is not used in the new deterministic UI
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
@@ -56,7 +58,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   const [playerState] = useAtom(playerStateAtom)
   const { addToSession } = useGenerations()
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast.error('Please describe a sound to generate')
       return
@@ -84,27 +86,26 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
     const currentPrompt = prompt.trim()
     setPrompt('')
 
-    startTransition(async () => {
-      dispatchPlayerAction({ type: 'START_GENERATION' })
-      
-      try {
-        const result = isTTSMode 
-          ? await generateTextToSpeech(currentPrompt)
-          : await generateSoundEffect(currentPrompt, { durationSeconds, promptInfluence })
-        
-        if (result.success && result.data) {
+    dispatchPlayerAction({ type: 'START_GENERATION' })
+
+    try {
+      const res = isTTSMode
+        ? await executeTTS({ text: currentPrompt })
+        : await executeSFX({ prompt: currentPrompt, options: { durationSeconds, promptInfluence } })
+
+      if (res?.data) {
           dispatchPlayerAction({ 
             type: 'FINISH_GENERATION', 
-            payload: result.data 
+            payload: res.data 
           })
           
           dispatchPlayerAction({ 
             type: 'PLAY_TRACK', 
-            payload: result.data 
+            payload: res.data 
           })
           
           // Add to session for offline access
-          addToSession(result.data)
+          addToSession(res.data)
 
           // Replace loading message with result
           setMessages(prev => prev.map(msg => 
@@ -112,14 +113,14 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
               ? {
                   ...msg,
                   content: undefined,
-                  sound: result.data,
+                  sound: res.data,
                   isGenerating: false
                 }
               : msg
           ))
           
           toast.success(`${isTTSMode ? 'Speech' : 'Sound'} generated successfully!`)
-        } else {
+      } else {
           dispatchPlayerAction({ type: 'ERROR' })
           setMessages(prev => prev.map(msg => 
             msg.id === loadingMessage.id 
@@ -130,23 +131,22 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
                 }
               : msg
           ))
-          toast.error(result.error || 'Failed to generate')
-        }
-      } catch (error) {
-        dispatchPlayerAction({ type: 'ERROR' })
-        setMessages(prev => prev.map(msg => 
-          msg.id === loadingMessage.id 
-            ? {
-                ...msg,
-                content: "An error occurred while generating. Please try again.",
-                isGenerating: false
-              }
-            : msg
-        ))
-        toast.error('An unexpected error occurred')
-        console.error('Generation error:', error)
+          toast.error(res?.serverError || 'Failed to generate')
       }
-    })
+    } catch (error) {
+      dispatchPlayerAction({ type: 'ERROR' })
+      setMessages(prev => prev.map(msg => 
+        msg.id === loadingMessage.id 
+          ? {
+              ...msg,
+              content: "An error occurred while generating. Please try again.",
+              isGenerating: false
+            }
+          : msg
+      ))
+      toast.error('An unexpected error occurred')
+      console.error('Generation error:', error)
+    }
   }
 
   const handlePlaySound = (sound: GeneratedSound) => {
@@ -174,7 +174,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
     toast.success('URL copied to clipboard')
   }
 
-  const isLoading = isPending || isGenerating
+  const isLoading = isGenerating || isTTSPending || isSFXPending
 
   return (
     <div className={cn("h-full flex flex-col", className)}>
