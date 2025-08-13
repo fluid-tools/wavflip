@@ -70,7 +70,7 @@ export function ChatMessage({
         </ContextMenuItem>
       )}
       <ContextMenuItem 
-        onClick={() => sound && onDeleteSound?.(sound.id)}
+        onClick={(e) => { e.stopPropagation(); sound && onDeleteSound?.(sound.id) }}
         className="text-destructive focus:text-destructive"
       >
         <Trash2 className="h-4 w-4 mr-2" />
@@ -95,7 +95,7 @@ export function ChatMessage({
         </DropdownMenuItem>
       )}
       <DropdownMenuItem 
-        onClick={() => sound && onDeleteSound?.(sound.id)}
+        onClick={(e) => { e.stopPropagation(); sound && onDeleteSound?.(sound.id) }}
         className="text-destructive focus:text-destructive"
       >
         <Trash2 className="h-4 w-4 mr-2" />

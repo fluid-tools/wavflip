@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
@@ -25,6 +25,7 @@ interface InputAreaProps {
   isLoading: boolean
   onGenerate: () => void
   className?: string
+  extraControls?: ReactNode
 }
 
 export function InputArea({
@@ -34,7 +35,8 @@ export function InputArea({
   setIsTTSMode,
   isLoading,
   onGenerate,
-  className
+  className,
+  extraControls
 }: InputAreaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [textareaHeight, setTextareaHeight] = useState(72)
@@ -179,6 +181,7 @@ export function InputArea({
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <div className="h-4 w-px bg-black/10 dark:bg-white/10 mx-0.5" />
+                    {extraControls}
                     <div className="text-xs text-black/60 dark:text-white/60">
                       {prompt.length}/{isTTSMode ? 2500 : 500}
                     </div>

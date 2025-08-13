@@ -8,7 +8,10 @@ import type { GeneratedSound } from '@/types/audio'
 import type { GenerationError, GenerateSoundResult } from '@/types/elevenlabs'
 import { generateFilename } from '@/lib/utils'
 
-export async function generateSoundEffect(prompt: string): Promise<GenerateSoundResult> {
+export async function generateSoundEffect(
+  prompt: string,
+  options?: { durationSeconds?: number; promptInfluence?: number }
+): Promise<GenerateSoundResult> {
   if (!prompt || prompt.trim().length === 0) {
     return {
       success: false,
@@ -37,10 +40,16 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
 
     // Generate sound using ElevenLabs
     const elevenLabs = getElevenLabsClient()
+    const rawDuration = options?.durationSeconds
+    // Clamp per ElevenLabs docs: 0.1 to 22 seconds
+    const durationSeconds = typeof rawDuration === 'number'
+      ? Math.min(22, Math.max(0.1, rawDuration))
+      : 10
+    const promptInfluence = typeof options?.promptInfluence === 'number' ? options?.promptInfluence : 0.3
     const soundResponse = await elevenLabs.generateSoundEffect({
       text: prompt.trim(),
-      duration_seconds: 10,
-      prompt_influence: 0.3
+      duration_seconds: durationSeconds,
+      prompt_influence: promptInfluence
     })
 
     // Upload to S3
@@ -68,6 +77,7 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
       url: presignedUrl, // Return presigned URL for immediate playback
       createdAt: new Date(),
       type: 'generated',
+      duration: durationSeconds,
       metadata: {
         prompt: prompt.trim(),
         model: 'elevenlabs-sound-effects',
@@ -79,7 +89,7 @@ export async function generateSoundEffect(prompt: string): Promise<GenerateSound
     await addGeneratedSound(session.user.id, {
       name: generatedSound.title,
       fileKey: key, // Store S3 key
-      duration: 0,
+      duration: durationSeconds,
       size: soundResponse.audio.byteLength,
       mimeType: soundResponse.contentType,
       prompt: prompt.trim(),

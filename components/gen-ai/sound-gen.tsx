@@ -35,6 +35,8 @@ interface ChatMessage {
 export function SoundGenerator({ className }: SoundGeneratorProps) {
   const [prompt, setPrompt] = useState('')
   const [isTTSMode, setIsTTSMode] = useState(false)
+  const [durationSeconds, setDurationSeconds] = useState<number>(10)
+  const [promptInfluence, setPromptInfluence] = useState<number>(0.3)
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -83,7 +85,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
       try {
         const result = isTTSMode 
           ? await generateTextToSpeech(currentPrompt)
-          : await generateSoundEffect(currentPrompt)
+          : await generateSoundEffect(currentPrompt, { durationSeconds, promptInfluence })
         
         if (result.success && result.data) {
           dispatchPlayerAction({ 
@@ -185,6 +187,33 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
         setIsTTSMode={setIsTTSMode}
         isLoading={isLoading}
         onGenerate={handleGenerate}
+        // simple controls; integrate properly with your UI later
+        extraControls={
+          <div className="flex items-center gap-2 text-xs text-neutral-400">
+            <label className="flex items-center gap-1">dur
+              <input
+                type="number"
+                min={0.1}
+                max={22}
+                step={0.1}
+                value={durationSeconds}
+                onChange={(e)=> setDurationSeconds(Number(e.target.value))}
+                className="w-16 rounded bg-neutral-900 border border-neutral-800 px-1 py-0.5 text-neutral-200"
+              />
+            </label>
+            <label className="flex items-center gap-1">infl
+              <input
+                type="number"
+                min={0}
+                max={1}
+                step={0.1}
+                value={promptInfluence}
+                onChange={(e)=> setPromptInfluence(Number(e.target.value))}
+                className="w-16 rounded bg-neutral-900 border border-neutral-800 px-1 py-0.5 text-neutral-200"
+              />
+            </label>
+          </div>
+        }
       />
     </div>
   )
