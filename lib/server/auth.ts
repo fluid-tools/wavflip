@@ -16,7 +16,7 @@ export async function getServerSession() {
   }
 }
 
-// Require authentication - redirect if not authenticated
+// Require authentication - redirect if not authenticated // utility for api routes
 export async function requireAuth() {
   const session = await getServerSession()
   if (!session) {
