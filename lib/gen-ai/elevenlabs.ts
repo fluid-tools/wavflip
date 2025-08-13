@@ -45,13 +45,12 @@ class ElevenLabsClient {
 
   async generateSoundEffect(request: SoundEffectRequest): Promise<SoundEffectResponse> {
     try {
+      const body: Record<string, unknown> = { text: request.text }
+      if (typeof request.duration_seconds === 'number') body.duration_seconds = request.duration_seconds
+      if (typeof request.prompt_influence === 'number') body.prompt_influence = request.prompt_influence
       const response = await this.makeRequest('/v1/sound-generation', {
         method: 'POST',
-        body: JSON.stringify({
-          text: request.text,
-          duration_seconds: request.duration_seconds || 10,
-          prompt_influence: request.prompt_influence || 0.3
-        })
+        body: JSON.stringify(body)
       })
 
       const audioBuffer = await response.arrayBuffer()

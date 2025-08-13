@@ -133,7 +133,7 @@ export function InputArea({
 
               <div className="h-14 bg-black/5 dark:bg-white/5 rounded-b-xl flex items-center w-full">
                 <div className="absolute left-3 right-3 bottom-3 flex flex-wrap items-center justify-between w-[calc(100%-24px)] gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-4">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button

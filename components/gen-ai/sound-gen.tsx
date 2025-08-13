@@ -14,6 +14,9 @@ import {
 import { useGenerations } from '@/hooks/data/use-generations'
 import { WELCOME_MESSAGE } from '@/lib/constants/prompts'
 import { cn } from '@/lib/utils'
+import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
+import { Clock, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { InputArea } from './input-area'
@@ -189,29 +192,31 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
         onGenerate={handleGenerate}
         // simple controls; integrate properly with your UI later
         extraControls={
-          <div className="flex items-center gap-2 text-xs text-neutral-400">
-            <label className="flex items-center gap-1">dur
-              <input
-                type="number"
+          <div className="flex items-center gap-3 text-xs text-neutral-300">
+            <div className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 opacity-70" />
+              <Slider
+                value={[durationSeconds]}
                 min={0.1}
                 max={22}
                 step={0.1}
-                value={durationSeconds}
-                onChange={(e)=> setDurationSeconds(Number(e.target.value))}
-                className="w-16 rounded bg-neutral-900 border border-neutral-800 px-1 py-0.5 text-neutral-200"
+                onValueChange={(v)=> setDurationSeconds(Number(v[0]))}
+                className="w-28"
               />
-            </label>
-            <label className="flex items-center gap-1">infl
-              <input
-                type="number"
+              <span className="w-10 tabular-nums text-right">{durationSeconds.toFixed(1)}s</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 opacity-70" />
+              <Slider
+                value={[promptInfluence]}
                 min={0}
                 max={1}
-                step={0.1}
-                value={promptInfluence}
-                onChange={(e)=> setPromptInfluence(Number(e.target.value))}
-                className="w-16 rounded bg-neutral-900 border border-neutral-800 px-1 py-0.5 text-neutral-200"
+                step={0.05}
+                onValueChange={(v)=> setPromptInfluence(Number(v[0]))}
+                className="w-24"
               />
-            </label>
+              <span className="w-8 tabular-nums text-right">{Math.round(promptInfluence*100)}%</span>
+            </div>
           </div>
         }
       />

@@ -35,7 +35,7 @@ export function StorageIndicator({ className }: { className?: string }) {
     }
     if (storageInfo && !isLoading) void compute()
     return () => { cancelled = true }
-  }, [isLoading, storageInfo?.usageMB, storageInfo])
+  }, [isLoading, storageInfo?.usageMB])
 
   if (isLoading || !storageInfo) {
     return null
