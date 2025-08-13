@@ -2,11 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData, removeTrackFromVault } from '@/lib/storage/local-vault'
-import type { GeneratedSound } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 import type { LocalVaultTrack } from '@/lib/storage/local-vault'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
 import { waveformKeys } from '@/hooks/data/use-waveform'
 import { jotaiStore } from '@/state/jotai-store'
+import type { GenerationsResponse } from '@/types/generations'
 import { currentTrackAtom } from '@/state/audio-atoms'
 import { vaultKeys } from '@/hooks/data/use-vault'
 
@@ -30,23 +31,26 @@ function useOnlineGenerations() {
         }
         throw new Error('Failed to fetch generations')
       }
-      const data = await response.json()
-      
+      const data: GenerationsResponse = await response.json()
+
       // Transform tracks to GeneratedSound format
-      return data.tracks.map((track: any) => ({
-        id: track.id,
-        key: track.activeVersion?.fileKey || track.id,
-        title: track.name,
-        url: track.activeVersion?.presignedUrl || '',
-        createdAt: new Date(track.createdAt),
-        type: 'generated' as const,
-        duration: track.activeVersion?.duration,
-        metadata: {
-          prompt: track.metadata?.prompt || '',
-          model: track.metadata?.model || 'unknown',
-          generationTime: track.metadata?.generationTime
+      return data.tracks.map((track) => {
+        const meta = (track.metadata ?? {}) as { prompt?: string; model?: string; generationTime?: number }
+        return {
+          id: track.id,
+          key: track.activeVersion?.fileKey || track.id,
+          title: track.name,
+          url: track.activeVersion?.presignedUrl || '',
+          createdAt: new Date(track.createdAt),
+          type: 'generated' as const,
+          duration: track.activeVersion?.duration ?? undefined,
+          metadata: {
+            prompt: meta.prompt ?? '',
+            model: meta.model ?? 'uploaded',
+            generationTime: meta.generationTime,
+          },
         }
-      }))
+      })
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -161,7 +165,7 @@ export function useGenerations() {
     }
   })
   
-  // Mutation to handle new generation (auto-save offline)
+  // Mutation to handle new generation
   const addToSession = useMutation({
     mutationFn: async (sound: GeneratedSound) => {
       // Streaming-first: do not auto-save. Just refresh lists and persist peaks in background.
@@ -238,7 +242,7 @@ export function useGenerations() {
   })
   
   // Sort by creation date (newest first)
-  generations.sort((a, b) => 
+  generations.sort((a: GeneratedSound, b: GeneratedSound) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
   

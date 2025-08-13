@@ -1,4 +1,4 @@
-import { GeneratedSound } from "./audio"
+import { GeneratedSound } from "./generations"
 
 export interface ElevenLabsConfig {
   apiKey: string

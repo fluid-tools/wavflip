@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 
 import { useAtom } from 'jotai'
 import { currentTrackAtom, playerStateAtom, playerControlsAtom } from '@/state/audio-atoms'
-import type { GeneratedSound } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 

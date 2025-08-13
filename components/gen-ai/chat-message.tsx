@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
 import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
-import type { GeneratedSound } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
 

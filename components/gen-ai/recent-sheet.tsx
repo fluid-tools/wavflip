@@ -12,7 +12,7 @@ import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Virtuoso } from 'react-virtuoso'
-import type { GeneratedSound } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 import { useGenerations } from '@/hooks/data/use-generations'
 import { StorageIndicator } from './storage-indicator'
 
@@ -31,7 +31,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const { generations, isOnline, isLoading, saveOfflineAsync, removeOfflineAsync } = useGenerations()
   const [savingOffline, setSavingOffline] = useState<string | null>(null)
   const [removingOffline, setRemovingOffline] = useState<string | null>(null)
-  
+
   if (generations.length === 0 && !isLoading) return null
 
   const handleCopyUrl = (url: string) => {
@@ -40,8 +40,8 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   }
   const stopSelect = (e: Event) => {
     e.preventDefault()
-    // Cast to any to call stopPropagation when present (Radix onSelect passes a DOM Event)
-    ;(e as unknown as { stopPropagation?: () => void }).stopPropagation?.()
+      // Cast to any to call stopPropagation when present (Radix onSelect passes a DOM Event)
+      ; (e as unknown as { stopPropagation?: () => void }).stopPropagation?.()
   }
 
   const handleSaveOffline = async (sound: GeneratedSound & { isOffline?: boolean }) => {
@@ -76,12 +76,12 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const renderSoundCard = (sound: GeneratedSound & { isOffline?: boolean }) => {
     const isCurrentTrack = currentTrack?.id === sound.id
     const isPlaying = playerState === 'playing' && isCurrentTrack
-    
+
     return (
       <div className="px-4 py-2">
         <ContextMenu>
           <ContextMenuTrigger>
-            <div 
+            <div
               className="group bg-neutral-900/50 backdrop-blur-sm rounded-xl border border-neutral-800 hover:bg-neutral-800/80 transition-all duration-200 cursor-pointer hover:border-neutral-700 shadow-sm hover:shadow-md"
               onClick={(e) => {
                 const target = e.target as HTMLElement
@@ -192,8 +192,8 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                     variant="ghost"
                     className={cn(
                       "h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-all duration-200",
-                      isCurrentTrack 
-                        ? "bg-neutral-700 hover:bg-neutral-600 text-neutral-100" 
+                      isCurrentTrack
+                        ? "bg-neutral-700 hover:bg-neutral-600 text-neutral-100"
                         : "hover:bg-neutral-800 text-neutral-300"
                     )}
                     onClick={(e) => {
@@ -208,17 +208,17 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                     )}
                   </Button>
                 </div>
-                
+
                 {/* Waveform Preview */}
                 <div className="mb-2">
                   <MemoizedWaveform url={sound.url} trackKey={sound.key} />
                 </div>
-                
+
                 {/* Metadata */}
                 <div className="flex items-center justify-between text-xs text-neutral-400">
                   <div className="flex items-center gap-2">
                     <div className="px-2 py-0.5 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs">
-                      {sound.metadata?.model?.replace('elevenlabs-', '')}
+                      {sound.metadata.model?.replace('elevenlabs-', '') === 'unknown' ? 'uploaded' : sound.metadata.model.replace('elevenlabs-', '')}
                     </div>
                     {sound.isOffline && (
                       <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-900/20 border border-green-800/30">
@@ -232,7 +232,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
             </div>
           </ContextMenuTrigger>
           <ContextMenuContent className="w-40 bg-neutral-900 border border-neutral-800">
-            <ContextMenuItem 
+            <ContextMenuItem
               onClick={() => onPlaySound(sound)}
               className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
             >
@@ -243,7 +243,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
               )}
               {isPlaying ? 'Pause' : 'Play'}
             </ContextMenuItem>
-            <ContextMenuItem 
+            <ContextMenuItem
               onClick={() => handleCopyUrl(sound.url)}
               className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
             >
@@ -251,7 +251,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
               Copy URL
             </ContextMenuItem>
             {sound.metadata?.prompt && (
-              <ContextMenuItem 
+              <ContextMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(sound.metadata!.prompt!)
                   toast.success('Prompt copied to clipboard')
@@ -269,7 +269,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
               </a>
             </ContextMenuItem>
             {!sound.isOffline && isOnline && (
-              <ContextMenuItem 
+              <ContextMenuItem
                 onClick={() => handleSaveOffline(sound)}
                 disabled={savingOffline === sound.id}
                 className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
@@ -288,7 +288,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
               </ContextMenuItem>
             )}
             {sound.isOffline && (
-              <ContextMenuItem 
+              <ContextMenuItem
                 disabled
                 className="text-neutral-100"
               >
@@ -316,12 +316,12 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
           <SheetTitle className="text-lg font-semibold text-neutral-100">Recent Generations</SheetTitle>
           <p className="text-sm text-neutral-400 mt-1">Your latest sound creations</p>
         </SheetHeader>
-        
+
         {/* Storage Indicator */}
         <div className="px-6 py-3 border-b border-neutral-800">
           <StorageIndicator />
         </div>
-        
+
         <div className="flex-1 min-h-0">
           <Virtuoso
             style={{ height: '100%' }}

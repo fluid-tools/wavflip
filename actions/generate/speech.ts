@@ -7,7 +7,7 @@ import { getServerSession } from "@/lib/server/auth"
 import { addGeneratedSound } from "@/lib/server/vault/generations"
 import { generateFilename } from "@/lib/utils"
 import { uploadGeneratedAudioToS3, getPresignedUrl } from "@/lib/storage/s3-storage"
-import type { GeneratedSound } from "@/types/audio"
+import type { GeneratedSound } from "@/types/generations"
 import type { GenerationError } from "@/types/elevenlabs"
 
 const ttsInputSchema = z.object({

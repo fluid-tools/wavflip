@@ -49,7 +49,7 @@ export function useWaveform(trackKey?: string) {
       })
       return payload
     },
-    onSuccess: (payload) => {
+    onSuccess: (payload: WaveformData) => {
       if (!trackKey) return
       const optimistic: WaveformResponse = {
         data: payload,

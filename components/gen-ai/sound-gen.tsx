@@ -19,7 +19,7 @@ import { useAction } from 'next-safe-action/hooks'
 import { toast } from 'sonner'
 import { ChatMessages } from './chat-messages'
 import { InputArea } from './input-area'
-import type { GeneratedSound } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 
 interface SoundGeneratorProps {
   className?: string

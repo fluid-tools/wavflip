@@ -1,4 +1,4 @@
-export interface AudioTrack {
+export type AudioTrack = {
   id: string
   // S3 object key for streaming and caching
   key: string
@@ -15,19 +15,9 @@ export interface AudioTrack {
   }
 }
 
-export interface GeneratedSound extends AudioTrack {
-  type: 'generated'
-  metadata: {
-    prompt: string
-    model: string
-    generationTime?: number
-  }
-  isOffline?: boolean // Added to track offline availability
-}
-
 export type PlayerState = 'idle' | 'loading' | 'playing' | 'paused' | 'error'
 
-export interface PlayerControls {
+export type PlayerControls = {
   play: () => void
   pause: () => void
   stop: () => void

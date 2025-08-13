@@ -6,7 +6,7 @@ import { getElevenLabsClient } from "@/lib/gen-ai/elevenlabs"
 import { uploadGeneratedAudioToS3, getPresignedUrl } from "@/lib/storage/s3-storage"
 import { addGeneratedSound } from "@/lib/server/vault/generations"
 import { getServerSession } from "@/lib/server/auth"
-import type { GeneratedSound } from "@/types/audio"
+import type { GeneratedSound } from "@/types/generations"
 import type { GenerationError } from "@/types/elevenlabs"
 import { generateFilename } from "@/lib/utils"
 

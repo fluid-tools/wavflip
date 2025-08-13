@@ -4,6 +4,8 @@ import { getOrCreateGenerationsProject } from '@/lib/server/vault/generations'
 import { getPresignedUrl } from '@/lib/storage/s3-storage'
 import { REDIS_KEYS } from '@/lib/redis'
 
+import type { GenerationsResponse } from '@/types/generations'
+
 export async function GET() {
   try {
     const session = await getServerSession()
@@ -45,7 +47,7 @@ export async function GET() {
       })
     )
     
-    return NextResponse.json({
+    return NextResponse.json<GenerationsResponse>({
       ...generationsProject,
       tracks: tracksWithUrls
     })

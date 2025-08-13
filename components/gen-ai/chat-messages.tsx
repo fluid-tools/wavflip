@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatMessage } from './chat-message'
 import { cn } from '@/lib/utils'
 import { MUSIC_PROMPTS } from '@/lib/constants/prompts'
-import type { GeneratedSound } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 
 interface ChatMessage {
   id: string

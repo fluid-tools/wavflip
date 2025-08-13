@@ -1,6 +1,7 @@
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
-import type { AudioTrack, PlayerState, GeneratedSound } from '@/types/audio'
+import type { AudioTrack, PlayerState } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 
 // Queue repeat modes
 export type RepeatMode = 'none' | 'one' | 'all'

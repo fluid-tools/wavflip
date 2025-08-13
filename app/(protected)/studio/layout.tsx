@@ -5,7 +5,7 @@ import { getPresignedUrl } from '@/lib/storage/s3-storage'
 import { REDIS_KEYS } from '@/lib/redis'
 import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query'
 import type { TrackVersion, TrackWithVersions } from '@/db/schema/vault'
-import type { GeneratedSound } from '@/types/audio'
+import type { GeneratedSound } from "@/types/generations"
 
 interface StudioLayoutProps {
   children: ReactNode
