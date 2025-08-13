@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import { cn } from '@/lib/utils'
-import { generateWaveformData } from '@/lib/audio/waveform-generator'
+import { generateWaveformData, generatePlaceholderWaveform } from '@/lib/audio/waveform-generator'
 import { useWaveform } from '@/hooks/data/use-waveform'
 import { getTrackFromVault } from '@/lib/storage/local-vault'
 import { mediaStore } from '@/lib/storage/media-store'
@@ -19,6 +19,7 @@ interface WaveformPreviewProps {
   interact?: boolean
   onReady?: (wavesurfer: WaveSurfer) => void
   onTimeUpdate?: (time: number) => void
+  approxDuration?: number
 }
 
 export function WaveformPreview({ 
@@ -28,7 +29,8 @@ export function WaveformPreview({
   className, 
   interact = false,
   onReady,
-  onTimeUpdate
+  onTimeUpdate,
+  approxDuration
 }: WaveformPreviewProps) {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurferRef = useRef<WaveSurfer | null>(null)
@@ -82,6 +84,13 @@ export function WaveformPreview({
           }
         }
 
+        // If we still do not have peaks, render a deterministic placeholder to avoid layout flicker
+        if (!peaks && approxDuration) {
+          const ph = generatePlaceholderWaveform(approxDuration)
+          peaks = ph.peaks
+          duration = ph.duration
+        }
+
         // Abort guard after async
         if (!waveformRef.current) return
 
@@ -103,8 +112,8 @@ export function WaveformPreview({
           splitChannels: undefined,
           peaks: peaks ? [peaks] : undefined,
           duration,
-          // Avoid passing url for blob to prevent duplicate fetches; peaks-only render is fine for preview
-          url: !isBlob ? url : undefined
+          // Avoid passing url when we already have peaks to prevent an unnecessary fetch
+          url: !peaks && !isBlob ? url : undefined
         })
 
         wavesurferRef.current = wavesurfer

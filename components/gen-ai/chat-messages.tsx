@@ -14,6 +14,7 @@ interface ChatMessage {
   sound?: GeneratedSound
   timestamp: Date
   isGenerating?: boolean
+  etaSeconds?: number
 }
 
 interface ChatMessagesProps {
@@ -75,6 +76,7 @@ export function ChatMessages({
                 sound={message.sound}
                 isGenerating={message.isGenerating}
                 generationProgress={generationProgress}
+                etaSeconds={message.etaSeconds}
                 onPlaySound={onPlaySound}
                 onDeleteSound={onDeleteSound}
                 onCopyUrl={onCopyUrl}

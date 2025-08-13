@@ -20,6 +20,7 @@ interface ChatMessageProps {
   sound?: GeneratedSound
   isGenerating?: boolean
   generationProgress?: number
+  etaSeconds?: number
   onPlaySound?: (sound: GeneratedSound) => void
   onDeleteSound?: (soundId: string) => void
   onCopyUrl?: (url: string) => void
@@ -31,6 +32,7 @@ export function ChatMessage({
   sound,
   isGenerating = false,
   generationProgress = 0,
+  etaSeconds,
   onPlaySound,
   onDeleteSound,
   onCopyUrl
@@ -129,15 +131,41 @@ export function ChatMessage({
             <p className="text-sm leading-relaxed">{content}</p>
             {isGenerating && (
               <div className="mt-2">
-                <Progress 
-                  value={generationProgress * 100} 
-                  className={cn(
-                    "h-1",
-                    isUser ? "bg-white/20" : "bg-muted"
+                <div className="flex items-center justify-between gap-3">
+                  <Progress 
+                    value={generationProgress * 100} 
+                    className={cn(
+                      "h-1 flex-1",
+                      isUser ? "bg-white/20" : "bg-muted"
+                    )}
+                  />
+                  {typeof etaSeconds === 'number' && (
+                    <span className="text-[10px] tabular-nums opacity-70 min-w-[42px] text-right">
+                      ~{Math.max(1, Math.ceil(etaSeconds))}s
+                    </span>
                   )}
-                />
+                </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Deterministic skeleton card while generating */}
+        {isGenerating && !sound && (
+          <div className="rounded-2xl border border-border py-3 bg-card max-w-md w-full flex flex-col gap-4 sm:gap-6 mt-3">
+            <div className="flex px-3 gap-2 justify-between items-center">
+              <h4 className="font-medium font-mono tracking-tight text-xs opacity-75 truncate">Preparing sound…</h4>
+              <Badge className="bg-neutral-800 dark:bg-neutral-700 text-neutral-300 border-0 text-xs px-4 py-0.5">sfx</Badge>
+            </div>
+            <div className="border border-border bg-muted">
+              <WaveformPreview url={"about:blank"} height={waveformHeight} approxDuration={typeof etaSeconds === 'number' ? Math.max(2, etaSeconds) : 8} />
+            </div>
+            <div className="flex items-center justify-between px-3 pb-1">
+              <div className="flex items-center gap-2 text-xs text-neutral-400">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Finalizing…
+              </div>
+            </div>
           </div>
         )}
 
@@ -154,7 +182,7 @@ export function ChatMessage({
                 </div>
                 {/* Waveform */}
                 <div className="border border-border bg-muted">
-                  <WaveformPreview url={sound.url} trackKey={sound.key} height={waveformHeight} />
+                  <WaveformPreview url={sound.url} trackKey={sound.key} height={waveformHeight} approxDuration={sound.duration} />
                 </div>
                 {/* Controls */}
                 <div className="flex items-center justify-between">

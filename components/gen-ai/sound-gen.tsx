@@ -33,6 +33,7 @@ interface ChatMessage {
   sound?: GeneratedSound
   timestamp: Date
   isGenerating?: boolean
+  etaSeconds?: number
 }
 
 export function SoundGenerator({ className }: SoundGeneratorProps) {
@@ -70,12 +71,15 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
       timestamp: new Date()
     }
 
+    // Simple ETA: requested duration + small overhead (2s)
+    const etaSeconds = Math.max(2, Math.round((isTTSMode ? 4 : durationSeconds) + 2))
     const loadingMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),
       type: 'assistant',
       content: `Creating "${prompt.trim()}"...`,
       timestamp: new Date(),
-      isGenerating: true
+      isGenerating: true,
+      etaSeconds
     }
 
     setMessages(prev => [...prev, userMessage, loadingMessage])
