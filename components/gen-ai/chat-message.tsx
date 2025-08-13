@@ -9,10 +9,19 @@ import { Loader2, Play, Pause, Download, MoreHorizontal, Copy, Trash2 } from 'lu
 import { WaveformPreview } from '@/components/player/waveform-preview'
 import { cn } from '@/lib/utils'
 import { useAtom } from 'jotai'
+import { useEffect, useState } from 'react'
 import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
 import type { GeneratedSound } from '@/types/audio'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
+
+function computeDeterministicProgress(startedAt?: Date, etaSeconds?: number, nowMs?: number): number {
+  if (!startedAt || !etaSeconds || etaSeconds <= 0) return 0
+  const now = typeof nowMs === 'number' ? nowMs : Date.now()
+  const elapsed = (now - new Date(startedAt).getTime()) / 1000
+  const pct = Math.max(0, Math.min(1, elapsed / etaSeconds))
+  return Math.round(pct * 100)
+}
 
 interface ChatMessageProps {
   type: 'user' | 'assistant' | 'system'
@@ -21,6 +30,7 @@ interface ChatMessageProps {
   isGenerating?: boolean
   generationProgress?: number
   etaSeconds?: number
+  startedAt?: Date
   onPlaySound?: (sound: GeneratedSound) => void
   onDeleteSound?: (soundId: string) => void
   onCopyUrl?: (url: string) => void
@@ -33,6 +43,7 @@ export function ChatMessage({
   isGenerating = false,
   generationProgress = 0,
   etaSeconds,
+  startedAt,
   onPlaySound,
   onDeleteSound,
   onCopyUrl
@@ -48,9 +59,21 @@ export function ChatMessage({
   const isMobile = useIsMobile()
   const waveformHeight = isMobile ? 32 : 48
 
+  // Tick to update the time-based progress UI while generating
+  const [nowMs, setNowMs] = useState<number>(() => Date.now())
+  useEffect(() => {
+    if (!isGenerating) return
+    const id = setInterval(() => setNowMs(Date.now()), 200)
+    return () => clearInterval(id)
+  }, [isGenerating])
+  const percent = computeDeterministicProgress(startedAt, etaSeconds, nowMs)
+  const remaining = startedAt && etaSeconds
+    ? Math.max(1, Math.ceil(etaSeconds - (nowMs - new Date(startedAt).getTime()) / 1000))
+    : undefined
+
   const renderMenuItems = () => (
     <>
-      <ContextMenuItem onClick={() => sound && onPlaySound?.(sound)}>
+      <ContextMenuItem onClick={() => { if (sound) onPlaySound?.(sound) }}>
         {isPlaying && isCurrentTrack ? (
           <Pause className="h-4 w-4 mr-2" />
         ) : (
@@ -58,7 +81,7 @@ export function ChatMessage({
         )}
         {isPlaying && isCurrentTrack ? 'Pause' : 'Play'}
       </ContextMenuItem>
-      <ContextMenuItem onClick={() => sound && onCopyUrl?.(sound.url)}>
+      <ContextMenuItem onClick={() => { if (sound) onCopyUrl?.(sound.url) }}>
         <Copy className="h-4 w-4 mr-2" />
         Copy URL
       </ContextMenuItem>
@@ -72,7 +95,7 @@ export function ChatMessage({
         </ContextMenuItem>
       )}
       <ContextMenuItem 
-        onClick={(e) => { e.stopPropagation(); sound && onDeleteSound?.(sound.id) }}
+        onClick={(e) => { e.stopPropagation(); if (sound) onDeleteSound?.(sound.id) }}
         className="text-destructive focus:text-destructive"
       >
         <Trash2 className="h-4 w-4 mr-2" />
@@ -83,7 +106,7 @@ export function ChatMessage({
 
   const renderDropdownItems = () => (
     <>
-      <DropdownMenuItem onClick={() => sound && onCopyUrl?.(sound.url)}>
+      <DropdownMenuItem onClick={() => { if (sound) onCopyUrl?.(sound.url) }}>
         <Copy className="h-4 w-4 mr-2" />
         Copy URL
       </DropdownMenuItem>
@@ -97,7 +120,7 @@ export function ChatMessage({
         </DropdownMenuItem>
       )}
       <DropdownMenuItem 
-        onClick={(e) => { e.stopPropagation(); sound && onDeleteSound?.(sound.id) }}
+        onClick={(e) => { e.stopPropagation(); if (sound) onDeleteSound?.(sound.id) }}
         className="text-destructive focus:text-destructive"
       >
         <Trash2 className="h-4 w-4 mr-2" />
@@ -125,7 +148,7 @@ export function ChatMessage({
             {isGenerating && (
               <div className="flex items-center gap-2 text-xs opacity-80">
                 <Loader2 className="h-3 w-3 animate-spin" />
-                Generating... {Math.round(generationProgress * 100)}%
+                Generating... {percent}%
               </div>
             )}
             <p className="text-sm leading-relaxed">{content}</p>
@@ -133,15 +156,15 @@ export function ChatMessage({
               <div className="mt-2">
                 <div className="flex items-center justify-between gap-3">
                   <Progress 
-                    value={generationProgress * 100} 
+                    value={percent} 
                     className={cn(
                       "h-1 flex-1",
                       isUser ? "bg-white/20" : "bg-muted"
                     )}
                   />
-                  {typeof etaSeconds === 'number' && (
+                  {typeof remaining === 'number' && (
                     <span className="text-[10px] tabular-nums opacity-70 min-w-[42px] text-right">
-                      ~{Math.max(1, Math.ceil(etaSeconds))}s
+                      ~{remaining}s
                     </span>
                   )}
                 </div>

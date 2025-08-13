@@ -143,7 +143,7 @@ export function WaveformPreview({
         wavesurferRef.current = null
       }
     }
-  }, [url, trackKey, height, interact, onReady, onTimeUpdate, waveform.data])
+  }, [url, trackKey, height, interact, onReady, onTimeUpdate, waveform.data, approxDuration])
 
   return (
     <div 

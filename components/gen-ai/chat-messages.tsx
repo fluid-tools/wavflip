@@ -77,6 +77,7 @@ export function ChatMessages({
                 isGenerating={message.isGenerating}
                 generationProgress={generationProgress}
                 etaSeconds={message.etaSeconds}
+                startedAt={message.timestamp}
                 onPlaySound={onPlaySound}
                 onDeleteSound={onDeleteSound}
                 onCopyUrl={onCopyUrl}
