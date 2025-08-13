@@ -212,16 +212,13 @@ export default function PlayerDock() {
           mediaRef.current = media
         }
 
-        const wavesurfer = WaveSurfer.create({
+		const wavesurfer = WaveSurfer.create({
           container,
-          height: isMobile ? 48 : 60,
-          waveColor: monoPeaks ? 'rgb(64 64 64)' : 'rgb(200 200 200)',
-          progressColor: 'rgb(255 255 255)',
-          cursorColor: 'rgb(255 255 255)',
-          cursorWidth: 3,
-          barWidth: 3,
-          barGap: 2,
-          barRadius: 3,
+			height: isMobile ? 44 : 56,
+			waveColor: monoPeaks ? 'rgba(148,163,184,0.55)' : 'rgba(203,213,225,0.6)',
+			progressColor: 'rgba(255,255,255,0.9)',
+			cursorColor: 'rgba(255,255,255,0.7)',
+			cursorWidth: 1.5,
           fillParent: true,
           interact: true,
           dragToSeek: true,
@@ -424,10 +421,10 @@ export default function PlayerDock() {
 
           {/* Waveform - Takes remaining space with buffering overlay */}
           <div className="flex-1 min-w-0 px-4">
-            <div className="relative">
+          <div className="relative">
               <div 
                 ref={desktopWaveformRef}
-                className="w-full h-[60px] rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+                className="w-full h-[56px] rounded-lg overflow-hidden bg-neutral-800/80 border border-neutral-700/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
               />
               {(isLoading || isBuffering) && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-neutral-900/30">
@@ -565,7 +562,7 @@ export default function PlayerDock() {
           <div className="relative">
             <div 
               ref={mobileWaveformRef}
-              className="w-full h-12 rounded-md overflow-hidden bg-neutral-800 border border-neutral-700"
+              className="w-full h-12 rounded-lg overflow-hidden bg-neutral-800/80 border border-neutral-700/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
             />
             {(isLoading || isBuffering) && (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-neutral-900/30">
