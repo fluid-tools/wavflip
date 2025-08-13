@@ -6,7 +6,6 @@ import { generateSoundEffect } from '@/actions/generate/sound'
 import { generateTextToSpeech } from '@/actions/generate/speech'
 import { 
   isGeneratingAtom, 
-  generationProgressAtom, 
   playerControlsAtom,
   currentTrackAtom,
   playerStateAtom
@@ -51,7 +50,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
   const [isPending, startTransition] = useTransition()
   
   const [isGenerating] = useAtom(isGeneratingAtom)
-  const [generationProgress] = useAtom(generationProgressAtom)
+  // generationProgress is not used in the new deterministic UI
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
   const [currentTrack] = useAtom(currentTrackAtom)
   const [playerState] = useAtom(playerStateAtom)
@@ -181,7 +180,6 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
     <div className={cn("h-full flex flex-col", className)}>
       <ChatMessages
         messages={messages}
-        generationProgress={generationProgress}
         onPlaySound={handlePlaySound}
         onDeleteSound={handleDeleteSound}
         onCopyUrl={handleCopyUrl}

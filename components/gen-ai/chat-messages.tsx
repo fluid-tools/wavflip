@@ -19,7 +19,6 @@ interface ChatMessage {
 
 interface ChatMessagesProps {
   messages: ChatMessage[]
-  generationProgress: number
   onPlaySound: (sound: GeneratedSound) => void
   onDeleteSound: (soundId: string) => void
   onCopyUrl: (url: string) => void
@@ -28,7 +27,6 @@ interface ChatMessagesProps {
 
 export function ChatMessages({
   messages,
-  generationProgress,
   onPlaySound,
   onDeleteSound,
   onCopyUrl,
@@ -75,7 +73,6 @@ export function ChatMessages({
                 content={message.content}
                 sound={message.sound}
                 isGenerating={message.isGenerating}
-                generationProgress={generationProgress}
                 etaSeconds={message.etaSeconds}
                 startedAt={message.timestamp}
                 onPlaySound={onPlaySound}

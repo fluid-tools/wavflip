@@ -28,7 +28,6 @@ interface ChatMessageProps {
   content?: string
   sound?: GeneratedSound
   isGenerating?: boolean
-  generationProgress?: number
   etaSeconds?: number
   startedAt?: Date
   onPlaySound?: (sound: GeneratedSound) => void
@@ -41,7 +40,6 @@ export function ChatMessage({
   content,
   sound,
   isGenerating = false,
-  generationProgress = 0,
   etaSeconds,
   startedAt,
   onPlaySound,
