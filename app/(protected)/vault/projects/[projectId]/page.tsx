@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getServerSession } from '@/lib/server/auth'
+import { getCachedSession } from '@/lib/server/auth'
+import { redirect } from 'next/navigation'
 import { getProjectWithTracks } from '@/lib/server/vault'
 import { getPresignedImageUrl, getPresignedUrl } from '@/lib/storage/s3-storage'
 import { ProjectView } from './client'
@@ -17,11 +18,11 @@ interface ProjectPageProps {
 export default async function ProjectPage({ params }: ProjectPageProps) {
   // Parallelize session check and params extraction for better performance
   const [session, { projectId }] = await Promise.all([
-    getServerSession(),
+    getCachedSession(),
     params
   ])
 
-  if (!projectId || !session?.user?.id) notFound()
+  if (!projectId || !session?.user?.id) redirect('/sign-in')
 
   const queryClient = new QueryClient({
     defaultOptions: {

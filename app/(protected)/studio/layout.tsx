@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { getServerSession } from '@/lib/server/auth'
+import { getCachedSession } from '@/lib/server/auth'
 import { getOrCreateGenerationsProject } from '@/lib/server/vault/generations'
 import { getPresignedUrl } from '@/lib/storage/s3-storage'
 import { REDIS_KEYS } from '@/lib/redis'
@@ -15,7 +15,7 @@ export default async function StudioLayout({ children }: StudioLayoutProps) {
   const queryClient = new QueryClient()
   
   // Prefetch generations project if user is authenticated
-  const session = await getServerSession()
+  const session = await getCachedSession()
   
   if (session?.user?.id) {
     await queryClient.prefetchQuery({

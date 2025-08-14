@@ -1,4 +1,5 @@
-import { requireAuth } from "@/lib/server/auth";
+import { getCachedSession } from "@/lib/server/auth";
+import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/nav/app-sidebar";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Navbar } from "@/components/nav/base-nav";
@@ -16,8 +17,9 @@ export default async function ProtectedLayout({
 }: {
     children: React.ReactNode;
 }) {
-    // Server-side auth check - will redirect if not authenticated
-    await requireAuth();
+    // Server-side auth check using cached session; redirect if not authenticated
+    const session = await getCachedSession()
+    if (!session) redirect('/sign-in')
 
     // Get sidebar state from cookie for persistence
     const cookieStore = await cookies()

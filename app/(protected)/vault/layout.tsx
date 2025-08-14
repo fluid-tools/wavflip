@@ -1,7 +1,8 @@
 import { ReactNode } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
-import { requireAuth } from '@/lib/server/auth'
+import { getCachedSession } from '@/lib/server/auth'
+import { redirect } from 'next/navigation'
 import { getUserFolders, getVaultProjects, getSidebarData } from '@/lib/server/vault'
 
 interface VaultLayoutProps {
@@ -9,7 +10,8 @@ interface VaultLayoutProps {
 }
 
 export default async function VaultLayout({ children }: VaultLayoutProps) {
-  const session = await requireAuth()
+  const session = await getCachedSession()
+  if (!session) redirect('/sign-in')
   
   // Create query client with proper default options
   const queryClient = new QueryClient({

@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { getServerSession } from '@/lib/server/auth'
+import { getCachedSession } from '@/lib/server/auth'
 import { Button } from '@/components/ui/button'
 
 export default async function HomePage() {
-  const session = await getServerSession()
+  const session = await getCachedSession()
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
