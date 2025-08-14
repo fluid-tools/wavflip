@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/actions/use-vault-action'
+import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/actions/vault/use-action'
 import type { FolderWithProjects } from '@/db/schema/vault'
 
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'

@@ -12,7 +12,7 @@ import { ProjectCard } from '@/components/vault/projects/card'
 
 import { Virtuoso } from 'react-virtuoso'
 import { DndLayout } from '@/components/vault/dnd-layout'
-import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/use-vault-action'
+import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/vault/use-action'
 import { useFolder } from '@/hooks/data/use-vault'
 import { useVaultSelection } from '@/hooks/use-vault-selection'
 import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms'

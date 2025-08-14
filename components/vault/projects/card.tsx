@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/vault/use-action'
 import type { Project, ProjectWithTracks } from '@/db/schema/vault'
 
 import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'

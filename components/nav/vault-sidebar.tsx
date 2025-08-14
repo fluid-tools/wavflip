@@ -48,7 +48,7 @@ import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { RenameDialog } from '@/components/vault/dialogs/rename-dialog'
 import { DeleteDialog } from '@/components/vault/dialogs/delete-dialog'
 import { MoveDialog } from '@/components/vault/dialogs/move-dialog'
-import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction, useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction, useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/vault/use-action'
 import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
 
 interface SidebarFolder {

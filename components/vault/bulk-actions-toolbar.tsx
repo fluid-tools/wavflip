@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useDeleteFolderAction, useDeleteProjectAction, useMoveFolderAction, useMoveProjectAction } from '@/actions/use-vault-action'
+import { useDeleteFolderAction, useDeleteProjectAction, useMoveFolderAction, useMoveProjectAction } from '@/actions/vault/use-action'
 
 
 interface BulkActionsToolbarProps {
