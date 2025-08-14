@@ -9,7 +9,7 @@ import { waveformKeys } from '@/hooks/data/use-waveform'
 import { jotaiStore } from '@/state/jotai-store'
 import type { GenerationsResponse } from '@/types/generations'
 import { currentTrackAtom } from '@/state/audio-atoms'
-import { vaultKeys } from '@/hooks/data/use-vault'
+import { vaultKeys } from './keys'
 
 // Query keys
 export const generationsKeys = {

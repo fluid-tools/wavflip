@@ -49,7 +49,7 @@ export function useVaultAction(
 
 // Specific hooks for common operations
 export function useCreateFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { createFolderAction } = require('@/actions/vault')
+  const { createFolderAction } = require('@/actions/vault/folder')
   
   return useVaultAction(
     createFolderAction,
@@ -62,7 +62,7 @@ export function useCreateFolderAction(options: Omit<UseVaultActionOptions, 'succ
 }
 
 export function useCreateProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { createProjectAction } = require('@/actions/vault')
+  const { createProjectAction } = require('@/actions/vault/project')
   
   return useVaultAction(
     createProjectAction,
@@ -75,7 +75,7 @@ export function useCreateProjectAction(options: Omit<UseVaultActionOptions, 'suc
 }
 
 export function useDeleteFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { deleteFolderAction } = require('@/actions/vault')
+  const { deleteFolderAction } = require('@/actions/vault/folder')
   
   return useVaultAction(
     deleteFolderAction,
@@ -88,7 +88,7 @@ export function useDeleteFolderAction(options: Omit<UseVaultActionOptions, 'succ
 }
 
 export function useDeleteProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { deleteProjectAction } = require('@/actions/vault')
+  const { deleteProjectAction } = require('@/actions/vault/project')
   
   return useVaultAction(
     deleteProjectAction,
@@ -101,7 +101,7 @@ export function useDeleteProjectAction(options: Omit<UseVaultActionOptions, 'suc
 }
 
 export function useRenameFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { renameFolderAction } = require('@/actions/vault')
+  const { renameFolderAction } = require('@/actions/vault/folder')
   
   return useVaultAction(
     renameFolderAction,
@@ -114,7 +114,7 @@ export function useRenameFolderAction(options: Omit<UseVaultActionOptions, 'succ
 }
 
 export function useRenameProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { renameProjectAction } = require('@/actions/vault')
+  const { renameProjectAction } = require('@/actions/vault/project')
   
   return useVaultAction(
     renameProjectAction,
@@ -127,7 +127,7 @@ export function useRenameProjectAction(options: Omit<UseVaultActionOptions, 'suc
 }
 
 export function useMoveFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { moveFolderAction } = require('@/actions/vault')
+  const { moveFolderAction } = require('@/actions/vault/folder')
   
   return useVaultAction(
     moveFolderAction,
@@ -140,7 +140,7 @@ export function useMoveFolderAction(options: Omit<UseVaultActionOptions, 'succes
 }
 
 export function useMoveProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { moveProjectAction } = require('@/actions/vault')
+  const { moveProjectAction } = require('@/actions/vault/project')
   
   return useVaultAction(
     moveProjectAction,
@@ -153,7 +153,7 @@ export function useMoveProjectAction(options: Omit<UseVaultActionOptions, 'succe
 }
 
 export function useCombineProjectsAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { createFolderFromProjectsAction } = require('@/actions/vault')
+  const { createFolderFromProjectsAction } = require('@/actions/vault/project')
   
   return useVaultAction(
     createFolderFromProjectsAction,

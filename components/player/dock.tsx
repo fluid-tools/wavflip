@@ -30,7 +30,7 @@ import { useWaveform } from '@/hooks/data/use-waveform'
 import { downloadAndStoreAudio, getTrackFromVault } from '@/lib/storage/local-vault'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
-import { vaultKeys } from '@/hooks/data/use-vault'
+import { vaultKeys } from '@/hooks/data/keys'
 
 interface MutableHTMLAudioElement extends HTMLAudioElement {
   _cleanupListeners?: () => void

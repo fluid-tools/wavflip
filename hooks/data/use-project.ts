@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import type { ProjectWithTracks } from '@/db/schema/vault'
 import type { ProjectImageResponse } from '@/types/project'
 import { nanoid } from 'nanoid'
-import { vaultKeys } from './use-vault'
+import { vaultKeys } from './keys'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
 
 interface UseProjectProps {
