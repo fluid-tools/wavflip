@@ -121,11 +121,6 @@ export type FolderWithProjects = Folder & {
   projectCount?: number;
 };
 
-export type NestedFolderStructure = Folder & {
-  projects: ProjectWithTracks[];
-  subFolders: NestedFolderStructure[];
-};
-
 export type TrackWithVersions = Track & {
   activeVersion?: TrackVersion;
   versions: TrackVersion[];

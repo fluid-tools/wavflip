@@ -1,29 +1,10 @@
 import 'server-only'
 
-import type { 
-  Folder, NewFolder, 
-  Project, NewProject,
-  Track, NewTrack,
-  TrackVersion, NewTrackVersion,
-  FolderWithProjects,
-  ProjectWithTracks
-} from '@/db/schema/vault'
-
-// Re-export schema types for convenience
-export type { 
-  Folder, NewFolder,
-  Project, NewProject, 
-  Track, NewTrack,
-  TrackVersion, NewTrackVersion,
-  FolderWithProjects,
-  ProjectWithTracks
-}
-
 // ================================
 // UNIFIED VAULT DATA TYPES
 // ================================
 
-export interface VaultProject {
+interface VaultProject {
   id: string
   name: string
   trackCount: number
@@ -79,4 +60,6 @@ export interface VaultQueryOptions {
   // Display options
   includeLevels?: boolean
   maxDepth?: number
-} 
+}
+
+

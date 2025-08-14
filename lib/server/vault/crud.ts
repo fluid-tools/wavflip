@@ -4,14 +4,12 @@ import { db } from '@/db'
 import { folder, project, track, trackVersion } from '@/db/schema/vault'
 import { eq, and, desc, not, isNull, count } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import type { 
-  Folder, NewFolder,
-  Project, NewProject,
-  Track, NewTrack,
-  TrackVersion, NewTrackVersion,
+
+import type {
+  NewFolder, NewProject, Folder, Project, NewTrack, NewTrackVersion, Track, TrackVersion,
   FolderWithProjects,
   ProjectWithTracks
-} from './types'
+} from '@/db/schema/vault'
 
 // ================================
 // DATA FETCHING OPERATIONS
@@ -30,17 +28,17 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
       // Get full folder contents to calculate proper counts
       const fullFolderContent = await getFolderWithContents(f.id, userId)
       if (!fullFolderContent) {
-        return { 
-          ...f, 
+        return {
+          ...f,
           projects: [],
           subFolders: [],
           subFolderCount: 0,
           projectCount: 0
         }
       }
-      
-      return { 
-        ...f, 
+
+      return {
+        ...f,
         projects: fullFolderContent.projects,
         subFolders: fullFolderContent.subFolders,
         subFolderCount: fullFolderContent.subFolderCount,
@@ -81,9 +79,9 @@ export async function getAllUserFolders(userId: string): Promise<FolderWithProje
         .where(eq(project.folderId, f.id))
         .groupBy(project.id)
         .orderBy(project.order, project.createdAt)
-      
-      return { 
-        ...f, 
+
+      return {
+        ...f,
         projects: projects.map(p => ({ ...p, tracks: [] })),
         subFolders: [] // Not needed for move picker
       }
@@ -113,14 +111,14 @@ export async function getVaultProjects(userId: string): Promise<ProjectWithTrack
     .where(and(eq(project.userId, userId), isNull(project.folderId)))
     .groupBy(project.id)
     .orderBy(project.order, project.createdAt)
-  
+
   // Sort to ensure Generations project appears first if it exists
   const sortedProjects = projects.sort((a, b) => {
     if (a.id === 'system-generations') return -1
     if (b.id === 'system-generations') return 1
     return a.order - b.order || a.createdAt.getTime() - b.createdAt.getTime()
   })
-  
+
   return sortedProjects.map(p => ({ ...p, tracks: [] }))
 }
 
@@ -146,7 +144,7 @@ export async function getProjectWithTracks(projectId: string, userId: string): P
         .where(eq(trackVersion.trackId, t.id))
         .orderBy(desc(trackVersion.version))
 
-      const activeVersion = t.activeVersionId 
+      const activeVersion = t.activeVersionId
         ? versions.find(v => v.id === t.activeVersionId)
         : undefined
 
@@ -324,7 +322,7 @@ export async function moveProject(projectId: string, folderId: string | null, us
 
 export async function createTrack(data: Omit<NewTrack, 'id' | 'createdAt' | 'updatedAt'>): Promise<Track> {
   const now = new Date()
-  
+
   // Create the track
   const newTrack: NewTrack = {
     ...data,
@@ -337,11 +335,11 @@ export async function createTrack(data: Omit<NewTrack, 'id' | 'createdAt' | 'upd
 
   // Create initial version if file data is provided
   if (data.activeVersionId) {
-      const initialVersion: NewTrackVersion = {
+    const initialVersion: NewTrackVersion = {
       id: data.activeVersionId,
       trackId: createdTrack.id,
       version: 1,
-        fileKey: '', // Will be set by the caller
+      fileKey: '', // Will be set by the caller
       size: 0,     // Will be set by the caller  
       duration: 0, // Will be set by the caller
       mimeType: '', // Will be set by the caller
@@ -411,8 +409,8 @@ export async function setActiveVersion(trackId: string, versionId: string, userI
 // ================================
 
 export async function handleDuplicateFolderName(
-  name: string, 
-  parentFolderId: string | null, 
+  name: string,
+  parentFolderId: string | null,
   userId: string,
   excludeId?: string
 ): Promise<string> {

@@ -9,8 +9,9 @@ import type {
   BreadcrumbItem, 
   VaultStats,
   VaultQueryOptions,
-  Folder,
 } from './types'
+
+import type { Folder } from '@/db/schema/vault'
 
 // ================================
 // CORE DATA FETCHING
