@@ -21,17 +21,11 @@ import { selectedItemsAtom } from '@/state/vault-selection-atoms'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 
-
-interface VaultPageProps {
-  initialFolders?: FolderWithProjects[]
-  initialProjects?: ProjectWithTracks[]
-}
-
 type VaultItem =
   | { type: 'folder'; data: FolderWithProjects }
   | { type: 'project'; data: ProjectWithTracks }
 
-export default function VaultPage({ }: VaultPageProps = {}) {
+export default function VaultPage() {
   const isTablet = useIsTablet()
   const [, moveFolderAction] = useMoveFolderAction()
   const [, moveProjectAction] = useMoveProjectAction()
