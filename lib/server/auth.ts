@@ -54,9 +54,7 @@ export async function getCachedSession() {
     { tags: ['session'], revalidate: 30 }
   )
   const cached = await fetchSession()
-  console.log(`cached session:${cacheKey}:`, cached)
   if (cached) return cached
-  console.log(`no cached session:${cacheKey}`)
   // Fallback to a direct, uncached read to avoid false negatives
   return getServerSession()
 }
