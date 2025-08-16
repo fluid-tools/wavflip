@@ -1,9 +1,7 @@
 import { NextRequest } from 'next/server'
-import { db } from '@/db'
-import { project } from '@/db/schema/vault'
-import { eq } from 'drizzle-orm'
 import { requireAuth } from '@/lib/server/auth'
-import { uploadProjectImage, getPresignedImageUrl, bustPresignedImageCache } from '@/lib/storage/s3-storage'
+import { uploadProjectImage, bustPresignedImageCache } from '@/lib/storage/s3-storage'
+import { getProjectOr404, requireProjectOwnership, getPresignedImageUrlForProject } from '@/lib/server/vault'
 
 export async function POST(
   request: NextRequest,
@@ -13,16 +11,8 @@ export async function POST(
     const session = await requireAuth()
     const { projectId } = await params
 
-    // Verify project ownership
-    const existingProject = await db
-      .select()
-      .from(project)
-      .where(eq(project.id, projectId))
-      .limit(1)
-
-    if (!existingProject.length || existingProject[0].userId !== session.user.id) {
-      return Response.json({ success: false, error: 'Project not found' }, { status: 404 })
-    }
+    const project = await getProjectOr404(projectId)
+    requireProjectOwnership(project, session.user.id)
 
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -41,18 +31,11 @@ export async function POST(
     // Bust the Redis cache for this project's presigned URL
     await bustPresignedImageCache(projectId)
 
-    // Store only the S3 key (filename) in the DB
-    await db
-      .update(project)
-      .set({ 
-        image: uploadResult.filename!,
-        updatedAt: new Date()
-      })
-      .where(eq(project.id, projectId))
+    await (await import('@/lib/server/vault')).setProjectImageKey(projectId, uploadResult.filename!)
 
     return Response.json({ 
       success: true, 
-      imageUrl: uploadResult.filename // return key for client cache update
+      resourceKey: uploadResult.filename
     })
 
   } catch (error) {
@@ -72,24 +55,11 @@ export async function GET(
     const session = await requireAuth()
     const { projectId } = await params
     
-    // Get project and check ownership
-    const existingProject = await db
-      .select()
-      .from(project)
-      .where(eq(project.id, projectId))
-      .limit(1)
-      
-    if (!existingProject.length || existingProject[0].userId !== session.user.id) {
-      return Response.json({ success: false, error: 'Project not found' }, { status: 404 })
-    }
-    
-    const key = existingProject[0].image
-    if (!key) {
+    // Use resource-first helper to enforce ownership and return presigned URL
+    const signedUrl = await getPresignedImageUrlForProject(projectId, { requireOwnerUserId: session.user.id })
+    if (!signedUrl) {
       return Response.json({ success: false, error: 'No image' }, { status: 404 })
     }
-    
-    // Use refactored function to get presigned URL with caching
-    const signedUrl = await getPresignedImageUrl(key, projectId)
     return Response.json({ success: true, signedUrl })
   } catch (error) {
     console.error('Project image get error:', error)

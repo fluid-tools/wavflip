@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { ProjectWithTracks } from '@/db/schema/vault'
-import type { ProjectImageResponse } from '@/types/project'
+import type { ProjectImageResponse } from '@/lib/server/types/project'
 import { nanoid } from 'nanoid'
 import { vaultKeys } from './keys'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
@@ -15,7 +15,7 @@ interface UseProjectProps {
 }
 
 interface UploadTrackData {
-  name: string
+  name: string  
   file: File
   duration?: number
 }
@@ -412,7 +412,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       toast.error(`Failed to upload image: ${error.message}`)
     },
     onSuccess: async (data, variables, context) => {
-      if (data.success && data.imageUrl) {
+      if (data.success && data.resourceKey) {
         // First, fetch the presigned URL for the new image
         try {
           const res = await fetch(`/api/projects/${projectId}/image`)
@@ -428,7 +428,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
               if (!oldData) return oldData
               return {
                 ...oldData,
-                image: data.imageUrl || null
+                image: data.resourceKey || null
               }
             })
             
@@ -455,7 +455,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
                   if (updated.projects) {
                     updated.projects = updated.projects.map((p: any) => 
                       p.id === projectId 
-                        ? { ...p, image: data.imageUrl || null }
+                        ? { ...p, image: data.resourceKey || null }
                         : p
                     )
                   }
@@ -479,7 +479,7 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
               if (!oldProjects) return oldProjects
               return oldProjects.map(p => 
                 p.id === projectId 
-                  ? { ...p, image: data.imageUrl || null }
+                  ? { ...p, image: data.resourceKey || null }
                   : p
               )
             })

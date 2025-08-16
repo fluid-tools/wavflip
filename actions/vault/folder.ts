@@ -1,7 +1,8 @@
 'use server'
 
 import { requireAuth } from '@/lib/server/auth';
-import { handleDuplicateFolderName, createFolder, deleteFolder, renameFolder, moveFolder } from '@/lib/server/vault';
+import { createFolder, deleteFolder, renameFolder, moveFolder } from '@/lib/server/vault/folder';
+import { handleDuplicateFolderName } from '@/lib/server/vault/utils';
 import { revalidatePath } from 'next/cache';
 import type { FolderActionState, DeleteActionState, RenameActionState, MoveActionState } from './types';
 

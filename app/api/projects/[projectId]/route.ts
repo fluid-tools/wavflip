@@ -3,7 +3,7 @@ import { requireAuth } from '@/lib/server/auth'
 import { getProjectWithTracks } from '@/lib/server/vault'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
