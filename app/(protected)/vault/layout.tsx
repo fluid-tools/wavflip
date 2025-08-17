@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { getCachedSession } from '@/lib/server/auth'
 import { redirect } from 'next/navigation'
-import { getUserFolders, getVaultProjects, getSidebarData } from '@/lib/server/vault'
+import { getUserFolders, getVaultProjects, getVaultData } from '@/lib/server/vault'
 import { vaultKeys } from '@/hooks/data/keys'
 
 interface VaultLayoutProps {
@@ -39,7 +39,7 @@ export default async function VaultLayout({ children }: VaultLayoutProps) {
     }),
     queryClient.prefetchQuery({
       queryKey: vaultKeys.sidebar(),
-      queryFn: () => getSidebarData(session.user.id),
+      queryFn: () => getVaultData(session.user.id, { includeHierarchy: true }),
       staleTime: 5 * 60 * 1000,
     })
   ])

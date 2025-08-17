@@ -27,9 +27,3 @@ Goals:
 ### Generations / Offline
 - When a track is saved offline or newly generated, we decode and POST real peaks.
 - After successful POST, we call `invalidateQueries(['waveform', key])` so any open views re-fetch and replace placeholders.
-
-### Why this fixes the original bug
-- Previously, placeholders were written into `wf-peaks-cache` and never updated → stale waveforms.
-- Now, placeholder responses are never persisted locally; only the React Query cache holds them and they get replaced via invalidation after POST.
-
-

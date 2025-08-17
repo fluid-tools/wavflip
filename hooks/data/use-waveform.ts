@@ -2,11 +2,7 @@
 
 import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
-export const waveformKeys = {
-  all: ['waveform'] as const,
-  byKey: (key: string) => [...waveformKeys.all, key] as const,
-}
+import { waveformKeys } from './keys'
 
 type WaveformData = {
   peaks: number[]

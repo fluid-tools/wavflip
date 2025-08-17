@@ -1,29 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/server/auth'
-import { getVaultData } from '@/lib/server/vault/data'
+// This route is deprecated in favor of /api/vault/tree. Keeping a stub that returns 410 Gone to catch stragglers.
+import { NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
-  try {
-    const session = await requireAuth()
-    const { searchParams } = new URL(request.url)
-    
-    // Support different query options via URL params
-    const includeStats = searchParams.get('stats') === 'true'
-    const excludeFolderId = searchParams.get('exclude') || undefined
-    
-    const vaultData = await getVaultData(session.user.id, {
-      includeHierarchy: true,
-      includeLevels: !!excludeFolderId, // Include levels if we're excluding (for move dialogs)
-      includeStats,
-      excludeFolderId
-    })
-    
-    return NextResponse.json(vaultData)
-  } catch (error) {
-    console.error('Failed to fetch vault data:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch vault data' },
-      { status: 500 }
-    )
-  }
-} 
+export async function GET() {
+  return NextResponse.json({ error: 'Deprecated. Use /api/vault/tree' }, { status: 410 })
+}

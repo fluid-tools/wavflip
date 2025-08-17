@@ -108,6 +108,7 @@ const queryKey = ['vault', 'folders', folderId]
 ```
 
 Available query key functions:
+- find them in `hooks/data/keys.ts`
 - `vaultKeys.base` - Base vault key
 - `vaultKeys.sidebar()` - Sidebar data
 - `vaultKeys.folders()` - All folders

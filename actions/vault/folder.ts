@@ -39,7 +39,7 @@ export async function createFolderAction(prevState: FolderActionState, formData:
     }
     // Always revalidate the root vault for sidebar updates
     revalidatePath('/vault')
-    revalidatePath('/api/vault/sidebar')
+    revalidatePath('/api/vault/tree')
 
     return { success: true, folder, error: null }
   } catch (error) {
@@ -70,7 +70,7 @@ export async function deleteFolderAction(prevState: DeleteActionState, formData:
     }
     // Always revalidate for sidebar updates
     revalidatePath('/vault')
-    revalidatePath('/api/vault/sidebar')
+    revalidatePath('/api/vault/tree')
 
     return { success: true, error: null }
   } catch (error) {
@@ -97,7 +97,7 @@ export async function renameFolderAction(prevState: RenameActionState, formData:
     // Revalidate all relevant paths and sidebar
     revalidatePath('/vault')
     revalidatePath(`/vault/folders/${folderId}`)
-    revalidatePath('/api/vault/sidebar')
+    revalidatePath('/api/vault/tree')
     return { success: true, error: null }
   } catch (error) {
     console.error('Failed to rename folder:', error)

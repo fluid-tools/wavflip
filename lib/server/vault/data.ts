@@ -215,24 +215,6 @@ const getVaultStats = async (userId: string): Promise<VaultStats> => {
 // CONVENIENCE FUNCTIONS
 // ================================
 
-// For sidebar navigation
-export async function getSidebarData(userId: string): Promise<VaultData> {
-  return getVaultData(userId, {
-    includeHierarchy: true,
-    includeLevels: false
-  })
-}
-
-// For move dialogs
-export async function getHierarchicalFolders(userId: string, excludeFolderId?: string): Promise<VaultFolder[]> {
-  const data = await getVaultData(userId, {
-    includeHierarchy: true,
-    includeLevels: true,
-    excludeFolderId
-  })
-  return data.folders
-}
-
 // For folder views with breadcrumbs
 export async function getFolderData(folderId: string, userId: string): Promise<VaultData> {
   return getVaultData(userId, {

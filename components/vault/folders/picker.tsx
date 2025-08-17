@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { vaultKeys } from '@/hooks/data/keys'
+import { useVaultHierarchy } from '@/hooks/data/use-vault'
 import { Folder, ChevronRight, ChevronDown, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -45,21 +44,12 @@ export function FolderPicker({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
   // Fetch hierarchical folders from server
-  const { data: foldersData, isLoading } = useQuery({
-    queryKey: vaultKeys.hierarchical(excludeFolderId || undefined),
-    queryFn: async () => {
-      const url = new URL('/api/vault/sidebar', process.env.NEXT_PUBLIC_BASE_URL)
-      if (excludeFolderId) {
-        url.searchParams.set('exclude', excludeFolderId)
-      }
-      const response = await fetch(url.toString())
-      if (!response.ok) throw new Error('Failed to fetch folders')
-      return response.json()
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  const { data: foldersData, isLoading } = useVaultHierarchy(excludeFolderId)
 
-  const hierarchicalFolders = foldersData?.folders || []
+  const hierarchicalFolders = (foldersData?.folders || []).map(f => ({
+    ...f,
+    level: typeof f.level === 'number' ? f.level : 0,
+  })) as HierarchicalFolder[]
 
   // Flatten hierarchical folders into a displayable list
   const flattenFolders = (folders: HierarchicalFolder[]): FolderNode[] => {

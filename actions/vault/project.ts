@@ -64,7 +64,7 @@ export async function moveProjectAction(prevState: MoveActionState, formData: Fo
       revalidatePath('/vault')
     }
     revalidatePath(`/vault/projects/${projectId}`)
-    revalidatePath('/api/vault/sidebar')
+    revalidatePath('/api/vault/tree')
 
     return { success: true, error: null }
   } catch (error) {
@@ -108,7 +108,7 @@ export async function createProjectAction(prevState: ProjectActionState, formDat
     }
     // Always revalidate the root vault for sidebar updates
     revalidatePath('/vault')
-    revalidatePath('/api/vault/sidebar')
+    revalidatePath('/api/vault/tree')
 
     return { success: true, project, error: null }
   } catch (error) {
@@ -139,7 +139,7 @@ export async function deleteProjectAction(prevState: DeleteActionState, formData
     }
     // Always revalidate for sidebar updates
     revalidatePath('/vault')
-    revalidatePath('/api/vault/sidebar')
+    revalidatePath('/api/vault/tree')
 
     return { success: true, error: null }
   } catch (error) {

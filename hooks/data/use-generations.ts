@@ -5,7 +5,7 @@ import { getVaultTracks, downloadAndStoreAudio, createBlobUrlFromAudioData, remo
 import type { GeneratedSound } from "@/types/generations"
 import type { LocalVaultTrack } from '@/lib/storage/local-vault'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
-import { waveformKeys } from '@/hooks/data/use-waveform'
+import { waveformKeys } from './keys'
 import { jotaiStore } from '@/state/jotai-store'
 import type { GenerationsResponse } from '@/types/generations'
 import { currentTrackAtom } from '@/state/audio-atoms'

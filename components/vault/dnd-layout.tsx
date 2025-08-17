@@ -1,9 +1,8 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { VaultDndProvider } from './dnd/context'
-import { DropData } from './dnd/types'
-import { DroppableWrapper } from './dnd/droppable-wrapper'
+import { VaultDndProvider, DroppableWrapper } from '@/components/vault/dnd'
+import type { DropData } from '@/components/vault/dnd'
 
 interface DndLayoutProps {
   children: ReactNode

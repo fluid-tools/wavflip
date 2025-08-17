@@ -30,8 +30,7 @@ import { Label } from '@/components/ui/label'
 import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/actions/vault/use-action'
 import type { FolderWithProjects } from '@/db/schema/vault'
 
-import { DraggableWrapper } from '@/components/vault/dnd/draggable-wrapper'
-import { DroppableWrapper } from '@/components/vault/dnd/droppable-wrapper'
+import { DraggableWrapper, DroppableWrapper } from '@/components/vault/dnd'
 import { FolderPicker } from './picker'
 import { FolderPreviewImage } from '@/components/vault/folder-preview-image'
 

@@ -35,11 +35,43 @@ export function useVaultSidebar() {
   return useQuery({
     queryKey: vaultKeys.sidebar(),
     queryFn: async (): Promise<VaultSidebarData> => {
-      const response = await fetch('/api/vault/sidebar')
+      const url = new URL('/api/vault/tree', window.location.origin)
+      url.searchParams.set('levels', 'false')
+      const response = await fetch(url.toString())
       if (!response.ok) throw new Error('Failed to fetch vault sidebar')
       return response.json()
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  })
+}
+
+export interface VaultHierarchyData {
+  folders: Array<{
+    id: string
+    name: string
+    parentFolderId: string | null
+    projects: Array<{ id: string; name: string; trackCount: number }>
+    subfolders: any[]
+    projectCount: number
+    subFolderCount: number
+    level?: number
+  }>
+}
+
+export function useVaultHierarchy(excludeId?: string) {
+  return useQuery({
+    queryKey: vaultKeys.hierarchical(excludeId),
+    queryFn: async () => {
+      const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL)
+      if (excludeId) url.searchParams.set('exclude', excludeId)
+      // always include levels for picker-like UIs
+      url.searchParams.set('levels', 'true')
+      const response = await fetch(url.toString())
+      if (!response.ok) throw new Error('Failed to fetch vault hierarchy')
+      return response.json() as Promise<VaultHierarchyData>
+    },
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   })
 }
@@ -120,7 +152,9 @@ export function useVaultStats() {
   return useQuery({
     queryKey: vaultKeys.stats(),
     queryFn: async () => {
-      const response = await fetch('/api/vault/sidebar?stats=true')
+      const url = new URL('/api/vault/tree', window.location.origin)
+      url.searchParams.set('stats', 'true')
+      const response = await fetch(url.toString())
       if (!response.ok) throw new Error('Failed to fetch vault stats')
       const data = await response.json()
       return data.stats

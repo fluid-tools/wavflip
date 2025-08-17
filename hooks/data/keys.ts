@@ -17,4 +17,8 @@ export const vaultKeys = {
       : ([...vaultKeys.base, 'hierarchical'] as const),
   stats: () => [...vaultKeys.base, 'stats'] as const,
   storage: () => ['storage-estimate'] as const,
+};export const waveformKeys = {
+  all: ['waveform'] as const,
+  byKey: (key: string) => [...waveformKeys.all, key] as const,
 }
+
