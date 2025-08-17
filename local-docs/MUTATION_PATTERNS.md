@@ -1,6 +1,10 @@
 # React Query Mutation Patterns
 
-This document outlines the standardized patterns for mutations in our codebase using TanStack Query (React Query) v5.
+This document outlines the standardized patterns for client-side mutations in our codebase using TanStack Query (React Query) v5.
+
+Notes:
+- These patterns are used primarily for tracks, uploads, and other complex client-driven flows.
+- For server actions (folders/projects CRUD, generation flows), we prefer next-safe-action. See State Management Patterns for details and the next-safe-action docs (`http://next-safe-action.dev/`).
 
 ## 🎯 Core Philosophy
 
@@ -82,6 +86,9 @@ const mutation = useMutation({
     }
     
     // 2. Invalidate queries to ensure sync with server
+    // Prefer using our invalidation helpers when available
+    // e.g. const { invalidateProject } = useVaultInvalidation()
+    // invalidateProject(projectId)
     queryClient.invalidateQueries({ queryKey })
     
     // 3. Invalidate related queries if needed
@@ -94,7 +101,7 @@ const mutation = useMutation({
 
 ## 🔑 Query Keys
 
-**ALWAYS** use the centralized query key functions:
+**ALWAYS** use the centralized query key functions from `hooks/data/keys.ts`:
 
 ```typescript
 // ✅ CORRECT
@@ -107,8 +114,7 @@ const queryKey = ['project', projectId]
 const queryKey = ['vault', 'folders', folderId]
 ```
 
-Available query key functions:
-- find them in `hooks/data/keys.ts`
+Available query key functions (non-exhaustive):
 - `vaultKeys.base` - Base vault key
 - `vaultKeys.sidebar()` - Sidebar data
 - `vaultKeys.folders()` - All folders
@@ -116,7 +122,21 @@ Available query key functions:
 - `vaultKeys.projects()` - All projects
 - `vaultKeys.project(id)` - Specific project
 - `vaultKeys.vaultProjects()` - Vault projects
+- `vaultKeys.hierarchical(excludeId?)` - Hierarchical tree data for pickers
 - `vaultKeys.stats()` - Vault statistics
+- `vaultKeys.storage()` - Storage usage estimate
+- `waveformKeys.all` / `waveformKeys.byKey(key)` - Waveform cache keys
+
+Where possible in components that mutate vault data, prefer the invalidation helper from `hooks/data/use-vault.ts`:
+
+```typescript
+const { invalidateAll, invalidateSidebar, invalidateFolder, invalidateProject } = useVaultInvalidation()
+
+onSettled: () => {
+  invalidateProject(projectId)
+  invalidateSidebar()
+}
+```
 
 ## 🖼️ Handling File Uploads & Blob URLs
 
@@ -151,6 +171,7 @@ onSettled: (data, error, variables, context) => {
   if (context?.optimisticUrl) {
     URL.revokeObjectURL(context.optimisticUrl)
   }
+  // Prefer invalidation helpers where available
   queryClient.invalidateQueries({ queryKey })
 }
 ```
@@ -258,6 +279,7 @@ const uploadImageMutation = useMutation({
     if (context?.optimisticImageUrl) {
       URL.revokeObjectURL(context.optimisticImageUrl)
     }
+    // Optionally use useVaultInvalidation() helpers
   }
 })
 ```
@@ -375,6 +397,12 @@ When updating existing mutations to follow this pattern:
 - [ ] Test optimistic updates work correctly
 - [ ] Test error rollback works correctly
 - [ ] Test memory cleanup (no blob URL leaks)
+
+## 📎 Related: Server Actions (next-safe-action)
+
+For server actions (e.g., creating/renaming/moving folders/projects, AI generation), we prefer using next-safe-action for type-safe inputs/outputs and centralized error handling. Define actions via `actionClient` (see `lib/safe-action.ts`) with `.inputSchema(...)` and handle them on the client with `useActionState` wrappers that call our invalidation helpers.
+
+- Docs: `http://next-safe-action.dev/`
 
 ## 🎭 Testing Optimistic Updates
 

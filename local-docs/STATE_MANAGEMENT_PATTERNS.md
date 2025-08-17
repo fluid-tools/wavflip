@@ -8,12 +8,12 @@ This document outlines the state management patterns and architectural decisions
 
 We use a **hybrid approach** based on the complexity and requirements of each operation:
 
-#### 1. Server Actions with `useActionState` (Preferred)
-**Used for**: Vault operations (folders, projects, basic CRUD)
-- ✅ Server-side validation
-- ✅ Automatic React Query invalidation via wrapped hooks
-- ✅ Better error handling
-- ✅ Form integration
+#### 1. Server Actions with next-safe-action + `useActionState` (Preferred)
+**Used for**: Vault operations (folders, projects, basic CRUD), AI generations
+- ✅ End-to-end type safety via `next-safe-action` (`actionClient`) and input schemas (Zod)
+- ✅ Server-side validation and structured error handling
+- ✅ Client wrapper handles toasts and React Query invalidation via `useVaultInvalidation()`
+- ✅ Seamless form integration with `useActionState`
 
 #### 2. Client-side React Query Hooks
 **Used for**: Track operations and complex state scenarios
@@ -76,11 +76,11 @@ React's `useActionState` automatically handles transitions for **form submission
 
 ## Implementation Locations
 
-### Server Actions (with `useActionState`)
-- **Folder operations**: `components/vault/folders/`
-- **Project operations**: `components/vault/projects/` 
-- **Vault navigation**: Context menus, dialogs
-- **Wrapped hooks**: `hooks/use-vault-action.ts`
+### Server Actions (with next-safe-action + `useActionState`)
+- **Folder operations**: `actions/vault/folder.ts` (server) + `actions/vault/use-action.ts` (client wrapper)
+- **Project operations**: `actions/vault/project.ts` (server) + `actions/vault/use-action.ts` (client wrapper)
+- **AI generation**: `actions/generate/*` using `lib/safe-action.ts` `actionClient`
+- **Invalidation helpers**: `hooks/data/use-vault.ts` (`useVaultInvalidation`)
 
 ### Client Hooks (React Query)
 - **Track operations**: `hooks/use-project.ts`, `hooks/use-tracks.ts`
@@ -102,14 +102,12 @@ React's `useActionState` automatically handles transitions for **form submission
 - Complex client-side state interdependencies
 
 ### React Query Invalidation
-All server actions use wrapped hooks (`use-vault-action.ts`) that automatically handle React Query invalidation:
+All server actions use wrapped client hooks (`actions/vault/use-action.ts`) that show toast messages and call our invalidation helpers. Prefer invalidating via `useVaultInvalidation()` on the client rather than `revalidatePath` in server code.
 
-```typescript
-// Automatic invalidation strategies
-invalidationStrategy: 'all'    // Invalidates all vault data
-invalidationStrategy: 'sidebar' // Invalidates sidebar only  
-invalidationStrategy: 'specific' // Custom invalidation logic
-```
+Available helpers:
+- `invalidateAll()` – broad vault refresh
+- `invalidateSidebar()` – sidebar tree only
+- `invalidateFolder(id)` / `invalidateProject(id)` – targeted refresh
 
 ## Future Considerations
 
@@ -120,7 +118,12 @@ invalidationStrategy: 'specific' // Custom invalidation logic
 
 ## Memory References
 
-- Prefer React Query for GET operations and server actions for non-GET operations
-- Move away from revalidatePath due to async nature, prefer proper query key invalidation
+- Prefer React Query for GET operations and next-safe-action server actions for non-GET operations
+- Prefer client-side invalidation via `useVaultInvalidation()` instead of `revalidatePath` where possible
 - Keep audio player state separate from data fetching logic
-- Use client-side uploads for large files (audio) 
+- Use client-side uploads for large files (audio)
+
+## Reference: next-safe-action
+
+- Docs: `http://next-safe-action.dev/`
+- Our client: `lib/safe-action.ts` (`actionClient`)
