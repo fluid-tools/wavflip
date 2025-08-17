@@ -1,13 +1,12 @@
 import 'server-only'
 
 import { db } from '@/db'
-import { folder, project, track, trackVersion } from '@/db/schema/vault'
+import { folder, project, track } from '@/db/schema/vault'
 import { eq, and, isNull, count, not } from 'drizzle-orm'
 import type { 
   VaultData, 
   VaultFolder, 
   BreadcrumbItem, 
-  VaultStats,
 } from '@/lib/contracts/vault'
 import { VaultDataSchema } from '@/lib/contracts/vault'
 
@@ -178,44 +177,44 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
 }
 
 // todo: will use this for usage stats in billing
-const getVaultStats = async (userId: string): Promise<VaultStats> => {
-  const [projectCount, trackCount, folderCount, versionData] = await Promise.all([
-    db
-      .select({ count: count() })
-      .from(project)
-      .where(eq(project.userId, userId)),
+// const getVaultStats = async (userId: string): Promise<VaultStats> => {
+//   const [projectCount, trackCount, folderCount, versionData] = await Promise.all([
+//     db
+//       .select({ count: count() })
+//       .from(project)
+//       .where(eq(project.userId, userId)),
     
-    db
-      .select({ count: count() })
-      .from(track)
-      .where(eq(track.userId, userId)),
+//     db
+//       .select({ count: count() })
+//       .from(track)
+//       .where(eq(track.userId, userId)),
     
-    db
-      .select({ count: count() })
-      .from(folder)
-      .where(eq(folder.userId, userId)),
+//     db
+//       .select({ count: count() })
+//       .from(folder)
+//       .where(eq(folder.userId, userId)),
 
-    // Get version data from tracks that have userId
-    db
-      .select({ 
-        versionCount: count(trackVersion.id),
-        totalSize: count(trackVersion.size), // Sum when we have size field
-        totalDuration: count(trackVersion.duration) // Sum when we have duration field
-      })
-      .from(trackVersion)
-      .leftJoin(track, eq(track.id, trackVersion.trackId))
-      .where(eq(track.userId, userId))
-  ])
+//     // Get version data from tracks that have userId
+//     db
+//       .select({ 
+//         versionCount: count(trackVersion.id),
+//         totalSize: count(trackVersion.size), // Sum when we have size field
+//         totalDuration: count(trackVersion.duration) // Sum when we have duration field
+//       })
+//       .from(trackVersion)
+//       .leftJoin(track, eq(track.id, trackVersion.trackId))
+//       .where(eq(track.userId, userId))
+//   ])
 
-  return {
-    totalFolders: folderCount[0]?.count || 0,
-    totalProjects: projectCount[0]?.count || 0,
-    totalTracks: trackCount[0]?.count || 0,
-    totalVersions: versionData[0]?.versionCount || 0,
-    totalSize: versionData[0]?.totalSize || 0, // TODO: Implement proper sum when we have size field
-    totalDuration: versionData[0]?.totalDuration || 0 // TODO: Implement proper sum when we have duration field
-  }
-}
+//   return {
+//     totalFolders: folderCount[0]?.count || 0,
+//     totalProjects: projectCount[0]?.count || 0,
+//     totalTracks: trackCount[0]?.count || 0,
+//     totalVersions: versionData[0]?.versionCount || 0,
+//     totalSize: versionData[0]?.totalSize || 0, // TODO: Implement proper sum when we have size field
+//     totalDuration: versionData[0]?.totalDuration || 0 // TODO: Implement proper sum when we have duration field
+//   }
+// }
 
 // ================================
 // CONVENIENCE FUNCTIONS
