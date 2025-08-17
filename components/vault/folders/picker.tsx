@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useVaultHierarchy } from '@/hooks/data/use-vault'
+import { useVaultTree } from '@/hooks/data/use-vault'
 import { Folder, ChevronRight, ChevronDown, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -44,7 +44,7 @@ export function FolderPicker({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
   // Fetch hierarchical folders from server
-  const { data: foldersData, isLoading } = useVaultHierarchy(excludeFolderId)
+  const { data: foldersData, isLoading } = useVaultTree({ levels: true, excludeId: excludeFolderId })
 
   const hierarchicalFolders = (foldersData?.folders || []).map(f => ({
     ...f,

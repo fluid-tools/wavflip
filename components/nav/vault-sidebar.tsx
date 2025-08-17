@@ -80,7 +80,7 @@ export function VaultSidebarNavigation() {
   const [selectedItem, setSelectedItem] = useState<{ id: string; name: string; type: 'folder' | 'project'; parentId?: string | null } | null>(null)
 
   // Use the new vault hooks
-  const { data: vaultData, isLoading } = useVaultTree()
+  const { data: vaultData, isLoading } = useVaultTree({ levels: false })
   const { shouldShowContextMenu } = useContextMenuHandler()
 
   // Action hooks

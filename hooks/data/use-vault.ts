@@ -10,30 +10,19 @@ import { vaultKeys } from './keys'
 // ================================
 
 
-export function useVaultTree() {
+export function useVaultTree(opts?: { levels?: boolean; excludeId?: string; stats?: boolean }) {
+  const { levels = false, excludeId, stats = false } = opts ?? {}
   return useQuery({
-    queryKey: vaultKeys.tree(),
+    queryKey: ['vault', 'tree', { levels, excludeId: excludeId ?? null, stats }],
     queryFn: async (): Promise<VaultData> => {
-      const response = await fetch('/api/vault/tree')
-      if (!response.ok) throw new Error('Failed to fetch vault tree')
-      const json = await response.json()
-      return VaultDataSchema.parse(json)
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-  })
-}
-
-export function useVaultHierarchy(excludeId?: string) {
-  return useQuery({
-    queryKey: vaultKeys.hierarchical(excludeId),
-    queryFn: async () => {
-      const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL)
+      const url = new URL('/api/vault/tree', window.location.origin)
+      url.searchParams.set('levels', String(!!levels))
       if (excludeId) url.searchParams.set('exclude', excludeId)
-      // always include levels for picker-like UIs
-      url.searchParams.set('levels', 'true')
-      const response = await fetch(url.toString())
-      if (!response.ok) throw new Error('Failed to fetch vault hierarchy')
+      if (stats) url.searchParams.set('stats', 'true')
+      const response = await fetch(url.toString(), {
+        headers: { 'Accept': 'application/json' },
+      })
+      if (!response.ok) throw new Error('Failed to fetch vault tree')
       const json = await response.json()
       return VaultDataSchema.parse(json)
     },
