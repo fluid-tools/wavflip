@@ -4,6 +4,7 @@ import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query
 import { getCachedSession } from '@/lib/server/auth'
 import { redirect } from 'next/navigation'
 import { getUserFolders, getVaultProjects, getSidebarData } from '@/lib/server/vault'
+import { vaultKeys } from '@/hooks/data/keys'
 
 interface VaultLayoutProps {
   children: ReactNode
@@ -27,17 +28,17 @@ export default async function VaultLayout({ children }: VaultLayoutProps) {
   // Prefetch common vault data for all vault pages
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: ['vault', 'folders'],
+      queryKey: vaultKeys.folders(),
       queryFn: () => getUserFolders(session.user.id),
       staleTime: 5 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
-      queryKey: ['vault', 'vault-projects'],
+      queryKey: vaultKeys.vaultProjects(),
       queryFn: () => getVaultProjects(session.user.id),
       staleTime: 5 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
-      queryKey: ['vault', 'sidebar'],
+      queryKey: vaultKeys.sidebar(),
       queryFn: () => getSidebarData(session.user.id),
       staleTime: 5 * 60 * 1000,
     })

@@ -11,7 +11,7 @@ import type {
   VaultQueryOptions,
 } from './types'
 
-import type { Folder } from '@/db/schema/vault'
+import type { Folder, FolderWithProjects } from '@/db/schema/vault'
 
 // ================================
 // CORE DATA FETCHING
@@ -172,7 +172,7 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
   return path
 }
 
-export async function getVaultStats(userId: string): Promise<VaultStats> {
+const getVaultStats = async (userId: string): Promise<VaultStats> => {
   const [projectCount, trackCount, folderCount, versionData] = await Promise.all([
     db
       .select({ count: count() })
@@ -240,6 +240,108 @@ export async function getFolderData(folderId: string, userId: string): Promise<V
     includePath: true,
     specificFolderId: folderId
   })
+}
+// ================================
+// DATA FETCHING OPERATIONS
+// ================================
+
+export async function getUserFolders(userId: string): Promise<FolderWithProjects[]> {
+  // Only get root-level folders (parentFolderId is null)
+  const folders = await db
+    .select()
+    .from(folder)
+    .where(and(eq(folder.userId, userId), isNull(folder.parentFolderId)))
+    .orderBy(folder.order, folder.createdAt)
+
+  const foldersWithProjects = await Promise.all(
+    folders.map(async (f) => {
+      // Get full folder contents to calculate proper counts
+      const fullFolderContent = await getFolderWithContents(f.id, userId)
+      if (!fullFolderContent) {
+        return {
+          ...f,
+          projects: [],
+          subFolders: [],
+          subFolderCount: 0,
+          projectCount: 0
+        }
+      }
+
+      return {
+        ...f,
+        projects: fullFolderContent.projects,
+        subFolders: fullFolderContent.subFolders,
+        subFolderCount: fullFolderContent.subFolderCount,
+        projectCount: fullFolderContent.projectCount
+      }
+    })
+  )
+
+  return foldersWithProjects
+}
+
+export async function getFolderWithContents(folderId: string, userId: string): Promise<FolderWithProjects | null> {
+  const [folderData] = await db
+    .select()
+    .from(folder)
+    .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
+    .limit(1)
+
+  if (!folderData) return null
+
+  // Get subfolders with their full content
+  const subFolders = await Promise.all(
+    (await db
+      .select()
+      .from(folder)
+      .where(and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId)))
+      .orderBy(folder.order, folder.createdAt))
+      .map(async (sf) => {
+        // Recursively get subfolder contents
+        const subFolderContent = await getFolderWithContents(sf.id, userId)
+        return subFolderContent || { ...sf, projects: [], subFolders: [], subFolderCount: 0, projectCount: 0 }
+      })
+  )
+
+  // Get projects in this folder
+  const projects = await db
+    .select({
+      id: project.id,
+      name: project.name,
+      image: project.image,
+      folderId: project.folderId,
+      userId: project.userId,
+      accessType: project.accessType,
+      order: project.order,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      metadata: project.metadata,
+      trackCount: count(track.id)
+    })
+    .from(project)
+    .leftJoin(track, eq(track.projectId, project.id))
+    .where(eq(project.folderId, folderId))
+    .groupBy(project.id)
+    .orderBy(project.order, project.createdAt)
+
+  // Calculate total counts including nested content
+  const calculateTotalProjectCount = (folders: FolderWithProjects[]): number => {
+    return folders.reduce((total, folder) => {
+      return total + (folder.projects?.length || 0) + calculateTotalProjectCount(folder.subFolders || [])
+    }, 0)
+  }
+
+  const directProjectCount = projects.length
+  const nestedProjectCount = calculateTotalProjectCount(subFolders)
+  const totalProjectCount = directProjectCount + nestedProjectCount
+
+  return {
+    ...folderData,
+    subFolders,
+    projects: projects.map(p => ({ ...p, tracks: [] })),
+    subFolderCount: subFolders.length,
+    projectCount: totalProjectCount
+  }
 }
 
 

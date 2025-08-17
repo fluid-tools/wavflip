@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { vaultKeys } from '@/hooks/data/keys'
 import { Folder, ChevronRight, ChevronDown, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -45,7 +46,7 @@ export function FolderPicker({
 
   // Fetch hierarchical folders from server
   const { data: foldersData, isLoading } = useQuery({
-    queryKey: ['vault-data', 'hierarchical', excludeFolderId],
+    queryKey: vaultKeys.hierarchical(excludeFolderId || undefined),
     queryFn: async () => {
       const url = new URL('/api/vault/sidebar', process.env.NEXT_PUBLIC_BASE_URL)
       if (excludeFolderId) {

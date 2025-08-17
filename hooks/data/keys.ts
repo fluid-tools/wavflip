@@ -11,6 +11,10 @@ export const vaultKeys = {
   projects: () => [...vaultKeys.base, 'projects'] as const,
   project: (id: string) => [...vaultKeys.projects(), id] as const,
   vaultProjects: () => [...vaultKeys.base, 'vault-projects'] as const,
+  hierarchical: (excludeId?: string | null) =>
+    excludeId
+      ? ([...vaultKeys.base, 'hierarchical', excludeId] as const)
+      : ([...vaultKeys.base, 'hierarchical'] as const),
   stats: () => [...vaultKeys.base, 'stats'] as const,
   storage: () => ['storage-estimate'] as const,
 }
