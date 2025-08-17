@@ -5,7 +5,8 @@ import { project, track, trackVersion } from '@/db/schema/vault'
 import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 
-import type { Project, ProjectWithTracks } from '@/db/schema/vault'
+import type { NewProject, Project, ProjectWithTracks } from '@/db/schema/vault'
+import { nanoid } from 'nanoid'
 
 // Resource-first helpers (no auth)
 const getProjectById = async (projectId: string): Promise<Project | null> => {
@@ -111,5 +112,38 @@ export async function getProjectWithTracks(projectId: string, userId: string): P
 
   return { ...proj, tracks: tracksWithVersions, trackCount: tracksWithVersions.length }
 }
+// ================================
+// PROJECT CRUD OPERATIONS  
+// ================================
 
+export async function createProject(data: Omit<NewProject, 'id' | 'createdAt' | 'updatedAt'>): Promise<Project> {
+  const now = new Date()
+  const newProject: NewProject = {
+    ...data,
+    id: nanoid(),
+    createdAt: now,
+    updatedAt: now
+  }
+
+  const [createdProject] = await db.insert(project).values(newProject).returning()
+  return createdProject
+}
+
+export async function deleteProject(projectId: string, userId: string): Promise<void> {
+  await db.delete(project).where(and(eq(project.id, projectId), eq(project.userId, userId)))
+}
+
+export async function renameProject(projectId: string, name: string, userId: string): Promise<void> {
+  await db
+    .update(project)
+    .set({ name, updatedAt: new Date() })
+    .where(and(eq(project.id, projectId), eq(project.userId, userId)))
+}
+
+export async function moveProject(projectId: string, folderId: string | null, userId: string): Promise<void> {
+  await db
+    .update(project)
+    .set({ folderId, updatedAt: new Date() })
+    .where(and(eq(project.id, projectId), eq(project.userId, userId)))
+}
 
