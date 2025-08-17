@@ -2,61 +2,26 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
+import { VaultDataSchema, type VaultData } from '@/lib/contracts/vault'
 import { vaultKeys } from './keys'
 
 // ================================
-// SIDEBAR HOOK
+// TREE HOOKS (VAULT)
 // ================================
 
-interface SidebarFolder {
-  id: string
-  name: string
-  parentFolderId: string | null
-  projects: Array<{
-    id: string
-    name: string
-    trackCount: number
-  }>
-  subfolders: SidebarFolder[]
-  projectCount: number
-  subFolderCount: number
-}
 
-interface VaultSidebarData {
-  folders: SidebarFolder[]
-  rootProjects: Array<{
-    id: string
-    name: string
-    trackCount: number
-  }>
-}
-
-export function useVaultSidebar() {
+export function useVaultTree() {
   return useQuery({
-    queryKey: vaultKeys.sidebar(),
-    queryFn: async (): Promise<VaultSidebarData> => {
-      const url = new URL('/api/vault/tree', window.location.origin)
-      url.searchParams.set('levels', 'false')
-      const response = await fetch(url.toString())
-      if (!response.ok) throw new Error('Failed to fetch vault sidebar')
-      return response.json()
+    queryKey: vaultKeys.tree(),
+    queryFn: async (): Promise<VaultData> => {
+      const response = await fetch('/api/vault/tree')
+      if (!response.ok) throw new Error('Failed to fetch vault tree')
+      const json = await response.json()
+      return VaultDataSchema.parse(json)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   })
-}
-
-export interface VaultHierarchyData {
-  folders: Array<{
-    id: string
-    name: string
-    parentFolderId: string | null
-    projects: Array<{ id: string; name: string; trackCount: number }>
-    subfolders: any[]
-    projectCount: number
-    subFolderCount: number
-    level?: number
-  }>
 }
 
 export function useVaultHierarchy(excludeId?: string) {
@@ -69,7 +34,8 @@ export function useVaultHierarchy(excludeId?: string) {
       url.searchParams.set('levels', 'true')
       const response = await fetch(url.toString())
       if (!response.ok) throw new Error('Failed to fetch vault hierarchy')
-      return response.json() as Promise<VaultHierarchyData>
+      const json = await response.json()
+      return VaultDataSchema.parse(json)
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -134,7 +100,7 @@ export function useVaultInvalidation() {
   
   return {
     invalidateAll: () => queryClient.invalidateQueries({ queryKey: vaultKeys.base }),
-    invalidateSidebar: () => queryClient.invalidateQueries({ queryKey: vaultKeys.sidebar() }),
+    invalidateTree: () => queryClient.invalidateQueries({ queryKey: vaultKeys.tree() }),
     invalidateFolders: () => queryClient.invalidateQueries({ queryKey: vaultKeys.folders() }),
     invalidateFolder: (id: string) => queryClient.invalidateQueries({ queryKey: vaultKeys.folder(id) }),
     invalidateProjects: () => queryClient.invalidateQueries({ queryKey: vaultKeys.projects() }),
@@ -152,7 +118,7 @@ export function useVaultStats() {
   return useQuery({
     queryKey: vaultKeys.stats(),
     queryFn: async () => {
-      const url = new URL('/api/vault/tree', window.location.origin)
+      const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL)
       url.searchParams.set('stats', 'true')
       const response = await fetch(url.toString())
       if (!response.ok) throw new Error('Failed to fetch vault stats')

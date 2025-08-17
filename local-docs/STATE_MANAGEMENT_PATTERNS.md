@@ -106,7 +106,7 @@ All server actions use wrapped client hooks (`actions/vault/use-action.ts`) that
 
 Available helpers:
 - `invalidateAll()` – broad vault refresh
-- `invalidateSidebar()` – sidebar tree only
+- `invalidateTree()` – tree only
 - `invalidateFolder(id)` / `invalidateProject(id)` – targeted refresh
 
 ## Future Considerations

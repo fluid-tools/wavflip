@@ -8,10 +8,20 @@ import type {
   VaultFolder, 
   BreadcrumbItem, 
   VaultStats,
-  VaultQueryOptions,
-} from './types'
+} from '@/lib/contracts/vault'
+import { VaultDataSchema } from '@/lib/contracts/vault'
 
 import type { Folder, FolderWithProjects } from '@/db/schema/vault'
+
+// Local options type for server composition
+interface VaultQueryOptions {
+  includeStats?: boolean
+  includePath?: boolean
+  includeHierarchy?: boolean
+  excludeFolderId?: string
+  specificFolderId?: string
+  includeLevels?: boolean
+}
 
 // ================================
 // CORE DATA FETCHING
@@ -137,7 +147,8 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
     result.stats = await getVaultStats(userId)
   }
 
-  return result
+  // Validate composed data against contract for consistency
+  return VaultDataSchema.parse(result)
 }
 
 // ================================

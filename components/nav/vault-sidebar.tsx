@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import React from 'react'
-import { useVaultSidebar } from '@/hooks/data/use-vault'
+import { useVaultTree } from '@/hooks/data/use-vault'
 import Link from "next/link"
 import { 
   FolderOpen, 
@@ -80,7 +80,7 @@ export function VaultSidebarNavigation() {
   const [selectedItem, setSelectedItem] = useState<{ id: string; name: string; type: 'folder' | 'project'; parentId?: string | null } | null>(null)
 
   // Use the new vault hooks
-  const { data: vaultData, isLoading } = useVaultSidebar()
+  const { data: vaultData, isLoading } = useVaultTree()
   const { shouldShowContextMenu } = useContextMenuHandler()
 
   // Action hooks

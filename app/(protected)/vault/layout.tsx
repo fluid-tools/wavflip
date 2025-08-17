@@ -38,8 +38,8 @@ export default async function VaultLayout({ children }: VaultLayoutProps) {
       staleTime: 5 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
-      queryKey: vaultKeys.sidebar(),
-      queryFn: () => getVaultData(session.user.id, { includeHierarchy: true }),
+      queryKey: vaultKeys.tree(),
+      queryFn: () => getVaultData(session.user.id),
       staleTime: 5 * 60 * 1000,
     })
   ])

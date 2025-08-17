@@ -130,11 +130,11 @@ Available query key functions (non-exhaustive):
 Where possible in components that mutate vault data, prefer the invalidation helper from `hooks/data/use-vault.ts`:
 
 ```typescript
-const { invalidateAll, invalidateSidebar, invalidateFolder, invalidateProject } = useVaultInvalidation()
+const { invalidateAll, invalidateTree, invalidateFolder, invalidateProject } = useVaultInvalidation()
 
 onSettled: () => {
   invalidateProject(projectId)
-  invalidateSidebar()
+  invalidateTree()
 }
 ```
 

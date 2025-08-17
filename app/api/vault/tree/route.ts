@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { getVaultData } from '@/lib/server/vault/data'
+import { VaultDataSchema } from '@/lib/contracts/vault'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,9 @@ export async function GET(request: NextRequest) {
       excludeFolderId,
     })
 
-    return NextResponse.json(vaultData)
+    // Validate response shape for consistency
+    const parsed = VaultDataSchema.parse(vaultData)
+    return NextResponse.json(parsed)
   } catch (error) {
     console.error('Failed to fetch vault tree:', error)
     return NextResponse.json(
