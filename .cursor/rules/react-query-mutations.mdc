@@ -1,0 +1,14 @@
+---
+description: React Query mutation patterns (optimistic updates, invalidation, and keys)
+globs:
+  - "hooks/**"
+  - "components/**"
+alwaysApply: false
+---
+
+- Use the standard mutation lifecycle: `onMutate` (cancel + snapshot + optimistic), `onError` (rollback + toast), `onSuccess` (toast + targeted updates), `onSettled` (cleanup + invalidation).
+- Keys: Use centralized keys from `hooks/data/keys.ts` (e.g., `vaultKeys.*`, `waveformKeys.*`)—never hardcode string arrays.
+- Invalidation: Prefer `useVaultInvalidation()` where available. Always invalidate in `onSettled`, not in `onSuccess`.
+- Files/Blob URLs: Create object URLs in `onMutate`; always revoke them in `onSettled`.
+- Recursive cache updates: For nested folder/project updates, use a helper to update all relevant folder queries, then let invalidation reconcile with server.
+- Track operations are generally client-driven mutations; keep optimistic updates snappy and conservative. Prefer server actions for CRUD on folders/projects.

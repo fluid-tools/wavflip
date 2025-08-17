@@ -1,0 +1,14 @@
+---
+description: Waveform data fetching, caching and POST persistence patterns
+globs:
+  - "hooks/data/use-waveform.ts"
+  - "app/api/waveform/**/route.ts"
+  - "components/player/**"
+alwaysApply: false
+---
+
+- GET: `/api/waveform/[key]` returns `{ data: { peaks, duration, sampleRate, channels, bits }, isPlaceholder, generatedAt, key }`. Server reads Redis first; missing entries return an on-the-fly placeholder and are not persisted server-side.
+- POST: `/api/waveform/[key]` accepts `{ peaks, duration, sampleRate, channels }`. Server sanitizes (clamps, caps length) and stores in Redis; best-effort DB `duration` update.
+- Client hook: `useWaveform(key)` uses `waveformKeys.byKey(key)`. The `persist` mutation optimistically sets `{ isPlaceholder: false, ... }` and invalidates the key for confirmation.
+- No custom caches (localStorage/Jotai) for peaks; rely on React Query with IDB persistence (see `state/providers.tsx`).
+- Components must read peaks via `useWaveform(key)`; for offline blobs, local decode is fine for UI, and `persist` can be used to POST real peaks.
