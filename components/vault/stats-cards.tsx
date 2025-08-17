@@ -1,10 +1,18 @@
 'use client'
 
 import { Folder, Music, FileAudio, HardDrive } from 'lucide-react'
-import { useVaultStats } from '@/hooks/data/use-vault'
+// import { useVaultStats } from '@/hooks/data/use-vault'
 
 export function VaultStats() {
-  const { data: stats } = useVaultStats()
+  // const { data: stats } = useVaultStats()
+  const stats = {
+    totalFolders: 10,
+    totalProjects: 100,
+    totalTracks: 1000,
+    totalVersions: 10000,
+    totalSize: 1000000,
+    totalDuration: 1000000
+  }
   
   if (!stats) return null
   const formatBytes = (bytes: number) => {

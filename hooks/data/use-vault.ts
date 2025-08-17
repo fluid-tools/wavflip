@@ -103,21 +103,21 @@ export function useVaultInvalidation() {
 // VAULT STATS HOOK
 // ================================
 
-export function useVaultStats() {
-  return useQuery({
-    queryKey: vaultKeys.stats(),
-    queryFn: async () => {
-      const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL)
-      url.searchParams.set('stats', 'true')
-      const response = await fetch(url.toString())
-      if (!response.ok) throw new Error('Failed to fetch vault stats')
-      const data = await response.json()
-      return data.stats
-    },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-  })
-}
+// export function useVaultStats() {
+//   return useQuery({
+//     queryKey: vaultKeys.stats(),
+//     queryFn: async () => {
+//       const url = new URL('/api/vault/stats', process.env.NEXT_PUBLIC_BASE_URL)
+//       url.searchParams.set('stats', 'true')
+//       const response = await fetch(url.toString())
+//       if (!response.ok) throw new Error('Failed to fetch vault stats')
+//       const data = await response.json()
+//       return data.stats
+//     },
+//     staleTime: 10 * 60 * 1000, // 10 minutes
+//     refetchOnWindowFocus: false,
+//   })
+// }
 
 // ================================
 // FOLDER PATH HOOK

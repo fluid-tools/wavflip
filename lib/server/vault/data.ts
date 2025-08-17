@@ -15,7 +15,6 @@ import type { Folder, FolderWithProjects } from '@/db/schema/vault'
 
 // Local options type for server composition
 interface VaultQueryOptions {
-  includeStats?: boolean
   includePath?: boolean
   includeHierarchy?: boolean
   excludeFolderId?: string
@@ -29,7 +28,6 @@ interface VaultQueryOptions {
 
 export async function getVaultData(userId: string, options: VaultQueryOptions = {}): Promise<VaultData> {
   const {
-    includeStats = false,
     includePath = false,
     includeHierarchy = true,
     excludeFolderId,
@@ -142,10 +140,6 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
     result.path = await getFolderPath(specificFolderId, userId)
   }
 
-  // Add stats if requested
-  if (includeStats) {
-    result.stats = await getVaultStats(userId)
-  }
 
   // Validate composed data against contract for consistency
   return VaultDataSchema.parse(result)
@@ -183,6 +177,7 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
   return path
 }
 
+// todo: will use this for usage stats in billing
 const getVaultStats = async (userId: string): Promise<VaultStats> => {
   const [projectCount, trackCount, folderCount, versionData] = await Promise.all([
     db
