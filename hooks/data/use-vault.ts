@@ -15,7 +15,7 @@ export function useVaultTree(opts?: { levels?: boolean; excludeId?: string; stat
   return useQuery({
     queryKey: ['vault', 'tree', { levels, excludeId: excludeId ?? null, stats }],
     queryFn: async (): Promise<VaultData> => {
-      const url = new URL('/api/vault/tree', window.location.origin)
+      const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL)
       url.searchParams.set('levels', String(!!levels))
       if (excludeId) url.searchParams.set('exclude', excludeId)
       if (stats) url.searchParams.set('stats', 'true')
