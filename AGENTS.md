@@ -34,3 +34,25 @@
 ## important
 
 never ever modify the `/components/ui` directory. it's for shadcn/ui components.
+
+## Cursor rules (apply intelligently)
+
+- Architecture & state: `.cursor/rules/architecture-state.mdc`
+- Data Access Layer (DAL): `.cursor/rules/data-access-layer.mdc`
+- API contracts + Zod: `.cursor/rules/api-contracts-zod.mdc`
+- React Query mutations: `.cursor/rules/react-query-mutations.mdc`
+- Waveform data patterns: `.cursor/rules/waveform-data.mdc`
+
+These encode our preferred patterns: next-safe-action for mutations with Zod schemas, React Query for reads, DAL isolation, and runtime validation on both server and client.
+
+## External references
+
+- Next.js Data Security (Data Access Layer): [link](https://nextjs.org/docs/app/guides/data-security#data-access-layer)
+- next-safe-action docs: [link](http://next-safe-action.dev/)
+- Zod docs: [link](https://zod.dev/)
+
+## WaveSurfer docs (local)
+
+- Start here: [`local-docs/wavesurfer-docs/wavesurfer.xyz_docs_.md`](local-docs/wavesurfer-docs/wavesurfer.xyz_docs_.md)
+- See also class-specific references under `local-docs/wavesurfer-docs/` for plugins and options.
+- use https://wavesurfer.xyz/docs/ for reference when in doubt for latest online docs from web.
