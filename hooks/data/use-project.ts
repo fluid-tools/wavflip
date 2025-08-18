@@ -9,6 +9,7 @@ import { nanoid } from 'nanoid'
 import { TrackCreateFormSchema } from '@/lib/contracts/api/tracks'
 import { vaultKeys } from './keys'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
+import { waveformKeys } from './keys'
 
 interface UseProjectProps {
   projectId: string
@@ -162,6 +163,20 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
               channels: wf.channels,
             })
           })
+          // Optimistically set and invalidate per waveform-data rule
+          queryClient.setQueryData(waveformKeys.byKey(key), {
+            data: {
+              peaks: wf.peaks,
+              duration: wf.duration,
+              sampleRate: wf.sampleRate,
+              channels: wf.channels,
+              bits: 16,
+            },
+            isPlaceholder: false,
+            generatedAt: new Date().toISOString(),
+            key,
+          })
+          queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(key) })
         } catch (err) {
           console.warn('Failed to persist real waveform for upload:', err)
         }
