@@ -90,7 +90,7 @@ export function useVaultProjects() {
   return useQuery({
     queryKey: vaultKeys.vaultProjects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
-      const response = await fetch('/api/vault/projects')
+      const response = await fetch('/api/projects')
       if (!response.ok) throw new Error('Failed to fetch vault projects')
       return response.json()
     },

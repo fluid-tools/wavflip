@@ -23,7 +23,7 @@ function useOnlineGenerations() {
   return useQuery({
     queryKey: generationsKeys.online(),
     queryFn: async (): Promise<GeneratedSound[]> => {
-      const response = await fetch('/api/vault/generations')
+      const response = await fetch('/api/projects/generations')
       if (!response.ok) {
         // If not authenticated or no generations, return empty array
         if (response.status === 401 || response.status === 404) {

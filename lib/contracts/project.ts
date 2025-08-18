@@ -36,4 +36,6 @@ export const ProjectCreateDataSchema = ProjectInsertSchema.omit({
   accessType: AccessTypeSchema.optional(),
 })
 
+export type ProjectCreateData = z.infer<typeof ProjectCreateDataSchema>
+
 

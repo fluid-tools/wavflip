@@ -34,4 +34,7 @@ export const TrackVersionCreateDataSchema = TrackVersionInsertSchema.omit({
   createdAt: true,
 })
 
+export type TrackCreateData = z.infer<typeof TrackCreateDataSchema>
+export type TrackVersionCreateData = z.infer<typeof TrackVersionCreateDataSchema>
+
 

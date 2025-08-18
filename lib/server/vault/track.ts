@@ -3,6 +3,7 @@ import 'server-only'
 import { db } from '@/db'
 import { track, trackVersion } from '@/db/schema/vault'
 import { TrackWithVersionsSchema, TrackCreateDataSchema, TrackVersionCreateDataSchema } from '@/lib/contracts/track'
+import type { TrackCreateData, TrackVersionCreateData } from '@/lib/contracts/track'
 import { and, desc, eq } from 'drizzle-orm'
 import { getPresignedUrl } from '@/lib/storage/s3-storage'
 import { REDIS_KEYS } from '@/lib/redis'
@@ -62,7 +63,7 @@ export const getPresignedUrlForTrack = async (
 // TRACK CRUD OPERATIONS
 // ================================
 
-export async function createTrack(data: ReturnType<typeof getTrackCreateInput>) {
+export async function createTrack(data: TrackCreateData) {
   const now = new Date()
 
   // Create the track
@@ -118,7 +119,7 @@ export async function moveTrack(trackId: string, projectId: string, userId: stri
 // TRACK VERSION OPERATIONS
 // ================================
 
-export async function createTrackVersion(data: ReturnType<typeof getTrackVersionCreateInput>) {
+export async function createTrackVersion(data: TrackVersionCreateData) {
   // Get the next version number
   const existingVersions = await db
     .select({ version: trackVersion.version })
@@ -148,13 +149,6 @@ export async function setActiveVersion(trackId: string, versionId: string, userI
     .where(and(eq(track.id, trackId), eq(track.userId, userId)))
 }
 
-// Helper functions to lock types to Zod inputs (without exporting DB inferred types)
-function getTrackCreateInput(input: unknown) {
-  return TrackCreateDataSchema.parse(input)
-}
-
-function getTrackVersionCreateInput(input: unknown) {
-  return TrackVersionCreateDataSchema.parse(input)
-}
+// removed unused type-only helpers
 
 

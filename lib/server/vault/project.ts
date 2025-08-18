@@ -6,7 +6,7 @@ import { ProjectWithTracksSchema, ProjectCreateDataSchema, ProjectRowSchema } fr
 import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 
-// Stop importing inferred NewProject type; validate inputs with Zod
+// Use contract row type not DB inferred types
 import type { Project } from '@/lib/contracts/project'
 import { nanoid } from 'nanoid'
 
@@ -118,7 +118,9 @@ export async function getProjectWithTracks(projectId: string, userId: string) {
 // PROJECT CRUD OPERATIONS  
 // ================================
 
-export async function createProject(data: ReturnType<typeof getProjectCreateInput>): Promise<Project> {
+import type { ProjectCreateData } from '@/lib/contracts/project'
+
+export async function createProject(data: ProjectCreateData): Promise<Project> {
   const now = new Date()
   const base = ProjectCreateDataSchema.parse(data)
   const newProject = {
@@ -150,7 +152,5 @@ export async function moveProject(projectId: string, folderId: string | null, us
     .where(and(eq(project.id, projectId), eq(project.userId, userId)))
 }
 
-function getProjectCreateInput(input: unknown) {
-  return ProjectCreateDataSchema.parse(input)
-}
+// removed unused type-only helper
 
