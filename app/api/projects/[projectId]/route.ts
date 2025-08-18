@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { getProjectWithTracks } from '@/lib/server/vault'
+import { ProjectWithTracksSchema } from '@/lib/contracts/project'
 
 export async function GET(
   _request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    return NextResponse.json(project)
+    return NextResponse.json(ProjectWithTracksSchema.parse(project))
   } catch (error) {
     console.error('Failed to fetch project:', error)
     return NextResponse.json(

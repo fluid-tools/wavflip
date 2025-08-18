@@ -51,6 +51,14 @@ export function useFolder(folderId: string) {
 }
 
 export function useRootFolders() {
+  // Read tree cache directly to avoid using any types
+  const queryClient = useQueryClient()
+  const treeData = queryClient.getQueryData<VaultData>(vaultKeys.tree())
+  console.log('treeData', treeData)
+  const fromTree = Array.isArray(treeData?.folders)
+    ? treeData!.folders.map((f) => ({ ...f, tracks: [] }))
+    : undefined
+
   return useQuery({
     queryKey: vaultKeys.folders(),
     queryFn: async (): Promise<FolderWithProjects[]> => {
@@ -58,6 +66,7 @@ export function useRootFolders() {
       if (!response.ok) throw new Error('Failed to fetch folders')
       return response.json()
     },
+    placeholderData: fromTree as unknown as FolderWithProjects[] | undefined,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   })
@@ -68,6 +77,12 @@ export function useRootFolders() {
 // ================================
 
 export function useVaultProjects() {
+  const queryClient = useQueryClient()
+  const treeData = queryClient.getQueryData<VaultData>(vaultKeys.tree())
+  const fromTree = Array.isArray(treeData?.rootProjects)
+    ? treeData!.rootProjects.map((p) => ({ ...p, tracks: [] }))
+    : undefined
+
   return useQuery({
     queryKey: vaultKeys.vaultProjects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
@@ -75,6 +90,7 @@ export function useVaultProjects() {
       if (!response.ok) throw new Error('Failed to fetch vault projects')
       return response.json()
     },
+    placeholderData: fromTree as unknown as ProjectWithTracks[] | undefined,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   })

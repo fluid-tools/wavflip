@@ -34,16 +34,18 @@ export const VaultStatsSchema = z.object({
 })
 
 // Recursive folder schema composed from base row + aggregates
-export const VaultFolderSchema: z.ZodType<{
+type VaultFolderT = {
   id: string
   name: string
   parentFolderId: string | null
   projects: z.infer<typeof VaultProjectSchema>[]
-  subfolders: any
+  subfolders: VaultFolderT[]
   projectCount: number
   subFolderCount: number
   level?: number
-}> = z.lazy(() =>
+}
+
+export const VaultFolderSchema: z.ZodType<VaultFolderT> = z.lazy(() =>
   FolderRowSchema.extend({
     projects: z.array(VaultProjectSchema),
     subfolders: z.array(VaultFolderSchema),

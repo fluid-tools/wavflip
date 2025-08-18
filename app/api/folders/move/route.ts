@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { moveFolder } from '@/lib/server/vault'
+import { z } from 'zod'
 
 export async function PATCH(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const folderId = formData.get('folderId') as string
-    const rawParentFolderId = formData.get('parentFolderId') as string
+    const Schema = z.object({
+      folderId: z.string().min(1),
+      parentFolderId: z.union([z.string().min(1), z.literal('')]),
+    })
+    const parsed = Schema.parse({
+      folderId: formData.get('folderId'),
+      parentFolderId: formData.get('parentFolderId'),
+    })
+    const parentFolderId = parsed.parentFolderId === '' ? null : parsed.parentFolderId
 
-    if (!folderId) {
-      return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 })
-    }
-
-    // Convert empty strings to null for root placement
-    const parentFolderId = rawParentFolderId === '' ? null : rawParentFolderId
-
-    await moveFolder(folderId, parentFolderId, session.user.id)
+    await moveFolder(parsed.folderId, parentFolderId, session.user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

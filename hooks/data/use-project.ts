@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { ProjectWithTracks } from '@/db/schema/vault'
+import type { ProjectWithTracks } from '@/lib/contracts/project'
+import { ProjectWithTracksSchema } from '@/lib/contracts/project'
 import type { ProjectImageResponse } from '@/lib/server/types/project'
 import { nanoid } from 'nanoid'
 import { vaultKeys } from './keys'
@@ -32,7 +33,8 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       if (!response.ok) {
         throw new Error('Failed to fetch project')
       }
-      return response.json()
+      const json = await response.json()
+      return ProjectWithTracksSchema.parse(json)
     },
     // Use placeholderData instead of initialData to ensure invalidation works
     placeholderData: initialData,

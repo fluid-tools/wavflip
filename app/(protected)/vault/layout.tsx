@@ -26,23 +26,11 @@ export default async function VaultLayout({ children }: VaultLayoutProps) {
   })
 
   // Prefetch common vault data for all vault pages
-  await Promise.all([
-    queryClient.prefetchQuery({
-      queryKey: vaultKeys.folders(),
-      queryFn: () => getUserFolders(session.user.id),
-      staleTime: 5 * 60 * 1000,
-    }),
-    queryClient.prefetchQuery({
-      queryKey: vaultKeys.vaultProjects(),
-      queryFn: () => getVaultProjects(session.user.id),
-      staleTime: 5 * 60 * 1000,
-    }),
-    queryClient.prefetchQuery({
-      queryKey: vaultKeys.tree(),
-      queryFn: () => getVaultData(session.user.id),
-      staleTime: 5 * 60 * 1000,
-    })
-  ])
+  await queryClient.prefetchQuery({
+    queryKey: vaultKeys.tree(),
+    queryFn: () => getVaultData(session.user.id),
+    staleTime: 5 * 60 * 1000,
+  })
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

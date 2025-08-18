@@ -2,11 +2,28 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { createTrack, createTrackVersion, deleteTrack, renameTrack, setActiveVersion } from '@/lib/server/vault'
 import { bustPresignedTrackCache } from '@/lib/storage/s3-storage'
+import { z } from 'zod'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
-    const { name, projectId, fileKey, fileSize, mimeType, duration } = await request.json()
+    const form = await request.formData()
+    const Schema = z.object({
+      name: z.string().min(1),
+      projectId: z.string().min(1),
+      fileKey: z.string().min(1),
+      fileSize: z.coerce.number().optional(),
+      mimeType: z.string().optional(),
+      duration: z.coerce.number().optional(),
+    })
+    const { name, projectId, fileKey, fileSize, mimeType, duration } = Schema.parse({
+      name: form.get('name'),
+      projectId: form.get('projectId'),
+      fileKey: form.get('fileKey'),
+      fileSize: form.get('fileSize'),
+      mimeType: form.get('mimeType'),
+      duration: form.get('duration'),
+    })
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json({ error: 'Track name is required' }, { status: 400 })
@@ -32,9 +49,9 @@ export async function POST(request: NextRequest) {
     const version = await createTrackVersion({
       trackId: track.id,
       fileKey,
-      size: parseInt(fileSize) || 0,
-      duration: parseFloat(duration) || 0,
-      mimeType: mimeType || 'audio/mpeg',
+      size: fileSize ?? 0,
+      duration: duration ?? 0,
+      mimeType: mimeType ?? 'audio/mpeg',
     })
 
     // Set the active version for the track
@@ -54,7 +71,8 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const trackId = formData.get('trackId') as string
+    const trackId = (formData.get('trackId') as string | null) ?? ''
+    if (!trackId) return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
 
     if (!trackId) {
       return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
@@ -79,16 +97,10 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const trackId = formData.get('trackId') as string
-    const name = formData.get('name') as string
-
-    if (!trackId) {
-      return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
-    }
-
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json({ error: 'Track name is required' }, { status: 400 })
-    }
+    const trackId = (formData.get('trackId') as string | null) ?? ''
+    const name = (formData.get('name') as string | null) ?? ''
+    if (!trackId) return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
+    if (!name.trim()) return NextResponse.json({ error: 'Track name is required' }, { status: 400 })
 
     await renameTrack(trackId, name.trim(), session.user.id)
 

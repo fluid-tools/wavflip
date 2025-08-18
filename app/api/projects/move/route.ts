@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { moveProject } from '@/lib/server/vault'
+import { z } from 'zod'
 
 export async function PATCH(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const projectId = formData.get('projectId') as string
-    const rawFolderId = formData.get('folderId') as string
+    const Schema = z.object({
+      projectId: z.string().min(1),
+      folderId: z.union([z.string().min(1), z.literal('')]).optional(),
+    })
+    const parsed = Schema.parse({
+      projectId: formData.get('projectId'),
+      folderId: formData.get('folderId'),
+    })
+    const folderId = parsed.folderId === '' ? null : parsed.folderId ?? null
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
-    }
-
-    // Convert empty strings to null for root placement
-    const folderId = rawFolderId === '' ? null : rawFolderId
-
-    await moveProject(projectId, folderId, session.user.id)
+    await moveProject(parsed.projectId, folderId, session.user.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

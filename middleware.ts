@@ -3,7 +3,7 @@ import { getSessionCookie } from 'better-auth/cookies'
 
 // Centralized route groups
 const API_AUTH_PREFIX = '/api/auth'
-const PUBLIC_AUTH_PATHS = ['/sign-in', '/login', '/reset-password', '/login-beta']
+const PUBLIC_AUTH_PATHS = ['/sign-in', '/reset-password']
 const PROTECTED_PAGE_PREFIXES = ['/vault', '/studio'] // (protected) group pages
 
 function isPathStartingWith(pathname: string, prefixes: string[]) {

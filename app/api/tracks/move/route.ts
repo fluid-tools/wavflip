@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { moveTrack } from '@/lib/server/vault'
+import { z } from 'zod'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const trackId = formData.get('trackId') as string
-    const projectId = formData.get('projectId') as string
-
-    if (!trackId || !projectId) {
-      return NextResponse.json({ error: 'Track ID and Project ID are required' }, { status: 400 })
-    }
+    const Schema = z.object({
+      trackId: z.string().min(1),
+      projectId: z.string().min(1),
+    })
+    const { trackId, projectId } = Schema.parse({
+      trackId: formData.get('trackId'),
+      projectId: formData.get('projectId'),
+    })
 
     await moveTrack(trackId, projectId, session.user.id)
 

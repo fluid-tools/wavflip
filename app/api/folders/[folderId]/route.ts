@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { getFolderWithContents } from '@/lib/server/vault'
+import { FolderWithProjectsSchema } from '@/lib/contracts/folder'
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
       return NextResponse.json({ error: 'Folder not found' }, { status: 404 })
     }
 
-    return NextResponse.json(folder)
+    return NextResponse.json(FolderWithProjectsSchema.parse(folder))
   } catch (error) {
     console.error('Failed to fetch folder:', error)
     return NextResponse.json(

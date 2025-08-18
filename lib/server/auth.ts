@@ -1,4 +1,4 @@
-'use server'
+import 'server-only'
 
 import { headers, cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -73,10 +73,3 @@ export async function requireAuth() {
   return session
 }
 
-// Require no authentication - redirect if authenticated
-export async function requireNoAuth() {
-  const session = await getServerSession()
-  if (session) {
-    redirect('/vault')
-  }
-} 

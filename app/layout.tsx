@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { BaseProviders } from "@/state/providers";
 
@@ -13,22 +13,46 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  weight: "400",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "WAVFLIP - AI Audio Sampler",
+  metadataBase: new URL("https://wavflip.com"),
+  applicationName: "WAVFLIP",
+  title: "WAVFLIP — AI-Native Audio Workflows in the Browser",
   description:
-    "wavflip is an ai-powered audio sampler and soundpack generator. 100x your audio-sampling workflow. free and open-source. - AI-powered sampler - sample anything. produce tracks in minutes. generate royalty-free soundpacks in seconds",
+    "Browser-based AI sampler and multi-track studio. Go from prompt to sound, generate stems, split stems, edit with ai agents, then export locally or save to your WAVFLIP Vault.",
+  keywords: [
+    "AI audio sampler",
+    "prompt to sound",
+    "multi-track",
+    "cursor",
+    "sampling",
+    "AI-Native",
+    "stems",
+    "music production",
+    "browser-based",
+    "web app",
+    "WAVFLIP",
+  ],
+  alternates: {
+    canonical: "https://wavflip.com",
+  },
   openGraph: {
-    title: "WAV\u00A0FLIP - AI Audio Sampler",
+    title: "WAVFLIP — AI-Native Audio Workflows in the Browser",
     description:
-      "wavflip is an ai-powered audio sampler and soundpack generator. 100x your audio-sampling workflow. free and open-source.",
+      "AI-Assist for music production in your browser. Prompt to sound, generate and edit stems, multi-track arranging, and exporting or saving to your Vault.",
     url: "https://wavflip.com",
-    siteName: "wavflip",
+    siteName: "WAVFLIP",
     images: [
       {
-        url: "/file.svg", // or a proper OG image
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "wavflip logo",
+        alt: "WAVFLIP — AI-Native Audio Workflows in the Browser",
       },
     ],
     locale: "en_US",
@@ -36,9 +60,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "WAV\u00A0FLIP - AI Audio Sampler",
+    title: "WAVFLIP — AI-Native Audio Workflows in the Browser",
     description:
-      "wavflip is an ai-powered audio sampler and soundpack generator. 100x your audio-sampling workflow. free and open-source.",
+      "Browser-based AI sampler and multi-track studio. Prompt to sound, agent-powered editing, and Vault storage.",
     images: ["/og-image.png"],
   },
 };
@@ -54,7 +78,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${instrumentSerif.variable} ${geistMono.variable} antialiased`}
       >
         <BaseProviders>
           {children}
