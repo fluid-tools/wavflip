@@ -7,8 +7,7 @@ import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 
 // Stop importing inferred NewProject type; validate inputs with Zod
-import type { Project } from '@/db/schema/vault'
-import type { ProjectRow } from '@/lib/contracts/project'
+import type { Project } from '@/lib/contracts/project'
 import { nanoid } from 'nanoid'
 
 // Resource-first helpers (no auth)
@@ -18,7 +17,7 @@ const getProjectById = async (projectId: string): Promise<Project | null> => {
     .from(project)
     .where(eq(project.id, projectId))
     .limit(1)
-  return result ?? null
+  return result ? ProjectRowSchema.parse(result) : null
 }
 
 // getor404 project
@@ -119,7 +118,7 @@ export async function getProjectWithTracks(projectId: string, userId: string) {
 // PROJECT CRUD OPERATIONS  
 // ================================
 
-export async function createProject(data: ReturnType<typeof getProjectCreateInput>): Promise<ProjectRow> {
+export async function createProject(data: ReturnType<typeof getProjectCreateInput>): Promise<Project> {
   const now = new Date()
   const base = ProjectCreateDataSchema.parse(data)
   const newProject = {

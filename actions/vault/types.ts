@@ -1,5 +1,5 @@
 import type { FolderRow } from '@/lib/contracts/folder';
-import type { ProjectRow } from '@/lib/contracts/project';
+import type { Project } from '@/lib/contracts/project';
 
 
 export type FolderActionState = {
@@ -11,7 +11,7 @@ export type FolderActionState = {
 export type ProjectActionState = {
   success: boolean
   error: string | null
-  project?: ProjectRow
+  project?: Project
 }
 
 export type DeleteActionState = {

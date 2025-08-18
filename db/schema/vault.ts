@@ -99,7 +99,3 @@ export const trackVersion = pgTable("track_version", {
   // Unique version numbers per track
   unique("unique_version_per_track").on(table.trackId, table.version),
 ]);
-
-// Types for use in the application
-
-export type Project = typeof project.$inferSelect;

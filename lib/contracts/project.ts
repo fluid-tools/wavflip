@@ -23,7 +23,7 @@ export const ProjectWithTracksSchema = ProjectRowSchema.extend({
 export type ProjectWithTracks = z.infer<typeof ProjectWithTracksSchema>
 export type TrackWithVersions = z.infer<typeof TrackWithVersionsSchema>
 export type TrackVersion = z.infer<typeof TrackVersionSchema>
-export type ProjectRow = z.infer<typeof ProjectRowSchema>
+export type Project = z.infer<typeof ProjectRowSchema>
 
 // Input for creating a project (server supplies id/timestamps)
 const AccessTypeSchema = z.enum(['private', 'public', 'invite-only'])

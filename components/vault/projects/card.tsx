@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/vault/use-action'
-import type { ProjectRow, ProjectWithTracks } from '@/lib/contracts/project'
+import type { Project, ProjectWithTracks } from '@/lib/contracts/project'
 
 import { DraggableWrapper, DroppableWrapper } from '@/components/vault/dnd'
 import { FolderPicker } from '@/components/vault/folders/picker'
@@ -36,7 +36,7 @@ import Image from 'next/image'
 import { useProject } from '@/hooks/data/use-project'
 
 interface ProjectCardProps {
-  project: ProjectRow | ProjectWithTracks
+  project: Project | ProjectWithTracks
   folderId?: string | null
   trackCount?: number
   isDragAndDropEnabled?: boolean
