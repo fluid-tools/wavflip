@@ -12,3 +12,5 @@ alwaysApply: false
 - Client hook: `useWaveform(key)` uses `waveformKeys.byKey(key)`. The `persist` mutation optimistically sets `{ isPlaceholder: false, ... }` and invalidates the key for confirmation.
 - No custom caches (localStorage/Jotai) for peaks; rely on React Query with IDB persistence (see `state/providers.tsx`).
 - Components must read peaks via `useWaveform(key)`; for offline blobs, local decode is fine for UI, and `persist` can be used to POST real peaks.
+
+- for references to making a waveform based editor, you can also refer to https://github.com/OpenCut-app/OpenCut. opencut uses wavefsurfer under the hood with ffmpeg it seems. use something of that sort. or even ffmpeg for nextjs itself.
