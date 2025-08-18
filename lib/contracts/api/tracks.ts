@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { TrackRowSchema } from '@/lib/contracts/track'
+import { TrackWithVersionsSchema } from '@/lib/contracts/track'
 
 // FormData-based schemas for track mutations
 export const TrackCreateFormSchema = z.object({
@@ -27,8 +27,11 @@ export const TrackMoveFormSchema = z.object({
 
 export const TrackCreateResponseSchema = z.object({
   success: z.boolean(),
-  track: TrackRowSchema,
+  track: TrackWithVersionsSchema,
 })
+
+export const TrackDeleteResponseSchema = z.object({ success: z.boolean() })
+export const TrackRenameResponseSchema = z.object({ success: z.boolean() })
 
 export const TrackDeleteFormSchemaV2 = TrackDeleteFormSchema
 export const TrackRenameFormSchemaV2 = TrackRenameFormSchema

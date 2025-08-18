@@ -1,11 +1,8 @@
-import { z } from 'zod'
-
-const ProjectImageUploadSchema = z.object({
-  file: z.instanceof(File),
-  projectId: z.string(),
-})
-
-export type ProjectImageUpload = z.infer<typeof ProjectImageUploadSchema>
+// Define as a pure TypeScript type to avoid unused runtime schema lint
+export type ProjectImageUpload = {
+  file: File
+  projectId: string
+}
 
 export interface ProjectImageResponse {
   success: boolean

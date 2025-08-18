@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FolderWithProjects } from '@/lib/contracts/folder'
 import type { ProjectWithTracks } from '@/lib/contracts/project'
 import { VaultDataSchema, type VaultData } from '@/lib/contracts/vault'
+import { ProjectsListResponseSchema } from '@/lib/contracts/api/projects'
 import { FoldersListResponseSchema } from '@/lib/contracts/api/folders'
 import { vaultKeys } from './keys'
 
@@ -92,7 +93,8 @@ export function useVaultProjects() {
     queryFn: async (): Promise<ProjectWithTracks[]> => {
       const response = await fetch('/api/projects')
       if (!response.ok) throw new Error('Failed to fetch vault projects')
-      return response.json()
+      const json = await response.json()
+      return ProjectsListResponseSchema.parse(json)
     },
     placeholderData: fromTree as unknown as ProjectWithTracks[] | undefined,
     staleTime: 5 * 60 * 1000,

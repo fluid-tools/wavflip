@@ -231,10 +231,23 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
       }
       toast.error(`Failed to upload ${variables.name}: ${error.message}`)
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables, context) => {
       toast.success(`${variables.name} uploaded successfully`)
-      // The server data will replace the optimistic data
-      queryClient.invalidateQueries({ queryKey })
+      // Replace optimistic track with server track in project cache
+      try {
+        const serverTrack = data?.track
+        if (context?.previousProject && serverTrack) {
+          queryClient.setQueryData<ProjectWithTracks>(queryKey, (old) => {
+            if (!old) return old
+            const withoutTemps = (old.tracks ?? []).filter(t => !t.id.startsWith('temp-'))
+            return { ...old, tracks: [...withoutTemps, serverTrack] }
+          })
+        }
+      } finally {
+        // Invalidate tree and sidebar data to update counts
+        queryClient.invalidateQueries({ queryKey: vaultKeys.base })
+        queryClient.invalidateQueries({ queryKey })
+      }
     },
     onSettled: (data, error, variables, context) => {
       // Clean up optimistic blob URL from track upload

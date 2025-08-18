@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { createTrack, createTrackVersion, deleteTrack, renameTrack, setActiveVersion } from '@/lib/server/vault'
 import { bustPresignedTrackCache } from '@/lib/storage/s3-storage'
-import { TrackCreateFormSchema, TrackDeleteFormSchema, TrackRenameFormSchema } from '@/lib/contracts/api/tracks'
+import { TrackCreateFormSchema, TrackDeleteFormSchema, TrackRenameFormSchema, TrackCreateResponseSchema, TrackDeleteResponseSchema, TrackRenameResponseSchema } from '@/lib/contracts/api/tracks'
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,8 +48,15 @@ export async function POST(request: NextRequest) {
 
     // Set the active version for the track
     await setActiveVersion(track.id, version.id, session.user.id)
-    
-    return NextResponse.json({ success: true, track })
+
+    // Compose full track-with-versions payload for clients that expect versions array
+    const fullTrack = {
+      ...track,
+      versions: [version],
+      activeVersion: version,
+    }
+
+    return NextResponse.json(TrackCreateResponseSchema.parse({ success: true, track: fullTrack }))
   } catch (error) {
     console.error('Failed to create track:', error)
     return NextResponse.json(
@@ -76,7 +83,7 @@ export async function DELETE(request: NextRequest) {
     // Bust the cache for this track
     await bustPresignedTrackCache(trackId)
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json(TrackDeleteResponseSchema.parse({ success: true }))
   } catch (error) {
     console.error('Failed to delete track:', error)
     return NextResponse.json(
@@ -97,7 +104,7 @@ export async function PATCH(request: NextRequest) {
 
     await renameTrack(trackId, name.trim(), session.user.id)
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json(TrackRenameResponseSchema.parse({ success: true }))
   } catch (error) {
     console.error('Failed to rename track:', error)
     return NextResponse.json(

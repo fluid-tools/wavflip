@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
 import { track, trackVersion } from '@/db/schema/vault'
 
-export const TrackRowSchema = createSelectSchema(track)
+const TrackRowSchema = createSelectSchema(track)
 export const TrackVersionRowSchema = createSelectSchema(trackVersion)
 export const TrackInsertSchema = createInsertSchema(track)
 export const TrackVersionInsertSchema = createInsertSchema(trackVersion)

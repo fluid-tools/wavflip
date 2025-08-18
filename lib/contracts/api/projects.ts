@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ProjectWithTracksSchema } from '@/lib/contracts/project'
 
 export const ProjectMoveFormSchema = z.object({
   projectId: z.string().min(1),
@@ -20,4 +21,11 @@ export const ProjectRenameFormSchema = z.object({
 export const ProjectDeleteFormSchema = z.object({
   projectId: z.string().min(1),
 })
+
+export const ProjectGetResponseSchema = ProjectWithTracksSchema
+export type ProjectGetResponse = z.infer<typeof ProjectGetResponseSchema>
+
+
+export const ProjectsListResponseSchema = z.array(ProjectWithTracksSchema)
+export type ProjectsListResponse = z.infer<typeof ProjectsListResponseSchema>
 

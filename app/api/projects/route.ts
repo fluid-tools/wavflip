@@ -6,8 +6,7 @@ import {
   getVaultProjects,
   handleDuplicateProjectName 
 } from '@/lib/server/vault'
-import { ProjectCreateFormSchema, ProjectDeleteFormSchema } from '@/lib/contracts/api/projects'
-import { ProjectWithTracksSchema } from '@/lib/contracts/project'
+import { ProjectCreateFormSchema, ProjectDeleteFormSchema, ProjectsListResponseSchema } from '@/lib/contracts/api/projects'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: NextRequest) {
@@ -16,8 +15,7 @@ export async function GET(request: NextRequest) {
 
     // Get only root-level projects (not in any folder)
     const projects = await getVaultProjects(session.user.id)
-
-    return NextResponse.json(projects.map(p => ProjectWithTracksSchema.parse(p)))
+    return NextResponse.json(ProjectsListResponseSchema.parse(projects))
   } catch (error) {
     console.error('Failed to fetch vault projects:', error)
     return NextResponse.json(

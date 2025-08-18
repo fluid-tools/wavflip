@@ -31,10 +31,28 @@ export function useTrackPresignedUrl(trackId: string | null) {
 
 // Multiple track presigned URLs (for a project)
 export function useProjectTrackUrls(tracks: TrackWithVersions[] | undefined) {
-  const trackIds = tracks?.map(t => t.id) || []
-  
+  const allTracks = tracks || []
+
+  // Pre-populate URL map with local blob URLs for optimistic tracks to avoid network calls
+  const urlMap = new Map<string, string>()
+  const realTrackIds: string[] = []
+
+  for (const t of allTracks) {
+    const fileKey = t.activeVersion?.fileKey
+    const isTempId = t.id.startsWith('temp-')
+    const isBlob = typeof fileKey === 'string' && fileKey.startsWith('blob:')
+    if (isTempId || isBlob) {
+      const maybeBlob = (t.activeVersion?.metadata as any)?.tempBlobUrl || fileKey
+      if (typeof maybeBlob === 'string') {
+        urlMap.set(t.id, maybeBlob)
+      }
+      continue
+    }
+    realTrackIds.push(t.id)
+  }
+
   const queries = useQueries({
-    queries: trackIds.map(trackId => ({
+    queries: realTrackIds.map(trackId => ({
       queryKey: trackUrlKeys.single(trackId),
       queryFn: async () => {
         const response = await fetch(`/api/tracks/${trackId}/presigned-url`)
@@ -49,16 +67,15 @@ export function useProjectTrackUrls(tracks: TrackWithVersions[] | undefined) {
       refetchInterval: 45 * 60 * 1000,
     }))
   })
-  
-  // Create a map of trackId to presigned URL
-  const urlMap = new Map<string, string>()
-  trackIds.forEach((trackId, index) => {
+
+  // Merge fetched URLs into urlMap
+  realTrackIds.forEach((trackId, index) => {
     const query = queries[index]
     if (query?.data) {
       urlMap.set(trackId, query.data)
     }
   })
-  
+
   return {
     urlMap,
     isLoading: queries.some(q => q.isLoading),
