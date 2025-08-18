@@ -2,11 +2,13 @@ import 'server-only'
 
 import { db } from '@/db'
 import { project, track, trackVersion } from '@/db/schema/vault'
-import { ProjectWithTracksSchema } from '@/lib/contracts/project'
+import { ProjectWithTracksSchema, ProjectCreateDataSchema, ProjectRowSchema } from '@/lib/contracts/project'
 import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 
-import type { NewProject, Project } from '@/db/schema/vault'
+// Stop importing inferred NewProject type; validate inputs with Zod
+import type { Project } from '@/db/schema/vault'
+import type { ProjectRow } from '@/lib/contracts/project'
 import { nanoid } from 'nanoid'
 
 // Resource-first helpers (no auth)
@@ -117,17 +119,18 @@ export async function getProjectWithTracks(projectId: string, userId: string) {
 // PROJECT CRUD OPERATIONS  
 // ================================
 
-export async function createProject(data: Omit<NewProject, 'id' | 'createdAt' | 'updatedAt'>): Promise<Project> {
+export async function createProject(data: ReturnType<typeof getProjectCreateInput>): Promise<ProjectRow> {
   const now = new Date()
-  const newProject: NewProject = {
-    ...data,
+  const base = ProjectCreateDataSchema.parse(data)
+  const newProject = {
+    ...base,
     id: nanoid(),
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   }
 
   const [createdProject] = await db.insert(project).values(newProject).returning()
-  return createdProject
+  return ProjectRowSchema.parse(createdProject)
 }
 
 export async function deleteProject(projectId: string, userId: string): Promise<void> {
@@ -146,5 +149,9 @@ export async function moveProject(projectId: string, folderId: string | null, us
     .update(project)
     .set({ folderId, updatedAt: new Date() })
     .where(and(eq(project.id, projectId), eq(project.userId, userId)))
+}
+
+function getProjectCreateInput(input: unknown) {
+  return ProjectCreateDataSchema.parse(input)
 }
 

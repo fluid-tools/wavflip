@@ -101,33 +101,5 @@ export const trackVersion = pgTable("track_version", {
 ]);
 
 // Types for use in the application
-export type Folder = typeof folder.$inferSelect;
-export type NewFolder = typeof folder.$inferInsert;
 
 export type Project = typeof project.$inferSelect;
-export type NewProject = typeof project.$inferInsert;
-
-export type Track = typeof track.$inferSelect;
-export type NewTrack = typeof track.$inferInsert;
-
-export type TrackVersion = typeof trackVersion.$inferSelect;
-export type NewTrackVersion = typeof trackVersion.$inferInsert;
-
-// Extended types with relationships
-export type FolderWithProjects = Folder & {
-  projects: ProjectWithTracks[];
-  subFolders?: FolderWithProjects[];
-  subFolderCount?: number;
-  projectCount?: number;
-};
-
-export type TrackWithVersions = Track & {
-  activeVersion?: TrackVersion;
-  versions: TrackVersion[];
-  project?: Project;
-};
-
-export type ProjectWithTracks = Project & {
-  tracks?: TrackWithVersions[];
-  trackCount: number;
-}; 

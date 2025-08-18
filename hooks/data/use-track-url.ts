@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useQueries } from '@tanstack/react-query'
-import type { TrackWithVersions } from '@/db/schema/vault'
+import type { TrackWithVersions } from '@/lib/contracts/track'
 
 // Query keys
 export const trackUrlKeys = {

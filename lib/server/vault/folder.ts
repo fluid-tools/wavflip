@@ -1,25 +1,26 @@
 import { db } from '@/db';
-import { type NewFolder, type Folder, folder, project } from '@/db/schema/vault';
-import { FolderWithProjectsSchema } from '@/lib/contracts/folder'
+import { folder, project } from '@/db/schema/vault';
 import { and, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
+import { FolderCreateDataSchema, FolderRowSchema } from '@/lib/contracts/folder'
 
 
 // ================================
 // FOLDER CRUD OPERATIONS
 // ================================
 
-export async function createFolder(data: Omit<NewFolder, 'id' | 'createdAt' | 'updatedAt'>): Promise<Folder> {
+export async function createFolder(data: { name: string; parentFolderId: string | null; userId: string; order: number }) {
   const now = new Date()
-  const newFolder: NewFolder = {
-    ...data,
+  const base = FolderCreateDataSchema.parse(data)
+  const newFolder = {
+    ...base,
     id: nanoid(),
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   }
 
   const [createdFolder] = await db.insert(folder).values(newFolder).returning()
-  return createdFolder
+  return FolderRowSchema.parse(createdFolder)
 }
 
 export async function deleteFolder(folderId: string, userId: string): Promise<{ parentFolderId: string | null} > {

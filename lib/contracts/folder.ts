@@ -1,8 +1,16 @@
 import { z } from 'zod'
-import { createSelectSchema } from 'drizzle-zod'
+import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
 import { folder, project, track } from '@/db/schema/vault'
 
 export const FolderRowSchema = createSelectSchema(folder)
+export const FolderInsertSchema = createInsertSchema(folder)
+
+// Input for creating a folder on the server (server-supplied id/timestamps)
+export const FolderCreateDataSchema = FolderInsertSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+})
 export const ProjectRowSchema = createSelectSchema(project)
 export const TrackRowSchema = createSelectSchema(track)
 
@@ -27,5 +35,6 @@ export const FolderWithProjectsSchema: z.ZodType<FolderWithProjectsT> = z.lazy((
 )
 
 export type FolderWithProjects = z.infer<typeof FolderWithProjectsSchema>
+export type FolderRow = z.infer<typeof FolderRowSchema>
 
 

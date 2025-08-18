@@ -4,7 +4,9 @@ import { db } from '@/db'
 import { project, track, trackVersion } from '@/db/schema/vault'
 import { eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import type { ProjectWithTracks } from '@/db/schema/vault'
+import type { ProjectWithTracks } from '@/lib/contracts/project'
+import { TrackWithVersionsSchema } from '@/lib/contracts/track'
+import { ProjectWithTracksSchema } from '@/lib/contracts/project'
 
 const GENERATIONS_PROJECT_NAME = 'Generations'
 
@@ -48,15 +50,15 @@ export async function getOrCreateGenerationsProject(userId: string): Promise<Pro
           ? versions.find(v => v.id === t.activeVersionId)
           : versions[0]
 
-        return { ...t, versions, activeVersion, project: existingProject }
+        return TrackWithVersionsSchema.parse({ ...t, versions, activeVersion, project: existingProject })
       })
     )
 
-    return {
+    return ProjectWithTracksSchema.parse({
       ...existingProject,
       tracks: tracksWithVersions,
       trackCount: tracksWithVersions.length
-    }
+    })
   }
 
   // Create the generations project
@@ -83,11 +85,11 @@ export async function getOrCreateGenerationsProject(userId: string): Promise<Pro
     .values(newProject)
     .returning()
 
-  return {
+  return ProjectWithTracksSchema.parse({
     ...createdProject,
     tracks: [],
     trackCount: 0
-  }
+  })
 }
 
 /**

@@ -5,7 +5,7 @@ import { getProjectWithTracks } from '@/lib/server/vault'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 import { ProjectView } from './client'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
-import type { ProjectWithTracks } from '@/db/schema/vault'
+import type { ProjectWithTracks } from '@/lib/contracts/project'
 // Remove client-only import
 
 interface ProjectPageProps {

@@ -4,7 +4,7 @@ import { useMemo, startTransition, useState, useEffect, useCallback } from 'reac
 import { useIsTablet } from '@/hooks/use-mobile'
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import type { FolderWithProjects } from '@/db/schema/vault'
+import type { FolderWithProjects } from '@/lib/contracts/folder'
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
 import { FolderCard } from '@/components/vault/folders/card'

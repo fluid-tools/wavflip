@@ -6,15 +6,15 @@ import {
   deleteFolder,
   handleDuplicateFolderName 
 } from '@/lib/server/vault'
-import { FolderCreateFormSchema, FolderDeleteFormSchema } from '@/lib/contracts/api/folders'
+import { FolderCreateFormSchema, FolderDeleteFormSchema, FoldersListResponseSchema } from '@/lib/contracts/api/folders'
 
 export async function GET() {
   try {
     const session = await requireAuth()
     
     const folders = await getUserFolders(session.user.id)
-    
-    return NextResponse.json(folders)
+    // Validate API response
+    return NextResponse.json(FoldersListResponseSchema.parse(folders))
   } catch (error) {
     console.error('Failed to fetch folders:', error)
     return NextResponse.json(

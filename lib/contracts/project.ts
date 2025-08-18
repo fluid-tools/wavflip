@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { createSelectSchema } from 'drizzle-zod'
+import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
 import { project, track, trackVersion } from '@/db/schema/vault'
 
 export const ProjectRowSchema = createSelectSchema(project)
+export const ProjectInsertSchema = createInsertSchema(project)
 export const TrackRowSchema = createSelectSchema(track)
 export const TrackVersionRowSchema = createSelectSchema(trackVersion)
 
@@ -22,5 +23,17 @@ export const ProjectWithTracksSchema = ProjectRowSchema.extend({
 export type ProjectWithTracks = z.infer<typeof ProjectWithTracksSchema>
 export type TrackWithVersions = z.infer<typeof TrackWithVersionsSchema>
 export type TrackVersion = z.infer<typeof TrackVersionSchema>
+export type ProjectRow = z.infer<typeof ProjectRowSchema>
+
+// Input for creating a project (server supplies id/timestamps)
+const AccessTypeSchema = z.enum(['private', 'public', 'invite-only'])
+
+export const ProjectCreateDataSchema = ProjectInsertSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  accessType: AccessTypeSchema.optional(),
+})
 
 

@@ -37,7 +37,7 @@ import { createTracksTableColumns } from './table-columns'
 import { useTracks, type TrackFromProject } from '../../../hooks/data/use-tracks'
 import { ProjectPicker } from '../projects/picker'
 import { MobileTracksList } from './mobile-list'
-import type { ProjectWithTracks } from '@/db/schema/vault'
+import type { ProjectWithTracks } from '@/lib/contracts/project'
 import { useProjectTrackUrls } from '@/hooks/data/use-track-url'
 
 interface TracksTableProps {

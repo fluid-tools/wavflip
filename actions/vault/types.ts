@@ -1,16 +1,17 @@
-import type { Folder, Project } from '@/db/schema/vault';
+import type { FolderRow } from '@/lib/contracts/folder';
+import type { ProjectRow } from '@/lib/contracts/project';
 
 
 export type FolderActionState = {
   success: boolean
   error: string | null
-  folder?: Folder
+  folder?: FolderRow
 }
 
 export type ProjectActionState = {
   success: boolean
   error: string | null
-  project?: Project
+  project?: ProjectRow
 }
 
 export type DeleteActionState = {

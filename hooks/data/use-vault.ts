@@ -1,8 +1,10 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
+import type { FolderWithProjects } from '@/lib/contracts/folder'
+import type { ProjectWithTracks } from '@/lib/contracts/project'
 import { VaultDataSchema, type VaultData } from '@/lib/contracts/vault'
+import { FoldersListResponseSchema } from '@/lib/contracts/api/folders'
 import { vaultKeys } from './keys'
 
 // ================================
@@ -43,6 +45,7 @@ export function useFolder(folderId: string) {
     queryFn: async (): Promise<FolderWithProjects> => {
       const response = await fetch(`/api/folders/${folderId}`)
       if (!response.ok) throw new Error('Failed to fetch folder')
+      // TODO: introduce a dedicated contract schema for folder GET by id
       return response.json()
     },
     staleTime: 5 * 60 * 1000,
@@ -64,7 +67,8 @@ export function useRootFolders() {
     queryFn: async (): Promise<FolderWithProjects[]> => {
       const response = await fetch('/api/folders')
       if (!response.ok) throw new Error('Failed to fetch folders')
-      return response.json()
+      const json = await response.json()
+      return FoldersListResponseSchema.parse(json)
     },
     placeholderData: fromTree as unknown as FolderWithProjects[] | undefined,
     staleTime: 5 * 60 * 1000,

@@ -14,7 +14,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { TrackWithVersions } from '@/db/schema/vault'
+import type { TrackWithVersions } from '@/lib/contracts/track'
 import type { AudioTrack } from '@/types/audio'
 import Image from 'next/image'
 import {
@@ -55,7 +55,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
     const availableProjects = [
         ...vaultProjects,
-        ...folders.flatMap(folder => folder.projects)
+        ...folders.flatMap(folder => folder.projects.map(p => ({ ...p, trackCount: p.trackCount ?? 0 })))
     ]
 
     // // Debug: Log when project data changes
@@ -343,7 +343,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                                     <>
                                         <span>•</span>
                                         <Badge variant="secondary" className="text-xs">
-                                            {project.accessType}
+                                            {String(project.accessType)}
                                         </Badge>
                                     </>
                                 )}

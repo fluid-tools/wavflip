@@ -5,17 +5,16 @@ import {
   deleteProject,
   handleDuplicateProjectName 
 } from '@/lib/server/vault'
+import { ProjectCreateFormSchema, ProjectDeleteFormSchema } from '@/lib/contracts/api/projects'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const name = formData.get('name') as string
-    const folderId = formData.get('folderId') as string | null
-
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json({ error: 'Project name is required' }, { status: 400 })
-    }
+    const { name, folderId } = ProjectCreateFormSchema.parse({
+      name: formData.get('name'),
+      folderId: formData.get('folderId'),
+    })
 
     // Handle duplicate names by adding suffix
     const projectName = await handleDuplicateProjectName(
@@ -46,11 +45,9 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const projectId = formData.get('projectId') as string
-
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
-    }
+    const { projectId } = ProjectDeleteFormSchema.parse({
+      projectId: formData.get('projectId'),
+    })
 
     await deleteProject(projectId, session.user.id)
 

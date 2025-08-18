@@ -5,7 +5,8 @@ import { useIsTablet } from '@/hooks/use-mobile'
 
 import { Folder } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import type { FolderWithProjects, ProjectWithTracks } from '@/db/schema/vault'
+import type { FolderWithProjects } from '@/lib/contracts/folder'
+import type { ProjectWithTracks } from '@/lib/contracts/project'
 import { FolderCard } from '@/components/vault/folders/card'
 import { ProjectCard } from '@/components/vault/projects/card'
 

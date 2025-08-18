@@ -10,7 +10,8 @@ import type {
 } from '@/lib/contracts/vault'
 import { VaultDataSchema } from '@/lib/contracts/vault'
 
-import type { Folder, FolderWithProjects } from '@/db/schema/vault'
+import type { FolderWithProjects } from '@/lib/contracts/folder'
+import { FolderWithProjectsSchema } from '@/lib/contracts/folder'
 
 // Local options type for server composition
 interface VaultQueryOptions {
@@ -149,11 +150,12 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
 // ================================
 
 async function getFolderPath(folderId: string, userId: string): Promise<BreadcrumbItem[]> {
+  type DbFolderRow = { id: string; name: string; parentFolderId: string | null }
   const path: BreadcrumbItem[] = []
   let currentFolderId: string | null = folderId
 
   while (currentFolderId) {
-    const folderData: Folder[] = await db
+    const folderData: DbFolderRow[] = await db
       .select()
       .from(folder)
       .where(and(eq(folder.id, currentFolderId), eq(folder.userId, userId)))
@@ -163,7 +165,7 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
       throw new Error('Folder not found')
     }
 
-    const currentFolder: Folder = folderData[0]
+    const currentFolder = folderData[0]
     path.unshift({
       id: currentFolder.id,
       name: currentFolder.name,
@@ -322,13 +324,13 @@ export async function getFolderWithContents(folderId: string, userId: string): P
   const nestedProjectCount = calculateTotalProjectCount(subFolders)
   const totalProjectCount = directProjectCount + nestedProjectCount
 
-  return {
+  return FolderWithProjectsSchema.parse({
     ...folderData,
     subFolders,
-    projects: projects.map(p => ({ ...p, tracks: [] })),
+    projects,
     subFolderCount: subFolders.length,
     projectCount: totalProjectCount
-  }
+  })
 }
 
 

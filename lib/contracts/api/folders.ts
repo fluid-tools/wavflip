@@ -8,6 +8,10 @@ export const FolderMoveFormSchema = z.object({
 
 export const FolderGetResponseSchema = FolderWithProjectsSchema
 
+// List folders (root-level) response
+export const FoldersListResponseSchema = z.array(FolderWithProjectsSchema)
+export type FoldersListResponse = z.infer<typeof FoldersListResponseSchema>
+
 export type FolderMoveForm = z.infer<typeof FolderMoveFormSchema>
 
 export const FolderCreateFormSchema = z.object({
@@ -17,5 +21,13 @@ export const FolderCreateFormSchema = z.object({
 
 export const FolderDeleteFormSchema = z.object({
   folderId: z.string().min(1),
+})
+
+// Server-friendly create schema (no empty string for root)
+export const FolderEntityCreateSchema = z.object({
+  name: z.string().min(1),
+  parentFolderId: z.string().min(1).nullable().optional(),
+  userId: z.string().min(1),
+  order: z.number().int().default(0),
 })
 

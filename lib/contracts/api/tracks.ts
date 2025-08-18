@@ -30,6 +30,10 @@ export const TrackCreateResponseSchema = z.object({
   track: TrackRowSchema,
 })
 
+export const TrackDeleteFormSchemaV2 = TrackDeleteFormSchema
+export const TrackRenameFormSchemaV2 = TrackRenameFormSchema
+export const TrackMoveFormSchemaV2 = TrackMoveFormSchema
+
 export type TrackCreateForm = z.infer<typeof TrackCreateFormSchema>
 export type TrackDeleteForm = z.infer<typeof TrackDeleteFormSchema>
 export type TrackRenameForm = z.infer<typeof TrackRenameFormSchema>

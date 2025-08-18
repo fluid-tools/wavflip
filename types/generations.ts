@@ -1,4 +1,5 @@
-import type { ProjectWithTracks, TrackVersion, TrackWithVersions } from '@/db/schema/vault'
+import type { ProjectWithTracks, TrackVersion, TrackWithVersions } from '@/lib/contracts/project'
+// Note: TrackVersion is also exported from contracts/track, but re-exported by contracts/project
 import type { AudioTrack } from './audio'
 
 export type WithPresignedUrl<T extends TrackVersion> = T & { presignedUrl?: string }
