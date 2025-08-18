@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
 import { getCachedSession } from '@/lib/server/auth'
 import { redirect } from 'next/navigation'
-import { getUserFolders, getVaultProjects, getVaultData } from '@/lib/server/vault'
+import { getVaultData } from '@/lib/server/vault'
 import { vaultKeys } from '@/hooks/data/keys'
 
 interface VaultLayoutProps {

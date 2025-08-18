@@ -2,11 +2,13 @@ import 'server-only'
 
 import { db } from '@/db'
 import { track, trackVersion } from '@/db/schema/vault'
+import { TrackWithVersionsSchema } from '@/lib/contracts/track'
 import { and, desc, eq } from 'drizzle-orm'
 import { getPresignedUrl } from '@/lib/storage/s3-storage'
 import { REDIS_KEYS } from '@/lib/redis'
 
-import type { NewTrack, NewTrackVersion, Track, TrackVersion } from '@/db/schema/vault'
+import type { NewTrack, NewTrackVersion, Track } from '@/db/schema/vault'
+import type { TrackWithVersions } from '@/lib/contracts/track'
 import { nanoid } from 'nanoid'
 
 /**
@@ -21,7 +23,7 @@ const getTrackById = async (trackId: string): Promise<Track | null> => {
   return result ?? null
 }
 
-const getActiveVersionForTrack = async (trackRecord: Track): Promise<TrackVersion | null> => {
+const getActiveVersionForTrack = async (trackRecord: Track) => {
   if (!trackRecord.activeVersionId) return null
   const [version] = await db
     .select()
@@ -115,7 +117,7 @@ export async function moveTrack(trackId: string, projectId: string, userId: stri
 // TRACK VERSION OPERATIONS
 // ================================
 
-export async function createTrackVersion(data: Omit<NewTrackVersion, 'id' | 'version' | 'createdAt'>): Promise<TrackVersion> {
+export async function createTrackVersion(data: Omit<NewTrackVersion, 'id' | 'version' | 'createdAt'>) {
   // Get the next version number
   const existingVersions = await db
     .select({ version: trackVersion.version })
@@ -134,7 +136,7 @@ export async function createTrackVersion(data: Omit<NewTrackVersion, 'id' | 'ver
   }
 
   const [version] = await db.insert(trackVersion).values(newVersion).returning()
-  return version
+  return TrackWithVersionsSchema.shape.versions.element.parse(version)
 }
 
 export async function setActiveVersion(trackId: string, versionId: string, userId: string): Promise<void> {

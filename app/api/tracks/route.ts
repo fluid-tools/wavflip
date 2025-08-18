@@ -2,21 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { createTrack, createTrackVersion, deleteTrack, renameTrack, setActiveVersion } from '@/lib/server/vault'
 import { bustPresignedTrackCache } from '@/lib/storage/s3-storage'
-import { z } from 'zod'
+import { TrackCreateFormSchema, TrackDeleteFormSchema, TrackRenameFormSchema } from '@/lib/contracts/api/tracks'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
     const form = await request.formData()
-    const Schema = z.object({
-      name: z.string().min(1),
-      projectId: z.string().min(1),
-      fileKey: z.string().min(1),
-      fileSize: z.coerce.number().optional(),
-      mimeType: z.string().optional(),
-      duration: z.coerce.number().optional(),
-    })
-    const { name, projectId, fileKey, fileSize, mimeType, duration } = Schema.parse({
+    const { name, projectId, fileKey, fileSize, mimeType, duration } = TrackCreateFormSchema.parse({
       name: form.get('name'),
       projectId: form.get('projectId'),
       fileKey: form.get('fileKey'),
@@ -71,8 +63,9 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const trackId = (formData.get('trackId') as string | null) ?? ''
-    if (!trackId) return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
+    const { trackId } = TrackDeleteFormSchema.parse({
+      trackId: formData.get('trackId'),
+    })
 
     if (!trackId) {
       return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
@@ -97,10 +90,10 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const trackId = (formData.get('trackId') as string | null) ?? ''
-    const name = (formData.get('name') as string | null) ?? ''
-    if (!trackId) return NextResponse.json({ error: 'Track ID is required' }, { status: 400 })
-    if (!name.trim()) return NextResponse.json({ error: 'Track name is required' }, { status: 400 })
+    const { trackId, name } = TrackRenameFormSchema.parse({
+      trackId: formData.get('trackId'),
+      name: formData.get('name'),
+    })
 
     await renameTrack(trackId, name.trim(), session.user.id)
 

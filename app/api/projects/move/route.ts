@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { moveProject } from '@/lib/server/vault'
-import { z } from 'zod'
+import { ProjectMoveFormSchema } from '@/lib/contracts/api/projects'
 
 export async function PATCH(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const Schema = z.object({
-      projectId: z.string().min(1),
-      folderId: z.union([z.string().min(1), z.literal('')]).optional(),
-    })
-    const parsed = Schema.parse({
+    const parsed = ProjectMoveFormSchema.parse({
       projectId: formData.get('projectId'),
       folderId: formData.get('folderId'),
     })

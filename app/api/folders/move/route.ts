@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { moveFolder } from '@/lib/server/vault'
-import { z } from 'zod'
+import { FolderMoveFormSchema } from '@/lib/contracts/api/folders'
 
 export async function PATCH(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const Schema = z.object({
-      folderId: z.string().min(1),
-      parentFolderId: z.union([z.string().min(1), z.literal('')]),
-    })
-    const parsed = Schema.parse({
+    const parsed = FolderMoveFormSchema.parse({
       folderId: formData.get('folderId'),
       parentFolderId: formData.get('parentFolderId'),
     })

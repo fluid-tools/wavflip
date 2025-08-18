@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth'
 import { moveTrack } from '@/lib/server/vault'
-import { z } from 'zod'
+import { TrackMoveFormSchema } from '@/lib/contracts/api/tracks'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const Schema = z.object({
-      trackId: z.string().min(1),
-      projectId: z.string().min(1),
-    })
-    const { trackId, projectId } = Schema.parse({
+    const { trackId, projectId } = TrackMoveFormSchema.parse({
       trackId: formData.get('trackId'),
       projectId: formData.get('projectId'),
     })

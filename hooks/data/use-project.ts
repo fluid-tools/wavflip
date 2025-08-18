@@ -6,6 +6,7 @@ import type { ProjectWithTracks } from '@/lib/contracts/project'
 import { ProjectWithTracksSchema } from '@/lib/contracts/project'
 import type { ProjectImageResponse } from '@/lib/server/types/project'
 import { nanoid } from 'nanoid'
+import { TrackCreateFormSchema } from '@/lib/contracts/api/tracks'
 import { vaultKeys } from './keys'
 import { generateWaveformData } from '@/lib/audio/waveform-generator'
 
@@ -119,21 +120,26 @@ export function useProject({ projectId, initialData, enabled = true }: UseProjec
         throw new Error('Failed to upload file to S3')
       }
 
-      // Create track in database - store S3 key
+      // Create track in database - store S3 key (FormData + Zod validation)
+      const validated = TrackCreateFormSchema.parse({
+        name: name.trim(),
+        projectId,
+        fileKey: key,
+        fileSize: file.size,
+        mimeType: file.type,
+        duration: duration || 0,
+      })
+      const fd = new FormData()
+      fd.set('name', validated.name)
+      fd.set('projectId', validated.projectId)
+      fd.set('fileKey', validated.fileKey)
+      if (validated.fileSize != null) fd.set('fileSize', String(validated.fileSize))
+      if (validated.mimeType) fd.set('mimeType', validated.mimeType)
+      if (validated.duration != null) fd.set('duration', String(validated.duration))
+
       const response = await fetch('/api/tracks', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: trackId,
-          name: name.trim(),
-          projectId,
-          fileKey: key,
-          fileSize: file.size,
-          mimeType: file.type,
-          duration: duration || 0
-        })
+        body: fd,
       })
 
       if (!response.ok) {

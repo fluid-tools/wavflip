@@ -54,7 +54,7 @@ export function useRootFolders() {
   // Read tree cache directly to avoid using any types
   const queryClient = useQueryClient()
   const treeData = queryClient.getQueryData<VaultData>(vaultKeys.tree())
-  console.log('treeData', treeData)
+  if (treeData && treeData.folders.length > 0) { console.log('treeData cache hit') }
   const fromTree = Array.isArray(treeData?.folders)
     ? treeData!.folders.map((f) => ({ ...f, tracks: [] }))
     : undefined

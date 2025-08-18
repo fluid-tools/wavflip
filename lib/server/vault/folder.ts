@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { type NewFolder, type Folder, folder, project } from '@/db/schema/vault';
+import { FolderWithProjectsSchema } from '@/lib/contracts/folder'
 import { and, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 

@@ -6,6 +6,7 @@ import {
   deleteFolder,
   handleDuplicateFolderName 
 } from '@/lib/server/vault'
+import { FolderCreateFormSchema, FolderDeleteFormSchema } from '@/lib/contracts/api/folders'
 
 export async function GET() {
   try {
@@ -27,12 +28,10 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const name = formData.get('name') as string
-    const parentFolderId = formData.get('parentFolderId') as string | null
-
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json({ error: 'Folder name is required' }, { status: 400 })
-    }
+    const { name, parentFolderId } = FolderCreateFormSchema.parse({
+      name: formData.get('name'),
+      parentFolderId: formData.get('parentFolderId'),
+    })
 
     // Handle duplicate names by adding suffix
     const folderName = await handleDuplicateFolderName(
@@ -62,11 +61,9 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await requireAuth()
     const formData = await request.formData()
-    const folderId = formData.get('folderId') as string
-
-    if (!folderId) {
-      return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 })
-    }
+    const { folderId } = FolderDeleteFormSchema.parse({
+      folderId: formData.get('folderId'),
+    })
 
     const { parentFolderId } = await deleteFolder(folderId, session.user.id)
 

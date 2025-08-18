@@ -2,10 +2,11 @@ import 'server-only'
 
 import { db } from '@/db'
 import { project, track, trackVersion } from '@/db/schema/vault'
+import { ProjectWithTracksSchema } from '@/lib/contracts/project'
 import { and, count, desc, eq, isNull } from 'drizzle-orm'
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage'
 
-import type { NewProject, Project, ProjectWithTracks } from '@/db/schema/vault'
+import type { NewProject, Project } from '@/db/schema/vault'
 import { nanoid } from 'nanoid'
 
 // Resource-first helpers (no auth)
@@ -49,7 +50,7 @@ export const setProjectImageKey = async (projectId: string, imageKey: string): P
     .set({ image: imageKey, updatedAt: new Date() })
     .where(eq(project.id, projectId))
 }
-export async function getVaultProjects(userId: string): Promise<ProjectWithTracks[]> {
+export async function getVaultProjects(userId: string) {
   const projects = await db
     .select({
       id: project.id,
@@ -80,7 +81,7 @@ export async function getVaultProjects(userId: string): Promise<ProjectWithTrack
   return sortedProjects.map(p => ({ ...p, tracks: [] }))
 }
 
-export async function getProjectWithTracks(projectId: string, userId: string): Promise<ProjectWithTracks | null> {
+export async function getProjectWithTracks(projectId: string, userId: string) {
   const [proj] = await db
     .select()
     .from(project)
@@ -110,7 +111,7 @@ export async function getProjectWithTracks(projectId: string, userId: string): P
     })
   )
 
-  return { ...proj, tracks: tracksWithVersions, trackCount: tracksWithVersions.length }
+  return ProjectWithTracksSchema.parse({ ...proj, tracks: tracksWithVersions, trackCount: tracksWithVersions.length })
 }
 // ================================
 // PROJECT CRUD OPERATIONS  
