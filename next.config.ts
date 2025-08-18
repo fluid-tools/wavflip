@@ -62,6 +62,6 @@ const nextConfig = withBotId({
     ],
   },
   skipTrailingSlashRedirect: true,
-})
+});
 
-export default nextConfig
+export default nextConfig;

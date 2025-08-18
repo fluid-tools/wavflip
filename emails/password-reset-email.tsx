@@ -9,8 +9,8 @@ import {
   Link,
   Preview,
   Section,
-  Text,
   Tailwind,
+  Text,
 } from '@react-email/components';
 
 interface PasswordResetEmailProps {
@@ -22,42 +22,44 @@ export const PasswordResetEmail = ({
   username,
   resetLink,
 }: PasswordResetEmailProps) => {
-  const previewText = `Reset your password`;
-  
+  const previewText = 'Reset your password';
+
   return (
     <Html>
       <Head />
       <Preview>{previewText}</Preview>
       <Tailwind>
-        <Body className="bg-white my-auto mx-auto font-sans px-2">
-          <Container className="border border-solid border-[#eaeaea] rounded my-[40px] mx-auto p-[20px] max-w-[465px]">
-            <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+        <Body className="mx-auto my-auto bg-white px-2 font-sans">
+          <Container className="mx-auto my-[40px] max-w-[465px] rounded border border-[#eaeaea] border-solid p-[20px]">
+            <Heading className="mx-0 my-[30px] p-0 text-center font-normal text-[24px] text-black">
               Reset your password
             </Heading>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-[14px] text-black leading-[24px]">
               Hello {username || 'there'},
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
-              We received a request to reset your password. Click the button below to create a new password.
+            <Text className="text-[14px] text-black leading-[24px]">
+              We received a request to reset your password. Click the button
+              below to create a new password.
             </Text>
-            <Section className="text-center mt-[32px] mb-[32px]">
+            <Section className="mt-[32px] mb-[32px] text-center">
               <Button
-                className="bg-[#000000] rounded text-white text-[12px] font-semibold no-underline text-center px-5 py-3"
+                className="rounded bg-[#000000] px-5 py-3 text-center font-semibold text-[12px] text-white no-underline"
                 href={resetLink}
               >
                 Reset Password
               </Button>
             </Section>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-[14px] text-black leading-[24px]">
               or copy and paste this URL into your browser:{' '}
-              <Link href={resetLink} className="text-blue-600 no-underline">
+              <Link className="text-blue-600 no-underline" href={resetLink}>
                 {resetLink}
               </Link>
             </Text>
-            <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
+            <Hr className="mx-0 my-[26px] w-full border border-[#eaeaea] border-solid" />
             <Text className="text-[#666666] text-[12px] leading-[24px]">
               This password reset was requested for{' '}
-              <span className="text-black">{username}</span>. If you did not request a password reset, you can ignore this email.
+              <span className="text-black">{username}</span>. If you did not
+              request a password reset, you can ignore this email.
             </Text>
           </Container>
         </Body>

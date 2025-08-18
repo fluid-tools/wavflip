@@ -1,2 +1,8 @@
-export { reactVerificationEmail, VerificationEmail } from './verification-email';
-export { reactPasswordResetEmail, PasswordResetEmail } from './password-reset-email';
+export {
+  PasswordResetEmail,
+  reactPasswordResetEmail,
+} from './password-reset-email';
+export {
+  reactVerificationEmail,
+  VerificationEmail,
+} from './verification-email';

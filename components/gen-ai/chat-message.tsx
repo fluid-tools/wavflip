@@ -1,38 +1,60 @@
-'use client'
+'use client';
 
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Loader2, Play, Pause, Download, MoreHorizontal, Copy, Trash2 } from 'lucide-react'
-import { WaveformPreview } from '@/components/player/waveform-preview'
-import { cn } from '@/lib/utils'
-import { useAtom } from 'jotai'
-import { useEffect, useState } from 'react'
-import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms'
-import type { GeneratedSound } from "@/types/generations"
-import { toast } from 'sonner'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useAtom } from 'jotai';
+import {
+  Copy,
+  Download,
+  Loader2,
+  MoreHorizontal,
+  Pause,
+  Play,
+  Trash2,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { WaveformPreview } from '@/components/player/waveform-preview';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Progress } from '@/components/ui/progress';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms';
+import type { GeneratedSound } from '@/types/generations';
 
-function computeDeterministicProgress(startedAt?: Date, etaSeconds?: number, nowMs?: number): number {
-  if (!startedAt || !etaSeconds || etaSeconds <= 0) return 0
-  const now = typeof nowMs === 'number' ? nowMs : Date.now()
-  const elapsed = (now - new Date(startedAt).getTime()) / 1000
-  const pct = Math.max(0, Math.min(1, elapsed / etaSeconds))
-  return Math.round(pct * 100)
+function computeDeterministicProgress(
+  startedAt?: Date,
+  etaSeconds?: number,
+  nowMs?: number
+): number {
+  if (!(startedAt && etaSeconds) || etaSeconds <= 0) return 0;
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  const elapsed = (now - new Date(startedAt).getTime()) / 1000;
+  const pct = Math.max(0, Math.min(1, elapsed / etaSeconds));
+  return Math.round(pct * 100);
 }
 
 interface ChatMessageProps {
-  type: 'user' | 'assistant' | 'system'
-  content?: string
-  sound?: GeneratedSound
-  isGenerating?: boolean
-  etaSeconds?: number
-  startedAt?: Date
-  onPlaySound?: (sound: GeneratedSound) => void
-  onDeleteSound?: (soundId: string) => void
-  onCopyUrl?: (url: string) => void
+  type: 'user' | 'assistant' | 'system';
+  content?: string;
+  sound?: GeneratedSound;
+  isGenerating?: boolean;
+  etaSeconds?: number;
+  startedAt?: Date;
+  onPlaySound?: (sound: GeneratedSound) => void;
+  onDeleteSound?: (soundId: string) => void;
+  onCopyUrl?: (url: string) => void;
 }
 
 export function ChatMessage({
@@ -44,105 +66,132 @@ export function ChatMessage({
   startedAt,
   onPlaySound,
   onDeleteSound,
-  onCopyUrl
+  onCopyUrl,
 }: ChatMessageProps) {
-  const isUser = type === 'user'
-  
-  const [currentTrack] = useAtom(currentTrackAtom)
-  const [playerState] = useAtom(playerStateAtom)
-  
-  const isCurrentTrack = currentTrack?.id === sound?.id
-  const isPlaying = playerState === 'playing' && isCurrentTrack
+  const isUser = type === 'user';
 
-  const isMobile = useIsMobile()
-  const waveformHeight = isMobile ? 32 : 48
+  const [currentTrack] = useAtom(currentTrackAtom);
+  const [playerState] = useAtom(playerStateAtom);
+
+  const isCurrentTrack = currentTrack?.id === sound?.id;
+  const isPlaying = playerState === 'playing' && isCurrentTrack;
+
+  const isMobile = useIsMobile();
+  const waveformHeight = isMobile ? 32 : 48;
 
   // Tick to update the time-based progress UI while generating
-  const [nowMs, setNowMs] = useState<number>(() => Date.now())
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
   useEffect(() => {
-    if (!isGenerating) return
-    const id = setInterval(() => setNowMs(Date.now()), 200)
-    return () => clearInterval(id)
-  }, [isGenerating])
-  const percent = computeDeterministicProgress(startedAt, etaSeconds, nowMs)
-  const remaining = startedAt && etaSeconds
-    ? Math.max(1, Math.ceil(etaSeconds - (nowMs - new Date(startedAt).getTime()) / 1000))
-    : undefined
+    if (!isGenerating) return;
+    const id = setInterval(() => setNowMs(Date.now()), 200);
+    return () => clearInterval(id);
+  }, [isGenerating]);
+  const percent = computeDeterministicProgress(startedAt, etaSeconds, nowMs);
+  const remaining =
+    startedAt && etaSeconds
+      ? Math.max(
+          1,
+          Math.ceil(etaSeconds - (nowMs - new Date(startedAt).getTime()) / 1000)
+        )
+      : undefined;
 
   const renderMenuItems = () => (
     <>
-      <ContextMenuItem onClick={() => { if (sound) onPlaySound?.(sound) }}>
+      <ContextMenuItem
+        onClick={() => {
+          if (sound) onPlaySound?.(sound);
+        }}
+      >
         {isPlaying && isCurrentTrack ? (
-          <Pause className="h-4 w-4 mr-2" />
+          <Pause className="mr-2 h-4 w-4" />
         ) : (
-          <Play className="h-4 w-4 mr-2" />
+          <Play className="mr-2 h-4 w-4" />
         )}
         {isPlaying && isCurrentTrack ? 'Pause' : 'Play'}
       </ContextMenuItem>
-      <ContextMenuItem onClick={() => { if (sound) onCopyUrl?.(sound.url) }}>
-        <Copy className="h-4 w-4 mr-2" />
+      <ContextMenuItem
+        onClick={() => {
+          if (sound) onCopyUrl?.(sound.url);
+        }}
+      >
+        <Copy className="mr-2 h-4 w-4" />
         Copy URL
       </ContextMenuItem>
       {sound?.metadata?.prompt && (
-        <ContextMenuItem onClick={() => {
-          navigator.clipboard.writeText(sound.metadata!.prompt!)
-          toast.success('Prompt copied to clipboard')
-        }}>
-          <Copy className="h-4 w-4 mr-2" />
+        <ContextMenuItem
+          onClick={() => {
+            navigator.clipboard.writeText(sound.metadata!.prompt!);
+            toast.success('Prompt copied to clipboard');
+          }}
+        >
+          <Copy className="mr-2 h-4 w-4" />
           Copy Prompt
         </ContextMenuItem>
       )}
-      <ContextMenuItem 
-        onClick={(e) => { e.stopPropagation(); if (sound) onDeleteSound?.(sound.id) }}
+      <ContextMenuItem
         className="text-destructive focus:text-destructive"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (sound) onDeleteSound?.(sound.id);
+        }}
       >
-        <Trash2 className="h-4 w-4 mr-2" />
+        <Trash2 className="mr-2 h-4 w-4" />
         Remove
       </ContextMenuItem>
     </>
-  )
+  );
 
   const renderDropdownItems = () => (
     <>
-      <DropdownMenuItem onClick={() => { if (sound) onCopyUrl?.(sound.url) }}>
-        <Copy className="h-4 w-4 mr-2" />
+      <DropdownMenuItem
+        onClick={() => {
+          if (sound) onCopyUrl?.(sound.url);
+        }}
+      >
+        <Copy className="mr-2 h-4 w-4" />
         Copy URL
       </DropdownMenuItem>
       {sound?.metadata?.prompt && (
-        <DropdownMenuItem onClick={() => {
-          navigator.clipboard.writeText(sound.metadata!.prompt!)
-          toast.success('Prompt copied to clipboard')
-        }}>
-          <Copy className="h-4 w-4 mr-2" />
+        <DropdownMenuItem
+          onClick={() => {
+            navigator.clipboard.writeText(sound.metadata!.prompt!);
+            toast.success('Prompt copied to clipboard');
+          }}
+        >
+          <Copy className="mr-2 h-4 w-4" />
           Copy Prompt
         </DropdownMenuItem>
       )}
-      <DropdownMenuItem 
-        onClick={(e) => { e.stopPropagation(); if (sound) onDeleteSound?.(sound.id) }}
+      <DropdownMenuItem
         className="text-destructive focus:text-destructive"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (sound) onDeleteSound?.(sound.id);
+        }}
       >
-        <Trash2 className="h-4 w-4 mr-2" />
+        <Trash2 className="mr-2 h-4 w-4" />
         Remove
       </DropdownMenuItem>
     </>
-  )
+  );
 
   return (
-    <div className={cn(
-      "flex",
-      isUser && "justify-end"
-    )}>
-      <div className={cn(
-        "max-w-full sm:max-w-md w-full",
-        isUser && "w-fit ml-auto"
-      )}>
+    <div className={cn('flex', isUser && 'justify-end')}>
+      <div
+        className={cn(
+          'w-full max-w-full sm:max-w-md',
+          isUser && 'ml-auto w-fit'
+        )}
+      >
         {content && (
-          <div className={cn(
-            "rounded-2xl px-3 py-2",
-            isUser 
-              ? "bg-blue-500 text-white rounded-full ml-auto" 
-              : "bg-black/5 dark:bg-white/5 border border-border/30"
-          )}>
+          <div
+            className={cn(
+              'rounded-2xl px-3 py-2',
+              isUser
+                ? 'ml-auto rounded-full bg-blue-500 text-white'
+                : 'border border-border/30 bg-black/5 dark:bg-white/5'
+            )}
+          >
             {isGenerating && (
               <div className="flex items-center gap-2 text-xs opacity-80">
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -153,15 +202,15 @@ export function ChatMessage({
             {isGenerating && (
               <div className="mt-2">
                 <div className="flex items-center justify-between gap-3">
-                  <Progress 
-                    value={percent} 
+                  <Progress
                     className={cn(
-                      "h-1 flex-1",
-                      isUser ? "bg-white/20" : "bg-muted"
+                      'h-1 flex-1',
+                      isUser ? 'bg-white/20' : 'bg-muted'
                     )}
+                    value={percent}
                   />
                   {typeof remaining === 'number' && (
-                    <span className="text-[10px] tabular-nums opacity-70 min-w-[42px] text-right">
+                    <span className="min-w-[42px] text-right text-[10px] tabular-nums opacity-70">
                       ~{remaining}s
                     </span>
                   )}
@@ -173,16 +222,26 @@ export function ChatMessage({
 
         {/* Deterministic skeleton card while generating */}
         {isGenerating && !sound && (
-          <div className="rounded-2xl border border-border py-3 bg-card max-w-md w-full flex flex-col gap-4 sm:gap-6 mt-3">
-            <div className="flex px-3 gap-2 justify-between items-center">
-              <h4 className="font-medium font-mono tracking-tight text-xs opacity-75 truncate">Preparing sound…</h4>
-              <Badge className="bg-neutral-800 dark:bg-neutral-700 text-neutral-300 border-0 text-xs px-4 py-0.5">sfx</Badge>
+          <div className="mt-3 flex w-full max-w-md flex-col gap-4 rounded-2xl border border-border bg-card py-3 sm:gap-6">
+            <div className="flex items-center justify-between gap-2 px-3">
+              <h4 className="truncate font-medium font-mono text-xs tracking-tight opacity-75">
+                Preparing sound…
+              </h4>
+              <Badge className="border-0 bg-neutral-800 px-4 py-0.5 text-neutral-300 text-xs dark:bg-neutral-700">
+                sfx
+              </Badge>
             </div>
             <div className="border border-border bg-muted">
-              <WaveformPreview url={"about:blank"} height={waveformHeight} approxDuration={typeof etaSeconds === 'number' ? Math.max(2, etaSeconds) : 8} />
+              <WaveformPreview
+                approxDuration={
+                  typeof etaSeconds === 'number' ? Math.max(2, etaSeconds) : 8
+                }
+                height={waveformHeight}
+                url={'about:blank'}
+              />
             </div>
             <div className="flex items-center justify-between px-3 pb-1">
-              <div className="flex items-center gap-2 text-xs text-neutral-400">
+              <div className="flex items-center gap-2 text-neutral-400 text-xs">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Finalizing…
               </div>
@@ -193,60 +252,69 @@ export function ChatMessage({
         {sound && (
           <ContextMenu>
             <ContextMenuTrigger>
-              <div className="rounded-2xl border border-border py-3 bg-card max-w-md w-full flex flex-col gap-4 sm:gap-6">
+              <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-border bg-card py-3 sm:gap-6">
                 {/* Header */}
-                <div className="flex px-3 gap-2 justify-between items-center">
-                  <h4 className="font-medium font-mono tracking-tight text-xs opacity-75 truncate">{sound.title}</h4>
-                  <Badge className="bg-neutral-800 dark:bg-neutral-700 text-neutral-300 border-0 text-xs px-4 py-0.5">
+                <div className="flex items-center justify-between gap-2 px-3">
+                  <h4 className="truncate font-medium font-mono text-xs tracking-tight opacity-75">
+                    {sound.title}
+                  </h4>
+                  <Badge className="border-0 bg-neutral-800 px-4 py-0.5 text-neutral-300 text-xs dark:bg-neutral-700">
                     {sound.metadata?.model?.includes('tts') ? 'tts' : 'sfx'}
                   </Badge>
                 </div>
                 {/* Waveform */}
                 <div className="border border-border bg-muted">
-                  <WaveformPreview url={sound.url} trackKey={sound.key} height={waveformHeight} approxDuration={sound.duration} />
+                  <WaveformPreview
+                    approxDuration={sound.duration}
+                    height={waveformHeight}
+                    trackKey={sound.key}
+                    url={sound.url}
+                  />
                 </div>
                 {/* Controls */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 px-3">
                     <Button
+                      className={cn(
+                        'h-8 w-8 p-0',
+                        isCurrentTrack && isPlaying
+                          ? 'text-primary dark:text-white'
+                          : 'text-neutral-900 dark:text-neutral-100'
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPlaySound?.(sound);
+                      }}
                       size="icon"
                       variant="ghost"
-                      onClick={e => {
-                        e.stopPropagation()
-                        onPlaySound?.(sound)
-                      }}
-                      className={cn(
-                        "h-8 w-8 p-0",
-                        isCurrentTrack && isPlaying
-                          ? "text-primary dark:text-white"
-                          : "text-neutral-900 dark:text-neutral-100"
-                      )}
                     >
                       {isPlaying && isCurrentTrack ? (
                         <Pause className="h-4 w-4" />
                       ) : (
-                        <Play className="h-4 w-4 ml-0.5" />
+                        <Play className="ml-0.5 h-4 w-4" />
                       )}
                     </Button>
-                    <span className="text-xs text-neutral-400">{sound.duration ? `${Math.round(sound.duration)}s` : ''}</span>
+                    <span className="text-neutral-400 text-xs">
+                      {sound.duration ? `${Math.round(sound.duration)}s` : ''}
+                    </span>
                   </div>
                   <div className="flex items-center px-3">
                     <Button
-                      size="icon"
-                      variant="ghost"
                       asChild
                       className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                      size="icon"
+                      variant="ghost"
                     >
-                      <a target="_blank" href={sound.url} download>
+                      <a download href={sound.url} target="_blank">
                         <Download className="h-4 w-4" />
                       </a>
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
+                        <Button
                           className="h-8 w-8 p-0 text-neutral-400 hover:text-white"
+                          size="icon"
+                          variant="ghost"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
@@ -266,5 +334,5 @@ export function ChatMessage({
         )}
       </div>
     </div>
-  )
-} 
+  );
+}

@@ -1,8 +1,9 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useCreateProjectAction } from '@/actions/vault/use-action';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,58 +12,54 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useCreateProjectAction } from '@/actions/vault/use-action'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface CreateProjectDialogProps {
-  folderId?: string | null
-  triggerText?: string
-  onSuccess?: () => void
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  folderId?: string | null;
+  triggerText?: string;
+  onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-
-
-export function CreateProjectDialog({ 
-  folderId = null, 
-  triggerText = "New Project", 
+export function CreateProjectDialog({
+  folderId = null,
+  triggerText = 'New Project',
   onSuccess,
   open: controlledOpen,
-  onOpenChange: controlledOnOpenChange
+  onOpenChange: controlledOnOpenChange,
 }: CreateProjectDialogProps) {
-  const [internalOpen, setInternalOpen] = useState(false)
-  const [name, setName] = useState('')
-  
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [name, setName] = useState('');
+
   // Use controlled state if provided, otherwise use internal state
-  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
-  const setOpen = controlledOnOpenChange || setInternalOpen
-  
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
+
   const [, formAction] = useCreateProjectAction({
     onSuccess: () => {
-      setOpen(false)
-      setName('')
-      onSuccess?.()
-    }
-  })
-
+      setOpen(false);
+      setName('');
+      onSuccess?.();
+    },
+  });
 
   const handleSubmit = async (formData: FormData) => {
     if (folderId) {
-      formData.append('folderId', folderId)
+      formData.append('folderId', folderId);
     }
-    formAction(formData)
-  }
+    formAction(formData);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog onOpenChange={setOpen} open={open}>
       {/* Only show trigger when not controlled (used as standalone) */}
       {controlledOpen === undefined && (
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
             {triggerText}
           </Button>
         </DialogTrigger>
@@ -73,40 +70,41 @@ export function CreateProjectDialog({
             <DialogTitle>Create New Project</DialogTitle>
             <DialogDescription>
               Create a new project to organize your tracks.
-              {folderId && " This project will be created in the current folder."}
+              {folderId &&
+                ' This project will be created in the current folder.'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+              <Label className="text-right" htmlFor="name">
                 Name
               </Label>
               <Input
+                autoFocus
+                className="col-span-3"
                 id="name"
                 name="name"
-                value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="col-span-3"
                 placeholder="Project name"
-                autoFocus
                 required
+                value={name}
               />
             </div>
           </div>
           <DialogFooter>
             <Button
+              onClick={() => setOpen(false)}
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim()}>
+            <Button disabled={!name.trim()} type="submit">
               Create Project
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
-} 
+  );
+}

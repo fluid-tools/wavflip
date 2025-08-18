@@ -1,21 +1,23 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Folder, Edit2, Trash2, FolderOpen } from 'lucide-react'
-import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { useIsTablet } from '@/hooks/use-mobile'
-import { cn } from '@/lib/utils'
+import { useAtomValue } from 'jotai';
+import { Edit2, Folder, FolderOpen, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+import {
+  useDeleteFolderAction,
+  useMoveFolderAction,
+  useRenameFolderAction,
+} from '@/actions/vault/use-action';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '@/components/ui/context-menu'
-import { useAtomValue } from 'jotai'
-import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms'
-import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
+} from '@/components/ui/context-menu';
 import {
   Dialog,
   DialogContent,
@@ -23,121 +25,135 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction } from '@/actions/vault/use-action'
-import type { FolderWithProjects } from '@/lib/contracts/folder'
-
-import { DraggableWrapper, DroppableWrapper } from '@/components/vault/dnd'
-import { FolderPicker } from './picker'
-import { FolderPreviewImage } from '@/components/vault/folder-preview-image'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { DraggableWrapper, DroppableWrapper } from '@/components/vault/dnd';
+import { FolderPreviewImage } from '@/components/vault/folder-preview-image';
+import { useContextMenuHandler } from '@/hooks/use-context-menu-handler';
+import { useIsTablet } from '@/hooks/use-mobile';
+import type { FolderWithProjects } from '@/lib/contracts/folder';
+import { cn } from '@/lib/utils';
+import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms';
+import { FolderPicker } from './picker';
 
 interface FolderCardProps {
-  folder: FolderWithProjects
-  showProjectCount?: boolean
-  parentFolderId?: string | null
-  isDragAndDropEnabled?: boolean
-  isSelected?: boolean
-  onSelectionClick?: (event: React.MouseEvent) => void
+  folder: FolderWithProjects;
+  showProjectCount?: boolean;
+  parentFolderId?: string | null;
+  isDragAndDropEnabled?: boolean;
+  isSelected?: boolean;
+  onSelectionClick?: (event: React.MouseEvent) => void;
 }
 
-export function FolderCard({ 
-  folder, 
-  showProjectCount = true, 
+export function FolderCard({
+  folder,
+  showProjectCount = true,
   parentFolderId = null,
   isDragAndDropEnabled = false,
   isSelected = false,
-  onSelectionClick
+  onSelectionClick,
 }: FolderCardProps) {
-  const isTablet = useIsTablet()
+  const isTablet = useIsTablet();
   // const [isCompact] = useAtom(vaultViewCompactAtom) // TODO: Use for compact styling
-  const [showRenameDialog, setShowRenameDialog] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [showMoveDialog, setShowMoveDialog] = useState(false)
-  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null)
-  const [newName, setNewName] = useState(folder.name)
-  
-  const isSelectModeActive = useAtomValue(isSelectModeActiveAtom)
-  const { shouldShowContextMenu } = useContextMenuHandler()
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [selectedDestinationId, setSelectedDestinationId] = useState<
+    string | null
+  >(null);
+  const [newName, setNewName] = useState(folder.name);
+
+  const isSelectModeActive = useAtomValue(isSelectModeActiveAtom);
+  const { shouldShowContextMenu } = useContextMenuHandler();
 
   const [, deleteAction, isDeleting] = useDeleteFolderAction({
     onSuccess: () => {
-      setShowDeleteDialog(false)
-    }
-  })
+      setShowDeleteDialog(false);
+    },
+  });
 
   const [, renameAction, isRenaming] = useRenameFolderAction({
     onSuccess: () => {
-      setShowRenameDialog(false)
-      setNewName(folder.name)
-    }
-  })
+      setShowRenameDialog(false);
+      setNewName(folder.name);
+    },
+  });
 
   const [, moveAction, isMoving] = useMoveFolderAction({
     onSuccess: () => {
-      setShowMoveDialog(false)
-      setSelectedDestinationId(null)
-    }
-  })
+      setShowMoveDialog(false);
+      setSelectedDestinationId(null);
+    },
+  });
 
   const handleRename = async (formData: FormData) => {
-    formData.append('folderId', folder.id)
-    renameAction(formData)
-  }
+    formData.append('folderId', folder.id);
+    renameAction(formData);
+  };
 
   const handleDelete = async (formData: FormData) => {
-    formData.append('folderId', folder.id)
-    deleteAction(formData)
-  }
+    formData.append('folderId', folder.id);
+    deleteAction(formData);
+  };
 
   const handleMove = async (formData: FormData) => {
-    formData.append('folderId', folder.id)
-    formData.append('parentFolderId', selectedDestinationId || '')
-    formData.append('sourceParentFolderId', parentFolderId || '')
-    moveAction(formData)
-  }
+    formData.append('folderId', folder.id);
+    formData.append('parentFolderId', selectedDestinationId || '');
+    formData.append('sourceParentFolderId', parentFolderId || '');
+    moveAction(formData);
+  };
 
   // State management is now handled by the custom hooks automatically
 
   // Calculate folder contents description
   const getContentDescription = () => {
-    const subFolderCount = (folder as FolderWithProjects & { subFolderCount?: number }).subFolderCount || 0
-    const projectCount = showProjectCount ? (folder.projects?.length || 0) : ((folder as FolderWithProjects & { projectCount?: number }).projectCount || 0)
-    
+    const subFolderCount =
+      (folder as FolderWithProjects & { subFolderCount?: number })
+        .subFolderCount || 0;
+    const projectCount = showProjectCount
+      ? folder.projects?.length || 0
+      : (folder as FolderWithProjects & { projectCount?: number })
+          .projectCount || 0;
+
     // A folder is only "empty" if it has no subfolders AND no projects
     if (subFolderCount === 0 && projectCount === 0) {
-      return 'Empty'
+      return 'Empty';
     }
-    
+
     // Build description based on what's actually in the folder
-    const parts = []
+    const parts = [];
     if (subFolderCount > 0) {
-      parts.push(`${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}`)
+      parts.push(
+        `${subFolderCount} ${subFolderCount === 1 ? 'folder' : 'folders'}`
+      );
     }
     if (projectCount > 0) {
-      parts.push(`${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`)
+      parts.push(
+        `${projectCount} ${projectCount === 1 ? 'project' : 'projects'}`
+      );
     }
-    
-    return parts.join(', ')
-  }
+
+    return parts.join(', ');
+  };
 
   const cardContent = shouldShowContextMenu() ? (
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div className="block">
-          <Card 
+          <Card
             className={cn(
-              "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
-              isTablet ? "w-40" : "w-full max-w-40",
-              isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
+              'group relative aspect-[4/5] cursor-pointer overflow-hidden rounded-lg border bg-background p-0 transition-all',
+              isTablet ? 'w-40' : 'w-full max-w-40',
+              isSelected
+                ? 'border-primary ring-2 ring-primary'
+                : 'border-muted hover:border-muted-foreground/20'
             )}
             onClick={onSelectionClick}
           >
             {/* Image/Preview Section - No padding */}
-            <div className="relative w-full h-40 overflow-hidden">
-              <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out group-hover:scale-105">
+            <div className="relative h-40 w-full overflow-hidden">
+              <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0.5 transition-transform duration-300 ease-out group-hover:scale-105">
                 {/* 
                   Grid Logic:
                   1. If folder has projects: Show up to 4 project previews
@@ -150,45 +166,58 @@ export function FolderCard({
                   <>
                     {/* Render project previews (up to 4) */}
                     {folder.projects.slice(0, 4).map((project) => (
-                      <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
+                      <div
+                        className="relative h-full w-full overflow-hidden rounded-sm bg-muted"
+                        key={project.id}
+                      >
                         <FolderPreviewImage
+                          imageKey={project.image}
                           projectId={project.id}
                           projectName={project.name}
-                          imageKey={project.image}
                         />
                       </div>
                     ))}
                     {/* Fill remaining cells with empty placeholders */}
-                    {Array.from({ length: Math.max(0, 4 - folder.projects.length) }).map((_, idx) => (
-                      <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                    {Array.from({
+                      length: Math.max(0, 4 - folder.projects.length),
+                    }).map((_, idx) => (
+                      <div
+                        className="h-full w-full rounded-sm bg-muted/50"
+                        key={`empty-${idx}`}
+                      />
                     ))}
                   </>
                 ) : (
                   <>
                     {/* No projects: show folder icon in first cell, rest empty */}
-                    <div className="w-full h-full rounded-sm bg-muted flex items-center justify-center">
-                      <Folder className="text-muted-foreground h-4 w-4" />
+                    <div className="flex h-full w-full items-center justify-center rounded-sm bg-muted">
+                      <Folder className="h-4 w-4 text-muted-foreground" />
                     </div>
                     {/* Fill remaining 3 cells with empty placeholders */}
                     {Array.from({ length: 3 }).map((_, idx) => (
-                      <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                      <div
+                        className="h-full w-full rounded-sm bg-muted/50"
+                        key={`empty-${idx}`}
+                      />
                     ))}
                   </>
                 )}
               </div>
             </div>
-            
+
             {/* Metadata Section - No top padding */}
             <div className="px-2 pb-2">
-              <h3 className="text-xs font-medium truncate">{folder.name}</h3>
-              <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
+              <h3 className="truncate font-medium text-xs">{folder.name}</h3>
+              <p className="truncate text-[10px] text-muted-foreground">
+                {getContentDescription()}
+              </p>
             </div>
-            
+
             {/* Invisible overlay for navigation */}
             {!isSelectModeActive && (
-              <Link 
-                href={`/vault/folders/${folder.id}`}
+              <Link
                 className="absolute inset-0 z-10"
+                href={`/vault/folders/${folder.id}`}
               />
             )}
           </Card>
@@ -198,9 +227,9 @@ export function FolderCard({
       <ContextMenuContent className="w-48">
         <ContextMenuItem
           onClick={(e) => {
-            e.preventDefault()
-            setNewName(folder.name)
-            setShowRenameDialog(true)
+            e.preventDefault();
+            setNewName(folder.name);
+            setShowRenameDialog(true);
           }}
         >
           <Edit2 className="h-4 w-4" />
@@ -208,9 +237,9 @@ export function FolderCard({
         </ContextMenuItem>
         <ContextMenuItem
           onClick={(e) => {
-            e.preventDefault()
-            setSelectedDestinationId(null)
-            setShowMoveDialog(true)
+            e.preventDefault();
+            setSelectedDestinationId(null);
+            setShowMoveDialog(true);
           }}
         >
           <FolderOpen className="h-4 w-4" />
@@ -218,11 +247,11 @@ export function FolderCard({
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem
-          variant="destructive"
           onClick={(e) => {
-            e.preventDefault()
-            setShowDeleteDialog(true)
+            e.preventDefault();
+            setShowDeleteDialog(true);
           }}
+          variant="destructive"
         >
           <Trash2 className="h-4 w-4" />
           Delete
@@ -231,78 +260,93 @@ export function FolderCard({
     </ContextMenu>
   ) : (
     <div className="block">
-      <Card 
+      <Card
         className={cn(
-          "aspect-[4/5] rounded-lg overflow-hidden bg-background border transition-all cursor-pointer relative p-0 group",
-          isTablet ? "w-40" : "w-full max-w-40",
-          isSelected ? "ring-2 ring-primary border-primary" : "border-muted hover:border-muted-foreground/20"
+          'group relative aspect-[4/5] cursor-pointer overflow-hidden rounded-lg border bg-background p-0 transition-all',
+          isTablet ? 'w-40' : 'w-full max-w-40',
+          isSelected
+            ? 'border-primary ring-2 ring-primary'
+            : 'border-muted hover:border-muted-foreground/20'
         )}
         onClick={onSelectionClick}
       >
         {/* Image/Preview Section - No padding */}
-        <div className="relative w-full h-40 overflow-hidden">
-          <div className="grid grid-cols-2 grid-rows-2 gap-0.5 w-full h-full transition-transform duration-300 ease-out group-hover:scale-105">
+        <div className="relative h-40 w-full overflow-hidden">
+          <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0.5 transition-transform duration-300 ease-out group-hover:scale-105">
             {folder.projects && folder.projects.length > 0 ? (
               <>
                 {folder.projects.slice(0, 4).map((project) => (
-                  <div key={project.id} className="relative w-full h-full rounded-sm overflow-hidden bg-muted">
+                  <div
+                    className="relative h-full w-full overflow-hidden rounded-sm bg-muted"
+                    key={project.id}
+                  >
                     <FolderPreviewImage
+                      imageKey={project.image}
                       projectId={project.id}
                       projectName={project.name}
-                      imageKey={project.image}
                     />
                   </div>
                 ))}
-                {Array.from({ length: Math.max(0, 4 - folder.projects.length) }).map((_, idx) => (
-                  <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                {Array.from({
+                  length: Math.max(0, 4 - folder.projects.length),
+                }).map((_, idx) => (
+                  <div
+                    className="h-full w-full rounded-sm bg-muted/50"
+                    key={`empty-${idx}`}
+                  />
                 ))}
               </>
             ) : (
               <>
-                <div className="w-full h-full rounded-sm bg-muted flex items-center justify-center">
-                  <Folder className="text-muted-foreground h-4 w-4" />
+                <div className="flex h-full w-full items-center justify-center rounded-sm bg-muted">
+                  <Folder className="h-4 w-4 text-muted-foreground" />
                 </div>
                 {Array.from({ length: 3 }).map((_, idx) => (
-                  <div key={`empty-${idx}`} className="w-full h-full rounded-sm bg-muted/50" />
+                  <div
+                    className="h-full w-full rounded-sm bg-muted/50"
+                    key={`empty-${idx}`}
+                  />
                 ))}
               </>
             )}
           </div>
         </div>
-        
+
         {/* Metadata Section - No top padding */}
         <div className="px-2 pb-2">
-          <h3 className="text-xs font-medium truncate">{folder.name}</h3>
-          <p className="text-[10px] text-muted-foreground truncate">{getContentDescription()}</p>
+          <h3 className="truncate font-medium text-xs">{folder.name}</h3>
+          <p className="truncate text-[10px] text-muted-foreground">
+            {getContentDescription()}
+          </p>
         </div>
-        
+
         {!isSelectModeActive && (
-          <Link 
-            href={`/vault/folders/${folder.id}`}
+          <Link
             className="absolute inset-0 z-10"
+            href={`/vault/folders/${folder.id}`}
           />
         )}
       </Card>
     </div>
-  )
+  );
 
   const dragData = {
     type: 'folder' as const,
     id: folder.id,
     name: folder.name,
     sourceContainer: parentFolderId || 'vault',
-  }
+  };
 
   const dropData = {
     type: 'folder' as const,
     id: folder.id,
-  }
+  };
 
   return (
     <>
       {isDragAndDropEnabled ? (
-        <DroppableWrapper id={`folder-${folder.id}`} data={dropData}>
-          <DraggableWrapper id={`folder-${folder.id}`} data={dragData}>
+        <DroppableWrapper data={dropData} id={`folder-${folder.id}`}>
+          <DraggableWrapper data={dragData} id={`folder-${folder.id}`}>
             {cardContent}
           </DraggableWrapper>
         </DroppableWrapper>
@@ -311,7 +355,7 @@ export function FolderCard({
       )}
 
       {/* Rename Dialog */}
-      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+      <Dialog onOpenChange={setShowRenameDialog} open={showRenameDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <form action={handleRename}>
             <DialogHeader>
@@ -322,30 +366,30 @@ export function FolderCard({
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
+                <Label className="text-right" htmlFor="name">
                   Name
                 </Label>
                 <Input
+                  autoFocus
+                  className="col-span-3"
                   id="name"
                   name="name"
-                  value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="col-span-3"
-                  autoFocus
                   required
+                  value={newName}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button
+                disabled={isRenaming}
+                onClick={() => setShowRenameDialog(false)}
                 type="button"
                 variant="outline"
-                onClick={() => setShowRenameDialog(false)}
-                disabled={isRenaming}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isRenaming || !newName.trim()}>
+              <Button disabled={isRenaming || !newName.trim()} type="submit">
                 {isRenaming ? 'Renaming...' : 'Rename'}
               </Button>
             </DialogFooter>
@@ -354,29 +398,27 @@ export function FolderCard({
       </Dialog>
 
       {/* Delete Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <Dialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <form action={handleDelete}>
             <DialogHeader>
               <DialogTitle>Delete Folder</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete &quot;{folder.name}&quot;? This will also delete all projects and tracks inside it. This action cannot be undone.
+                Are you sure you want to delete &quot;{folder.name}&quot;? This
+                will also delete all projects and tracks inside it. This action
+                cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button
+                disabled={isDeleting}
+                onClick={() => setShowDeleteDialog(false)}
                 type="button"
                 variant="outline"
-                onClick={() => setShowDeleteDialog(false)}
-                disabled={isDeleting}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                variant="destructive" 
-                disabled={isDeleting}
-              >
+              <Button disabled={isDeleting} type="submit" variant="destructive">
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </Button>
             </DialogFooter>
@@ -385,7 +427,7 @@ export function FolderCard({
       </Dialog>
 
       {/* Move Dialog */}
-      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+      <Dialog onOpenChange={setShowMoveDialog} open={showMoveDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <form action={handleMove}>
             <DialogHeader>
@@ -396,22 +438,22 @@ export function FolderCard({
             </DialogHeader>
             <div className="py-4">
               <FolderPicker
-                selectedFolderId={selectedDestinationId}
-                onFolderSelect={setSelectedDestinationId}
-                excludeFolderId={folder.id}
                 allowVaultSelection={true}
+                excludeFolderId={folder.id}
+                onFolderSelect={setSelectedDestinationId}
+                selectedFolderId={selectedDestinationId}
               />
             </div>
             <DialogFooter>
               <Button
+                disabled={isMoving}
+                onClick={() => setShowMoveDialog(false)}
                 type="button"
                 variant="outline"
-                onClick={() => setShowMoveDialog(false)}
-                disabled={isMoving}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isMoving}>
+              <Button disabled={isMoving} type="submit">
                 {isMoving ? 'Moving...' : 'Move'}
               </Button>
             </DialogFooter>
@@ -419,5 +461,5 @@ export function FolderCard({
         </DialogContent>
       </Dialog>
     </>
-  )
-} 
+  );
+}

@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import { useActionState } from 'react'
-import { toast } from 'sonner'
-import { useVaultInvalidation } from '@/hooks/data/use-vault'
+import { useActionState } from 'react';
+import { toast } from 'sonner';
+import { useVaultInvalidation } from '@/hooks/data/use-vault';
 
 type BaseActionState = {
-  success: boolean
-  error: string | null
-}
+  success: boolean;
+  error: string | null;
+};
 
 interface UseVaultActionOptions {
-  successMessage?: string
-  onSuccess?: (result: any) => void
+  successMessage?: string;
+  onSuccess?: (result: any) => void;
 }
 
 export function useVaultAction(
@@ -19,148 +19,166 @@ export function useVaultAction(
   initialState: BaseActionState,
   options: UseVaultActionOptions = {}
 ) {
-  const invalidate = useVaultInvalidation()
-  const { successMessage, onSuccess } = options
+  const invalidate = useVaultInvalidation();
+  const { successMessage, onSuccess } = options;
 
   const wrappedAction = async (prevState: any, payload: FormData) => {
-    const result = await action(prevState, payload)
+    const result = await action(prevState, payload);
 
     if (result.success) {
       // Show success message
       if (successMessage) {
-        toast.success(successMessage)
+        toast.success(successMessage);
       }
 
       // Simple: just invalidate everything vault-related
       // React Query is smart enough to only refetch what's actually being used
-      invalidate.invalidateAll()
+      invalidate.invalidateAll();
 
       // Call custom success handler
-      onSuccess?.(result)
+      onSuccess?.(result);
     } else if (result.error) {
-      toast.error(result.error)
+      toast.error(result.error);
     }
 
-    return result
-  }
+    return result;
+  };
 
-  return useActionState(wrappedAction, initialState)
+  return useActionState(wrappedAction, initialState);
 }
 
 // Specific hooks for common operations
-export function useCreateFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { createFolderAction } = require('@/actions/vault/folder')
+export function useCreateFolderAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { createFolderAction } = require('@/actions/vault/folder');
 
   return useVaultAction(
     createFolderAction,
     { success: false, error: null },
     {
       successMessage: 'Folder created successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useCreateProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { createProjectAction } = require('@/actions/vault/project')
+export function useCreateProjectAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { createProjectAction } = require('@/actions/vault/project');
 
   return useVaultAction(
     createProjectAction,
     { success: false, error: null },
     {
       successMessage: 'Project created successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useDeleteFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { deleteFolderAction } = require('@/actions/vault/folder')
+export function useDeleteFolderAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { deleteFolderAction } = require('@/actions/vault/folder');
 
   return useVaultAction(
     deleteFolderAction,
     { success: false, error: null },
     {
       successMessage: 'Folder deleted successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useDeleteProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { deleteProjectAction } = require('@/actions/vault/project')
+export function useDeleteProjectAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { deleteProjectAction } = require('@/actions/vault/project');
 
   return useVaultAction(
     deleteProjectAction,
     { success: false, error: null },
     {
       successMessage: 'Project deleted successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useRenameFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { renameFolderAction } = require('@/actions/vault/folder')
+export function useRenameFolderAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { renameFolderAction } = require('@/actions/vault/folder');
 
   return useVaultAction(
     renameFolderAction,
     { success: false, error: null },
     {
       successMessage: 'Folder renamed successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useRenameProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { renameProjectAction } = require('@/actions/vault/project')
+export function useRenameProjectAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { renameProjectAction } = require('@/actions/vault/project');
 
   return useVaultAction(
     renameProjectAction,
     { success: false, error: null },
     {
       successMessage: 'Project renamed successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useMoveFolderAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { moveFolderAction } = require('@/actions/vault/folder')
+export function useMoveFolderAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { moveFolderAction } = require('@/actions/vault/folder');
 
   return useVaultAction(
     moveFolderAction,
     { success: false, error: null },
     {
       successMessage: 'Folder moved successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useMoveProjectAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { moveProjectAction } = require('@/actions/vault/project')
+export function useMoveProjectAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { moveProjectAction } = require('@/actions/vault/project');
 
   return useVaultAction(
     moveProjectAction,
     { success: false, error: null },
     {
       successMessage: 'Project moved successfully',
-      ...options
+      ...options,
     }
-  )
+  );
 }
 
-export function useCombineProjectsAction(options: Omit<UseVaultActionOptions, 'successMessage'> = {}) {
-  const { createFolderFromProjectsAction } = require('@/actions/vault/project')
+export function useCombineProjectsAction(
+  options: Omit<UseVaultActionOptions, 'successMessage'> = {}
+) {
+  const { createFolderFromProjectsAction } = require('@/actions/vault/project');
 
   return useVaultAction(
     createFolderFromProjectsAction,
     { success: false, error: null },
     {
       successMessage: 'Projects combined successfully',
-      ...options
+      ...options,
     }
-  )
-} 
+  );
+}

@@ -1,237 +1,255 @@
-'use client'
+'use client';
 
-import { useMemo, startTransition, useState, useEffect, useCallback } from 'react'
-import { useIsTablet } from '@/hooks/use-mobile'
-
-import { Folder } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
-import type { FolderWithProjects } from '@/lib/contracts/folder'
-import type { ProjectWithTracks } from '@/lib/contracts/project'
-import { FolderCard } from '@/components/vault/folders/card'
-import { ProjectCard } from '@/components/vault/projects/card'
-
-import { Virtuoso } from 'react-virtuoso'
-import { DndLayout } from '@/components/vault/dnd-layout'
-import { useMoveFolderAction, useMoveProjectAction, useCombineProjectsAction } from '@/actions/vault/use-action'
-import { useRootFolders, useVaultProjects } from '@/hooks/data/use-vault'
-import { useVaultSelection } from '@/hooks/use-vault-selection'
-import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms'
-import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar'
-import { useAtomValue } from 'jotai'
-import { selectedItemsAtom } from '@/state/vault-selection-atoms'
-import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
-import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
+import { useAtomValue } from 'jotai';
+import { Folder } from 'lucide-react';
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { Virtuoso } from 'react-virtuoso';
+import {
+  useCombineProjectsAction,
+  useMoveFolderAction,
+  useMoveProjectAction,
+} from '@/actions/vault/use-action';
+import { Card, CardContent } from '@/components/ui/card';
+import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar';
+import { DndLayout } from '@/components/vault/dnd-layout';
+import { FolderCard } from '@/components/vault/folders/card';
+import { CreateFolderDialog } from '@/components/vault/folders/create-dialog';
+import { ProjectCard } from '@/components/vault/projects/card';
+import { CreateProjectDialog } from '@/components/vault/projects/create-dialog';
+import { useRootFolders, useVaultProjects } from '@/hooks/data/use-vault';
+import { useIsTablet } from '@/hooks/use-mobile';
+import { useVaultSelection } from '@/hooks/use-vault-selection';
+import type { FolderWithProjects } from '@/lib/contracts/folder';
+import type { ProjectWithTracks } from '@/lib/contracts/project';
+import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms';
+import { selectedItemsAtom } from '@/state/vault-selection-atoms';
 
 type VaultItem =
   | { type: 'folder'; data: FolderWithProjects }
-  | { type: 'project'; data: ProjectWithTracks }
+  | { type: 'project'; data: ProjectWithTracks };
 
 export default function VaultPage() {
-  const isTablet = useIsTablet()
-  const [, moveFolderAction] = useMoveFolderAction()
-  const [, moveProjectAction] = useMoveProjectAction()
-  const [, combineProjectsAction] = useCombineProjectsAction()
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
-  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
-
+  const isTablet = useIsTablet();
+  const [, moveFolderAction] = useMoveFolderAction();
+  const [, moveProjectAction] = useMoveProjectAction();
+  const [, combineProjectsAction] = useCombineProjectsAction();
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
 
   // Use React Query with hydrated data
-  const { data: folders = [] } = useRootFolders()
-  const { data: projects = [] } = useVaultProjects()
+  const { data: folders = [] } = useRootFolders();
+  const { data: projects = [] } = useVaultProjects();
 
   // Selection functionality
-  const {
-    selectedItems,
-    handleItemClick,
-    handleKeyDown,
-    clearSelection
-  } = useVaultSelection()
+  const { selectedItems, handleItemClick, handleKeyDown, clearSelection } =
+    useVaultSelection();
 
   // Get stable selection state directly from atom for O(1) lookups
-  const selectedItemsSet = useAtomValue(selectedItemsAtom)
+  const selectedItemsSet = useAtomValue(selectedItemsAtom);
 
   const handleMoveFolder = async (
     folderId: string,
     parentFolderId: string | null,
     sourceParentFolderId: string | null
   ) => {
-    const formData = new FormData()
-    formData.append('folderId', folderId)
-    formData.append('parentFolderId', parentFolderId || '')
-    formData.append('sourceParentFolderId', sourceParentFolderId || '')
+    const formData = new FormData();
+    formData.append('folderId', folderId);
+    formData.append('parentFolderId', parentFolderId || '');
+    formData.append('sourceParentFolderId', sourceParentFolderId || '');
 
     startTransition(() => {
-      moveFolderAction(formData)
-    })
-  }
+      moveFolderAction(formData);
+    });
+  };
 
   const handleMoveProject = async (
     projectId: string,
     folderId: string | null,
     sourceFolderId: string | null
   ) => {
-    const formData = new FormData()
-    formData.append('projectId', projectId)
-    formData.append('folderId', folderId || '')
-    formData.append('sourceFolderId', sourceFolderId || '')
+    const formData = new FormData();
+    formData.append('projectId', projectId);
+    formData.append('folderId', folderId || '');
+    formData.append('sourceFolderId', sourceFolderId || '');
 
     startTransition(() => {
-      moveProjectAction(formData)
-    })
-  }
+      moveProjectAction(formData);
+    });
+  };
 
-  const handleCombineProjects = async (sourceProjectId: string, targetProjectId: string) => {
-    const formData = new FormData()
-    formData.append('sourceProjectId', sourceProjectId)
-    formData.append('targetProjectId', targetProjectId)
+  const handleCombineProjects = async (
+    sourceProjectId: string,
+    targetProjectId: string
+  ) => {
+    const formData = new FormData();
+    formData.append('sourceProjectId', sourceProjectId);
+    formData.append('targetProjectId', targetProjectId);
     // For vault view, combined projects should be created at root level (null parent)
-    formData.append('parentFolderId', '')
+    formData.append('parentFolderId', '');
 
     startTransition(() => {
-      combineProjectsAction(formData)
-    })
-  }
-
+      combineProjectsAction(formData);
+    });
+  };
 
   // Combine folders and projects into a single array for virtualization
   const vaultItems = useMemo((): VaultItem[] => {
     const items: VaultItem[] = [
-      ...folders.map(folder => ({ type: 'folder' as const, data: folder })),
-      ...projects.map(project => ({ type: 'project' as const, data: project }))
-    ]
-    return items
-  }, [folders, projects])
+      ...folders.map((folder) => ({ type: 'folder' as const, data: folder })),
+      ...projects.map((project) => ({
+        type: 'project' as const,
+        data: project,
+      })),
+    ];
+    return items;
+  }, [folders, projects]);
 
   // Create stable selection items - only changes when vault items change
   const selectionItems = useMemo((): SelectionVaultItem[] => {
-    return vaultItems.map(item => ({
+    return vaultItems.map((item) => ({
       id: item.data.id,
       type: item.type,
-      name: item.data.name
-    }))
-  }, [vaultItems])
+      name: item.data.name,
+    }));
+  }, [vaultItems]);
 
   // Create stable click handlers map - prevents re-renders
   const clickHandlers = useMemo(() => {
-    const handlers = new Map<string, (event: React.MouseEvent) => void>()
-    vaultItems.forEach(item => {
+    const handlers = new Map<string, (event: React.MouseEvent) => void>();
+    vaultItems.forEach((item) => {
       handlers.set(item.data.id, (event: React.MouseEvent) => {
-        handleItemClick(item.data.id, event, selectionItems)
-      })
-    })
-    return handlers
-  }, [vaultItems, handleItemClick, selectionItems])
+        handleItemClick(item.data.id, event, selectionItems);
+      });
+    });
+    return handlers;
+  }, [vaultItems, handleItemClick, selectionItems]);
 
   const handleCreateFolderWithSelection = useCallback(() => {
-    setShowCreateFolderDialog(true)
-  }, [])
+    setShowCreateFolderDialog(true);
+  }, []);
 
   const handleBulkDelete = useCallback(() => {
     // This would trigger the bulk delete dialog from BulkActionsToolbar
     // For now, we'll just clear selection
-    clearSelection()
-  }, [clearSelection])
+    clearSelection();
+  }, [clearSelection]);
 
   // Keyboard event handling
   useEffect(() => {
     const handleKeyDownEvent = (event: KeyboardEvent) => {
-      handleKeyDown(event, selectionItems, handleCreateFolderWithSelection, handleBulkDelete)
-    }
+      handleKeyDown(
+        event,
+        selectionItems,
+        handleCreateFolderWithSelection,
+        handleBulkDelete
+      );
+    };
 
-    document.addEventListener('keydown', handleKeyDownEvent)
-    return () => document.removeEventListener('keydown', handleKeyDownEvent)
-  }, [handleKeyDown, selectionItems, handleCreateFolderWithSelection, handleBulkDelete])
+    document.addEventListener('keydown', handleKeyDownEvent);
+    return () => document.removeEventListener('keydown', handleKeyDownEvent);
+  }, [
+    handleKeyDown,
+    selectionItems,
+    handleCreateFolderWithSelection,
+    handleBulkDelete,
+  ]);
 
   // Calculate grid columns based on screen size
-  const ITEMS_PER_ROW = 4
+  const ITEMS_PER_ROW = 4;
 
-  const renderItem = useCallback((index: number) => {
-    const item = vaultItems[index]
-    if (!item) return null
+  const renderItem = useCallback(
+    (index: number) => {
+      const item = vaultItems[index];
+      if (!item) return null;
 
-    // Use stable atom value for O(1) lookup - no function recreation
-    const isSelected = selectedItemsSet.has(item.data.id)
-    // Get stable click handler from map - no function recreation
-    const handleClick = clickHandlers.get(item.data.id)!
+      // Use stable atom value for O(1) lookup - no function recreation
+      const isSelected = selectedItemsSet.has(item.data.id);
+      // Get stable click handler from map - no function recreation
+      const handleClick = clickHandlers.get(item.data.id)!;
 
-    if (item.type === 'folder') {
-      return (
-        <FolderCard
-          key={item.data.id}
-          folder={item.data}
-          parentFolderId={null}
-          isDragAndDropEnabled={true}
-          isSelected={isSelected}
-          onSelectionClick={handleClick}
-        />
-      )
-    } else {
+      if (item.type === 'folder') {
+        return (
+          <FolderCard
+            folder={item.data}
+            isDragAndDropEnabled={true}
+            isSelected={isSelected}
+            key={item.data.id}
+            onSelectionClick={handleClick}
+            parentFolderId={null}
+          />
+        );
+      }
       return (
         <ProjectCard
-          key={item.data.id}
-          project={item.data}
           folderId={null}
-          trackCount={item.data.trackCount}
           isDragAndDropEnabled={true}
           isSelected={isSelected}
+          key={item.data.id}
           onSelectionClick={handleClick}
+          project={item.data}
+          trackCount={item.data.trackCount}
         />
-      )
-    }
-  }, [vaultItems, selectedItemsSet, clickHandlers])
+      );
+    },
+    [vaultItems, selectedItemsSet, clickHandlers]
+  );
 
   return (
     <>
       <DndLayout
-        droppableId="vault"
+        className="space-y-4 rounded-lg border border-border bg-card/5 px-2 py-6 backdrop-blur-sm sm:px-4 sm:py-4"
         droppableData={{ type: 'vault' }}
-        onMoveFolder={handleMoveFolder}
-        onMoveProject={handleMoveProject}
+        droppableId="vault"
+        onClearSelection={clearSelection}
         onCombineProjects={handleCombineProjects}
         onCreateFolder={() => setShowCreateFolderDialog(true)}
         onCreateProject={() => setShowCreateProjectDialog(true)}
-        onClearSelection={clearSelection}
-        className="space-y-4 py-6 sm:py-4 rounded-lg bg-card/5 border border-border backdrop-blur-sm sm:px-4 px-2"
+        onMoveFolder={handleMoveFolder}
+        onMoveProject={handleMoveProject}
       >
         {vaultItems.length > 0 ? (
           <div style={{ height: '600px' }}>
             <Virtuoso
-              style={{ height: '100%' }}
-              totalCount={Math.ceil(vaultItems.length / ITEMS_PER_ROW)}
-              itemContent={(rowIndex) => (
+              itemContent={(rowIndex) =>
                 isTablet ? (
-                  <div className="flex flex-wrap justify-center gap-4 mb-4">
+                  <div className="mb-4 flex flex-wrap justify-center gap-4">
                     {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
-                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex;
                       return itemIndex < vaultItems.length ? (
-                        <div key={itemIndex} className="w-40 flex-shrink-0">
+                        <div className="w-40 flex-shrink-0" key={itemIndex}>
                           {renderItem(itemIndex)}
                         </div>
-                      ) : null
+                      ) : null;
                     })}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 lg:gap-3 xl:gap-4 mb-4">
+                  <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-3 xl:grid-cols-6 xl:gap-4">
                     {Array.from({ length: ITEMS_PER_ROW }, (_, colIndex) => {
-                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex
+                      const itemIndex = rowIndex * ITEMS_PER_ROW + colIndex;
                       return itemIndex < vaultItems.length ? (
-                        <div key={itemIndex}>
-                          {renderItem(itemIndex)}
-                        </div>
-                      ) : null
+                        <div key={itemIndex}>{renderItem(itemIndex)}</div>
+                      ) : null;
                     })}
                   </div>
                 )
-              )}
+              }
+              style={{ height: '100%' }}
+              totalCount={Math.ceil(vaultItems.length / ITEMS_PER_ROW)}
             />
           </div>
         ) : (
           /* Empty state */
-          <Card className="border-dashed border-2">
+          <Card className="border-2 border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Folder className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold mb-2">No folders or projects yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <Folder className="mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 font-semibold">No folders or projects yet</h3>
+              <p className="mb-4 text-muted-foreground text-sm">
                 Start organizing your tracks by creating folders and projects
               </p>
               <div className="flex gap-2">
@@ -245,25 +263,27 @@ export default function VaultPage() {
 
       {/* Context Menu Dialogs */}
       <CreateFolderDialog
-        open={showCreateFolderDialog}
         onOpenChange={setShowCreateFolderDialog}
-        selectedItems={selectedItems.map(id => {
-          const item = selectionItems.find(item => item.id === id)
-          return item ? { id: item.id, type: item.type } : { id, type: 'project' as const }
-        })}
         onSuccess={() => {
-          setShowCreateFolderDialog(false)
-          clearSelection()
+          setShowCreateFolderDialog(false);
+          clearSelection();
         }}
+        open={showCreateFolderDialog}
+        selectedItems={selectedItems.map((id) => {
+          const item = selectionItems.find((item) => item.id === id);
+          return item
+            ? { id: item.id, type: item.type }
+            : { id, type: 'project' as const };
+        })}
       />
       <CreateProjectDialog
-        open={showCreateProjectDialog}
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
+        open={showCreateProjectDialog}
       />
 
       {/* Bulk Actions Toolbar */}
       <BulkActionsToolbar vaultItems={selectionItems} />
     </>
-  )
-} 
+  );
+}

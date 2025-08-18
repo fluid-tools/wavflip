@@ -1,19 +1,23 @@
-import { ReactNode } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query'
-import { getCachedSession } from '@/lib/server/auth'
-import { redirect } from 'next/navigation'
-import { getVaultData } from '@/lib/server/vault'
-import { vaultKeys } from '@/hooks/data/keys'
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from '@tanstack/react-query';
+import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { vaultKeys } from '@/hooks/data/keys';
+import { getCachedSession } from '@/lib/server/auth';
+import { getVaultData } from '@/lib/server/vault';
 
 interface VaultLayoutProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export default async function VaultLayout({ children }: VaultLayoutProps) {
-  const session = await getCachedSession()
-  if (!session) redirect('/sign-in')
-  
+  const session = await getCachedSession();
+  if (!session) redirect('/sign-in');
+
   // Create query client with proper default options
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -21,26 +25,24 @@ export default async function VaultLayout({ children }: VaultLayoutProps) {
         staleTime: 5 * 60 * 1000, // 5 minutes
         refetchOnWindowFocus: false,
         refetchOnMount: true, // Ensure data is fresh when navigating
-      }
-    }
-  })
+      },
+    },
+  });
 
   // Prefetch common vault data for all vault pages
   await queryClient.prefetchQuery({
     queryKey: vaultKeys.tree(),
     queryFn: () => getVaultData(session.user.id),
     staleTime: 5 * 60 * 1000,
-  })
+  });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="h-full w-full flex flex-col">
+      <div className="flex h-full w-full flex-col">
         <ScrollArea className="flex-1">
-          <div className="pb-24">
-            {children}
-          </div>
+          <div className="pb-24">{children}</div>
         </ScrollArea>
       </div>
     </HydrationBoundary>
-  )
-} 
+  );
+}

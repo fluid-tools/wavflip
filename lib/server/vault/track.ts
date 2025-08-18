@@ -1,15 +1,21 @@
-import 'server-only'
+import 'server-only';
 
-import { db } from '@/db'
-import { track, trackVersion } from '@/db/schema/vault'
-import { TrackWithVersionsSchema, TrackCreateDataSchema, TrackVersionCreateDataSchema } from '@/lib/contracts/track'
-import type { TrackCreateData, TrackVersionCreateData } from '@/lib/contracts/track'
-import { and, desc, eq } from 'drizzle-orm'
-import { getPresignedUrl } from '@/lib/storage/s3-storage'
-import { REDIS_KEYS } from '@/lib/redis'
-
+import { and, desc, eq } from 'drizzle-orm';
 // Stop importing NewTrack/NewTrackVersion inferred types from DB schema; use Zod schemas instead
-import { nanoid } from 'nanoid'
+import { nanoid } from 'nanoid';
+import { db } from '@/db';
+import { track, trackVersion } from '@/db/schema/vault';
+import type {
+  TrackCreateData,
+  TrackVersionCreateData,
+} from '@/lib/contracts/track';
+import {
+  TrackCreateDataSchema,
+  TrackVersionCreateDataSchema,
+  TrackWithVersionsSchema,
+} from '@/lib/contracts/track';
+import { REDIS_KEYS } from '@/lib/redis';
+import { getPresignedUrl } from '@/lib/storage/s3-storage';
 
 /**
  * Core resource fetchers (no auth)
@@ -19,63 +25,70 @@ const getTrackById = async (trackId: string) => {
     .select()
     .from(track)
     .where(eq(track.id, trackId))
-    .limit(1)
-  return result ?? null
-}
+    .limit(1);
+  return result ?? null;
+};
 
-const getActiveVersionForTrack = async (trackRecord: { activeVersionId: string | null }) => {
-  if (!trackRecord.activeVersionId) return null
+const getActiveVersionForTrack = async (trackRecord: {
+  activeVersionId: string | null;
+}) => {
+  if (!trackRecord.activeVersionId) return null;
   const [version] = await db
     .select()
     .from(trackVersion)
     .where(eq(trackVersion.id, trackRecord.activeVersionId))
-    .limit(1)
-  return version ?? null
-}
+    .limit(1);
+  return version ?? null;
+};
 
-const isTrackOwnedByUser = (trackRecord: { userId: string }, userId: string): boolean => {
-  return trackRecord.userId === userId
-}
+const isTrackOwnedByUser = (
+  trackRecord: { userId: string },
+  userId: string
+): boolean => {
+  return trackRecord.userId === userId;
+};
 
-export const requireTrackOwnership = (trackRecord: { userId: string }, userId: string): void => {
+export const requireTrackOwnership = (
+  trackRecord: { userId: string },
+  userId: string
+): void => {
   if (!isTrackOwnedByUser(trackRecord, userId)) {
-    throw Object.assign(new Error('Forbidden'), { status: 403 })
+    throw Object.assign(new Error('Forbidden'), { status: 403 });
   }
-}
+};
 
 // enforce ownership optional
 export const getPresignedUrlForTrack = async (
   trackId: string,
   options: { requireOwnerUserId?: string; expiresInSeconds?: number } = {}
 ): Promise<string | null> => {
-  const { requireOwnerUserId, expiresInSeconds = 60 * 60 } = options
-  const record = await getTrackById(trackId)
-  if (!record) return null
-  if (requireOwnerUserId) requireTrackOwnership(record, requireOwnerUserId)
-  const version = await getActiveVersionForTrack(record)
-  if (!version || !version.fileKey) return null
-  const cacheKey = REDIS_KEYS.presignedTrack(trackId)
-  return getPresignedUrl(version.fileKey, cacheKey, expiresInSeconds)
-}
-
+  const { requireOwnerUserId, expiresInSeconds = 60 * 60 } = options;
+  const record = await getTrackById(trackId);
+  if (!record) return null;
+  if (requireOwnerUserId) requireTrackOwnership(record, requireOwnerUserId);
+  const version = await getActiveVersionForTrack(record);
+  if (!(version && version.fileKey)) return null;
+  const cacheKey = REDIS_KEYS.presignedTrack(trackId);
+  return getPresignedUrl(version.fileKey, cacheKey, expiresInSeconds);
+};
 
 // ================================
 // TRACK CRUD OPERATIONS
 // ================================
 
 export async function createTrack(data: TrackCreateData) {
-  const now = new Date()
+  const now = new Date();
 
   // Create the track
-  const base = TrackCreateDataSchema.parse(data)
+  const base = TrackCreateDataSchema.parse(data);
   const newTrack = {
     ...base,
     id: nanoid(),
     createdAt: now,
     updatedAt: now,
-  }
+  };
 
-  const [createdTrack] = await db.insert(track).values(newTrack).returning()
+  const [createdTrack] = await db.insert(track).values(newTrack).returning();
 
   // Create initial version if file data is provided
   if (data.activeVersionId) {
@@ -86,34 +99,47 @@ export async function createTrack(data: TrackCreateData) {
       duration: 0,
       mimeType: '',
       metadata: null,
-    })
+    });
     await db.insert(trackVersion).values({
       ...initialVersionBase,
       id: data.activeVersionId,
       version: 1,
       createdAt: now,
-    })
+    });
   }
 
-  return createdTrack
+  return createdTrack;
 }
 
-export async function deleteTrack(trackId: string, userId: string): Promise<void> {
-  await db.delete(track).where(and(eq(track.id, trackId), eq(track.userId, userId)))
+export async function deleteTrack(
+  trackId: string,
+  userId: string
+): Promise<void> {
+  await db
+    .delete(track)
+    .where(and(eq(track.id, trackId), eq(track.userId, userId)));
 }
 
-export async function renameTrack(trackId: string, name: string, userId: string): Promise<void> {
+export async function renameTrack(
+  trackId: string,
+  name: string,
+  userId: string
+): Promise<void> {
   await db
     .update(track)
     .set({ name, updatedAt: new Date() })
-    .where(and(eq(track.id, trackId), eq(track.userId, userId)))
+    .where(and(eq(track.id, trackId), eq(track.userId, userId)));
 }
 
-export async function moveTrack(trackId: string, projectId: string, userId: string): Promise<void> {
+export async function moveTrack(
+  trackId: string,
+  projectId: string,
+  userId: string
+): Promise<void> {
   await db
     .update(track)
     .set({ projectId, updatedAt: new Date() })
-    .where(and(eq(track.id, trackId), eq(track.userId, userId)))
+    .where(and(eq(track.id, trackId), eq(track.userId, userId)));
 }
 // ================================
 // TRACK VERSION OPERATIONS
@@ -126,29 +152,34 @@ export async function createTrackVersion(data: TrackVersionCreateData) {
     .from(trackVersion)
     .where(eq(trackVersion.trackId, data.trackId))
     .orderBy(desc(trackVersion.version))
-    .limit(1)
+    .limit(1);
 
-  const nextVersion = (existingVersions[0]?.version || 0) + 1
+  const nextVersion = (existingVersions[0]?.version || 0) + 1;
 
-  const base = TrackVersionCreateDataSchema.parse(data)
+  const base = TrackVersionCreateDataSchema.parse(data);
   const newVersion = {
     ...base,
     id: nanoid(),
     version: nextVersion,
     createdAt: new Date(),
-  }
+  };
 
-  const [version] = await db.insert(trackVersion).values(newVersion).returning()
-  return TrackWithVersionsSchema.shape.versions.element.parse(version)
+  const [version] = await db
+    .insert(trackVersion)
+    .values(newVersion)
+    .returning();
+  return TrackWithVersionsSchema.shape.versions.element.parse(version);
 }
 
-export async function setActiveVersion(trackId: string, versionId: string, userId: string): Promise<void> {
+export async function setActiveVersion(
+  trackId: string,
+  versionId: string,
+  userId: string
+): Promise<void> {
   await db
     .update(track)
     .set({ activeVersionId: versionId, updatedAt: new Date() })
-    .where(and(eq(track.id, trackId), eq(track.userId, userId)))
+    .where(and(eq(track.id, trackId), eq(track.userId, userId)));
 }
 
 // removed unused type-only helpers
-
-

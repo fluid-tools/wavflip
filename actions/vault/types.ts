@@ -1,30 +1,29 @@
 import type { FolderRow } from '@/lib/contracts/folder';
 import type { Project } from '@/lib/contracts/project';
 
-
 export type FolderActionState = {
-  success: boolean
-  error: string | null
-  folder?: FolderRow
-}
+  success: boolean;
+  error: string | null;
+  folder?: FolderRow;
+};
 
 export type ProjectActionState = {
-  success: boolean
-  error: string | null
-  project?: Project
-}
+  success: boolean;
+  error: string | null;
+  project?: Project;
+};
 
 export type DeleteActionState = {
-  success: boolean
-  error: string | null
-}
+  success: boolean;
+  error: string | null;
+};
 
 export type RenameActionState = {
-  success: boolean
-  error: string | null
-}
+  success: boolean;
+  error: string | null;
+};
 
 export type MoveActionState = {
-  success: boolean
-  error: string | null
-}
+  success: boolean;
+  error: string | null;
+};

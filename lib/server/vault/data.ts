@@ -1,51 +1,53 @@
-import 'server-only'
+import 'server-only';
 
-import { db } from '@/db'
-import { folder, project, track } from '@/db/schema/vault'
-import { eq, and, isNull, count, not } from 'drizzle-orm'
-import type { 
-  VaultData, 
-  VaultFolder, 
-  BreadcrumbItem, 
-} from '@/lib/contracts/vault'
-import { VaultDataSchema } from '@/lib/contracts/vault'
-
-import type { FolderWithProjects } from '@/lib/contracts/folder'
-import { FolderWithProjectsSchema } from '@/lib/contracts/folder'
+import { and, count, eq, isNull, not } from 'drizzle-orm';
+import { db } from '@/db';
+import { folder, project, track } from '@/db/schema/vault';
+import type { FolderWithProjects } from '@/lib/contracts/folder';
+import { FolderWithProjectsSchema } from '@/lib/contracts/folder';
+import type {
+  BreadcrumbItem,
+  VaultData,
+  VaultFolder,
+} from '@/lib/contracts/vault';
+import { VaultDataSchema } from '@/lib/contracts/vault';
 
 // Local options type for server composition
 interface VaultQueryOptions {
-  includePath?: boolean
-  includeHierarchy?: boolean
-  excludeFolderId?: string
-  specificFolderId?: string
-  includeLevels?: boolean
+  includePath?: boolean;
+  includeHierarchy?: boolean;
+  excludeFolderId?: string;
+  specificFolderId?: string;
+  includeLevels?: boolean;
 }
 
 // ================================
 // CORE DATA FETCHING
 // ================================
 
-export async function getVaultData(userId: string, options: VaultQueryOptions = {}): Promise<VaultData> {
+export async function getVaultData(
+  userId: string,
+  options: VaultQueryOptions = {}
+): Promise<VaultData> {
   const {
     includePath = false,
     includeHierarchy = true,
     excludeFolderId,
     specificFolderId,
-    includeLevels = false
-  } = options
+    includeLevels = false,
+  } = options;
 
   // Build folder query with exclusions
-  const whereConditions = [eq(folder.userId, userId)]
+  const whereConditions = [eq(folder.userId, userId)];
   if (excludeFolderId) {
-    whereConditions.push(not(eq(folder.id, excludeFolderId)))
+    whereConditions.push(not(eq(folder.id, excludeFolderId)));
   }
-  
+
   const allFolders = await db
     .select()
     .from(folder)
     .where(and(...whereConditions))
-    .orderBy(folder.order, folder.createdAt)
+    .orderBy(folder.order, folder.createdAt);
 
   // Get all projects with track counts for each folder
   const folderProjects = await Promise.all(
@@ -61,36 +63,45 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
           order: project.order,
           createdAt: project.createdAt,
           updatedAt: project.updatedAt,
-          trackCount: count(track.id)
+          trackCount: count(track.id),
         })
         .from(project)
         .leftJoin(track, eq(track.projectId, project.id))
         .where(eq(project.folderId, f.id))
         .groupBy(project.id)
-        .orderBy(project.order, project.createdAt)
-      
-      return { folderId: f.id, projects }
+        .orderBy(project.order, project.createdAt);
+
+      return { folderId: f.id, projects };
     })
-  )
+  );
 
   const projectsByFolder = new Map(
-    folderProjects.map(fp => [fp.folderId, fp.projects])
-  )
+    folderProjects.map((fp) => [fp.folderId, fp.projects])
+  );
 
   // Calculate total project count including nested projects
   const calculateTotalProjectCount = (folders: VaultFolder[]): number => {
     return folders.reduce((total, folder) => {
-      return total + folder.projects.length + calculateTotalProjectCount(folder.subfolders)
-    }, 0)
-  }
+      return (
+        total +
+        folder.projects.length +
+        calculateTotalProjectCount(folder.subfolders)
+      );
+    }, 0);
+  };
 
   // Build hierarchical structure
-  const buildHierarchy = (parentId: string | null = null, level = 0): VaultFolder[] => {
+  const buildHierarchy = (
+    parentId: string | null = null,
+    level = 0
+  ): VaultFolder[] => {
     return allFolders
-      .filter(f => f.parentFolderId === parentId)
-      .map(f => {
-        const projects = projectsByFolder.get(f.id) || []
-        const subfolders = includeHierarchy ? buildHierarchy(f.id, level + 1) : []
+      .filter((f) => f.parentFolderId === parentId)
+      .map((f) => {
+        const projects = projectsByFolder.get(f.id) || [];
+        const subfolders = includeHierarchy
+          ? buildHierarchy(f.id, level + 1)
+          : [];
 
         const folder: VaultFolder = {
           id: f.id,
@@ -98,17 +109,18 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
           parentFolderId: f.parentFolderId,
           projects,
           subfolders,
-          projectCount: projects.length + calculateTotalProjectCount(subfolders),
-          subFolderCount: subfolders.length
-        }
+          projectCount:
+            projects.length + calculateTotalProjectCount(subfolders),
+          subFolderCount: subfolders.length,
+        };
 
         if (includeLevels) {
-          folder.level = level
+          folder.level = level;
         }
 
-        return folder
-      })
-  }
+        return folder;
+      });
+  };
 
   // Get root projects (not in any folder)
   const rootProjects = await db
@@ -122,60 +134,66 @@ export async function getVaultData(userId: string, options: VaultQueryOptions = 
       order: project.order,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
-      trackCount: count(track.id)
+      trackCount: count(track.id),
     })
     .from(project)
     .leftJoin(track, eq(track.projectId, project.id))
     .where(and(eq(project.userId, userId), isNull(project.folderId)))
     .groupBy(project.id)
-    .orderBy(project.order, project.createdAt)
+    .orderBy(project.order, project.createdAt);
 
   const result: VaultData = {
     folders: buildHierarchy(),
-    rootProjects
-  }
+    rootProjects,
+  };
 
   // Add path if requested
   if (includePath && specificFolderId) {
-    result.path = await getFolderPath(specificFolderId, userId)
+    result.path = await getFolderPath(specificFolderId, userId);
   }
 
-
   // Validate composed data against contract for consistency
-  return VaultDataSchema.parse(result)
+  return VaultDataSchema.parse(result);
 }
 
 // ================================
 // SPECIFIC DATA HELPERS
 // ================================
 
-async function getFolderPath(folderId: string, userId: string): Promise<BreadcrumbItem[]> {
-  type DbFolderRow = { id: string; name: string; parentFolderId: string | null }
-  const path: BreadcrumbItem[] = []
-  let currentFolderId: string | null = folderId
+async function getFolderPath(
+  folderId: string,
+  userId: string
+): Promise<BreadcrumbItem[]> {
+  type DbFolderRow = {
+    id: string;
+    name: string;
+    parentFolderId: string | null;
+  };
+  const path: BreadcrumbItem[] = [];
+  let currentFolderId: string | null = folderId;
 
   while (currentFolderId) {
     const folderData: DbFolderRow[] = await db
       .select()
       .from(folder)
       .where(and(eq(folder.id, currentFolderId), eq(folder.userId, userId)))
-      .limit(1)
+      .limit(1);
 
     if (folderData.length === 0) {
-      throw new Error('Folder not found')
+      throw new Error('Folder not found');
     }
 
-    const currentFolder = folderData[0]
+    const currentFolder = folderData[0];
     path.unshift({
       id: currentFolder.id,
       name: currentFolder.name,
-      parentFolderId: currentFolder.parentFolderId
-    })
+      parentFolderId: currentFolder.parentFolderId,
+    });
 
-    currentFolderId = currentFolder.parentFolderId
+    currentFolderId = currentFolder.parentFolderId;
   }
 
-  return path
+  return path;
 }
 
 // todo: will use this for usage stats in billing
@@ -185,12 +203,12 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
 //       .select({ count: count() })
 //       .from(project)
 //       .where(eq(project.userId, userId)),
-    
+
 //     db
 //       .select({ count: count() })
 //       .from(track)
 //       .where(eq(track.userId, userId)),
-    
+
 //     db
 //       .select({ count: count() })
 //       .from(folder)
@@ -198,7 +216,7 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
 
 //     // Get version data from tracks that have userId
 //     db
-//       .select({ 
+//       .select({
 //         versionCount: count(trackVersion.id),
 //         totalSize: count(trackVersion.size), // Sum when we have size field
 //         totalDuration: count(trackVersion.duration) // Sum when we have duration field
@@ -223,37 +241,42 @@ async function getFolderPath(folderId: string, userId: string): Promise<Breadcru
 // ================================
 
 // For folder views with breadcrumbs
-export async function getFolderData(folderId: string, userId: string): Promise<VaultData> {
+export async function getFolderData(
+  folderId: string,
+  userId: string
+): Promise<VaultData> {
   return getVaultData(userId, {
     includeHierarchy: false,
     includePath: true,
-    specificFolderId: folderId
-  })
+    specificFolderId: folderId,
+  });
 }
 // ================================
 // DATA FETCHING OPERATIONS
 // ================================
 
-export async function getUserFolders(userId: string): Promise<FolderWithProjects[]> {
+export async function getUserFolders(
+  userId: string
+): Promise<FolderWithProjects[]> {
   // Only get root-level folders (parentFolderId is null)
   const folders = await db
     .select()
     .from(folder)
     .where(and(eq(folder.userId, userId), isNull(folder.parentFolderId)))
-    .orderBy(folder.order, folder.createdAt)
+    .orderBy(folder.order, folder.createdAt);
 
   const foldersWithProjects = await Promise.all(
     folders.map(async (f) => {
       // Get full folder contents to calculate proper counts
-      const fullFolderContent = await getFolderWithContents(f.id, userId)
+      const fullFolderContent = await getFolderWithContents(f.id, userId);
       if (!fullFolderContent) {
         return {
           ...f,
           projects: [],
           subFolders: [],
           subFolderCount: 0,
-          projectCount: 0
-        }
+          projectCount: 0,
+        };
       }
 
       return {
@@ -261,36 +284,50 @@ export async function getUserFolders(userId: string): Promise<FolderWithProjects
         projects: fullFolderContent.projects,
         subFolders: fullFolderContent.subFolders,
         subFolderCount: fullFolderContent.subFolderCount,
-        projectCount: fullFolderContent.projectCount
-      }
+        projectCount: fullFolderContent.projectCount,
+      };
     })
-  )
+  );
 
-  return foldersWithProjects
+  return foldersWithProjects;
 }
 
-export async function getFolderWithContents(folderId: string, userId: string): Promise<FolderWithProjects | null> {
+export async function getFolderWithContents(
+  folderId: string,
+  userId: string
+): Promise<FolderWithProjects | null> {
   const [folderData] = await db
     .select()
     .from(folder)
     .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
-    .limit(1)
+    .limit(1);
 
-  if (!folderData) return null
+  if (!folderData) return null;
 
   // Get subfolders with their full content
   const subFolders = await Promise.all(
-    (await db
-      .select()
-      .from(folder)
-      .where(and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId)))
-      .orderBy(folder.order, folder.createdAt))
-      .map(async (sf) => {
-        // Recursively get subfolder contents
-        const subFolderContent = await getFolderWithContents(sf.id, userId)
-        return subFolderContent || { ...sf, projects: [], subFolders: [], subFolderCount: 0, projectCount: 0 }
-      })
-  )
+    (
+      await db
+        .select()
+        .from(folder)
+        .where(
+          and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId))
+        )
+        .orderBy(folder.order, folder.createdAt)
+    ).map(async (sf) => {
+      // Recursively get subfolder contents
+      const subFolderContent = await getFolderWithContents(sf.id, userId);
+      return (
+        subFolderContent || {
+          ...sf,
+          projects: [],
+          subFolders: [],
+          subFolderCount: 0,
+          projectCount: 0,
+        }
+      );
+    })
+  );
 
   // Get projects in this folder
   const projects = await db
@@ -305,34 +342,36 @@ export async function getFolderWithContents(folderId: string, userId: string): P
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
       metadata: project.metadata,
-      trackCount: count(track.id)
+      trackCount: count(track.id),
     })
     .from(project)
     .leftJoin(track, eq(track.projectId, project.id))
     .where(eq(project.folderId, folderId))
     .groupBy(project.id)
-    .orderBy(project.order, project.createdAt)
+    .orderBy(project.order, project.createdAt);
 
   // Calculate total counts including nested content
-  const calculateTotalProjectCount = (folders: FolderWithProjects[]): number => {
+  const calculateTotalProjectCount = (
+    folders: FolderWithProjects[]
+  ): number => {
     return folders.reduce((total, folder) => {
-      return total + (folder.projects?.length || 0) + calculateTotalProjectCount(folder.subFolders || [])
-    }, 0)
-  }
+      return (
+        total +
+        (folder.projects?.length || 0) +
+        calculateTotalProjectCount(folder.subFolders || [])
+      );
+    }, 0);
+  };
 
-  const directProjectCount = projects.length
-  const nestedProjectCount = calculateTotalProjectCount(subFolders)
-  const totalProjectCount = directProjectCount + nestedProjectCount
+  const directProjectCount = projects.length;
+  const nestedProjectCount = calculateTotalProjectCount(subFolders);
+  const totalProjectCount = directProjectCount + nestedProjectCount;
 
   return FolderWithProjectsSchema.parse({
     ...folderData,
     subFolders,
     projects,
     subFolderCount: subFolders.length,
-    projectCount: totalProjectCount
-  })
+    projectCount: totalProjectCount,
+  });
 }
-
-
-
- 

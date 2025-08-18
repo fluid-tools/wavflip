@@ -1,23 +1,17 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useMemo } from 'react'
-import { useAtom } from 'jotai'
-import { useIsMobile } from '@/hooks/use-mobile'
 import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  SortingState,
+  type SortingState,
   useReactTable,
-} from '@tanstack/react-table'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+} from '@tanstack/react-table';
+import { useAtom } from 'jotai';
+import { useEffect, useMemo, useState } from 'react';
+import { TableVirtuoso } from 'react-virtuoso';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -25,65 +19,92 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { TableVirtuoso } from 'react-virtuoso'
-import { currentTrackAtom, playerControlsAtom, isPlayingAtom } from '@/state/audio-atoms'
-import type { AudioTrack } from '@/types/audio'
-import { createTracksTableColumns } from './table-columns'
-import { useTracks, type TrackFromProject } from '../../../hooks/data/use-tracks'
-import { ProjectPicker } from '../projects/picker'
-import { MobileTracksList } from './mobile-list'
-import type { ProjectWithTracks } from '@/lib/contracts/project'
-import { useProjectTrackUrls } from '@/hooks/data/use-track-url'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useProjectTrackUrls } from '@/hooks/data/use-track-url';
+import { useIsMobile } from '@/hooks/use-mobile';
+import type { ProjectWithTracks } from '@/lib/contracts/project';
+import {
+  currentTrackAtom,
+  isPlayingAtom,
+  playerControlsAtom,
+} from '@/state/audio-atoms';
+import type { AudioTrack } from '@/types/audio';
+import {
+  type TrackFromProject,
+  useTracks,
+} from '../../../hooks/data/use-tracks';
+import { ProjectPicker } from '../projects/picker';
+import { MobileTracksList } from './mobile-list';
+import { createTracksTableColumns } from './table-columns';
 
 interface TracksTableProps {
-  tracks: TrackFromProject[]
-  projectId: string
-  availableProjects?: ProjectWithTracks[]
+  tracks: TrackFromProject[];
+  projectId: string;
+  availableProjects?: ProjectWithTracks[];
 }
 
-export function TracksTable({ tracks, projectId, availableProjects = [] }: TracksTableProps) {
-  const isMobile = useIsMobile()
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [selectedTrack, setSelectedTrack] = useState<TrackFromProject | null>(null)
-  const [showRenameDialog, setShowRenameDialog] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [showMoveDialog, setShowMoveDialog] = useState(false)
-  const [selectedDestinationProjectId, setSelectedDestinationProjectId] = useState<string | null>(null)
-  const [newName, setNewName] = useState('')
+export function TracksTable({
+  tracks,
+  projectId,
+  availableProjects = [],
+}: TracksTableProps) {
+  const isMobile = useIsMobile();
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [selectedTrack, setSelectedTrack] = useState<TrackFromProject | null>(
+    null
+  );
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [selectedDestinationProjectId, setSelectedDestinationProjectId] =
+    useState<string | null>(null);
+  const [newName, setNewName] = useState('');
 
-  const [currentTrack] = useAtom(currentTrackAtom)
-  const [, dispatchPlayerAction] = useAtom(playerControlsAtom)
-  const [isPlaying] = useAtom(isPlayingAtom)
+  const [currentTrack] = useAtom(currentTrackAtom);
+  const [, dispatchPlayerAction] = useAtom(playerControlsAtom);
+  const [isPlaying] = useAtom(isPlayingAtom);
 
-  const { deleteTrack, renameTrack, moveTrack, isDeleting, isRenaming, isMoving } = useTracks({ projectId })
-  
+  const {
+    deleteTrack,
+    renameTrack,
+    moveTrack,
+    isDeleting,
+    isRenaming,
+    isMoving,
+  } = useTracks({ projectId });
+
   // Get presigned URLs for all tracks
-  useProjectTrackUrls(tracks)
+  useProjectTrackUrls(tracks);
 
   // Memoize the tracks data to prevent unnecessary re-renders
-  const memoizedTracks = useMemo(() => tracks, [tracks])
+  const memoizedTracks = useMemo(() => tracks, [tracks]);
 
   const handlePlayTrack = (track: TrackFromProject) => {
     if (!track.activeVersion) {
-      toast.error('No audio version available')
-      return
+      toast.error('No audio version available');
+      return;
     }
 
     // Build streaming URL from S3 key (stored in activeVersion.fileKey)
-    const s3Key = track.activeVersion.fileKey
+    const s3Key = track.activeVersion.fileKey;
     if (!s3Key) {
-      toast.error('Track file not available')
-      return
+      toast.error('Track file not available');
+      return;
     }
 
     // Always use the /api/audio/[key] proxy route for proper HTTP range request streaming
     // This allows progressive download instead of waiting for the entire file
-    const streamingUrl = `/api/audio/${encodeURIComponent(s3Key)}`
+    const streamingUrl = `/api/audio/${encodeURIComponent(s3Key)}`;
 
     const audioTrack: AudioTrack = {
       id: track.id,
@@ -93,53 +114,53 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       createdAt: track.createdAt,
       type: 'uploaded',
       key: track.activeVersion.fileKey,
-    }
+    };
 
-    dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack })
-  }
+    dispatchPlayerAction({ type: 'PLAY_TRACK', payload: audioTrack });
+  };
 
   const handleRenameTrack = (track: TrackFromProject) => {
-    setSelectedTrack(track)
-    setNewName(track.name)
-    setShowRenameDialog(true)
-  }
+    setSelectedTrack(track);
+    setNewName(track.name);
+    setShowRenameDialog(true);
+  };
 
   const handleDeleteTrack = (track: TrackFromProject) => {
-    setSelectedTrack(track)
-    setShowDeleteDialog(true)
-  }
+    setSelectedTrack(track);
+    setShowDeleteDialog(true);
+  };
 
   const handleMoveTrack = (track: TrackFromProject) => {
-    setSelectedTrack(track)
-    setSelectedDestinationProjectId(null)
-    setShowMoveDialog(true)
-  }
+    setSelectedTrack(track);
+    setSelectedDestinationProjectId(null);
+    setShowMoveDialog(true);
+  };
 
   const handleRename = async () => {
-    if (!selectedTrack || !newName.trim()) return
+    if (!(selectedTrack && newName.trim())) return;
 
-    await renameTrack(selectedTrack.id, newName.trim())
-    setShowRenameDialog(false)
-    setSelectedTrack(null)
-    setNewName('')
-  }
+    await renameTrack(selectedTrack.id, newName.trim());
+    setShowRenameDialog(false);
+    setSelectedTrack(null);
+    setNewName('');
+  };
 
   const handleDelete = async () => {
-    if (!selectedTrack) return
+    if (!selectedTrack) return;
 
-    await deleteTrack(selectedTrack.id)
-    setShowDeleteDialog(false)
-    setSelectedTrack(null)
-  }
+    await deleteTrack(selectedTrack.id);
+    setShowDeleteDialog(false);
+    setSelectedTrack(null);
+  };
 
   const handleMove = async () => {
-    if (!selectedTrack || !selectedDestinationProjectId) return
+    if (!(selectedTrack && selectedDestinationProjectId)) return;
 
-    await moveTrack(selectedTrack.id, selectedDestinationProjectId)
-    setShowMoveDialog(false)
-    setSelectedTrack(null)
-    setSelectedDestinationProjectId(null)
-  }
+    await moveTrack(selectedTrack.id, selectedDestinationProjectId);
+    setShowMoveDialog(false);
+    setSelectedTrack(null);
+    setSelectedDestinationProjectId(null);
+  };
 
   const columns = createTracksTableColumns({
     currentTrack,
@@ -149,7 +170,7 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
     onDeleteTrack: handleDeleteTrack,
     onMoveTrack: handleMoveTrack,
     dispatchPlayerAction,
-  })
+  });
 
   const table = useReactTable({
     data: memoizedTracks,
@@ -160,30 +181,30 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
     state: {
       sorting,
     },
-  })
+  });
 
   // Debug: Log when tracks prop changes
   useEffect(() => {
-    console.log('📊 TracksTable tracks updated:', tracks.length, 'tracks')
-  }, [tracks])
+    console.log('📊 TracksTable tracks updated:', tracks.length, 'tracks');
+  }, [tracks]);
 
   if (tracks.length === 0) {
     return (
-      <div className="h-24 flex items-center justify-center text-center text-muted-foreground">
+      <div className="flex h-24 items-center justify-center text-center text-muted-foreground">
         No tracks found.
       </div>
-    )
+    );
   }
 
   return (
     <>
       {isMobile ? (
         <MobileTracksList
-          tracks={memoizedTracks}
-          onPlayTrack={handlePlayTrack}
-          onRenameTrack={handleRenameTrack}
           onDeleteTrack={handleDeleteTrack}
           onMoveTrack={handleMoveTrack}
+          onPlayTrack={handlePlayTrack}
+          onRenameTrack={handleRenameTrack}
+          tracks={memoizedTracks}
         />
       ) : (
         <div className="rounded-md border">
@@ -195,14 +216,14 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
-                        <TableHead 
+                        <TableHead
+                          className="border-0"
                           key={header.id}
-                          style={{ 
+                          style={{
                             width: header.getSize(),
                             minWidth: header.getSize(),
-                            maxWidth: header.getSize()
+                            maxWidth: header.getSize(),
                           }}
-                          className="border-0"
                         >
                           {header.isPlaceholder
                             ? null
@@ -220,8 +241,6 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
 
             {/* Scrollable Body - only contains rows */}
             <TableVirtuoso
-              style={{ height: '400px' }}
-              totalCount={table.getRowModel().rows.length}
               components={{
                 Table: ({ style, ...props }) => (
                   <Table {...props} style={{ ...style, width: '100%' }} />
@@ -231,29 +250,29 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
                 ),
                 TableRow: ({ style, ...props }) => {
                   return (
-                    <TableRow 
-                      {...props} 
+                    <TableRow
+                      {...props}
+                      className="group transition-colors odd:bg-background even:bg-muted/20 hover:bg-muted/70"
                       style={style}
-                      className="group hover:bg-muted/70 transition-colors even:bg-muted/20 odd:bg-background"
                     />
-                  )
+                  );
                 },
               }}
               itemContent={(index) => {
-                const row = table.getRowModel().rows[index]
-                if (!row) return null
-                
+                const row = table.getRowModel().rows[index];
+                if (!row) return null;
+
                 return (
                   <>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell 
+                      <TableCell
+                        className="border-0"
                         key={cell.id}
-                        style={{ 
+                        style={{
                           width: cell.column.getSize(),
                           minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize()
+                          maxWidth: cell.column.getSize(),
                         }}
-                        className="border-0"
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -262,15 +281,17 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
                       </TableCell>
                     ))}
                   </>
-                )
+                );
               }}
+              style={{ height: '400px' }}
+              totalCount={table.getRowModel().rows.length}
             />
           </div>
         </div>
       )}
 
       {/* Rename Dialog */}
-      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+      <Dialog onOpenChange={setShowRenameDialog} open={showRenameDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Rename Track</DialogTitle>
@@ -280,32 +301,32 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+              <Label className="text-right" htmlFor="name">
                 Name
               </Label>
               <Input
+                autoFocus
+                className="col-span-3"
                 id="name"
                 name="name"
-                value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="col-span-3"
-                autoFocus
                 required
+                value={newName}
               />
             </div>
           </div>
           <DialogFooter>
             <Button
+              disabled={isRenaming}
+              onClick={() => setShowRenameDialog(false)}
               type="button"
               variant="outline"
-              onClick={() => setShowRenameDialog(false)}
-              disabled={isRenaming}
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleRename} 
+            <Button
               disabled={isRenaming || !newName.trim()}
+              onClick={handleRename}
             >
               {isRenaming ? 'Renaming...' : 'Rename'}
             </Button>
@@ -314,27 +335,28 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       </Dialog>
 
       {/* Delete Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <Dialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Delete Track</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{selectedTrack?.name}&quot;? This will also delete all versions. This action cannot be undone.
+              Are you sure you want to delete &quot;{selectedTrack?.name}&quot;?
+              This will also delete all versions. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
+              disabled={isDeleting}
+              onClick={() => setShowDeleteDialog(false)}
               type="button"
               variant="outline"
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={isDeleting}
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleDelete}
-              variant="destructive" 
+            <Button
               disabled={isDeleting}
+              onClick={handleDelete}
+              variant="destructive"
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </Button>
@@ -343,7 +365,7 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
       </Dialog>
 
       {/* Move Dialog */}
-      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+      <Dialog onOpenChange={setShowMoveDialog} open={showMoveDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Move Track</DialogTitle>
@@ -353,24 +375,24 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
           </DialogHeader>
           <div className="py-4">
             <ProjectPicker
+              excludeProjectId={projectId}
+              onProjectSelect={setSelectedDestinationProjectId}
               projects={availableProjects}
               selectedProjectId={selectedDestinationProjectId}
-              onProjectSelect={setSelectedDestinationProjectId}
-              excludeProjectId={projectId}
             />
           </div>
           <DialogFooter>
             <Button
+              disabled={isMoving}
+              onClick={() => setShowMoveDialog(false)}
               type="button"
               variant="outline"
-              onClick={() => setShowMoveDialog(false)}
-              disabled={isMoving}
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleMove} 
+            <Button
               disabled={isMoving || !selectedDestinationProjectId}
+              onClick={handleMove}
             >
               {isMoving ? 'Moving...' : 'Move'}
             </Button>
@@ -378,5 +400,5 @@ export function TracksTable({ tracks, projectId, availableProjects = [] }: Track
         </DialogContent>
       </Dialog>
     </>
-  )
-} 
+  );
+}

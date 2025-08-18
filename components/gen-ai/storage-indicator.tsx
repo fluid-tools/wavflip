@@ -1,68 +1,70 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Progress } from '@/components/ui/progress'
-import { HardDrive } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useStorageEstimate } from '@/hooks/data/use-vault'
-import { mediaStore } from '@/lib/storage/media-store'
+import { HardDrive } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Progress } from '@/components/ui/progress';
+import { useStorageEstimate } from '@/hooks/data/use-vault';
+import { mediaStore } from '@/lib/storage/media-store';
+import { cn } from '@/lib/utils';
 
 export function StorageIndicator({ className }: { className?: string }) {
-  const { data: storageInfo, isLoading } = useStorageEstimate()
-  const [usedMB, setUsedMB] = useState<number>(0)
+  const { data: storageInfo, isLoading } = useStorageEstimate();
+  const [usedMB, setUsedMB] = useState<number>(0);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     const compute = async () => {
       try {
-        if (!storageInfo) return
+        if (!storageInfo) return;
         if (!mediaStore.isOPFSEnabled()) {
-          if (!cancelled) setUsedMB(storageInfo.usageMB)
-          return
+          if (!cancelled) setUsedMB(storageInfo.usageMB);
+          return;
         }
         // Try to read our IDB index of offline tracks to estimate OPFS size precisely
-        const { get } = await import('idb-keyval')
-        const ids: string[] = (await get('wavflip-vault-index')) || []
+        const { get } = await import('idb-keyval');
+        const ids: string[] = (await get('wavflip-vault-index')) || [];
         if (ids.length === 0) {
-          if (!cancelled) setUsedMB(0)
-          return
+          if (!cancelled) setUsedMB(0);
+          return;
         }
-        const total = await mediaStore.sizeByKeys(ids)
-        if (!cancelled) setUsedMB(total / (1024 * 1024))
+        const total = await mediaStore.sizeByKeys(ids);
+        if (!cancelled) setUsedMB(total / (1024 * 1024));
       } catch {
-        if (!cancelled && storageInfo) setUsedMB(storageInfo.usageMB)
+        if (!cancelled && storageInfo) setUsedMB(storageInfo.usageMB);
       }
-    }
-    if (storageInfo && !isLoading) void compute()
-    return () => { cancelled = true }
-  }, [isLoading, storageInfo])
+    };
+    if (storageInfo && !isLoading) void compute();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoading, storageInfo]);
 
   if (isLoading || !storageInfo) {
-    return null
+    return null;
   }
 
-  const { quotaMB } = storageInfo
-  const usagePercentage = quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0
+  const { quotaMB } = storageInfo;
+  const usagePercentage = quotaMB > 0 ? (usedMB / quotaMB) * 100 : 0;
 
   // Format storage size
   const formatSize = (mb: number) => {
     if (mb < 1024) {
-      return `${mb.toFixed(1)} MB`
+      return `${mb.toFixed(1)} MB`;
     }
-    return `${(mb / 1024).toFixed(1)} GB`
-  }
+    return `${(mb / 1024).toFixed(1)} GB`;
+  };
 
   // Determine color based on usage
   const getProgressColor = () => {
-    if (usagePercentage > 90) return 'bg-red-500'
-    if (usagePercentage > 70) return 'bg-orange-500'
-    if (usagePercentage > 50) return 'bg-yellow-500'
-    return 'bg-green-500'
-  }
+    if (usagePercentage > 90) return 'bg-red-500';
+    if (usagePercentage > 70) return 'bg-orange-500';
+    if (usagePercentage > 50) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+    <div className={cn('space-y-2', className)}>
+      <div className="flex items-center justify-between text-muted-foreground text-xs">
         <div className="flex items-center gap-1.5">
           <HardDrive className="h-3.5 w-3.5" />
           <span>Offline storage</span>
@@ -71,15 +73,12 @@ export function StorageIndicator({ className }: { className?: string }) {
           {formatSize(usedMB)} / {formatSize(quotaMB)}
         </span>
       </div>
-      
+
       <div className="relative">
-        <Progress 
-          value={usagePercentage} 
-          className="h-1.5"
-        />
-        <div 
+        <Progress className="h-1.5" value={usagePercentage} />
+        <div
           className={cn(
-            "absolute inset-0 h-1.5 rounded-full opacity-50",
+            'absolute inset-0 h-1.5 rounded-full opacity-50',
             getProgressColor()
           )}
           style={{ width: `${usagePercentage}%` }}
@@ -87,14 +86,18 @@ export function StorageIndicator({ className }: { className?: string }) {
       </div>
 
       {usagePercentage > 70 && (
-        <p className="text-xs text-orange-500">
-          Storage is {usagePercentage.toFixed(0)}% full. Consider clearing old tracks.
+        <p className="text-orange-500 text-xs">
+          Storage is {usagePercentage.toFixed(0)}% full. Consider clearing old
+          tracks.
         </p>
       )}
 
       <div className="text-[11px] text-muted-foreground">
-        Backend: {mediaStore.isOPFSEnabled() ? 'OPFS (on-device file system)' : 'Streaming only (no OPFS)'}
+        Backend:{' '}
+        {mediaStore.isOPFSEnabled()
+          ? 'OPFS (on-device file system)'
+          : 'Streaming only (no OPFS)'}
       </div>
     </div>
-  )
+  );
 }

@@ -1,62 +1,60 @@
-'use client'
+'use client';
 
-import { useAtom, useSetAtom } from 'jotai'
-import { Button } from '@/components/ui/button'
-import { Check, X } from 'lucide-react'
-import { 
-  isSelectModeActiveAtom,
-  enterSelectionModeAtom,
+import { useAtom, useSetAtom } from 'jotai';
+import { Check, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import {
   clearSelectionAtom,
-  selectedItemsCountAtom
-} from '@/state/vault-selection-atoms'
-
-import { cn } from '@/lib/utils'
+  enterSelectionModeAtom,
+  isSelectModeActiveAtom,
+  selectedItemsCountAtom,
+} from '@/state/vault-selection-atoms';
 
 export function SelectionModeToggle() {
-  const [isSelectModeActive] = useAtom(isSelectModeActiveAtom)
-  const enterSelection = useSetAtom(enterSelectionModeAtom)
-  const clearSelection = useSetAtom(clearSelectionAtom)
-  const selectedCount = useAtom(selectedItemsCountAtom)[0]
+  const [isSelectModeActive] = useAtom(isSelectModeActiveAtom);
+  const enterSelection = useSetAtom(enterSelectionModeAtom);
+  const clearSelection = useSetAtom(clearSelectionAtom);
+  const selectedCount = useAtom(selectedItemsCountAtom)[0];
 
   const handleEnterSelection = () => {
-    enterSelection()
-  }
+    enterSelection();
+  };
 
   const handleExitSelection = () => {
-    clearSelection()
-  }
+    clearSelection();
+  };
 
   if (isSelectModeActive) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
-          {selectedCount > 0 ? `${selectedCount} selected` : 'Click items to select'}
+        <span className="text-muted-foreground text-sm">
+          {selectedCount > 0
+            ? `${selectedCount} selected`
+            : 'Click items to select'}
         </span>
         <Button
+          className="h-8"
+          onClick={handleExitSelection}
           size="sm"
           variant="ghost"
-          onClick={handleExitSelection}
-          className="h-8"
         >
-          <X className="h-4 w-4 mr-1" />
+          <X className="mr-1 h-4 w-4" />
           Cancel
         </Button>
       </div>
-    )
+    );
   }
 
   return (
     <Button
+      className={cn('h-8', 'hover:bg-accent')}
+      onClick={handleEnterSelection}
       size="sm"
       variant="outline"
-      onClick={handleEnterSelection}
-      className={cn(
-        "h-8",
-        "hover:bg-accent"
-      )}
     >
-      <Check className="h-4 w-4 mr-1" />
+      <Check className="mr-1 h-4 w-4" />
       Select
     </Button>
-  )
+  );
 }

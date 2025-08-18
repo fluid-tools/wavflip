@@ -1,20 +1,31 @@
-'use client'
+'use client';
 
-import { ReactNode } from 'react'
-import { VaultDndProvider, DroppableWrapper } from '@/components/vault/dnd'
-import type { DropData } from '@/components/vault/dnd'
+import type { ReactNode } from 'react';
+import type { DropData } from '@/components/vault/dnd';
+import { DroppableWrapper, VaultDndProvider } from '@/components/vault/dnd';
 
 interface DndLayoutProps {
-  children: ReactNode
-  droppableId: string
-  droppableData: DropData
-  onMoveFolder: (folderId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
-  onMoveProject: (projectId: string, destinationFolderId: string | null, sourceFolderId: string | null) => Promise<void>
-  onCombineProjects: (sourceProjectId: string, targetProjectId: string) => Promise<void>
-  onCreateFolder?: () => void
-  onCreateProject?: () => void
-  onClearSelection?: () => void
-  className?: string
+  children: ReactNode;
+  droppableId: string;
+  droppableData: DropData;
+  onMoveFolder: (
+    folderId: string,
+    destinationFolderId: string | null,
+    sourceFolderId: string | null
+  ) => Promise<void>;
+  onMoveProject: (
+    projectId: string,
+    destinationFolderId: string | null,
+    sourceFolderId: string | null
+  ) => Promise<void>;
+  onCombineProjects: (
+    sourceProjectId: string,
+    targetProjectId: string
+  ) => Promise<void>;
+  onCreateFolder?: () => void;
+  onCreateProject?: () => void;
+  onClearSelection?: () => void;
+  className?: string;
 }
 
 export function DndLayout({
@@ -24,22 +35,22 @@ export function DndLayout({
   onMoveFolder,
   onMoveProject,
   onCombineProjects,
-  className = "p-6 space-y-6 min-h-screen"
+  className = 'p-6 space-y-6 min-h-screen',
 }: DndLayoutProps) {
   return (
     <VaultDndProvider
+      onCombineProjects={onCombineProjects}
       onMoveFolder={onMoveFolder}
       onMoveProject={onMoveProject}
-      onCombineProjects={onCombineProjects}
     >
-      <DroppableWrapper 
-        id={droppableId}
-        data={droppableData}
-        className={className}
+      <DroppableWrapper
         applyRoundedCorners={false}
+        className={className}
+        data={droppableData}
+        id={droppableId}
       >
         {children}
       </DroppableWrapper>
     </VaultDndProvider>
-  )
+  );
 }
