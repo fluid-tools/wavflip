@@ -1,0 +1,79 @@
+---
+description: FFmpeg usage patterns (server-only via AWS Lambda + ffmpeg-static) and integration contracts for wavflip
+globs:
+  - "app/api/**/route.ts"
+  - "lib/server/**"
+  - "lib/contracts/**"
+  - "lib/storage/**"
+alwaysApply: false
+---
+
+- Architecture decision: All media processing is cloud-only. The browser has read-only access to session files (offline cache allowed) and may use MIDI/Tone.js for input, but no client-side FFmpeg/WebCodecs processing.
+
+- Execution environment (Lambda)
+  - Use native FFmpeg bundled via `ffmpeg-static` (or layer) on AWS Lambda.
+  - Implement one handler per operation family (e.g., `transpose`, `varispeed`, `normalize`, `concat`, `trim`, `echo`, `reverb`, `reverse`, `mixdown`). Route handlers live under `app/api/**/route.ts` and delegate to server-only modules in `lib/server/**`.
+  - IO contract: read inputs from S3, write outputs to S3. Prefer streaming and avoid /tmp usage > 512 MB.
+  - Integrity: compute SHA-256 for each input and the output; return `checksumIn`/`checksumOut`. Clients verify before adopting artifacts.
+  - Security: do not accept raw filter strings from clients. Map friendly op names to vetted graphs with safe parameters and clamps.
+
+- Allowed operations and FFmpeg mappings
+  - Trim: `atrim=start=<s>:end=<s>`; use `aselect`/`asetpts` variants for precision when needed.
+  - Concat: use FFmpeg concat demuxer when inputs match; otherwise re-encode via `concat` filter.
+  - Normalize: `loudnorm` (target e.g., `I=-16:TP=-1.5:LRA=11`). For single-pass, return measured values; consider two-pass for accuracy if runtime allows.
+  - Reverse: `areverse`.
+  - Echo: `aecho=in_gain:out_gain:delays:decays` (e.g., `0.8:0.88:60|120:0.4|0.3`).
+  - Reverb (basic): `aecho` presets; advanced reverb via `afir` with IR files stored in S3 (optional feature flag).
+  - Tempo (time-stretch without pitch change): `atempo=<factor>`; chain when outside 0.5–2.0.
+  - Pitch (semitones, approximate without rubberband): factor `r = 2^(semitones/12)`, use `asetrate=sample_rate*r,aresample=sample_rate`.
+  - Varispeed (pitch+tempo together): factor `r`, use `asetrate=sample_rate*r,aresample=sample_rate` (changes both speed and pitch identically).
+  - Mixdown: `pan` to mono/stereo targets; e.g., `pan=mono|c0=0.5*c0+0.5*c1`.
+
+- API contracts (Zod, centralized)
+  - Define schemas in `lib/contracts/api/audio.ts` and export types. Requests include: `inputKey`, optional `inputKeys[]` for concat, `ops: Array<{ type: OpName; params: OpParams }>`; optional `outputKey`; optional `targetSampleRate`.
+  - Responses include: `outputKey`, `checksumIn`, `checksumOut`, `durationMs`, `appliedOps`. For longer jobs, optionally return a `jobId` and provide a status poll endpoint.
+  - Clients MUST parse responses with Zod and integrate via React Query per mutation patterns (invalidate project/track lists and waveform keys on success).
+
+- Storage and caching
+  - S3 is the source of truth for artifacts. Redis may store ephemeral job status.
+  - Browser OPFS may cache downloaded outputs for offline playback only; never used for processing.
+
+- Observability and DX
+  - Log the resolved FFmpeg command to CloudWatch in dev/staging with parameters redacted as needed. Do not echo full CLI to clients.
+  - Keep short, deterministic fixtures for smoke tests and checksum comparison in CI.
+
+- Example commands (audio-focused)
+
+```bash
+# Pitch shift +3 semitones (approximate): r=2^(3/12)
+ffmpeg -i input.wav -af "asetrate=48000*1.189207,aresample=48000" -c:a aac output.m4a
+```
+
+```bash
+# Tempo 0.8x without pitch change
+ffmpeg -i input.wav -af "atempo=0.8" -c:a aac output.m4a
+```
+
+```bash
+# Varispeed 1.2x (pitch and tempo together)
+ffmpeg -i input.wav -af "asetrate=48000*1.2,aresample=48000" -c:a aac output.m4a
+```
+
+```bash
+# Echo and reverse
+ffmpeg -i input.wav -af "aecho=0.8:0.88:60|120:0.4|0.3,areverse" -c:a aac output.m4a
+```
+
+```bash
+# Loudness normalization (single-pass)
+ffmpeg -i input.wav -af "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=summary" -c:a aac output.m4a
+```
+
+- References
+  - Pitch/tempo together: `https://stackoverflow.com/questions/40564451/how-to-change-pitch-and-tempo-together-reliably-with-ffmpeg`
+  - Lambda + FFmpeg examples: `https://github.com/sst/sst/tree/dev/examples/aws-ffmpeg`, `https://sst.dev/docs/examples/#ffmpeg-in-lambda`
+
+- Integration notes for wavflip
+  - Follow `api-contracts-zod`, `data-access-layer`, and `architecture-state` rules. Keep schemas centralized and DRY.
+  - On success, invalidate sidebar counts and related keys so project totals refresh.
+  - Respect `waveform-data` rule: updated outputs can supply peaks via POST; clients render via `useWaveform(key)`.
