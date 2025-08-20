@@ -1,7 +1,10 @@
-"use client";
+'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FolderGetResponseSchema, FoldersListResponseSchema } from '@/lib/contracts/api/folders';
+import {
+  FolderGetResponseSchema,
+  FoldersListResponseSchema,
+} from '@/lib/contracts/api/folders';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
 import type { VaultData } from '@/lib/contracts/vault';
 import { vaultKeys } from './keys';

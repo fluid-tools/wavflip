@@ -41,10 +41,10 @@ import {
 } from '@/components/ui/tooltip';
 import { TracksTable } from '@/components/vault/tracks/table';
 import { UploadTrackDialog } from '@/components/vault/tracks/upload-dialog';
+import { useRootFolders } from '@/hooks/data/use-folder';
 import { useProject } from '@/hooks/data/use-project';
 import { useProjectTrackUrls } from '@/hooks/data/use-track-url';
-import { useRootFolders } from '@/hooks/data/use-folder';
-import { useVaultProjects } from '@/hooks/data/use-vault';
+import { useVaultProjects } from '@/hooks/data/use-project';
 import type { TrackWithVersions } from '@/lib/contracts/track';
 import { playerControlsAtom } from '@/state/audio-atoms';
 import type { AudioTrack } from '@/types/audio';

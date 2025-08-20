@@ -9,6 +9,8 @@ import type { ProjectWithTracks } from '@/lib/contracts/project';
 import { ProjectWithTracksSchema } from '@/lib/contracts/project';
 import type { ProjectImageResponse } from '@/lib/server/types/project';
 import { vaultKeys, waveformKeys } from './keys';
+import { ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
+import type { VaultData } from '@/lib/contracts/vault';
 
 interface UseProjectProps {
   projectId: string;
@@ -577,4 +579,31 @@ export function useProject({
     isUploadingImage: uploadImageMutation.isPending,
     presignedImageUrl: presignedImageQuery.data,
   };
+}// ================================
+// PROJECT HOOKS
+// ================================
+
+export function useVaultProjects() {
+  const queryClient = useQueryClient();
+  const [treeEntry] = queryClient.getQueriesData<VaultData>({
+    queryKey: vaultKeys.tree(),
+  });
+  const treeData = treeEntry?.[1];
+  const fromTree = Array.isArray(treeData?.rootProjects)
+    ? treeData!.rootProjects.map((p) => ({ ...p, tracks: [] }))
+    : undefined;
+
+  return useQuery({
+    queryKey: vaultKeys.projects(),
+    queryFn: async (): Promise<ProjectWithTracks[]> => {
+      const response = await fetch('/api/projects');
+      if (!response.ok) throw new Error('Failed to fetch vault projects');
+      const json = await response.json();
+      return ProjectsListResponseSchema.parse(json);
+    },
+    placeholderData: fromTree as ProjectWithTracks[] | undefined,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 }
+

@@ -23,7 +23,7 @@ import { CreateFolderDialog } from '@/components/vault/folders/create-dialog';
 import { ProjectCard } from '@/components/vault/projects/card';
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog';
 import { useRootFolders } from '@/hooks/data/use-folder';
-import { useVaultProjects } from '@/hooks/data/use-vault';
+import { useVaultProjects } from '@/hooks/data/use-project';
 import { useIsTablet } from '@/hooks/use-mobile';
 import { useVaultSelection } from '@/hooks/use-vault-selection';
 import type { FolderWithProjects } from '@/lib/contracts/folder';

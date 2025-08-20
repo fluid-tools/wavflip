@@ -1,10 +1,6 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FolderGetResponseSchema, FoldersListResponseSchema } from '@/lib/contracts/api/folders';
-import { ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
-import type { FolderWithProjects } from '@/lib/contracts/folder';
-import type { ProjectWithTracks } from '@/lib/contracts/project';
 import { type VaultData, VaultDataSchema } from '@/lib/contracts/vault';
 import { vaultKeys } from './keys';
 
@@ -19,7 +15,10 @@ export function useVaultTree(opts?: {
 }) {
   const { levels = false, excludeId, stats = false } = opts ?? {};
   return useQuery({
-    queryKey: [...vaultKeys.tree(), { levels, excludeId: excludeId ?? null, stats }],
+    queryKey: [
+      ...vaultKeys.tree(),
+      { levels, excludeId: excludeId ?? null, stats },
+    ],
     queryFn: async (): Promise<VaultData> => {
       const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL);
       url.searchParams.set('levels', String(!!levels));
@@ -32,34 +31,6 @@ export function useVaultTree(opts?: {
       const json = await response.json();
       return VaultDataSchema.parse(json);
     },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-}
-
-// ================================
-// PROJECT HOOKS
-// ================================
-
-export function useVaultProjects() {
-  const queryClient = useQueryClient();
-  const [treeEntry] = queryClient.getQueriesData<VaultData>({
-    queryKey: vaultKeys.tree(),
-  });
-  const treeData = treeEntry?.[1];
-  const fromTree = Array.isArray(treeData?.rootProjects)
-    ? treeData!.rootProjects.map((p) => ({ ...p, tracks: [] }))
-    : undefined;
-
-  return useQuery({
-    queryKey: vaultKeys.projects(),
-    queryFn: async (): Promise<ProjectWithTracks[]> => {
-      const response = await fetch('/api/projects');
-      if (!response.ok) throw new Error('Failed to fetch vault projects');
-      const json = await response.json();
-      return ProjectsListResponseSchema.parse(json);
-    },
-    placeholderData: fromTree as ProjectWithTracks[] | undefined,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
