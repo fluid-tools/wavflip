@@ -1,12 +1,8 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { startTransition, useState } from 'react';
-import {
-  useCreateFolderAction,
-  useMoveFolderAction,
-  useMoveProjectAction,
-} from '@/actions/vault/hooks';
+import { useState } from 'react';
+import { useCreateFolderAction } from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -44,9 +40,6 @@ export function CreateFolderDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
-  const { execute: moveFolderExecute } = useMoveFolderAction();
-  const { execute: moveProjectExecute } = useMoveProjectAction();
-
   const { executeAsync: createFolderExecuteAsync } = useCreateFolderAction();
 
   const handleCreateFolder = async (name: string) => {
@@ -63,7 +56,7 @@ export function CreateFolderDialog({
       setOpen(false);
       setName('');
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error handling is done by the hook
     }
   };

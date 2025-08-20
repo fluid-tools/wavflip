@@ -19,7 +19,7 @@ import {
 
 // Custom hook wrapper that adds success/error handling and invalidation
 function useVaultActionWrapper<TInput, TOutput>(
-  action: any,
+  action: unknown,
   successMessage: string
 ) {
   const invalidate = useVaultInvalidation();

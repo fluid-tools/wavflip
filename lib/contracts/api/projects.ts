@@ -1,15 +1,10 @@
 import { z } from 'zod';
-import { ProjectWithTracksSchema, ProjectRowSchema, TrackVersionSchema, TrackWithVersionsSchema } from '@/lib/contracts/project';
+import { ProjectWithTracksSchema, TrackVersionSchema, TrackWithVersionsSchema } from '@/lib/contracts/project';
 
 // Allow both Date and ISO string in API payloads
 const ZDate = z.union([z.date(), z.string()]).transform((v) =>
   v instanceof Date ? v : new Date(v)
 );
-
-const ProjectRowApiSchema = ProjectRowSchema.extend({
-  createdAt: ZDate,
-  updatedAt: ZDate,
-});
 
 const TrackVersionApiSchema = TrackVersionSchema.extend({
   createdAt: ZDate,

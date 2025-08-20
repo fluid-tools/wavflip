@@ -118,7 +118,7 @@ export function ProjectCard({
     }
   };
 
-  const handleDelete = async (formData: FormData) => {
+  const handleDelete = async () => {
     await deleteExecute({
       projectId: project.id,
       folderId,
@@ -126,7 +126,7 @@ export function ProjectCard({
     setShowDeleteDialog(false);
   };
 
-  const handleMove = async (formData: FormData) => {
+  const handleMove = async () => {
     await moveExecute({
       projectId: project.id,
       folderId: selectedDestinationId,

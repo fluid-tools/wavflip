@@ -83,14 +83,14 @@ export function FolderCard({
     }
   };
 
-  const handleDelete = async (formData: FormData) => {
+  const handleDelete = async () => {
     await deleteExecute({
       folderId: folder.id,
     });
     setShowDeleteDialog(false);
   };
 
-  const handleMove = async (formData: FormData) => {
+  const handleMove = async () => {
     await moveExecute({
       folderId: folder.id,
       parentFolderId: selectedDestinationId,
