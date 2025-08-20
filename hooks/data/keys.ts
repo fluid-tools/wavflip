@@ -19,4 +19,11 @@ export const vaultKeys = {
 export const waveformKeys = {
   all: ['waveform'] as const,
   byKey: (key: string) => [...waveformKeys.all, key] as const,
+};// Query keys
+
+export const trackUrlKeys = {
+  all: ['track-urls'] as const,
+  single: (trackId: string) => [...trackUrlKeys.all, trackId] as const,
+  project: (projectId: string) => [...trackUrlKeys.all, 'project', projectId] as const,
 };
+

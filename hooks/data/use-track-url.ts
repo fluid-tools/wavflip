@@ -2,14 +2,7 @@
 
 import { useQueries, useQuery } from '@tanstack/react-query';
 import type { TrackWithVersions } from '@/lib/contracts/track';
-
-// Query keys
-export const trackUrlKeys = {
-  all: ['track-urls'] as const,
-  single: (trackId: string) => [...trackUrlKeys.all, trackId] as const,
-  project: (projectId: string) =>
-    [...trackUrlKeys.all, 'project', projectId] as const,
-};
+import { trackUrlKeys } from './keys';
 
 // Single track presigned URL
 export function useTrackPresignedUrl(trackId: string | null) {

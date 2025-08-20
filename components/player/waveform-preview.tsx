@@ -11,7 +11,7 @@ import { getTrackFromVault } from '@/lib/storage/local-vault';
 import { mediaStore } from '@/lib/storage/media-store';
 import { cn } from '@/lib/utils';
 
-// todo: massive refactor of this file + cleanup without breaking functionality
+// todo: isplaceholder usage missing. display a badge along with the waveform if it is placeholder.
 
 interface WaveformPreviewProps {
   url: string;
