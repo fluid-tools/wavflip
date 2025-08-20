@@ -38,51 +38,6 @@ export function useVaultTree(opts?: {
 }
 
 // ================================
-// FOLDER HOOKS
-// ================================
-
-export function useFolder(folderId: string) {
-  const queryKey = vaultKeys.folder(folderId);
-
-  return useQuery({
-    queryKey,
-    queryFn: async (): Promise<FolderWithProjects> => {
-      const response = await fetch(`/api/folders/${folderId}`);
-      if (!response.ok) throw new Error('Failed to fetch folder');
-      const json = await response.json();
-      return FolderGetResponseSchema.parse(json);
-    },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-}
-
-export function useRootFolders() {
-  // Read tree cache directly to avoid using any types
-  const queryClient = useQueryClient();
-  const [treeEntry] = queryClient.getQueriesData<VaultData>({
-    queryKey: vaultKeys.tree(),
-  });
-  const treeData = treeEntry?.[1];
-  const fromTree = Array.isArray(treeData?.folders)
-    ? treeData!.folders.map((f) => ({ ...f, tracks: [] }))
-    : undefined;
-
-  return useQuery({
-    queryKey: vaultKeys.folders(),
-    queryFn: async (): Promise<FolderWithProjects[]> => {
-      const response = await fetch('/api/folders');
-      if (!response.ok) throw new Error('Failed to fetch folders');
-      const json = await response.json();
-      return FoldersListResponseSchema.parse(json);
-    },
-    placeholderData: fromTree as FolderWithProjects[] | undefined,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-}
-
-// ================================
 // PROJECT HOOKS
 // ================================
 
@@ -133,51 +88,6 @@ export function useVaultInvalidation() {
     invalidateStats: () =>
       queryClient.invalidateQueries({ queryKey: vaultKeys.stats() }),
   };
-}
-
-// ================================
-// VAULT STATS HOOK
-// ================================
-
-// export function useVaultStats() {
-//   return useQuery({
-//     queryKey: vaultKeys.stats(),
-//     queryFn: async () => {
-//       const url = new URL('/api/vault/stats', process.env.NEXT_PUBLIC_BASE_URL)
-//       url.searchParams.set('stats', 'true')
-//       const response = await fetch(url.toString())
-//       if (!response.ok) throw new Error('Failed to fetch vault stats')
-//       const data = await response.json()
-//       return data.stats
-//     },
-//     staleTime: 10 * 60 * 1000, // 10 minutes
-//     refetchOnWindowFocus: false,
-//   })
-// }
-
-// ================================
-// FOLDER PATH HOOK
-// ================================
-
-interface FolderPathItem {
-  id: string;
-  name: string;
-  parentFolderId: string | null;
-}
-
-export function useFolderPath(folderId: string | null) {
-  return useQuery({
-    queryKey: [...vaultKeys.folder(folderId!), 'path'],
-    queryFn: async (): Promise<{ path: FolderPathItem[] } | null> => {
-      if (!folderId) return null;
-      const response = await fetch(`/api/folders/${folderId}/path`);
-      if (!response.ok) throw new Error('Failed to fetch folder path');
-      return response.json();
-    },
-    enabled: !!folderId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-  });
 }
 
 // ================================

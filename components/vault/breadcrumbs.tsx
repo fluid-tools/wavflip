@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useProject } from '@/hooks/data/use-project';
-import { useFolderPath } from '@/hooks/data/use-vault';
+import { useFolderPath } from '@/hooks/data/use-folder';
 
 interface FolderPathItem {
   id: string;
