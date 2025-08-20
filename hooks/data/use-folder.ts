@@ -31,23 +31,30 @@ export function useFolder(folderId: string) {
 
 export function useRootFolders() {
   const queryClient = useQueryClient();
-  const [treeEntry] = queryClient.getQueriesData<VaultData>({
-    queryKey: vaultKeys.tree(),
-  });
-  const treeData = treeEntry?.[1];
-  const fromTree = Array.isArray(treeData?.folders)
-    ? treeData!.folders.map((f) => ({ ...f, tracks: [] }))
-    : undefined;
 
   return useQuery({
     queryKey: vaultKeys.folders(),
     queryFn: async (): Promise<FolderWithProjects[]> => {
+      // Prefer hydrated tree cache to avoid flicker
+      const [treeEntry] = queryClient.getQueriesData<VaultData>({
+        queryKey: vaultKeys.tree(),
+      });
+      const treeData = treeEntry?.[1];
+      if (Array.isArray(treeData?.folders)) {
+        // Map VaultFolder -> FolderWithProjects shape (subfolders -> subFolders)
+        const mapped = treeData.folders.map((f: any) => ({
+          ...f,
+          subFolders: f.subfolders,
+        }));
+        return mapped as FolderWithProjects[];
+      }
+
+      // Fallback to API
       const response = await fetch('/api/folders');
       if (!response.ok) throw new Error('Failed to fetch folders');
       const json = await response.json();
       return FoldersListResponseSchema.parse(json);
     },
-    placeholderData: fromTree as FolderWithProjects[] | undefined,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
