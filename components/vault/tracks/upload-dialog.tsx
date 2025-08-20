@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { getAudioDuration } from '@/lib/audio/get-duration';
 import { useProject } from '@/hooks/data/use-project';
 
 interface UploadTrackDialogProps {
@@ -67,26 +68,6 @@ export function UploadTrackDialog({
     };
 
     return typeMap[mimeType] || extension || 'Audio';
-  };
-
-  // Helper function to extract audio duration from file
-  const getAudioDuration = (file: File): Promise<number> => {
-    return new Promise((resolve) => {
-      const audio = document.createElement('audio');
-      const url = URL.createObjectURL(file);
-
-      audio.addEventListener('loadedmetadata', () => {
-        URL.revokeObjectURL(url);
-        resolve(audio.duration || 0);
-      });
-
-      audio.addEventListener('error', () => {
-        URL.revokeObjectURL(url);
-        resolve(0); // Return 0 if we can't determine duration
-      });
-
-      audio.src = url;
-    });
   };
 
   const handleFileSelect = (file: File) => {

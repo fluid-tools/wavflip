@@ -12,14 +12,7 @@ import {
 import { currentTrackAtom } from '@/state/audio-atoms';
 import { jotaiStore } from '@/state/jotai-store';
 import type { GeneratedSound, GenerationsResponse } from '@/types/generations';
-import { vaultKeys, waveformKeys } from './keys';
-
-// Query keys
-export const generationsKeys = {
-  all: ['generations'] as const,
-  online: () => [...generationsKeys.all, 'online'] as const,
-  localCache: () => [...generationsKeys.all, 'local-cache'] as const,
-};
+import { vaultKeys, waveformKeys, generationsKeys } from './keys';
 
 // Hook to fetch generations from the Generations project (online) - SINGLE SOURCE OF TRUTH
 function useOnlineGenerations() {

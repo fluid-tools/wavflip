@@ -17,7 +17,21 @@ export const vaultKeys = {
   stats: () => [...vaultKeys.base, 'stats'] as const,
   storage: () => ['storage-estimate'] as const,
 };
+
 export const waveformKeys = {
   all: ['waveform'] as const,
   byKey: (key: string) => [...waveformKeys.all, key] as const,
+};
+
+export const trackUrlKeys = {
+  all: ['track-urls'] as const,
+  single: (trackId: string) => [...trackUrlKeys.all, trackId] as const,
+  project: (projectId: string) =>
+    [...trackUrlKeys.all, 'project', projectId] as const,
+};
+
+export const generationsKeys = {
+  all: ['generations'] as const,
+  online: () => [...generationsKeys.all, 'online'] as const,
+  localCache: () => [...generationsKeys.all, 'local-cache'] as const,
 };

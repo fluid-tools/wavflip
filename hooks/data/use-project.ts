@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
+import { getAudioDuration } from '@/lib/audio/get-duration';
 import { generateWaveformData } from '@/lib/audio/waveform-generator';
 import { TrackCreateFormSchema } from '@/lib/contracts/api/tracks';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
@@ -70,26 +71,6 @@ export function useProject({
     enabled: !!query.data?.image,
     staleTime: 60 * 1000,
   });
-
-  // Helper function to extract audio duration from file
-  const getAudioDuration = (file: File): Promise<number> => {
-    return new Promise((resolve) => {
-      const audio = document.createElement('audio');
-      const url = URL.createObjectURL(file);
-
-      audio.addEventListener('loadedmetadata', () => {
-        URL.revokeObjectURL(url);
-        resolve(audio.duration || 0);
-      });
-
-      audio.addEventListener('error', () => {
-        URL.revokeObjectURL(url);
-        resolve(0);
-      });
-
-      audio.src = url;
-    });
-  };
 
   // Upload track mutation with optimistic updates
   const uploadTrackMutation = useMutation({
@@ -259,21 +240,15 @@ export function useProject({
     onSuccess: async (data, variables, context) => {
       toast.success(`${variables.name} uploaded successfully`);
       // Replace optimistic track with server track in project cache
-      try {
-        const serverTrack = data?.track;
-        if (context?.previousProject && serverTrack) {
-          queryClient.setQueryData<ProjectWithTracks>(queryKey, (old) => {
-            if (!old) return old;
-            const withoutTemps = (old.tracks ?? []).filter(
-              (t) => !t.id.startsWith('temp-')
-            );
-            return { ...old, tracks: [...withoutTemps, serverTrack] };
-          });
-        }
-      } finally {
-        // Invalidate tree and sidebar data to update counts
-        queryClient.invalidateQueries({ queryKey: vaultKeys.base });
-        queryClient.invalidateQueries({ queryKey });
+      const serverTrack = data?.track;
+      if (context?.previousProject && serverTrack) {
+        queryClient.setQueryData<ProjectWithTracks>(queryKey, (old) => {
+          if (!old) return old;
+          const withoutTemps = (old.tracks ?? []).filter(
+            (t) => !t.id.startsWith('temp-')
+          );
+          return { ...old, tracks: [...withoutTemps, serverTrack] };
+        });
       }
     },
     onSettled: (data, error, variables, context) => {
@@ -281,6 +256,10 @@ export function useProject({
       if (context?.tempBlobUrl) {
         URL.revokeObjectURL(context.tempBlobUrl);
       }
+      
+      // Always invalidate queries to ensure sync with server
+      queryClient.invalidateQueries({ queryKey: vaultKeys.base });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 

@@ -54,6 +54,9 @@ export function useWaveform(trackKey?: string) {
         key: trackKey,
       };
       queryClient.setQueryData(waveformKeys.byKey(trackKey), optimistic);
+    },
+    onSettled: () => {
+      if (!trackKey) return;
       queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(trackKey) });
     },
   });
