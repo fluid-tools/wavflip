@@ -9,7 +9,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { type ReactNode, useRef, useState } from 'react';
+import { type ReactNode, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { MUSIC_PROMPTS } from '@/lib/constants/prompts';
 import { cn } from '@/lib/utils';
+import { useAutoResizeTextarea } from '@/hooks/use-auto-resize-textarea';
 
 interface InputAreaProps {
   prompt: string;
@@ -43,8 +44,10 @@ export function InputArea({
   className,
   extraControls,
 }: InputAreaProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [textareaHeight, setTextareaHeight] = useState(72);
+  const { textareaRef, adjustHeight } = useAutoResizeTextarea({
+    minHeight: 72,
+    maxHeight: 300,
+  });
 
   const modes = [
     { id: false, name: 'Sound Generation', icon: Music },
@@ -57,29 +60,15 @@ export function InputArea({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onGenerate();
+      adjustHeight(true);
     }
   };
 
   const handlePromptClick = (promptText: string) => {
     setPrompt(promptText);
     textareaRef.current?.focus();
-  };
-
-  const adjustHeight = (reset?: boolean) => {
-    if (textareaRef.current) {
-      if (reset) {
-        setTextareaHeight(72);
-        textareaRef.current.style.height = '72px';
-      } else {
-        textareaRef.current.style.height = 'auto';
-        const newHeight = Math.min(
-          Math.max(textareaRef.current.scrollHeight, 72),
-          300
-        );
-        textareaRef.current.style.height = `${newHeight}px`;
-        setTextareaHeight(newHeight);
-      }
-    }
+    // Resize after setting a suggestion
+    adjustHeight();
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -138,7 +127,6 @@ export function InputArea({
                       : 'Describe a sound, beat, or musical element...'
                   }
                   ref={textareaRef}
-                  style={{ height: `${textareaHeight}px` }}
                   value={prompt}
                 />
               </div>
