@@ -49,35 +49,36 @@ export async function getVaultData(
     .where(and(...whereConditions))
     .orderBy(folder.order, folder.createdAt);
 
-  // Get all projects with track counts for each folder
-  const folderProjects = await Promise.all(
-    allFolders.map(async (f) => {
-      const projects = await db
-        .select({
-          id: project.id,
-          name: project.name,
-          image: project.image,
-          folderId: project.folderId,
-          accessType: project.accessType,
-          userId: project.userId,
-          order: project.order,
-          createdAt: project.createdAt,
-          updatedAt: project.updatedAt,
-          trackCount: count(track.id),
-        })
-        .from(project)
-        .leftJoin(track, eq(track.projectId, project.id))
-        .where(eq(project.folderId, f.id))
-        .groupBy(project.id)
-        .orderBy(project.order, project.createdAt);
-
-      return { folderId: f.id, projects };
+  // Optimize: Get ALL projects for this user in a single query instead of N+1
+  const allProjects = await db
+    .select({
+      id: project.id,
+      name: project.name,
+      image: project.image,
+      folderId: project.folderId,
+      accessType: project.accessType,
+      userId: project.userId,
+      order: project.order,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      trackCount: count(track.id),
     })
-  );
+    .from(project)
+    .leftJoin(track, eq(track.projectId, project.id))
+    .where(eq(project.userId, userId))
+    .groupBy(project.id)
+    .orderBy(project.order, project.createdAt);
 
-  const projectsByFolder = new Map(
-    folderProjects.map((fp) => [fp.folderId, fp.projects])
-  );
+  // Group projects by folder ID for O(1) lookup
+  const projectsByFolder = new Map<string, typeof allProjects>();
+  allProjects.forEach((proj) => {
+    if (proj.folderId) {
+      if (!projectsByFolder.has(proj.folderId)) {
+        projectsByFolder.set(proj.folderId, []);
+      }
+      projectsByFolder.get(proj.folderId)!.push(proj);
+    }
+  });
 
   // Calculate total project count including nested projects
   const calculateTotalProjectCount = (folders: VaultFolder[]): number => {
@@ -122,25 +123,8 @@ export async function getVaultData(
       });
   };
 
-  // Get root projects (not in any folder)
-  const rootProjects = await db
-    .select({
-      id: project.id,
-      name: project.name,
-      image: project.image,
-      folderId: project.folderId,
-      accessType: project.accessType,
-      userId: project.userId,
-      order: project.order,
-      createdAt: project.createdAt,
-      updatedAt: project.updatedAt,
-      trackCount: count(track.id),
-    })
-    .from(project)
-    .leftJoin(track, eq(track.projectId, project.id))
-    .where(and(eq(project.userId, userId), isNull(project.folderId)))
-    .groupBy(project.id)
-    .orderBy(project.order, project.createdAt);
+  // Get root projects (not in any folder) - filter from already fetched projects
+  const rootProjects = allProjects.filter((proj) => !proj.folderId);
 
   const result: VaultData = {
     folders: buildHierarchy(),
@@ -265,115 +249,130 @@ export async function getUserFolders(
     .where(and(eq(folder.userId, userId), isNull(folder.parentFolderId)))
     .orderBy(folder.order, folder.createdAt);
 
-  const foldersWithProjects = await Promise.all(
-    folders.map(async (f) => {
-      // Get full folder contents to calculate proper counts
-      const fullFolderContent = await getFolderWithContents(f.id, userId);
-      if (!fullFolderContent) {
-        return {
-          ...f,
-          projects: [],
-          subFolders: [],
-          subFolderCount: 0,
-          projectCount: 0,
-        };
+  // Optimize: Get ALL folders and projects for this user in batch
+  const [allUserFolders, allUserProjects] = await Promise.all([
+    db
+      .select()
+      .from(folder)
+      .where(eq(folder.userId, userId))
+      .orderBy(folder.order, folder.createdAt),
+    
+    db
+      .select({
+        id: project.id,
+        name: project.name,
+        image: project.image,
+        folderId: project.folderId,
+        userId: project.userId,
+        accessType: project.accessType,
+        order: project.order,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+        metadata: project.metadata,
+        trackCount: count(track.id),
+      })
+      .from(project)
+      .leftJoin(track, eq(track.projectId, project.id))
+      .where(eq(project.userId, userId))
+      .groupBy(project.id)
+      .orderBy(project.order, project.createdAt),
+  ]);
+
+  // Create lookup maps for O(1) access
+  const folderMap = new Map(allUserFolders.map(f => [f.id, f]));
+  const projectsByFolder = new Map<string, typeof allUserProjects>();
+  const childrenByParent = new Map<string, typeof allUserFolders>();
+
+  // Group data by relationships
+  allUserProjects.forEach((proj) => {
+    if (proj.folderId) {
+      if (!projectsByFolder.has(proj.folderId)) {
+        projectsByFolder.set(proj.folderId, []);
       }
+      projectsByFolder.get(proj.folderId)!.push(proj);
+    }
+  });
 
-      return {
-        ...f,
-        projects: fullFolderContent.projects,
-        subFolders: fullFolderContent.subFolders,
-        subFolderCount: fullFolderContent.subFolderCount,
-        projectCount: fullFolderContent.projectCount,
-      };
-    })
-  );
+  allUserFolders.forEach((f) => {
+    if (f.parentFolderId) {
+      if (!childrenByParent.has(f.parentFolderId)) {
+        childrenByParent.set(f.parentFolderId, []);
+      }
+      childrenByParent.get(f.parentFolderId)!.push(f);
+    }
+  });
 
-  return foldersWithProjects;
+  // Build folder content recursively with memoization
+  const folderContentCache = new Map<string, FolderWithProjects>();
+  
+  const buildFolderContent = (folderId: string): FolderWithProjects | null => {
+    if (folderContentCache.has(folderId)) {
+      return folderContentCache.get(folderId)!;
+    }
+
+    const folderData = folderMap.get(folderId);
+    if (!folderData) {
+      return null;
+    }
+
+    const directProjects = projectsByFolder.get(folderId) || [];
+    const childFolders = childrenByParent.get(folderId) || [];
+    
+    const subFolders = childFolders
+      .map(cf => buildFolderContent(cf.id))
+      .filter((content): content is FolderWithProjects => content !== null);
+
+    // Calculate total project count including nested content
+    const calculateTotalProjectCount = (folders: FolderWithProjects[]): number => {
+      return folders.reduce((total, folder) => {
+        return (
+          total +
+          (folder.projects?.length || 0) +
+          calculateTotalProjectCount(folder.subFolders || [])
+        );
+      }, 0);
+    };
+
+    const nestedProjectCount = calculateTotalProjectCount(subFolders);
+    const totalProjectCount = directProjects.length + nestedProjectCount;
+
+    const result = FolderWithProjectsSchema.parse({
+      ...folderData,
+      subFolders,
+      projects: directProjects,
+      subFolderCount: subFolders.length,
+      projectCount: totalProjectCount,
+    });
+
+    folderContentCache.set(folderId, result);
+    return result;
+  };
+
+  return folders
+    .map(f => buildFolderContent(f.id))
+    .filter((content): content is FolderWithProjects => content !== null);
 }
 
 export async function getFolderWithContents(
   folderId: string,
   userId: string
 ): Promise<FolderWithProjects | null> {
-  const [folderData] = await db
-    .select()
-    .from(folder)
-    .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
-    .limit(1);
-
-  if (!folderData) {
+  // Use the optimized batch approach for single folder as well
+  const allUserFolders = await getUserFolders(userId);
+  
+  // Find the specific folder in the result or search recursively
+  const findFolder = (folders: FolderWithProjects[], targetId: string): FolderWithProjects | null => {
+    for (const folder of folders) {
+      if (folder.id === targetId) {
+        return folder;
+      }
+      const found = findFolder(folder.subFolders || [], targetId);
+      if (found) {
+        return found;
+      }
+    }
     return null;
-  }
-
-  // Get subfolders with their full content
-  const subFolders = await Promise.all(
-    (
-      await db
-        .select()
-        .from(folder)
-        .where(
-          and(eq(folder.parentFolderId, folderId), eq(folder.userId, userId))
-        )
-        .orderBy(folder.order, folder.createdAt)
-    ).map(async (sf) => {
-      // Recursively get subfolder contents
-      const subFolderContent = await getFolderWithContents(sf.id, userId);
-      return (
-        subFolderContent || {
-          ...sf,
-          projects: [],
-          subFolders: [],
-          subFolderCount: 0,
-          projectCount: 0,
-        }
-      );
-    })
-  );
-
-  // Get projects in this folder
-  const projects = await db
-    .select({
-      id: project.id,
-      name: project.name,
-      image: project.image,
-      folderId: project.folderId,
-      userId: project.userId,
-      accessType: project.accessType,
-      order: project.order,
-      createdAt: project.createdAt,
-      updatedAt: project.updatedAt,
-      metadata: project.metadata,
-      trackCount: count(track.id),
-    })
-    .from(project)
-    .leftJoin(track, eq(track.projectId, project.id))
-    .where(eq(project.folderId, folderId))
-    .groupBy(project.id)
-    .orderBy(project.order, project.createdAt);
-
-  // Calculate total counts including nested content
-  const calculateTotalProjectCount = (
-    folders: FolderWithProjects[]
-  ): number => {
-    return folders.reduce((total, folder) => {
-      return (
-        total +
-        (folder.projects?.length || 0) +
-        calculateTotalProjectCount(folder.subFolders || [])
-      );
-    }, 0);
   };
 
-  const directProjectCount = projects.length;
-  const nestedProjectCount = calculateTotalProjectCount(subFolders);
-  const totalProjectCount = directProjectCount + nestedProjectCount;
-
-  return FolderWithProjectsSchema.parse({
-    ...folderData,
-    subFolders,
-    projects,
-    subFolderCount: subFolders.length,
-    projectCount: totalProjectCount,
-  });
+  return findFolder(allUserFolders, folderId);
 }

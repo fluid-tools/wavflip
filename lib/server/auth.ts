@@ -92,7 +92,7 @@ export async function requireAuthPage() {
 }
 
 /**
- * Require authentication for API routes - returns 401 JSON response if not authenticated
+ * Require authentication for API routes - returns standardized 401 JSON response if not authenticated
  * Use this in API route handlers
  */
 export async function requireAuthApi() {
