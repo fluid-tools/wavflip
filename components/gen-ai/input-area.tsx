@@ -9,7 +9,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { type ReactNode, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,9 +19,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { useAutoResizeTextarea } from '@/hooks/use-auto-resize-textarea';
 import { MUSIC_PROMPTS } from '@/lib/constants/prompts';
 import { cn } from '@/lib/utils';
-import { useAutoResizeTextarea } from '@/hooks/use-auto-resize-textarea';
 
 interface InputAreaProps {
   prompt: string;
