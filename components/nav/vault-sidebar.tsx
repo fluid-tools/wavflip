@@ -22,7 +22,7 @@ import {
   useMoveProjectAction,
   useRenameFolderAction,
   useRenameProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import {
   ContextMenu,
   ContextMenuContent,

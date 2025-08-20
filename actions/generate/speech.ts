@@ -2,6 +2,12 @@
 
 import { z } from 'zod';
 import { getElevenLabsClient } from '@/lib/gen-ai/elevenlabs';
+import {
+  ELEVENLABS_TTS_MODEL,
+  PRESIGNED_URL_EXPIRY_HOURS,
+  TITLE_TRUNCATE_LENGTH,
+  TTS_TEXT_MAX_LENGTH,
+} from '@/lib/constants/generation';
 import { actionClient } from '@/lib/safe-action';
 import { getServerSession } from '@/lib/server/auth';
 import { addGeneratedSound } from '@/lib/server/vault/generations';
@@ -17,26 +23,27 @@ const ttsInputSchema = z.object({
   text: z
     .string()
     .min(1, 'Text is required')
-    .max(2500, 'Text is too long (max 2500 characters)'),
+    .max(TTS_TEXT_MAX_LENGTH, `Text is too long (max ${TTS_TEXT_MAX_LENGTH} characters)`),
   voiceId: z.string().optional(),
 });
 
 export const generateTextToSpeech = actionClient
-  .inputSchema(ttsInputSchema)
+  .schema(ttsInputSchema)
   .action(async ({ parsedInput }) => {
     const { text, voiceId } = parsedInput;
     const startTime = Date.now();
 
     const session = await getServerSession();
-    if (!session?.user?.id)
+    if (!session?.user?.id) {
       throw new Error('You must be logged in to generate speech');
+    }
 
     try {
       const elevenLabs = getElevenLabsClient();
       const speechResponse = await elevenLabs.generateTextToSpeech({
         text: text.trim(),
         voice_id: voiceId,
-        model_id: 'eleven_monolingual_v1',
+        model_id: ELEVENLABS_TTS_MODEL,
       });
 
       const filename = generateFilename(text, 'speech');
@@ -51,12 +58,12 @@ export const generateTextToSpeech = actionClient
       );
 
       const generationTime = Date.now() - startTime;
-      const presignedUrl = await getPresignedUrl(key, undefined, 60 * 60);
+      const presignedUrl = await getPresignedUrl(key, undefined, PRESIGNED_URL_EXPIRY_HOURS * 60 * 60);
 
       const generatedSound: GeneratedSound = {
         id: key,
         key,
-        title: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+        title: text.substring(0, TITLE_TRUNCATE_LENGTH) + (text.length > TITLE_TRUNCATE_LENGTH ? '...' : ''),
         url: presignedUrl,
         createdAt: new Date(),
         type: 'generated',
@@ -79,7 +86,6 @@ export const generateTextToSpeech = actionClient
 
       return generatedSound;
     } catch (error) {
-      console.error('Text-to-speech generation failed:', error);
       const generationError = error as GenerationError;
 
       if (

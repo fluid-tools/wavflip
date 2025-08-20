@@ -14,7 +14,7 @@ import {
   useCombineProjectsAction,
   useMoveFolderAction,
   useMoveProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Card, CardContent } from '@/components/ui/card';
 import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar';
 import { DndLayout } from '@/components/vault/dnd-layout';

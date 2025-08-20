@@ -16,7 +16,7 @@ import {
   useDeleteProjectAction,
   useMoveProjectAction,
   useRenameProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -92,20 +92,20 @@ export function ProjectCard({
     projectId: project.id,
   });
 
-  const [, deleteAction, isDeleting] = useDeleteProjectAction({
+  const { execute: deleteExecute, isPending: isDeleting } = useDeleteProjectAction({
     onSuccess: () => {
       setShowDeleteDialog(false);
     },
   });
 
-  const [, renameAction, isRenaming] = useRenameProjectAction({
+  const { execute: renameExecute, isPending: isRenaming } = useRenameProjectAction({
     onSuccess: () => {
       setShowRenameDialog(false);
       setNewName(project.name);
     },
   });
 
-  const [, moveAction, isMoving] = useMoveProjectAction({
+  const { execute: moveExecute, isPending: isMoving } = useMoveProjectAction({
     onSuccess: () => {
       setShowMoveDialog(false);
       setSelectedDestinationId(folderId ?? null);
@@ -113,20 +113,25 @@ export function ProjectCard({
   });
 
   const handleRename = async (formData: FormData) => {
-    formData.append('projectId', project.id);
-    renameAction(formData);
+    const name = formData.get('name') as string;
+    renameExecute({
+      projectId: project.id,
+      name,
+    });
   };
 
   const handleDelete = async (formData: FormData) => {
-    formData.append('projectId', project.id);
-    deleteAction(formData);
+    deleteExecute({
+      projectId: project.id,
+    });
   };
 
   const handleMove = async (formData: FormData) => {
-    formData.append('projectId', project.id);
-    formData.append('folderId', selectedDestinationId || '');
-    formData.append('sourceFolderId', folderId || '');
-    moveAction(formData);
+    moveExecute({
+      projectId: project.id,
+      folderId: selectedDestinationId || null,
+      sourceFolderId: folderId || null,
+    });
   };
 
   const triggerImageUpload = () => {

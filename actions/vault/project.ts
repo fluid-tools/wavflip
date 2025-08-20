@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { actionClient } from '@/lib/safe-action';
 import { requireAuth } from '@/lib/server/auth';
 import {
   createFolder,
@@ -11,32 +12,21 @@ import {
   moveProject,
   renameProject,
 } from '@/lib/server/vault';
-import type {
-  DeleteActionState,
-  MoveActionState,
-  ProjectActionState,
-  RenameActionState,
-} from './types';
+import {
+  combineProjectsSchema,
+  createProjectSchema,
+  deleteProjectSchema,
+  moveProjectSchema,
+  renameProjectSchema,
+} from './schemas';
 
-export async function moveProjectAction(
-  prevState: MoveActionState,
-  formData: FormData
-): Promise<MoveActionState> {
-  try {
+export const moveProjectAction = actionClient
+  .schema(moveProjectSchema)
+  .action(async ({ parsedInput }) => {
+    const { projectId, folderId, sourceFolderId } = parsedInput;
     const session = await requireAuth();
-    const projectId = formData.get('projectId') as string;
-    const rawFolderId = formData.get('folderId') as string;
-    const rawSourceFolderId = formData.get('sourceFolderId') as string;
 
-    if (!projectId) {
-      return { success: false, error: 'Project ID is required' };
-    }
-
-    // Convert empty strings to null for root placement
-    const folderId = rawFolderId === '' ? null : rawFolderId;
-    const sourceFolderId = rawSourceFolderId === '' ? null : rawSourceFolderId;
-
-    await moveProject(projectId, folderId, session.user.id);
+    await moveProject(projectId, folderId || null, session.user.id);
 
     // Revalidate source and destination paths
     if (sourceFolderId) {
@@ -51,62 +41,28 @@ export async function moveProjectAction(
       revalidatePath('/vault');
     }
 
-    return { success: true, error: null };
-  } catch (error) {
-    console.error('Failed to move project:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to move project',
-    };
-  }
-}
-export async function renameProjectAction(
-  prevState: RenameActionState,
-  formData: FormData
-): Promise<RenameActionState> {
-  try {
+    return { success: true as const };
+  });
+export const renameProjectAction = actionClient
+  .schema(renameProjectSchema)
+  .action(async ({ parsedInput }) => {
+    const { projectId, name } = parsedInput;
     const session = await requireAuth();
-    const projectId = formData.get('projectId') as string;
-    const name = formData.get('name') as string;
-    const folderId = formData.get('folderId') as string | null;
-
-    if (!(projectId && name?.trim())) {
-      return { success: false, error: 'Project ID and name are required' };
-    }
 
     await renameProject(projectId, name, session.user.id);
 
     // Revalidate appropriate paths and sidebar
-    if (folderId) {
-      revalidatePath(`/vault/folders/${folderId}`);
-    } else {
-      revalidatePath('/vault');
-    }
+    revalidatePath('/vault');
     revalidatePath(`/vault/projects/${projectId}`);
     revalidatePath('/api/vault/tree');
 
-    return { success: true, error: null };
-  } catch (error) {
-    console.error('Failed to rename project:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Failed to rename project',
-    };
-  }
-}
-export async function createProjectAction(
-  prevState: ProjectActionState,
-  formData: FormData
-): Promise<ProjectActionState> {
-  try {
+    return { success: true as const };
+  });
+export const createProjectAction = actionClient
+  .schema(createProjectSchema)
+  .action(async ({ parsedInput }) => {
+    const { name, folderId } = parsedInput;
     const session = await requireAuth();
-    const name = formData.get('name') as string;
-    const folderId = formData.get('folderId') as string | null;
-
-    if (!name || name.trim().length === 0) {
-      return { success: false, error: 'Project name is required' };
-    }
 
     // Handle duplicate names by adding suffix
     const projectName = await handleDuplicateProjectName(
@@ -133,97 +89,53 @@ export async function createProjectAction(
     revalidatePath('/vault');
     revalidatePath('/api/vault/tree');
 
-    return { success: true, project, error: null };
-  } catch (error) {
-    console.error('Failed to create project:', error);
     return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Failed to create project',
+      success: true as const,
+      project: {
+        id: project.id,
+        name: project.name,
+        folderId: project.folderId,
+      },
     };
-  }
-}
-export async function deleteProjectAction(
-  prevState: DeleteActionState,
-  formData: FormData
-): Promise<DeleteActionState> {
-  try {
+  });
+export const deleteProjectAction = actionClient
+  .schema(deleteProjectSchema)
+  .action(async ({ parsedInput }) => {
+    const { projectId } = parsedInput;
     const session = await requireAuth();
-    const projectId = formData.get('projectId') as string;
-    const folderId = formData.get('folderId') as string | null;
-
-    if (!projectId) {
-      return { success: false, error: 'Project ID is required' };
-    }
 
     await deleteProject(projectId, session.user.id);
 
     // Revalidate appropriate paths and sidebar
-    if (folderId) {
-      revalidatePath(`/vault/folders/${folderId}`);
-    } else {
-      revalidatePath('/vault');
-    }
-    // Always revalidate for sidebar updates
     revalidatePath('/vault');
     revalidatePath('/api/vault/tree');
 
-    return { success: true, error: null };
-  } catch (error) {
-    console.error('Failed to delete project:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Failed to delete project',
-    };
-  }
-}
-export async function createFolderFromProjectsAction(
-  prevState: MoveActionState,
-  formData: FormData
-): Promise<MoveActionState> {
-  try {
+    return { success: true as const };
+  });
+export const createFolderFromProjectsAction = actionClient
+  .schema(combineProjectsSchema)
+  .action(async ({ parsedInput }) => {
+    const { projectIds, folderName, parentFolderId } = parsedInput;
     const session = await requireAuth();
-    const sourceProjectId = formData.get('sourceProjectId') as string;
-    const targetProjectId = formData.get('targetProjectId') as string;
-    const parentFolderId = formData.get('parentFolderId') as string | null;
 
-    if (!(sourceProjectId && targetProjectId)) {
-      return { success: false, error: 'Both project IDs are required' };
+    if (projectIds.length < 2) {
+      throw new Error('At least 2 projects are required');
     }
 
-    if (sourceProjectId === targetProjectId) {
-      return { success: false, error: 'Cannot combine a project with itself' };
-    }
-
-    // Get project names to create folder name
-    const [sourceProject, targetProject] = await Promise.all([
-      getProjectWithTracks(sourceProjectId, session.user.id),
-      getProjectWithTracks(targetProjectId, session.user.id),
-    ]);
-
-    if (!(sourceProject && targetProject)) {
-      return { success: false, error: 'One or both projects not found' };
-    }
-
-    // Create a new folder with a combined name
-    const folderName = `${sourceProject.name} & ${targetProject.name}`;
-
+    // Create a new folder
     const newFolder = await createFolder({
       name: folderName,
       userId: session.user.id,
-      parentFolderId:
-        parentFolderId === '' || parentFolderId === 'vault'
-          ? null
-          : parentFolderId,
+      parentFolderId: parentFolderId || null,
       order: 0,
     });
 
-    // Move both projects to the new folder
-    await Promise.all([
-      moveProject(sourceProjectId, newFolder.id, session.user.id),
-      moveProject(targetProjectId, newFolder.id, session.user.id),
-    ]);
+    // Move all projects to the new folder
+    await Promise.all(
+      projectIds.map((projectId) =>
+        moveProject(projectId, newFolder.id, session.user.id)
+      )
+    );
 
     // Revalidate relevant paths
     if (parentFolderId) {
@@ -233,15 +145,5 @@ export async function createFolderFromProjectsAction(
     }
     revalidatePath(`/vault/folders/${newFolder.id}`);
 
-    return { success: true, error: null };
-  } catch (error) {
-    console.error('Failed to create folder from projects:', error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : 'Failed to create folder from projects',
-    };
-  }
-}
+    return { success: true as const };
+  });

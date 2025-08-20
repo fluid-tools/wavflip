@@ -6,7 +6,7 @@ import {
   useCreateFolderAction,
   useMoveFolderAction,
   useMoveProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -44,10 +44,10 @@ export function CreateFolderDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
-  const [, moveFolderAction] = useMoveFolderAction();
-  const [, moveProjectAction] = useMoveProjectAction();
+  const { execute: moveFolderExecute } = useMoveFolderAction();
+  const { execute: moveProjectExecute } = useMoveProjectAction();
 
-  const [, formAction] = useCreateFolderAction({
+  const { execute: createFolderExecute } = useCreateFolderAction({
     onSuccess: (result) => {
       // Move selected items to the newly created folder
       if (selectedItems.length > 0 && result?.folder?.id) {
@@ -56,18 +56,18 @@ export function CreateFolderDialog({
         // Process items using the proper action hooks with startTransition
         startTransition(() => {
           selectedItems.forEach((item) => {
-            const formData = new FormData();
-
             if (item.type === 'folder') {
-              formData.append('folderId', item.id);
-              formData.append('parentFolderId', newFolderId);
-              formData.append('sourceParentFolderId', parentFolderId || '');
-              moveFolderAction(formData);
+              moveFolderExecute({
+                folderId: item.id,
+                parentFolderId: newFolderId,
+                sourceParentFolderId: parentFolderId || null,
+              });
             } else {
-              formData.append('projectId', item.id);
-              formData.append('folderId', newFolderId);
-              formData.append('sourceFolderId', parentFolderId || '');
-              moveProjectAction(formData);
+              moveProjectExecute({
+                projectId: item.id,
+                folderId: newFolderId,
+                sourceFolderId: parentFolderId || null,
+              });
             }
           });
         });
@@ -80,10 +80,11 @@ export function CreateFolderDialog({
   });
 
   const handleSubmit = async (formData: FormData) => {
-    if (parentFolderId) {
-      formData.append('parentFolderId', parentFolderId);
-    }
-    formAction(formData);
+    const name = formData.get('name') as string;
+    createFolderExecute({
+      name,
+      parentFolderId: parentFolderId || null,
+    });
   };
 
   return (

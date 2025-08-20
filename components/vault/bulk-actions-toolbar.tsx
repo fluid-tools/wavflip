@@ -7,7 +7,7 @@ import {
   useDeleteProjectAction,
   useMoveFolderAction,
   useMoveProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {

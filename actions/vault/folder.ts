@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { actionClient } from '@/lib/safe-action';
 import { requireAuth } from '@/lib/server/auth';
 import {
   createFolder,
@@ -9,25 +10,18 @@ import {
   renameFolder,
 } from '@/lib/server/vault/folder';
 import { handleDuplicateFolderName } from '@/lib/server/vault/utils';
-import type {
-  DeleteActionState,
-  FolderActionState,
-  MoveActionState,
-  RenameActionState,
-} from './types';
+import {
+  createFolderSchema,
+  deleteFolderSchema,
+  moveFolderSchema,
+  renameFolderSchema,
+} from './schemas';
 
-export async function createFolderAction(
-  prevState: FolderActionState,
-  formData: FormData
-): Promise<FolderActionState> {
-  try {
+export const createFolderAction = actionClient
+  .schema(createFolderSchema)
+  .action(async ({ parsedInput }) => {
+    const { name, parentFolderId } = parsedInput;
     const session = await requireAuth();
-    const name = formData.get('name') as string;
-    const parentFolderId = formData.get('parentFolderId') as string | null;
-
-    if (!name || name.trim().length === 0) {
-      return { success: false, error: 'Folder name is required' };
-    }
 
     // Handle duplicate names by adding suffix
     const folderName = await handleDuplicateFolderName(
@@ -53,27 +47,21 @@ export async function createFolderAction(
     revalidatePath('/vault');
     revalidatePath('/api/vault/tree');
 
-    return { success: true, folder, error: null };
-  } catch (error) {
-    console.error('Failed to create folder:', error);
     return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to create folder',
+      success: true as const,
+      folder: {
+        id: folder.id,
+        name: folder.name,
+        parentFolderId: folder.parentFolderId,
+      },
     };
-  }
-}
+  });
 
-export async function deleteFolderAction(
-  prevState: DeleteActionState,
-  formData: FormData
-): Promise<DeleteActionState> {
-  try {
+export const deleteFolderAction = actionClient
+  .schema(deleteFolderSchema)
+  .action(async ({ parsedInput }) => {
+    const { folderId } = parsedInput;
     const session = await requireAuth();
-    const folderId = formData.get('folderId') as string;
-
-    if (!folderId) {
-      return { success: false, error: 'Folder ID is required' };
-    }
 
     const { parentFolderId } = await deleteFolder(folderId, session.user.id);
 
@@ -87,28 +75,14 @@ export async function deleteFolderAction(
     revalidatePath('/vault');
     revalidatePath('/api/vault/tree');
 
-    return { success: true, error: null };
-  } catch (error) {
-    console.error('Failed to delete folder:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete folder',
-    };
-  }
-}
+    return { success: true as const };
+  });
 
-export async function renameFolderAction(
-  prevState: RenameActionState,
-  formData: FormData
-): Promise<RenameActionState> {
-  try {
+export const renameFolderAction = actionClient
+  .schema(renameFolderSchema)
+  .action(async ({ parsedInput }) => {
+    const { folderId, name } = parsedInput;
     const session = await requireAuth();
-    const folderId = formData.get('folderId') as string;
-    const name = formData.get('name') as string;
-
-    if (!(folderId && name?.trim())) {
-      return { success: false, error: 'Folder ID and name are required' };
-    }
 
     await renameFolder(folderId, name, session.user.id);
 
@@ -116,38 +90,17 @@ export async function renameFolderAction(
     revalidatePath('/vault');
     revalidatePath(`/vault/folders/${folderId}`);
     revalidatePath('/api/vault/tree');
-    return { success: true, error: null };
-  } catch (error) {
-    console.error('Failed to rename folder:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to rename folder',
-    };
-  }
-}
+    
+    return { success: true as const };
+  });
 
-export async function moveFolderAction(
-  prevState: MoveActionState,
-  formData: FormData
-): Promise<MoveActionState> {
-  try {
+export const moveFolderAction = actionClient
+  .schema(moveFolderSchema)
+  .action(async ({ parsedInput }) => {
+    const { folderId, parentFolderId, sourceParentFolderId } = parsedInput;
     const session = await requireAuth();
-    const folderId = formData.get('folderId') as string;
-    const rawParentFolderId = formData.get('parentFolderId') as string;
-    const rawSourceParentFolderId = formData.get(
-      'sourceParentFolderId'
-    ) as string;
 
-    if (!folderId) {
-      return { success: false, error: 'Folder ID is required' };
-    }
-
-    // Convert empty strings to null for root placement
-    const parentFolderId = rawParentFolderId === '' ? null : rawParentFolderId;
-    const sourceParentFolderId =
-      rawSourceParentFolderId === '' ? null : rawSourceParentFolderId;
-
-    await moveFolder(folderId, parentFolderId, session.user.id);
+    await moveFolder(folderId, parentFolderId || null, session.user.id);
 
     // Revalidate source and destination paths
     if (sourceParentFolderId) {
@@ -162,12 +115,5 @@ export async function moveFolderAction(
       revalidatePath('/vault');
     }
 
-    return { success: true, error: null };
-  } catch (error) {
-    console.error('Failed to move folder:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to move folder',
-    };
-  }
-}
+    return { success: true as const };
+  });
