@@ -30,4 +30,10 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: [process.env.BETTER_AUTH_URL as string],
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes; tuned for frequent getSession calls
+    },
+  },
 });
