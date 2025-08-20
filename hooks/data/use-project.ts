@@ -44,7 +44,7 @@ export function useProject({
       return ProjectWithTracksSchema.parse(json);
     },
     // Use placeholderData instead of initialData to ensure invalidation works
-    placeholderData: initialData,
+    initialData: initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
     enabled: enabled && !!projectId,
@@ -611,7 +611,7 @@ export function useRootProjects() {
       const json = await response.json();
       return ProjectsListResponseSchema.parse(json);
     },
-    placeholderData: fromTree,
+    initialData: fromTree,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
