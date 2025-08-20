@@ -10,6 +10,15 @@ import {
   uploadGeneratedAudioToS3,
 } from '@/lib/storage/s3-storage';
 import { generateFilename } from '@/lib/utils';
+import {
+  SOUND_PROMPT_MAX_LENGTH,
+  SOUND_DURATION_MIN,
+  SOUND_DURATION_MAX,
+  SOUND_DURATION_DEFAULT,
+  PROMPT_INFLUENCE_DEFAULT,
+  TITLE_PREVIEW_LENGTH,
+  PRESIGNED_URL_DURATION,
+} from '@/lib/constants/generation';
 import type { GenerationError } from '@/types/elevenlabs';
 import type { GeneratedSound } from '@/types/generations';
 
@@ -17,25 +26,26 @@ const soundInputSchema = z.object({
   prompt: z
     .string()
     .min(1, 'Prompt is required')
-    .max(500, 'Prompt is too long (max 500 characters)'),
+    .max(SOUND_PROMPT_MAX_LENGTH, `Prompt is too long (max ${SOUND_PROMPT_MAX_LENGTH} characters)`),
   options: z
     .object({
-      durationSeconds: z.number().min(0.1).max(22).optional(),
+      durationSeconds: z.number().min(SOUND_DURATION_MIN).max(SOUND_DURATION_MAX).optional(),
       promptInfluence: z.number().min(0).max(1).optional(),
     })
     .optional(),
 });
 
 export const generateSoundEffect = actionClient
-  .inputSchema(soundInputSchema)
+  .schema(soundInputSchema)
   .action(async ({ parsedInput }) => {
     const { prompt, options } = parsedInput;
     const startTime = Date.now();
 
     // Auth
     const session = await getServerSession();
-    if (!session?.user?.id)
+    if (!session?.user?.id) {
       throw new Error('You must be logged in to generate sounds');
+    }
 
     try {
       // Generate sound using ElevenLabs
@@ -43,12 +53,12 @@ export const generateSoundEffect = actionClient
       const rawDuration = options?.durationSeconds;
       const durationSeconds =
         typeof rawDuration === 'number'
-          ? Math.min(22, Math.max(0.1, rawDuration))
-          : 10;
+          ? Math.min(SOUND_DURATION_MAX, Math.max(SOUND_DURATION_MIN, rawDuration))
+          : SOUND_DURATION_DEFAULT;
       const promptInfluence =
         typeof options?.promptInfluence === 'number'
           ? options?.promptInfluence
-          : 0.3;
+          : PROMPT_INFLUENCE_DEFAULT;
 
       const soundResponse = await elevenLabs.generateSoundEffect({
         text: prompt.trim(),
@@ -71,12 +81,12 @@ export const generateSoundEffect = actionClient
       const generationTime = Date.now() - startTime;
 
       // One-hour presigned URL for immediate playback
-      const presignedUrl = await getPresignedUrl(key, undefined, 60 * 60);
+      const presignedUrl = await getPresignedUrl(key, undefined, PRESIGNED_URL_DURATION);
 
       const generatedSound: GeneratedSound = {
         id: key,
         key,
-        title: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
+        title: prompt.substring(0, TITLE_PREVIEW_LENGTH) + (prompt.length > TITLE_PREVIEW_LENGTH ? '...' : ''),
         url: presignedUrl,
         createdAt: new Date(),
         type: 'generated',
@@ -100,8 +110,6 @@ export const generateSoundEffect = actionClient
 
       return generatedSound;
     } catch (error) {
-      console.error('Sound generation failed:', error);
-
       const generationError = error as GenerationError;
       if (
         generationError.code === 'system_busy' ||

@@ -10,6 +10,11 @@ import {
   uploadGeneratedAudioToS3,
 } from '@/lib/storage/s3-storage';
 import { generateFilename } from '@/lib/utils';
+import {
+  TTS_TEXT_MAX_LENGTH,
+  TITLE_PREVIEW_LENGTH,
+  PRESIGNED_URL_DURATION,
+} from '@/lib/constants/generation';
 import type { GenerationError } from '@/types/elevenlabs';
 import type { GeneratedSound } from '@/types/generations';
 
@@ -17,19 +22,20 @@ const ttsInputSchema = z.object({
   text: z
     .string()
     .min(1, 'Text is required')
-    .max(2500, 'Text is too long (max 2500 characters)'),
+    .max(TTS_TEXT_MAX_LENGTH, `Text is too long (max ${TTS_TEXT_MAX_LENGTH} characters)`),
   voiceId: z.string().optional(),
 });
 
 export const generateTextToSpeech = actionClient
-  .inputSchema(ttsInputSchema)
+  .schema(ttsInputSchema)
   .action(async ({ parsedInput }) => {
     const { text, voiceId } = parsedInput;
     const startTime = Date.now();
 
     const session = await getServerSession();
-    if (!session?.user?.id)
+    if (!session?.user?.id) {
       throw new Error('You must be logged in to generate speech');
+    }
 
     try {
       const elevenLabs = getElevenLabsClient();
@@ -51,12 +57,12 @@ export const generateTextToSpeech = actionClient
       );
 
       const generationTime = Date.now() - startTime;
-      const presignedUrl = await getPresignedUrl(key, undefined, 60 * 60);
+      const presignedUrl = await getPresignedUrl(key, undefined, PRESIGNED_URL_DURATION);
 
       const generatedSound: GeneratedSound = {
         id: key,
         key,
-        title: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+        title: text.substring(0, TITLE_PREVIEW_LENGTH) + (text.length > TITLE_PREVIEW_LENGTH ? '...' : ''),
         url: presignedUrl,
         createdAt: new Date(),
         type: 'generated',
@@ -79,7 +85,6 @@ export const generateTextToSpeech = actionClient
 
       return generatedSound;
     } catch (error) {
-      console.error('Text-to-speech generation failed:', error);
       const generationError = error as GenerationError;
 
       if (
