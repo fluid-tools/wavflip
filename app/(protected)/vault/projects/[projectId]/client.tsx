@@ -42,9 +42,8 @@ import {
 import { TracksTable } from '@/components/vault/tracks/table';
 import { UploadTrackDialog } from '@/components/vault/tracks/upload-dialog';
 import { useRootFolders } from '@/hooks/data/use-folder';
-import { useProject } from '@/hooks/data/use-project';
+import { useProject, useRootProjects } from '@/hooks/data/use-project';
 import { useProjectTrackUrls } from '@/hooks/data/use-track-url';
-import { useVaultProjects } from '@/hooks/data/use-project';
 import type { TrackWithVersions } from '@/lib/contracts/track';
 import { playerControlsAtom } from '@/state/audio-atoms';
 import type { AudioTrack } from '@/types/audio';
@@ -70,7 +69,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
   // Get available projects for move operations
   const { data: folders = [] } = useRootFolders();
-  const { data: vaultProjects = [] } = useVaultProjects();
+  const { data: vaultProjects = [] } = useRootProjects();
 
   const availableProjects = [
     ...vaultProjects,

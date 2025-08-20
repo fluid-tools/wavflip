@@ -4,13 +4,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 import { generateWaveformData } from '@/lib/audio/waveform-generator';
+import { ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
 import { TrackCreateFormSchema } from '@/lib/contracts/api/tracks';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
 import { ProjectWithTracksSchema } from '@/lib/contracts/project';
+import type { VaultData } from '@/lib/contracts/vault';
 import type { ProjectImageResponse } from '@/lib/server/types/project';
 import { vaultKeys, waveformKeys } from './keys';
-import { ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
-import type { VaultData } from '@/lib/contracts/vault';
 
 interface UseProjectProps {
   projectId: string;
@@ -579,11 +579,11 @@ export function useProject({
     isUploadingImage: uploadImageMutation.isPending,
     presignedImageUrl: presignedImageQuery.data,
   };
-}// ================================
+} // ================================
 // PROJECT HOOKS
 // ================================
 
-export function useVaultProjects() {
+export function useRootProjects() {
   const queryClient = useQueryClient();
   const [treeEntry] = queryClient.getQueriesData<VaultData>({
     queryKey: vaultKeys.tree(),
@@ -606,4 +606,3 @@ export function useVaultProjects() {
     refetchOnWindowFocus: false,
   });
 }
-
