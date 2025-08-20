@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { vaultKeys } from '@/hooks/data/keys';
-import { getCachedSession } from '@/lib/server/auth';
+import { getServerSession } from '@/lib/server/auth';
 import { getUserFolders, getVaultData, getRootProjects } from '@/lib/server/vault';
 
 interface VaultLayoutProps {
@@ -15,7 +15,7 @@ interface VaultLayoutProps {
 }
 
 export default async function VaultLayout({ children }: VaultLayoutProps) {
-  const session = await getCachedSession();
+  const session = await getServerSession();
   if (!session) redirect('/sign-in');
 
   // Create query client with proper default options

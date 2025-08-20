@@ -9,7 +9,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { getCachedSession } from '@/lib/server/auth';
+import { getServerSession } from '@/lib/server/auth';
 import { AppProviders } from '@/state/providers';
 
 const PlayerDock = dynamic(() => import('@/components/player/dock'), {
@@ -22,7 +22,7 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }) {
   // Server-side auth check using cached session; redirect if not authenticated
-  const session = await getCachedSession();
+  const session = await getServerSession();
   if (!session) redirect('/sign-in');
 
   // Get sidebar state from cookie for persistence

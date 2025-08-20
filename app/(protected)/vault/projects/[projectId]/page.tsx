@@ -5,7 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { notFound, redirect } from 'next/navigation';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
-import { getCachedSession } from '@/lib/server/auth';
+import { getServerSession } from '@/lib/server/auth';
 import { getProjectWithTracks } from '@/lib/server/vault';
 import { getPresignedImageUrl } from '@/lib/storage/s3-storage';
 import { ProjectView } from './client';
@@ -21,7 +21,7 @@ interface ProjectPageProps {
 export default async function ProjectPage({ params }: ProjectPageProps) {
   // Parallelize session check and params extraction for better performance
   const [session, { projectId }] = await Promise.all([
-    getCachedSession(),
+    getServerSession(),
     params,
   ]);
 
