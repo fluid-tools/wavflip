@@ -25,7 +25,7 @@ import { CreateProjectDialog } from '@/components/vault/projects/create-dialog';
 import { useRootFolders } from '@/hooks/data/use-folder';
 import { useRootProjects } from '@/hooks/data/use-project';
 import { useIsTablet } from '@/hooks/use-mobile';
-import { useVaultSelection } from '@/hooks/use-vault-selection';
+import { useVaultSelection } from '@/hooks/vault/use-vault-selection';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
 import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms';

@@ -23,7 +23,7 @@ import { ProjectCard } from '@/components/vault/projects/card';
 import { CreateProjectDialog } from '@/components/vault/projects/create-dialog';
 import { useFolder } from '@/hooks/data/use-folder';
 import { useIsTablet } from '@/hooks/use-mobile';
-import { useVaultSelection } from '@/hooks/use-vault-selection';
+import { useVaultSelection } from '@/hooks/vault/use-vault-selection';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
 import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms';
 

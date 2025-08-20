@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { CreateFolderDialog } from '@/components/vault/folders/create-dialog';
 import { FolderPicker } from '@/components/vault/folders/picker';
-import { useVaultSelection } from '@/hooks/use-vault-selection';
+import { useVaultSelection } from '@/hooks/vault/use-vault-selection';
 
 interface BulkActionsToolbarProps {
   vaultItems: Array<{ id: string; type: 'folder' | 'project'; name: string }>;
