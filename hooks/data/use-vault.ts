@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FoldersListResponseSchema } from '@/lib/contracts/api/folders';
+import { FolderGetResponseSchema, FoldersListResponseSchema } from '@/lib/contracts/api/folders';
 import { ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
@@ -49,8 +49,8 @@ export function useFolder(folderId: string) {
     queryFn: async (): Promise<FolderWithProjects> => {
       const response = await fetch(`/api/folders/${folderId}`);
       if (!response.ok) throw new Error('Failed to fetch folder');
-      // TODO: introduce a dedicated contract schema for folder GET by id
-      return response.json();
+      const json = await response.json();
+      return FolderGetResponseSchema.parse(json);
     },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -76,7 +76,7 @@ export function useRootFolders() {
       const json = await response.json();
       return FoldersListResponseSchema.parse(json);
     },
-    placeholderData: fromTree as unknown as FolderWithProjects[] | undefined,
+    placeholderData: fromTree as FolderWithProjects[] | undefined,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -97,14 +97,14 @@ export function useVaultProjects() {
     : undefined;
 
   return useQuery({
-    queryKey: vaultKeys.vaultProjects(),
+    queryKey: vaultKeys.projects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
       const response = await fetch('/api/projects');
       if (!response.ok) throw new Error('Failed to fetch vault projects');
       const json = await response.json();
       return ProjectsListResponseSchema.parse(json);
     },
-    placeholderData: fromTree as unknown as ProjectWithTracks[] | undefined,
+    placeholderData: fromTree as ProjectWithTracks[] | undefined,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -130,8 +130,6 @@ export function useVaultInvalidation() {
       queryClient.invalidateQueries({ queryKey: vaultKeys.projects() }),
     invalidateProject: (id: string) =>
       queryClient.invalidateQueries({ queryKey: vaultKeys.project(id) }),
-    invalidateVaultProjects: () =>
-      queryClient.invalidateQueries({ queryKey: vaultKeys.vaultProjects() }),
     invalidateStats: () =>
       queryClient.invalidateQueries({ queryKey: vaultKeys.stats() }),
   };

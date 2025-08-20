@@ -107,7 +107,7 @@ const mutation = useMutation({
 // ✅ CORRECT
 const queryKey = vaultKeys.project(projectId)
 const queryKey = vaultKeys.folder(folderId)
-const queryKey = vaultKeys.sidebar()
+const queryKey = vaultKeys.tree()
 
 // ❌ WRONG - Never use hardcoded arrays
 const queryKey = ['project', projectId]
@@ -116,12 +116,11 @@ const queryKey = ['vault', 'folders', folderId]
 
 Available query key functions (non-exhaustive):
 - `vaultKeys.base` - Base vault key
-- `vaultKeys.sidebar()` - Sidebar data
+- `vaultKeys.tree()` - Sidebar data
 - `vaultKeys.folders()` - All folders
 - `vaultKeys.folder(id)` - Specific folder
 - `vaultKeys.projects()` - All projects
 - `vaultKeys.project(id)` - Specific project
-- `vaultKeys.vaultProjects()` - Vault projects
 - `vaultKeys.hierarchical(excludeId?)` - Hierarchical tree data for pickers
 - `vaultKeys.stats()` - Vault statistics
 - `vaultKeys.storage()` - Storage usage estimate

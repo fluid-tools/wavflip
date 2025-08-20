@@ -386,7 +386,7 @@ export function useProject({
 
       // Also update root vault projects cache
       queryClient.setQueryData<ProjectWithTracks[]>(
-        vaultKeys.vaultProjects(),
+        vaultKeys.projects(),
         (oldProjects) => {
           if (!oldProjects) return oldProjects;
           return oldProjects.map((p) =>
@@ -455,7 +455,7 @@ export function useProject({
       // Also rollback root vault projects cache
       if (context?.previousProject) {
         queryClient.setQueryData<ProjectWithTracks[]>(
-          vaultKeys.vaultProjects(),
+          vaultKeys.projects(),
           (oldProjects) => {
             if (!oldProjects) return oldProjects;
             return oldProjects.map((p) =>
@@ -535,7 +535,7 @@ export function useProject({
 
             // Also update root vault projects cache
             queryClient.setQueryData<ProjectWithTracks[]>(
-              vaultKeys.vaultProjects(),
+              vaultKeys.projects(),
               (oldProjects) => {
                 if (!oldProjects) return oldProjects;
                 return oldProjects.map((p) =>

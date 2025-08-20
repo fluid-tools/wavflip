@@ -8,7 +8,6 @@ export const vaultKeys = {
   folder: (id: string) => [...vaultKeys.base, 'folders', id] as const,
   projects: () => [...vaultKeys.base, 'projects'] as const,
   project: (id: string) => [...vaultKeys.base, 'projects', id] as const,
-  vaultProjects: () => [...vaultKeys.base, 'vault-projects'] as const,
   tree: () => [...vaultKeys.base, 'tree'] as const,
   hierarchical: (excludeId?: string | null) =>
     excludeId
