@@ -3,7 +3,9 @@ import 'server-only';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { NextResponse } from 'next/server';
 import { auth } from '../auth';
+import { logger } from '../logger';
 
 // Get session using better-auth's recommended approach
 export async function getServerSession() {
@@ -12,7 +14,8 @@ export async function getServerSession() {
       headers: await headers(),
     });
     return session;
-  } catch {
+  } catch (error) {
+    logger.auth('Failed to get server session', undefined, { error: error as Error });
     return null;
   }
 }
@@ -53,7 +56,8 @@ export async function getCachedSession() {
         }
         const session = await auth.api.getSession({ headers: h });
         return session;
-      } catch {
+      } catch (error) {
+        logger.auth('Failed to get cached session', undefined, { error: error as Error });
         return null;
       }
     },
@@ -73,11 +77,50 @@ export async function revalidateSession() {
   revalidateTag('session');
 }
 
-// Require authentication - redirect if not authenticated // utility for api routes
-export async function requireAuth() {
+/**
+ * Require authentication for pages - redirects to sign-in if not authenticated
+ * Use this in page components and layout files
+ */
+export async function requireAuthPage() {
   const session = await getServerSession();
   if (!session) {
+    logger.auth('Unauthorized page access, redirecting to sign-in');
     redirect('/sign-in');
   }
+  logger.auth('Page access authorized', session.user.id);
   return session;
 }
+
+/**
+ * Require authentication for API routes - returns 401 JSON response if not authenticated
+ * Use this in API route handlers
+ */
+export async function requireAuthApi() {
+  const session = await getServerSession();
+  if (!session) {
+    logger.auth('Unauthorized API access');
+    return {
+      error: true,
+      response: NextResponse.json(
+        { 
+          success: false, 
+          error: 'Authentication required',
+          code: 'UNAUTHORIZED',
+        },
+        { status: 401 }
+      ),
+    };
+  }
+  
+  logger.auth('API access authorized', session.user.id);
+  return {
+    error: false,
+    session,
+  };
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use requireAuthPage() or requireAuthApi() instead
+ */
+export const requireAuth = requireAuthPage;

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { actionClient } from '@/lib/safe-action';
-import { requireAuth } from '@/lib/server/auth';
+import { requireAuthPage } from '@/lib/server/auth';
 import {
   createFolder,
   deleteFolder,
@@ -21,7 +21,7 @@ export const createFolderAction = actionClient
   .schema(createFolderSchema)
   .action(async ({ parsedInput }) => {
     const { name, parentFolderId } = parsedInput;
-    const session = await requireAuth();
+    const session = await requireAuthPage();
 
     // Handle duplicate names by adding suffix
     const folderName = await handleDuplicateFolderName(
@@ -61,7 +61,7 @@ export const deleteFolderAction = actionClient
   .schema(deleteFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId } = parsedInput;
-    const session = await requireAuth();
+    const session = await requireAuthPage();
 
     const { parentFolderId } = await deleteFolder(folderId, session.user.id);
 
@@ -82,7 +82,7 @@ export const renameFolderAction = actionClient
   .schema(renameFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId, name } = parsedInput;
-    const session = await requireAuth();
+    const session = await requireAuthPage();
 
     await renameFolder(folderId, name, session.user.id);
 
@@ -98,7 +98,7 @@ export const moveFolderAction = actionClient
   .schema(moveFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId, parentFolderId, sourceParentFolderId } = parsedInput;
-    const session = await requireAuth();
+    const session = await requireAuthPage();
 
     await moveFolder(folderId, parentFolderId || null, session.user.id);
 

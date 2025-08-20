@@ -87,35 +87,19 @@ export const getPresignedUrlForTrack = async (
 export async function createTrack(data: TrackCreateData) {
   const now = new Date();
 
-  // Create the track
+  // Create the track (remove implicit version creation)
   const base = TrackCreateDataSchema.parse(data);
   const newTrack = {
     ...base,
     id: nanoid(),
     createdAt: now,
     updatedAt: now,
+    // Remove activeVersionId from initial creation
+    // Versions should be created explicitly via createTrackVersion
+    activeVersionId: null,
   };
 
   const [createdTrack] = await db.insert(track).values(newTrack).returning();
-
-  // Create initial version if file data is provided
-  if (data.activeVersionId) {
-    const initialVersionBase = TrackVersionCreateDataSchema.parse({
-      trackId: createdTrack.id,
-      fileKey: '',
-      size: 0,
-      duration: 0,
-      mimeType: '',
-      metadata: null,
-    });
-    await db.insert(trackVersion).values({
-      ...initialVersionBase,
-      id: data.activeVersionId,
-      version: 1,
-      createdAt: now,
-    });
-  }
-
   return createdTrack;
 }
 
@@ -154,29 +138,33 @@ export async function moveTrack(
 // ================================
 
 export async function createTrackVersion(data: TrackVersionCreateData) {
-  // Get the next version number
-  const existingVersions = await db
-    .select({ version: trackVersion.version })
-    .from(trackVersion)
-    .where(eq(trackVersion.trackId, data.trackId))
-    .orderBy(desc(trackVersion.version))
-    .limit(1);
+  // Use transaction to prevent race conditions
+  return await db.transaction(async (tx) => {
+    // Get the next version number with locking
+    const existingVersions = await tx
+      .select({ version: trackVersion.version })
+      .from(trackVersion)
+      .where(eq(trackVersion.trackId, data.trackId))
+      .orderBy(desc(trackVersion.version))
+      .limit(1);
 
-  const nextVersion = (existingVersions[0]?.version || 0) + 1;
+    const nextVersion = (existingVersions[0]?.version || 0) + 1;
 
-  const base = TrackVersionCreateDataSchema.parse(data);
-  const newVersion = {
-    ...base,
-    id: nanoid(),
-    version: nextVersion,
-    createdAt: new Date(),
-  };
+    const base = TrackVersionCreateDataSchema.parse(data);
+    const newVersion = {
+      ...base,
+      id: nanoid(),
+      version: nextVersion,
+      createdAt: new Date(),
+    };
 
-  const [version] = await db
-    .insert(trackVersion)
-    .values(newVersion)
-    .returning();
-  return TrackWithVersionsSchema.shape.versions.element.parse(version);
+    const [version] = await tx
+      .insert(trackVersion)
+      .values(newVersion)
+      .returning();
+
+    return TrackWithVersionsSchema.shape.versions.element.parse(version);
+  });
 }
 
 export async function setActiveVersion(
@@ -184,6 +172,27 @@ export async function setActiveVersion(
   versionId: string,
   userId: string
 ): Promise<void> {
+  // Verify that the version belongs to the track and user owns the track
+  const [versionCheck] = await db
+    .select({
+      trackId: trackVersion.trackId,
+      userId: track.userId,
+    })
+    .from(trackVersion)
+    .innerJoin(track, eq(track.id, trackVersion.trackId))
+    .where(
+      and(
+        eq(trackVersion.id, versionId),
+        eq(trackVersion.trackId, trackId),
+        eq(track.userId, userId)
+      )
+    )
+    .limit(1);
+
+  if (!versionCheck) {
+    throw new Error('Version not found or does not belong to the specified track');
+  }
+
   await db
     .update(track)
     .set({ activeVersionId: versionId, updatedAt: new Date() })
