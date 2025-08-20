@@ -90,6 +90,15 @@ export function ProjectCard({
   // Use the project hook for image upload functionality
   const { uploadImage, isUploadingImage, presignedImageUrl } = useProject({
     projectId: project.id,
+    enabled: false, // avoid fetching the full project on the vault grid
+    initialData:
+      'tracks' in project
+        ? (project as ProjectWithTracks)
+        : ({
+            ...(project as Project),
+            tracks: [],
+            trackCount: displayTrackCount,
+          } as ProjectWithTracks),
   });
 
   const [, deleteAction, isDeleting] = useDeleteProjectAction({

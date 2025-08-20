@@ -61,7 +61,7 @@ export const setProjectImageKey = async (
     .set({ image: imageKey, updatedAt: new Date() })
     .where(eq(project.id, projectId));
 };
-export async function getVaultProjects(userId: string) {
+export async function getRootProjects(userId: string) {
   const projects = await db
     .select({
       id: project.id,

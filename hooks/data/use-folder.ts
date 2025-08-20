@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   FolderGetResponseSchema,
   FoldersListResponseSchema,
@@ -30,15 +30,6 @@ export function useFolder(folderId: string) {
 }
 
 export function useRootFolders() {
-  const queryClient = useQueryClient();
-  const [treeEntry] = queryClient.getQueriesData<VaultData>({
-    queryKey: vaultKeys.tree(),
-  });
-  const treeData = treeEntry?.[1];
-  const fromTree = Array.isArray(treeData?.folders)
-    ? (treeData!.folders as unknown as FolderWithProjects[])
-    : undefined;
-
   return useQuery({
     queryKey: vaultKeys.folders(),
     queryFn: async (): Promise<FolderWithProjects[]> => {
@@ -47,7 +38,6 @@ export function useRootFolders() {
       const json = await response.json();
       return FoldersListResponseSchema.parse(json);
     },
-    placeholderData: fromTree,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });

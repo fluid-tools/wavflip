@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { vaultKeys } from '@/hooks/data/keys';
 import { getCachedSession } from '@/lib/server/auth';
-import { getVaultData } from '@/lib/server/vault';
+import { getUserFolders, getVaultData, getRootProjects } from '@/lib/server/vault';
 
 interface VaultLayoutProps {
   children: ReactNode;
@@ -35,6 +35,20 @@ export default async function VaultLayout({ children }: VaultLayoutProps) {
     queryFn: () => getVaultData(session.user.id),
     staleTime: 5 * 60 * 1000,
   });
+
+  // Prefetch root folders and root projects for immediate availability in /vault
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: vaultKeys.folders(),
+      queryFn: () => getUserFolders(session.user.id),
+      staleTime: 5 * 60 * 1000,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: vaultKeys.projects(),
+      queryFn: () => getRootProjects(session.user.id),
+      staleTime: 5 * 60 * 1000,
+    }),
+  ]);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

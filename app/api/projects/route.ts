@@ -8,7 +8,7 @@ import { requireAuth } from '@/lib/server/auth';
 import {
   createProject,
   deleteProject,
-  getVaultProjects,
+  getRootProjects,
   handleDuplicateProjectName,
 } from '@/lib/server/vault';
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const session = await requireAuth();
 
     // Get only root-level projects (not in any folder)
-    const projects = await getVaultProjects(session.user.id);
+    const projects = await getRootProjects(session.user.id);
     return NextResponse.json(ProjectsListResponseSchema.parse(projects));
   } catch (error) {
     console.error('Failed to fetch vault projects:', error);

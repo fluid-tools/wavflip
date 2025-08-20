@@ -32,7 +32,6 @@ export function VaultBreadcrumbs() {
   // Only fetch project data when on project page
   const { project: projectData } = useProject({
     projectId: projectId || '',
-    initialData: undefined,
     enabled: isProject && !!projectId,
   });
 

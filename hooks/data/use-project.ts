@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 import { generateWaveformData } from '@/lib/audio/waveform-generator';
-import { ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
+import { ProjectGetResponseSchema, ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
 import { TrackCreateFormSchema } from '@/lib/contracts/api/tracks';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
 import { ProjectWithTracksSchema } from '@/lib/contracts/project';
@@ -41,7 +41,8 @@ export function useProject({
         throw new Error('Failed to fetch project');
       }
       const json = await response.json();
-      return ProjectWithTracksSchema.parse(json);
+      // Parse API payload (dates as ISO strings) and coerce to ProjectWithTracks shape
+      return ProjectGetResponseSchema.parse(json) as ProjectWithTracks;
     },
     // Use placeholderData instead of initialData to ensure invalidation works
     initialData: initialData,
@@ -55,13 +56,6 @@ export function useProject({
     queryKey: [queryKey, 'presigned-image'],
     queryFn: async () => {
       if (!query.data?.image) return null;
-
-      // Check if we already have a prefetched presigned URL
-      const cachedUrl = queryClient.getQueryData<string>([
-        queryKey,
-        'presigned-image',
-      ]);
-      if (cachedUrl) return cachedUrl;
 
       // Otherwise fetch from API
       const res = await fetch(`/api/projects/${projectId}/image`);
@@ -594,15 +588,6 @@ export function useProject({
 }
 
 export function useRootProjects() {
-  const queryClient = useQueryClient();
-  const [treeEntry] = queryClient.getQueriesData<VaultData>({
-    queryKey: vaultKeys.tree(),
-  });
-  const treeData = treeEntry?.[1];
-  const fromTree = Array.isArray(treeData?.rootProjects)
-    ? (treeData!.rootProjects as unknown as ProjectWithTracks[])
-    : undefined;
-
   return useQuery({
     queryKey: vaultKeys.projects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
@@ -611,7 +596,6 @@ export function useRootProjects() {
       const json = await response.json();
       return ProjectsListResponseSchema.parse(json);
     },
-    initialData: fromTree,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });

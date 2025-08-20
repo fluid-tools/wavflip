@@ -1,7 +1,8 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
-import { useProject } from '@/hooks/data/use-project';
+import { vaultKeys } from '@/hooks/data/keys';
 
 interface FolderPreviewImageProps {
   projectId: string;
@@ -19,11 +20,17 @@ export function FolderPreviewImage({
   sizes = '(max-width: 640px) 80px, (max-width: 768px) 90px, (max-width: 1024px) 100px, 120px',
   className = 'object-cover',
 }: FolderPreviewImageProps) {
-  // Use the same hook as ProjectCard for consistency
-  // We only need the presignedImageUrl, not the full project data
-  const { presignedImageUrl: presignedUrl } = useProject({
-    projectId,
-    enabled: !!imageKey, // Only fetch if there's an image
+  // Only need the presigned image URL; avoid fetching full project
+  const { data: presignedUrl } = useQuery({
+    queryKey: [...vaultKeys.project(projectId), 'presigned-image'],
+    queryFn: async () => {
+      const res = await fetch(`/api/projects/${projectId}/image`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data?.signedUrl as string) ?? null;
+    },
+    enabled: !!imageKey,
+    staleTime: 60 * 1000,
   });
 
   if (!imageKey) {
