@@ -158,7 +158,7 @@ export function useGenerations() {
               queryKey: waveformKeys.byKey(key),
             });
           }
-        } catch (_err) {}
+        } catch {}
       })();
       // Invalidate local cache to reflect the new offline track
       queryClient.invalidateQueries({ queryKey: generationsKeys.localCache() });
@@ -226,7 +226,7 @@ export function useGenerations() {
             }),
           });
           queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(id) });
-        } catch (_e) {}
+        } catch {}
       })();
 
       await queryClient.invalidateQueries({

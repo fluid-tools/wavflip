@@ -71,7 +71,7 @@ export async function listAudioFiles(prefix?: string): Promise<AudioTrack[]> {
         model: 'elevenlabs',
       },
     }));
-  } catch (_error) {
+  } catch {
     return [];
   }
 }

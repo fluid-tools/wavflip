@@ -128,8 +128,11 @@ export function ChatMessage({
       {sound?.metadata?.prompt && (
         <ContextMenuItem
           onClick={() => {
-            navigator.clipboard.writeText(sound.metadata?.prompt!);
-            toast.success('Prompt copied to clipboard');
+            const prompt = sound.metadata?.prompt;
+            if (prompt) {
+              navigator.clipboard.writeText(prompt);
+              toast.success('Prompt copied to clipboard');
+            }
           }}
         >
           <Copy className="mr-2 h-4 w-4" />
@@ -166,8 +169,11 @@ export function ChatMessage({
       {sound?.metadata?.prompt && (
         <DropdownMenuItem
           onClick={() => {
-            navigator.clipboard.writeText(sound.metadata?.prompt!);
-            toast.success('Prompt copied to clipboard');
+            const prompt = sound.metadata?.prompt;
+            if (prompt) {
+              navigator.clipboard.writeText(prompt);
+              toast.success('Prompt copied to clipboard');
+            }
           }}
         >
           <Copy className="mr-2 h-4 w-4" />

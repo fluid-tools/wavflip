@@ -151,7 +151,7 @@ export function UploadTrackDialog({
 
       setOpen(false);
       resetForm();
-    } catch (_error) {
+    } catch {
       // Error handling is done in the hook
     }
   };

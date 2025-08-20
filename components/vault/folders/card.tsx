@@ -97,13 +97,13 @@ export function FolderCard({
     });
   };
 
-  const handleDelete = async (_formData: FormData) => {
+  const handleDelete = async () => {
     deleteExecute({
       folderId: folder.id,
     });
   };
 
-  const handleMove = async (_formData: FormData) => {
+  const handleMove = async () => {
     moveExecute({
       folderId: folder.id,
       parentFolderId: selectedDestinationId || null,

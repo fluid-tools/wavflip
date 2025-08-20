@@ -112,7 +112,7 @@ export function useStorageEstimate() {
                 ).usageDetails
               : undefined,
         };
-      } catch (_error) {
+      } catch {
         return null;
       }
     },

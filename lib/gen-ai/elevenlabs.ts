@@ -124,7 +124,7 @@ class ElevenLabsClient {
     try {
       const response = await this.makeRequest('/v1/voices');
       return await response.json();
-    } catch (_error) {
+    } catch {
       return { voices: [] };
     }
   }

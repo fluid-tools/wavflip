@@ -74,7 +74,7 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
         callbackURL: `${process.env.NEXT_PUBLIC_BASE_URL}/vault`,
       });
       toast.success('Verification email sent! Check your inbox.');
-    } catch (_error) {
+    } catch {
       toast.error('Failed to send verification email. Please try again.');
     } finally {
       setIsResending(false);
@@ -95,7 +95,7 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
       toast.success(
         'Password reset email sent! Check your inbox to change your password.'
       );
-    } catch (_error) {
+    } catch {
       toast.error('Failed to send password reset email. Please try again.');
     } finally {
       setIsRequestingPasswordReset(false);

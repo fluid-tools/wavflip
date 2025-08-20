@@ -94,7 +94,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
     try {
       await saveOfflineAsync(sound);
       toast.success('Saved for offline access');
-    } catch (_error) {
+    } catch {
       toast.error('Failed to save offline');
     } finally {
       setSavingOffline(null);
@@ -108,7 +108,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
     try {
       await removeOfflineAsync(sound);
       toast.success('Removed from offline storage');
-    } catch (_error) {
+    } catch {
       toast.error('Failed to remove offline');
     } finally {
       setRemovingOffline(null);
@@ -184,10 +184,11 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                               data-no-play
                               onSelect={(e) => {
                                 stopSelect(e);
-                                navigator.clipboard.writeText(
-                                  sound.metadata?.prompt!
-                                );
-                                toast.success('Prompt copied to clipboard');
+                                const prompt = sound.metadata?.prompt;
+                                if (prompt) {
+                                  navigator.clipboard.writeText(prompt);
+                                  toast.success('Prompt copied to clipboard');
+                                }
                               }}
                             >
                               <Copy className="mr-2 h-3.5 w-3.5" />
@@ -332,8 +333,11 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
               <ContextMenuItem
                 className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
                 onClick={() => {
-                  navigator.clipboard.writeText(sound.metadata?.prompt!);
-                  toast.success('Prompt copied to clipboard');
+                  const prompt = sound.metadata?.prompt;
+                  if (prompt) {
+                    navigator.clipboard.writeText(prompt);
+                    toast.success('Prompt copied to clipboard');
+                  }
                 }}
               >
                 <Copy className="mr-2 h-4 w-4" />

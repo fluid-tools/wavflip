@@ -104,7 +104,7 @@ export default function SignIn() {
         callbackURL: `${process.env.NEXT_PUBLIC_BASE_URL}/vault`,
       });
       toast.success('Verification email sent! Check your inbox.');
-    } catch (_error) {
+    } catch {
       toast.error('Failed to send verification email. Please try again.');
     } finally {
       setIsResendingVerification(false);
@@ -124,7 +124,7 @@ export default function SignIn() {
         redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`,
       });
       toast.success('Password reset email sent! Check your inbox.');
-    } catch (_error) {
+    } catch {
       toast.error('Failed to send password reset email. Please try again.');
     } finally {
       setIsRequestingReset(false);

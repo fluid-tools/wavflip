@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(result);
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to generate upload URL' },
       { status: 500 }

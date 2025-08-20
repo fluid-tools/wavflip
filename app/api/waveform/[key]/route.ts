@@ -61,7 +61,7 @@ export async function GET(
       generatedAt: new Date().toISOString(),
       key,
     });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -142,11 +142,11 @@ export async function POST(
           .update(trackVersion)
           .set({ duration: numericDuration })
           .where(eq(trackVersion.fileKey, key));
-      } catch (_e) {}
+      } catch {}
     }
 
     return NextResponse.json({ success: true });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

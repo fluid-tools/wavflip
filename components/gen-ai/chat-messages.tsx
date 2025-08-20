@@ -34,13 +34,12 @@ export function ChatMessages({
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
     scrollToBottom();
-  }, [scrollToBottom]);
+  }, []);
 
   return (
     <div className={cn('relative min-h-0 flex-1', className)}>

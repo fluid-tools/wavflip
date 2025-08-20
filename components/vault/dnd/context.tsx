@@ -224,7 +224,7 @@ export function VaultDndProvider({
         }
 
         setSelectedItems(new Set());
-      } catch (_error) {
+      } catch {
         toast.error('Failed to move item');
       }
     },

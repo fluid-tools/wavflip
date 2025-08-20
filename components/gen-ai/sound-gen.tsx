@@ -153,7 +153,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
         );
         toast.error(res?.serverError || 'Failed to generate');
       }
-    } catch (_error) {
+    } catch {
       dispatchPlayerAction({ type: 'ERROR' });
       setMessages((prev) =>
         prev.map((msg) =>

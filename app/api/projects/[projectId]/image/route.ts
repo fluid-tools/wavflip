@@ -53,7 +53,7 @@ export async function POST(
       success: true,
       resourceKey: uploadResult.filename,
     });
-  } catch (_error) {
+  } catch {
     return Response.json(
       {
         success: false,
@@ -83,7 +83,7 @@ export async function GET(
       );
     }
     return Response.json({ success: true, signedUrl });
-  } catch (_error) {
+  } catch {
     return Response.json(
       { success: false, error: 'Failed to get presigned URL' },
       { status: 500 }

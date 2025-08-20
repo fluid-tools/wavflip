@@ -196,7 +196,7 @@ export function useProject({
             key,
           });
           queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(key) });
-        } catch (_err) {}
+        } catch {}
       })();
 
       return response.json();
@@ -574,7 +574,7 @@ export function useProject({
             );
           } else {
           }
-        } catch (_error) {}
+        } catch {}
 
         toast.success('Project image updated successfully');
       }

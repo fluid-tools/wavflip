@@ -21,7 +21,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Track not found' }, { status: 404 });
     }
     return NextResponse.json({ url: presignedUrl });
-  } catch (_error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to generate presigned URL' },
       { status: 500 }

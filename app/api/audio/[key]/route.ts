@@ -46,7 +46,7 @@ export async function GET(
       status: 200,
       headers,
     });
-  } catch (_err) {
+  } catch {
     return new Response('Internal Server Error', { status: 500 });
   }
 }

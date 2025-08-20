@@ -122,13 +122,13 @@ export function ProjectCard({
     });
   };
 
-  const handleDelete = async (_formData: FormData) => {
+  const handleDelete = async () => {
     deleteExecute({
       projectId: project.id,
     });
   };
 
-  const handleMove = async (_formData: FormData) => {
+  const handleMove = async () => {
     moveExecute({
       projectId: project.id,
       folderId: selectedDestinationId || null,

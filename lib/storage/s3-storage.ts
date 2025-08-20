@@ -166,15 +166,21 @@ export async function listAudioFilesS3(
     new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix })
   );
   return (
-    Contents?.map((obj) => ({
-      id: obj.Key!,
-      key: obj.Key!,
-      title: obj.Key?.split('/').pop()!,
-      url: `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${obj.Key}`,
-      createdAt: obj.LastModified ?? new Date(),
-      type: 'generated' as const,
-      metadata: { prompt: 'Unknown', model: 's3' },
-    })) ?? []
+    Contents?.map((obj) => {
+      const key = obj.Key;
+      if (!key) return null;
+      
+      const fileName = key.split('/').pop();
+      return {
+        id: key,
+        key: key,
+        title: fileName || 'Unknown',
+        url: `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+        createdAt: obj.LastModified ?? new Date(),
+        type: 'generated' as const,
+        metadata: { prompt: 'Unknown', model: 's3' },
+      };
+    }).filter(Boolean) ?? []
   );
 }
 
@@ -191,7 +197,7 @@ export async function getPresignedUrl(
       if (cached) {
         return cached;
       }
-    } catch (_error) {
+    } catch {
       // Continue to generate new URL if cache fails
     }
   }
@@ -204,7 +210,7 @@ export async function getPresignedUrl(
   if (cacheKey) {
     try {
       await redis.set(cacheKey, presignedUrl, { ex: expiresIn - 60 }); // Cache for slightly less than expiry
-    } catch (_error) {
+    } catch {
       // Continue even if caching fails
     }
   }
@@ -226,7 +232,7 @@ export async function getPresignedImageUrl(
       if (cached) {
         return cached;
       }
-    } catch (_error) {
+    } catch {
       // Continue to generate new URL if cache fails
     }
   }
@@ -240,7 +246,7 @@ export async function getPresignedImageUrl(
     try {
       const cacheKey = REDIS_KEYS.presignedImage(projectId);
       await redis.set(cacheKey, presignedUrl, { ex: REDIS_TTL.presignedUrl });
-    } catch (_error) {
+    } catch {
       // Continue even if caching fails
     }
   }
@@ -251,7 +257,7 @@ export async function getPresignedImageUrl(
 export async function bustPresignedCache(cacheKey: string): Promise<void> {
   try {
     await redis.del(cacheKey);
-  } catch (_error) {}
+  } catch {}
 }
 
 export async function bustPresignedImageCache(
@@ -300,7 +306,7 @@ export async function uploadProjectImage(
     }
 
     return { success: true, filename };
-  } catch (_error) {
+  } catch {
     return { success: false, error: 'Failed to upload image' };
   }
 }

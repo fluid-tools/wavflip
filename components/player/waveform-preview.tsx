@@ -128,7 +128,7 @@ export function WaveformPreview({
         if (onTimeUpdate) {
           wavesurfer.on('timeupdate', onTimeUpdate);
         }
-      } catch (_error) {}
+      } catch {}
     };
 
     let cancelled = false;

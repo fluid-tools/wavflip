@@ -79,7 +79,7 @@ export default function PlayerDock() {
     if (wavesurferRef.current) {
       try {
         wavesurferRef.current.pause();
-      } catch (_error) {}
+      } catch {}
       wavesurferRef.current.destroy();
       wavesurferRef.current = null;
     }
@@ -170,8 +170,8 @@ export default function PlayerDock() {
             setIsActuallyPlaying(true);
           };
           const handleError = async () => {
-            const _err: MediaError | null =
-              (media && (media as HTMLMediaElement).error) || null;
+            // MediaError is not used, but we check for its existence
+            const hasError = media && (media as HTMLMediaElement).error;
             setIsActuallyPlaying(false);
             // Fallback chain:
             // 1) If blob failed and we have a key, load from OPFS again to refresh blob URL
@@ -298,10 +298,10 @@ export default function PlayerDock() {
           setIsActuallyPlaying(false);
           dispatchPlayerAction({ type: 'STOP' });
         });
-        wavesurfer.on('error', (_error: unknown) => {});
+        wavesurfer.on('error', () => {});
         // Set initial volume
         wavesurfer.setVolume(muted ? 0 : volume);
-      } catch (_e) {}
+      } catch {}
     };
     loadWaveform();
 
@@ -309,7 +309,7 @@ export default function PlayerDock() {
       if (wavesurferRef.current) {
         try {
           wavesurferRef.current.pause();
-        } catch (_error) {}
+        } catch {}
         wavesurferRef.current.destroy();
         wavesurferRef.current = null;
       }
@@ -379,7 +379,7 @@ export default function PlayerDock() {
 
     try {
       wavesurferRef.current.playPause();
-    } catch (_error) {
+    } catch {
       dispatchPlayerAction({ type: 'ERROR' });
     }
   };
@@ -403,7 +403,7 @@ export default function PlayerDock() {
       toast.success('Track saved offline!');
       // Refresh storage estimate
       queryClient.invalidateQueries({ queryKey: vaultKeys.storage() });
-    } catch (_error) {
+    } catch {
       toast.error('Failed to save track to vault');
     } finally {
       setIsSaving(false);
