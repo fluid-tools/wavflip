@@ -111,10 +111,14 @@ Available helpers:
 
 ## Future Considerations
 
-1. **Tracks Unification**: Consider moving tracks to server actions if state management can be resolved
-2. **Player Integration**: Ensure audio player state (Jotai) remains separate from data fetching (React Query)
-3. **Performance**: Monitor React Query cache size and invalidation patterns
-4. **Consistency**: Aim for more unified patterns where possible without sacrificing UX
+1. **Adopt Next.js "use cache" for server readers**
+   - Wrap `getVaultData`, `getUserFolders`, `getRootProjects`, `getFolderWithContents`, `getProjectWithTracks` with `"use cache"` and attach tags.
+   - Continue SSR + Hydration; RSCs call cached readers directly, cutting boilerplate.
+   - Mutations: keep client invalidation; add `revalidateTag` on server actions.
+2. **Tracks Unification**: Consider partial server actions (e.g., rename/move) while keeping uploads as client mutations.
+3. **Player Integration**: Keep audio player (Jotai) separate from data fetching.
+4. **Performance**: Monitor cache size and invalidation fan-out; promote per-entity tags to avoid broad invalidations.
+5. **Consistency**: Maintain contract separation (tree vs folders/projects vs project detail) to avoid coercion.
 
 ## Memory References
 
@@ -122,6 +126,15 @@ Available helpers:
 - Prefer client-side invalidation via `useVaultInvalidation()` instead of `revalidatePath` where possible
 - Keep audio player state separate from data fetching logic
 - Use client-side uploads for large files (audio)
+
+## RSC + "use cache" Tag Map
+
+- `vault:tree` → `/api/vault/tree`, sidebar/picker
+- `vault:folders:root` → `/api/folders`, vault grid root folders
+- `vault:folder:${folderId}` → `/api/folders/[folderId]`, folder page
+- `vault:projects:root` → `/api/projects`, vault grid root projects
+- `vault:project:${projectId}` → `/api/projects/[projectId]`, project page
+- `waveform:${fileKey}` → `/api/waveform/[key]`, waveform data
 
 ## Reference: next-safe-action
 

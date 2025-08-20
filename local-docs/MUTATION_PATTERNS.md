@@ -5,6 +5,7 @@ This document outlines the standardized patterns for client-side mutations in ou
 Notes:
 - These patterns are used primarily for tracks, uploads, and other complex client-driven flows.
 - For server actions (folders/projects CRUD, generation flows), we prefer next-safe-action. See State Management Patterns for details and the next-safe-action docs (`http://next-safe-action.dev/`).
+- Forward-looking: when we adopt the Next.js "use cache" directive, client mutation patterns remain the same; server writes will also trigger tag-based revalidation.
 
 ## 🎯 Core Philosophy
 
@@ -217,6 +218,22 @@ queryClient.setQueriesData(
 )
 ```
 
+## 🧩 RSC + "use cache" migration notes
+
+When we enable the experimental `"use cache"` directive (Next 15):
+
+- Wrap server readers (`getUserFolders`, `getRootProjects`, `getFolderWithContents`, `getProjectWithTracks`) with `"use cache"` and attach stable tags.
+- Mutations continue to invalidate client caches; server actions also call `revalidateTag(tag)` to evict server cache entries.
+- Suggested tags:
+  - `vault:tree`
+  - `vault:folders:root`
+  - `vault:folder:${folderId}`
+  - `vault:projects:root`
+  - `vault:project:${projectId}`
+  - `waveform:${fileKey}`
+
+Minimal change at mutation sites: keep `queryClient.invalidateQueries(...)`; ensure server write paths also revalidate tags.
+
 ## 📝 Real-World Examples
 
 ### Project Image Upload
@@ -396,6 +413,7 @@ When updating existing mutations to follow this pattern:
 - [ ] Test optimistic updates work correctly
 - [ ] Test error rollback works correctly
 - [ ] Test memory cleanup (no blob URL leaks)
+.- [ ] If a server action is involved, ensure it calls `revalidatePath(...)` today and will call `revalidateTag(...)` once tags exist.
 
 ## 📎 Related: Server Actions (next-safe-action)
 
