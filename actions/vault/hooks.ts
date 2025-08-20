@@ -23,10 +23,7 @@ type UseVaultActionOptions = {
   onError?: (error: string) => void;
 };
 
-function createVaultHook<T extends (...args: unknown[]) => unknown>(
-  action: T,
-  defaultSuccessMessage: string
-) {
+function createVaultHook(action: any, defaultSuccessMessage: string) {
   return (options: Omit<UseVaultActionOptions, 'successMessage'> = {}) => {
     const invalidate = useVaultInvalidation();
     const {

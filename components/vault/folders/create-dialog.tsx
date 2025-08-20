@@ -50,8 +50,9 @@ export function CreateFolderDialog({
   const { execute: createFolderExecute } = useCreateFolderAction({
     onSuccess: (result) => {
       // Move selected items to the newly created folder
-      if (selectedItems.length > 0 && result?.folder?.id) {
-        const newFolderId = result.folder.id;
+      if (selectedItems.length > 0 && result && 'data' in result && result.data && 'folder' in result.data) {
+        const folder = result.data.folder as { id: string };
+        const newFolderId = folder.id;
 
         // Process items using the proper action hooks with startTransition
         startTransition(() => {
