@@ -2,19 +2,19 @@
  * Waveform data generation and caching utilities
  */
 
-export interface WaveformData {
+export type WaveformData = {
   peaks: number[];
   duration: number;
   sampleRate: number;
   channels: number;
   bits: number;
-}
+};
 
-export interface CachedWaveformData {
+export type CachedWaveformData = {
   data: WaveformData;
   generatedAt: string;
   key: string;
-}
+};
 
 /**
  * Generate waveform data from audio buffer
@@ -51,8 +51,9 @@ export async function generateWaveformData(
 
   // Compute max-absolute envelope across all channels per bin
   const channelArrays: Float32Array[] = [];
-  for (let c = 0; c < channels; c++)
+  for (let c = 0; c < channels; c++) {
     channelArrays.push(decoded.getChannelData(c));
+  }
 
   const peaks: number[] = new Array(peaksCount);
   for (let i = 0; i < peaksCount; i++) {
@@ -64,9 +65,13 @@ export async function generateWaveformData(
       // combine channels by max abs
       for (let c = 0; c < channels; c++) {
         const v = Math.abs(channelArrays[c][j]);
-        if (v > abs) abs = v;
+        if (v > abs) {
+          abs = v;
+        }
       }
-      if (abs > max) max = abs;
+      if (abs > max) {
+        max = abs;
+      }
     }
     peaks[i] = max;
   }
@@ -111,7 +116,9 @@ export function generatePlaceholderWaveform(duration: number): WaveformData {
  */
 export function normalizePeaks(peaks: number[], targetHeight = 1): number[] {
   const maxPeak = Math.max(...peaks);
-  if (maxPeak === 0) return peaks.map(() => 0);
+  if (maxPeak === 0) {
+    return peaks.map(() => 0);
+  }
 
   return peaks.map((peak) => (peak / maxPeak) * targetHeight);
 }

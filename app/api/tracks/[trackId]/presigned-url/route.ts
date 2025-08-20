@@ -2,13 +2,13 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/server/auth';
 import { getPresignedUrlForTrack } from '@/lib/server/vault/track';
 
-interface RouteParams {
+type RouteParams = {
   params: Promise<{
     trackId: string;
   }>;
-}
+};
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const session = await requireAuth();
     const { trackId } = await params;
@@ -21,8 +21,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Track not found' }, { status: 404 });
     }
     return NextResponse.json({ url: presignedUrl });
-  } catch (error) {
-    console.error('Failed to generate presigned URL:', error);
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to generate presigned URL' },
       { status: 500 }

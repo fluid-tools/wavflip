@@ -17,19 +17,23 @@ import {
   renameProjectAction,
 } from './project';
 
-interface UseVaultActionOptions {
+type UseVaultActionOptions = {
   successMessage?: string;
-  onSuccess?: (result: any) => void;
+  onSuccess?: (result: unknown) => void;
   onError?: (error: string) => void;
-}
+};
 
-function createVaultHook<T extends (...args: any[]) => any>(
+function createVaultHook<T extends (...args: unknown[]) => unknown>(
   action: T,
   defaultSuccessMessage: string
 ) {
   return (options: Omit<UseVaultActionOptions, 'successMessage'> = {}) => {
     const invalidate = useVaultInvalidation();
-    const { successMessage = defaultSuccessMessage, onSuccess, onError } = {
+    const {
+      successMessage = defaultSuccessMessage,
+      onSuccess,
+      onError,
+    } = {
       successMessage: defaultSuccessMessage,
       ...options,
     };
@@ -49,7 +53,8 @@ function createVaultHook<T extends (...args: any[]) => any>(
         onSuccess?.(result);
       },
       onError: (error) => {
-        const errorMessage = error.error?.serverError as string || 'An error occurred';
+        const errorMessage =
+          (error.error?.serverError as string) || 'An error occurred';
         toast.error(errorMessage);
         onError?.(errorMessage);
       },

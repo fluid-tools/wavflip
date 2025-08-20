@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-interface UseAutoResizeTextareaProps {
+type UseAutoResizeTextareaProps = {
   minHeight: number;
   maxHeight?: number;
-}
+};
 
 export function useAutoResizeTextarea({
   minHeight,
@@ -14,7 +14,9 @@ export function useAutoResizeTextarea({
   const adjustHeight = useCallback(
     (reset?: boolean) => {
       const textarea = textareaRef.current;
-      if (!textarea) return;
+      if (!textarea) {
+        return;
+      }
 
       if (reset) {
         textarea.style.height = `${minHeight}px`;

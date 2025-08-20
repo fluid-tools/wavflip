@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { FolderPicker } from '@/components/vault/folders/picker';
 
-interface MoveDialogProps {
+type MoveDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   itemName: string;
@@ -21,7 +21,7 @@ interface MoveDialogProps {
   excludeFolderId?: string; // For folders, exclude self from picker
   onSubmit: (destinationFolderId: string | null) => void;
   isLoading?: boolean;
-}
+};
 
 export function MoveDialog({
   open,

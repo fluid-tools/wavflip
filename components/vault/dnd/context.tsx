@@ -32,7 +32,7 @@ import type {
   ItemType,
 } from './types';
 
-interface VaultDndContextType {
+type VaultDndContextType = {
   activeDragData: DragData | null;
   selectedItems: Set<string>;
   toggleSelection: (id: string) => void;
@@ -40,7 +40,7 @@ interface VaultDndContextType {
   onDragMove: (operation: Omit<DragOperation, 'timestamp'>) => Promise<void>;
   undo: () => Promise<void>;
   canDrop: (dragType: ItemType, dropType: string) => boolean;
-}
+};
 
 const VaultDndContext = createContext<VaultDndContextType | null>(null);
 
@@ -123,7 +123,9 @@ export function VaultDndProvider({
   const handleDragMove = useCallback(
     (event: DragMoveEvent) => {
       const { active, over } = event;
-      if (!(over && active.data.current)) return;
+      if (!(over && active.data.current)) {
+        return;
+      }
 
       const dragData = active.data.current as DragData;
       const dropData = over.data.current as DropData;
@@ -144,29 +146,38 @@ export function VaultDndProvider({
       document.body.style.cursor = '';
 
       // Early returns - all validation checks grouped together
-      if (!(over && active.data.current)) return;
+      if (!(over && active.data.current)) {
+        return;
+      }
 
       const dragData = active.data.current as DragData;
       const dropData = over.data.current as DropData;
 
       // Prevent dropping on self
-      if (active.id === over.id) return;
+      if (active.id === over.id) {
+        return;
+      }
 
       // Prevent invalid drop combinations (silently)
-      if (!canDrop(dragData.type, dropData.type)) return;
+      if (!canDrop(dragData.type, dropData.type)) {
+        return;
+      }
 
       // Prevent project-to-project self-drops (silently)
       if (
         dragData.type === 'project' &&
         dropData.type === 'project' &&
         dragData.id === dropData.id
-      )
+      ) {
         return;
+      }
 
       // Prevent dropping item back to its current location (silently)
       const sourceLocation = dragData.sourceContainer || 'vault';
       const targetLocation = dropData.id || 'vault';
-      if (sourceLocation === targetLocation) return;
+      if (sourceLocation === targetLocation) {
+        return;
+      }
 
       const operation: DragOperation = {
         type: dragData.type,
@@ -213,8 +224,7 @@ export function VaultDndProvider({
         }
 
         setSelectedItems(new Set());
-      } catch (error) {
-        console.error('Drag operation failed:', error);
+      } catch (_error) {
         toast.error('Failed to move item');
       }
     },

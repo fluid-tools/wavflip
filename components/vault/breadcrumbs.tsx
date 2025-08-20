@@ -6,11 +6,11 @@ import { usePathname } from 'next/navigation';
 import { useFolderPath } from '@/hooks/data/use-folder';
 import { useProject } from '@/hooks/data/use-project';
 
-interface FolderPathItem {
+type FolderPathItem = {
   id: string;
   name: string;
   parentFolderId: string | null;
-}
+};
 
 export function VaultBreadcrumbs() {
   const pathname = usePathname();

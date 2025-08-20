@@ -22,12 +22,18 @@ export function useVaultTree(opts?: {
     queryFn: async (): Promise<VaultData> => {
       const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL);
       url.searchParams.set('levels', String(!!levels));
-      if (excludeId) url.searchParams.set('exclude', excludeId);
-      if (stats) url.searchParams.set('stats', 'true');
+      if (excludeId) {
+        url.searchParams.set('exclude', excludeId);
+      }
+      if (stats) {
+        url.searchParams.set('stats', 'true');
+      }
       const response = await fetch(url.toString(), {
         headers: { Accept: 'application/json' },
       });
-      if (!response.ok) throw new Error('Failed to fetch vault tree');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vault tree');
+      }
       const json = await response.json();
       return VaultDataSchema.parse(json);
     },
@@ -65,7 +71,7 @@ export function useVaultInvalidation() {
 // STORAGE HOOK
 // ================================
 
-interface StorageInfo {
+type StorageInfo = {
   usage: number;
   quota: number;
   usagePercentage: number;
@@ -76,7 +82,7 @@ interface StorageInfo {
     caches?: number;
     serviceWorker?: number;
   };
-}
+};
 
 export function useStorageEstimate() {
   return useQuery({
@@ -106,8 +112,7 @@ export function useStorageEstimate() {
                 ).usageDetails
               : undefined,
         };
-      } catch (error) {
-        console.error('Failed to estimate storage:', error);
+      } catch (_error) {
         return null;
       }
     },

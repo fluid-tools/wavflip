@@ -1,30 +1,30 @@
 export type ItemType = 'folder' | 'project' | 'track';
 export type ContainerType = 'folder' | 'vault' | 'project';
 
-export interface DragData {
+export type DragData = {
   type: ItemType;
   id: string;
   name: string;
   sourceContainer?: string;
   metadata?: Record<string, unknown>;
-}
+};
 
-export interface DropData {
+export type DropData = {
   type: ContainerType;
   id?: string;
   name?: string;
   accepts?: ItemType[];
-}
+};
 
-export interface DragOperation {
+export type DragOperation = {
   type: ItemType;
   from: string;
   to: string;
   itemId: string;
   timestamp: number;
-}
+};
 
-export interface DndCallbacks {
+export type DndCallbacks = {
   onMoveFolder?: (
     folderId: string,
     destinationFolderId: string | null,
@@ -44,11 +44,11 @@ export interface DndCallbacks {
     sourceProjectId: string,
     targetProjectId: string
   ) => Promise<void>;
-}
+};
 
-export interface DragState {
+export type DragState = {
   isDragging: boolean;
   draggedItems: DragData[];
   dropTargets: Set<string>;
   history: DragOperation[];
-}
+};

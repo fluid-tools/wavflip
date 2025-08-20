@@ -27,9 +27,9 @@ import { useVaultSelection } from '@/hooks/vault/use-vault-selection';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
 import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms';
 
-interface FolderViewProps {
+type FolderViewProps = {
   folderId: string;
-}
+};
 
 type FolderItem =
   | {
@@ -40,9 +40,9 @@ type FolderItem =
 
 export function FolderView({ folderId }: FolderViewProps) {
   const isTablet = useIsTablet();
-  const [, moveFolderAction] = useMoveFolderAction();
-  const [, moveProjectAction] = useMoveProjectAction();
-  const [, combineProjectsAction] = useCombineProjectsAction();
+  const { execute: moveFolderExecute } = useMoveFolderAction();
+  const { execute: moveProjectExecute } = useMoveProjectAction();
+  const { execute: combineProjectsExecute } = useCombineProjectsAction();
 
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
@@ -60,7 +60,9 @@ export function FolderView({ folderId }: FolderViewProps) {
 
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {
-    if (!folderData) return [];
+    if (!folderData) {
+      return [];
+    }
 
     const items: FolderItem[] = [
       ...(folderData.subFolders || []).map((subFolder) => ({
@@ -127,7 +129,7 @@ export function FolderView({ folderId }: FolderViewProps) {
     formData.append('sourceParentFolderId', sourceParentFolderId || '');
 
     startTransition(() => {
-      moveFolderAction(formData);
+      moveFolderExecute(formData);
     });
   };
 
@@ -142,7 +144,7 @@ export function FolderView({ folderId }: FolderViewProps) {
     formData.append('sourceFolderId', sourceFolderId || '');
 
     startTransition(() => {
-      moveProjectAction(formData);
+      moveProjectExecute(formData);
     });
   };
 
@@ -156,7 +158,7 @@ export function FolderView({ folderId }: FolderViewProps) {
     formData.append('parentFolderId', folderData.id);
 
     startTransition(() => {
-      combineProjectsAction(formData);
+      combineProjectsExecute(formData);
     });
   };
 
@@ -165,7 +167,9 @@ export function FolderView({ folderId }: FolderViewProps) {
 
   const renderItem = (index: number) => {
     const item = folderItems[index];
-    if (!item) return null;
+    if (!item) {
+      return null;
+    }
 
     const isSelected = isItemSelected(item.data.id);
     const handleClick = (event: React.MouseEvent) => {

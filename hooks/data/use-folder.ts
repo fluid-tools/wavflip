@@ -20,7 +20,9 @@ export function useFolder(folderId: string) {
     queryKey,
     queryFn: async (): Promise<FolderWithProjects> => {
       const response = await fetch(`/api/folders/${folderId}`);
-      if (!response.ok) throw new Error('Failed to fetch folder');
+      if (!response.ok) {
+        throw new Error('Failed to fetch folder');
+      }
       const json = await response.json();
       return FolderGetResponseSchema.parse(json);
     },
@@ -36,14 +38,16 @@ export function useRootFolders() {
   });
   const treeData = treeEntry?.[1];
   const fromTree = Array.isArray(treeData?.folders)
-    ? treeData!.folders.map((f) => ({ ...f, tracks: [] }))
+    ? treeData?.folders.map((f) => ({ ...f, tracks: [] }))
     : undefined;
 
   return useQuery({
     queryKey: vaultKeys.folders(),
     queryFn: async (): Promise<FolderWithProjects[]> => {
       const response = await fetch('/api/folders');
-      if (!response.ok) throw new Error('Failed to fetch folders');
+      if (!response.ok) {
+        throw new Error('Failed to fetch folders');
+      }
       const json = await response.json();
       return FoldersListResponseSchema.parse(json);
     },
@@ -57,19 +61,23 @@ export function useRootFolders() {
 // FOLDER PATH HOOK
 // ================================
 
-interface FolderPathItem {
+type FolderPathItem = {
   id: string;
   name: string;
   parentFolderId: string | null;
-}
+};
 
 export function useFolderPath(folderId: string | null) {
   return useQuery({
     queryKey: [...vaultKeys.folder(folderId!), 'path'],
     queryFn: async (): Promise<{ path: FolderPathItem[] } | null> => {
-      if (!folderId) return null;
+      if (!folderId) {
+        return null;
+      }
       const response = await fetch(`/api/folders/${folderId}/path`);
-      if (!response.ok) throw new Error('Failed to fetch folder path');
+      if (!response.ok) {
+        throw new Error('Failed to fetch folder path');
+      }
       return response.json();
     },
     enabled: !!folderId,

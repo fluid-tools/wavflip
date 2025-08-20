@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import type { DropData } from '@/components/vault/dnd';
 import { DroppableWrapper, VaultDndProvider } from '@/components/vault/dnd';
 
-interface DndLayoutProps {
+type DndLayoutProps = {
   children: ReactNode;
   droppableId: string;
   droppableData: DropData;
@@ -26,7 +26,7 @@ interface DndLayoutProps {
   onCreateProject?: () => void;
   onClearSelection?: () => void;
   className?: string;
-}
+};
 
 export function DndLayout({
   children,

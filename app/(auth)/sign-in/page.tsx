@@ -101,11 +101,10 @@ export default function SignIn() {
     try {
       await sendVerificationEmail({
         email,
-        callbackURL: process.env.NEXT_PUBLIC_BASE_URL + '/vault',
+        callbackURL: `${process.env.NEXT_PUBLIC_BASE_URL}/vault`,
       });
       toast.success('Verification email sent! Check your inbox.');
-    } catch (error) {
-      console.error('Failed to send verification email:', error);
+    } catch (_error) {
       toast.error('Failed to send verification email. Please try again.');
     } finally {
       setIsResendingVerification(false);
@@ -122,11 +121,10 @@ export default function SignIn() {
     try {
       await requestPasswordReset({
         email,
-        redirectTo: process.env.NEXT_PUBLIC_BASE_URL + '/reset-password',
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`,
       });
       toast.success('Password reset email sent! Check your inbox.');
-    } catch (error) {
-      console.error('Failed to send password reset email:', error);
+    } catch (_error) {
       toast.error('Failed to send password reset email. Please try again.');
     } finally {
       setIsRequestingReset(false);

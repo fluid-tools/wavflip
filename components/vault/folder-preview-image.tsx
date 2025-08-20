@@ -3,13 +3,13 @@
 import Image from 'next/image';
 import { useProject } from '@/hooks/data/use-project';
 
-interface FolderPreviewImageProps {
+type FolderPreviewImageProps = {
   projectId: string;
   projectName: string;
   imageKey: string | null | undefined;
   sizes?: string;
   className?: string;
-}
+};
 
 // Component for displaying project images in folder preview grids
 export function FolderPreviewImage({

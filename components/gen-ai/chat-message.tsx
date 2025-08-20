@@ -38,14 +38,16 @@ function computeDeterministicProgress(
   etaSeconds?: number,
   nowMs?: number
 ): number {
-  if (!(startedAt && etaSeconds) || etaSeconds <= 0) return 0;
+  if (!(startedAt && etaSeconds) || etaSeconds <= 0) {
+    return 0;
+  }
   const now = typeof nowMs === 'number' ? nowMs : Date.now();
   const elapsed = (now - new Date(startedAt).getTime()) / 1000;
   const pct = Math.max(0, Math.min(1, elapsed / etaSeconds));
   return Math.round(pct * 100);
 }
 
-interface ChatMessageProps {
+type ChatMessageProps = {
   type: 'user' | 'assistant' | 'system';
   content?: string;
   sound?: GeneratedSound;
@@ -55,7 +57,7 @@ interface ChatMessageProps {
   onPlaySound?: (sound: GeneratedSound) => void;
   onDeleteSound?: (soundId: string) => void;
   onCopyUrl?: (url: string) => void;
-}
+};
 
 export function ChatMessage({
   type,
@@ -82,7 +84,9 @@ export function ChatMessage({
   // Tick to update the time-based progress UI while generating
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
   useEffect(() => {
-    if (!isGenerating) return;
+    if (!isGenerating) {
+      return;
+    }
     const id = setInterval(() => setNowMs(Date.now()), 200);
     return () => clearInterval(id);
   }, [isGenerating]);
@@ -99,7 +103,9 @@ export function ChatMessage({
     <>
       <ContextMenuItem
         onClick={() => {
-          if (sound) onPlaySound?.(sound);
+          if (sound) {
+            onPlaySound?.(sound);
+          }
         }}
       >
         {isPlaying && isCurrentTrack ? (
@@ -111,7 +117,9 @@ export function ChatMessage({
       </ContextMenuItem>
       <ContextMenuItem
         onClick={() => {
-          if (sound) onCopyUrl?.(sound.url);
+          if (sound) {
+            onCopyUrl?.(sound.url);
+          }
         }}
       >
         <Copy className="mr-2 h-4 w-4" />
@@ -120,7 +128,7 @@ export function ChatMessage({
       {sound?.metadata?.prompt && (
         <ContextMenuItem
           onClick={() => {
-            navigator.clipboard.writeText(sound.metadata!.prompt!);
+            navigator.clipboard.writeText(sound.metadata?.prompt!);
             toast.success('Prompt copied to clipboard');
           }}
         >
@@ -132,7 +140,9 @@ export function ChatMessage({
         className="text-destructive focus:text-destructive"
         onClick={(e) => {
           e.stopPropagation();
-          if (sound) onDeleteSound?.(sound.id);
+          if (sound) {
+            onDeleteSound?.(sound.id);
+          }
         }}
       >
         <Trash2 className="mr-2 h-4 w-4" />
@@ -145,7 +155,9 @@ export function ChatMessage({
     <>
       <DropdownMenuItem
         onClick={() => {
-          if (sound) onCopyUrl?.(sound.url);
+          if (sound) {
+            onCopyUrl?.(sound.url);
+          }
         }}
       >
         <Copy className="mr-2 h-4 w-4" />
@@ -154,7 +166,7 @@ export function ChatMessage({
       {sound?.metadata?.prompt && (
         <DropdownMenuItem
           onClick={() => {
-            navigator.clipboard.writeText(sound.metadata!.prompt!);
+            navigator.clipboard.writeText(sound.metadata?.prompt!);
             toast.success('Prompt copied to clipboard');
           }}
         >
@@ -166,7 +178,9 @@ export function ChatMessage({
         className="text-destructive focus:text-destructive"
         onClick={(e) => {
           e.stopPropagation();
-          if (sound) onDeleteSound?.(sound.id);
+          if (sound) {
+            onDeleteSound?.(sound.id);
+          }
         }}
       >
         <Trash2 className="mr-2 h-4 w-4" />

@@ -46,8 +46,7 @@ export async function GET(
       status: 200,
       headers,
     });
-  } catch (err) {
-    console.error('audio stream error', err);
+  } catch (_err) {
     return new Response('Internal Server Error', { status: 500 });
   }
 }

@@ -6,13 +6,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
 import { cn } from '@/lib/utils';
 
-interface ProjectPickerProps {
+type ProjectPickerProps = {
   projects: ProjectWithTracks[];
   selectedProjectId: string | null;
   onProjectSelect: (projectId: string) => void;
   excludeProjectId?: string; // Project to exclude from selection (e.g., current project)
   className?: string;
-}
+};
 
 export function ProjectPicker({
   projects,

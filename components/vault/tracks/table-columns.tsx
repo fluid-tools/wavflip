@@ -24,7 +24,7 @@ import type { PlayerAction } from '@/state/audio-atoms';
 import type { AudioTrack } from '@/types/audio';
 import type { TrackFromProject } from '../../../hooks/data/use-tracks';
 
-interface ColumnActionsProps {
+type ColumnActionsProps = {
   track: TrackFromProject;
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
@@ -33,7 +33,7 @@ interface ColumnActionsProps {
   onDeleteTrack: (track: TrackFromProject) => void;
   onMoveTrack: (track: TrackFromProject) => void;
   dispatchPlayerAction: (action: PlayerAction) => void;
-}
+};
 
 const formatDuration = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -42,11 +42,13 @@ const formatDuration = (seconds: number) => {
 };
 
 const formatDate = (date: Date | string | null | undefined) => {
-  if (!date) return '--';
+  if (!date) {
+    return '--';
+  }
 
   const dateObj = date instanceof Date ? date : new Date(date);
 
-  if (isNaN(dateObj.getTime())) {
+  if (Number.isNaN(dateObj.getTime())) {
     return '--';
   }
 

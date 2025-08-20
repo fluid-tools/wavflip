@@ -26,8 +26,9 @@ const getProjectById = async (projectId: string): Promise<Project | null> => {
 // getor404 project
 export const getProjectOr404 = async (projectId: string): Promise<Project> => {
   const project = await getProjectById(projectId);
-  if (!project)
+  if (!project) {
     throw Object.assign(new Error('Project not found'), { status: 404 });
+  }
   return project;
 };
 
@@ -46,8 +47,12 @@ export const getPresignedImageUrlForProject = async (
 ): Promise<string | null> => {
   const { requireOwnerUserId, expiresInSeconds = 60 * 5 } = options;
   const record = await getProjectOr404(projectId);
-  if (requireOwnerUserId) requireProjectOwnership(record, requireOwnerUserId);
-  if (!record.image) return null;
+  if (requireOwnerUserId) {
+    requireProjectOwnership(record, requireOwnerUserId);
+  }
+  if (!record.image) {
+    return null;
+  }
   return getPresignedImageUrl(record.image, projectId, expiresInSeconds);
 };
 
@@ -84,8 +89,12 @@ export async function getVaultProjects(userId: string) {
 
   // Sort to ensure Generations project appears first if it exists
   const sortedProjects = projects.sort((a, b) => {
-    if (a.id === 'system-generations') return -1;
-    if (b.id === 'system-generations') return 1;
+    if (a.id === 'system-generations') {
+      return -1;
+    }
+    if (b.id === 'system-generations') {
+      return 1;
+    }
     return a.order - b.order || a.createdAt.getTime() - b.createdAt.getTime();
   });
 
@@ -98,7 +107,9 @@ export async function getProjectWithTracks(projectId: string, userId: string) {
     .from(project)
     .where(and(eq(project.id, projectId), eq(project.userId, userId)));
 
-  if (!proj) return null;
+  if (!proj) {
+    return null;
+  }
 
   const tracks = await db
     .select()

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { GeneratedSound } from '@/types/generations';
 import { ChatMessage } from './chat-message';
 
-interface ChatMessage {
+type ChatMessage = {
   id: string;
   type: 'user' | 'assistant' | 'system';
   content?: string;
@@ -15,15 +15,15 @@ interface ChatMessage {
   timestamp: Date;
   isGenerating?: boolean;
   etaSeconds?: number;
-}
+};
 
-interface ChatMessagesProps {
+type ChatMessagesProps = {
   messages: ChatMessage[];
   onPlaySound: (sound: GeneratedSound) => void;
   onDeleteSound: (soundId: string) => void;
   onCopyUrl: (url: string) => void;
   className?: string;
-}
+};
 
 export function ChatMessages({
   messages,
@@ -40,7 +40,7 @@ export function ChatMessages({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [scrollToBottom]);
 
   return (
     <div className={cn('relative min-h-0 flex-1', className)}>

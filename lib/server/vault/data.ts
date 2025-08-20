@@ -13,13 +13,13 @@ import type {
 import { VaultDataSchema } from '@/lib/contracts/vault';
 
 // Local options type for server composition
-interface VaultQueryOptions {
+type VaultQueryOptions = {
   includePath?: boolean;
   includeHierarchy?: boolean;
   excludeFolderId?: string;
   specificFolderId?: string;
   includeLevels?: boolean;
-}
+};
 
 // ================================
 // CORE DATA FETCHING
@@ -302,7 +302,9 @@ export async function getFolderWithContents(
     .where(and(eq(folder.id, folderId), eq(folder.userId, userId)))
     .limit(1);
 
-  if (!folderData) return null;
+  if (!folderData) {
+    return null;
+  }
 
   // Get subfolders with their full content
   const subFolders = await Promise.all(

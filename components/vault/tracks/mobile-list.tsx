@@ -28,13 +28,13 @@ import {
 } from '@/state/audio-atoms';
 import type { TrackFromProject } from '../../../hooks/data/use-tracks';
 
-interface MobileTracksListProps {
+type MobileTracksListProps = {
   tracks: TrackFromProject[];
   onPlayTrack: (track: TrackFromProject) => void;
   onRenameTrack: (track: TrackFromProject) => void;
   onDeleteTrack: (track: TrackFromProject) => void;
   onMoveTrack: (track: TrackFromProject) => void;
-}
+};
 
 const formatDuration = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -43,11 +43,13 @@ const formatDuration = (seconds: number) => {
 };
 
 const formatDate = (date: Date | string | null | undefined) => {
-  if (!date) return '--';
+  if (!date) {
+    return '--';
+  }
 
   const dateObj = date instanceof Date ? date : new Date(date);
 
-  if (isNaN(dateObj.getTime())) {
+  if (Number.isNaN(dateObj.getTime())) {
     return '--';
   }
 

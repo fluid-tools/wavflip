@@ -7,8 +7,8 @@ import type {
 } from '@/types/elevenlabs';
 
 class ElevenLabsClient {
-  private apiKey: string;
-  private baseUrl: string;
+  private readonly apiKey: string;
+  private readonly baseUrl: string;
 
   constructor(config: ElevenLabsConfig) {
     this.apiKey = config.apiKey;
@@ -50,10 +50,12 @@ class ElevenLabsClient {
   ): Promise<SoundEffectResponse> {
     try {
       const body: Record<string, unknown> = { text: request.text };
-      if (typeof request.duration_seconds === 'number')
+      if (typeof request.duration_seconds === 'number') {
         body.duration_seconds = request.duration_seconds;
-      if (typeof request.prompt_influence === 'number')
+      }
+      if (typeof request.prompt_influence === 'number') {
         body.prompt_influence = request.prompt_influence;
+      }
       const response = await this.makeRequest('/v1/sound-generation', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -122,8 +124,7 @@ class ElevenLabsClient {
     try {
       const response = await this.makeRequest('/v1/voices');
       return await response.json();
-    } catch (error) {
-      console.error('Failed to fetch voices:', error);
+    } catch (_error) {
       return { voices: [] };
     }
   }

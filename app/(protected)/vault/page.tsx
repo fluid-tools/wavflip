@@ -37,9 +37,9 @@ type VaultItem =
 
 export default function VaultPage() {
   const isTablet = useIsTablet();
-  const [, moveFolderAction] = useMoveFolderAction();
-  const [, moveProjectAction] = useMoveProjectAction();
-  const [, combineProjectsAction] = useCombineProjectsAction();
+  const { execute: moveFolderExecute } = useMoveFolderAction();
+  const { execute: moveProjectExecute } = useMoveProjectAction();
+  const { execute: combineProjectsExecute } = useCombineProjectsAction();
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
 
@@ -65,7 +65,7 @@ export default function VaultPage() {
     formData.append('sourceParentFolderId', sourceParentFolderId || '');
 
     startTransition(() => {
-      moveFolderAction(formData);
+      moveFolderExecute(formData);
     });
   };
 
@@ -80,7 +80,7 @@ export default function VaultPage() {
     formData.append('sourceFolderId', sourceFolderId || '');
 
     startTransition(() => {
-      moveProjectAction(formData);
+      moveProjectExecute(formData);
     });
   };
 
@@ -95,7 +95,7 @@ export default function VaultPage() {
     formData.append('parentFolderId', '');
 
     startTransition(() => {
-      combineProjectsAction(formData);
+      combineProjectsExecute(formData);
     });
   };
 
@@ -167,7 +167,9 @@ export default function VaultPage() {
   const renderItem = useCallback(
     (index: number) => {
       const item = vaultItems[index];
-      if (!item) return null;
+      if (!item) {
+        return null;
+      }
 
       // Use stable atom value for O(1) lookup - no function recreation
       const isSelected = selectedItemsSet.has(item.data.id);

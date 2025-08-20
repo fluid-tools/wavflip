@@ -13,10 +13,10 @@ import {
   Text,
 } from '@react-email/components';
 
-interface PasswordResetEmailProps {
+type PasswordResetEmailProps = {
   username?: string;
   resetLink?: string;
-}
+};
 
 export const PasswordResetEmail = ({
   username,

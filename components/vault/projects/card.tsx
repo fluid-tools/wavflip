@@ -45,14 +45,14 @@ import type { Project, ProjectWithTracks } from '@/lib/contracts/project';
 import { cn } from '@/lib/utils';
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms';
 
-interface ProjectCardProps {
+type ProjectCardProps = {
   project: Project | ProjectWithTracks;
   folderId?: string | null;
   trackCount?: number;
   isDragAndDropEnabled?: boolean;
   isSelected?: boolean;
   onSelectionClick?: (event: React.MouseEvent) => void;
-}
+};
 
 export function ProjectCard({
   project,
@@ -92,18 +92,20 @@ export function ProjectCard({
     projectId: project.id,
   });
 
-  const { execute: deleteExecute, isPending: isDeleting } = useDeleteProjectAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false);
-    },
-  });
+  const { execute: deleteExecute, isPending: isDeleting } =
+    useDeleteProjectAction({
+      onSuccess: () => {
+        setShowDeleteDialog(false);
+      },
+    });
 
-  const { execute: renameExecute, isPending: isRenaming } = useRenameProjectAction({
-    onSuccess: () => {
-      setShowRenameDialog(false);
-      setNewName(project.name);
-    },
-  });
+  const { execute: renameExecute, isPending: isRenaming } =
+    useRenameProjectAction({
+      onSuccess: () => {
+        setShowRenameDialog(false);
+        setNewName(project.name);
+      },
+    });
 
   const { execute: moveExecute, isPending: isMoving } = useMoveProjectAction({
     onSuccess: () => {
@@ -120,13 +122,13 @@ export function ProjectCard({
     });
   };
 
-  const handleDelete = async (formData: FormData) => {
+  const handleDelete = async (_formData: FormData) => {
     deleteExecute({
       projectId: project.id,
     });
   };
 
-  const handleMove = async (formData: FormData) => {
+  const handleMove = async (_formData: FormData) => {
     moveExecute({
       projectId: project.id,
       folderId: selectedDestinationId || null,

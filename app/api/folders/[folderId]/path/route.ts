@@ -3,7 +3,7 @@ import { requireAuth } from '@/lib/server/auth';
 import { getVaultData } from '@/lib/server/vault/data';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ folderId: string }> }
 ) {
   try {
@@ -25,7 +25,6 @@ export async function GET(
 
     return NextResponse.json({ path: data.path });
   } catch (error) {
-    console.error('Failed to fetch folder path:', error);
     return NextResponse.json(
       {
         error:

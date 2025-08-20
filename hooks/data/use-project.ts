@@ -12,17 +12,17 @@ import type { VaultData } from '@/lib/contracts/vault';
 import type { ProjectImageResponse } from '@/lib/server/types/project';
 import { vaultKeys, waveformKeys } from './keys';
 
-interface UseProjectProps {
+type UseProjectProps = {
   projectId: string;
   initialData?: ProjectWithTracks;
   enabled?: boolean;
-}
+};
 
-interface UploadTrackData {
+type UploadTrackData = {
   name: string;
   file: File;
   duration?: number;
-}
+};
 
 export function useProject({
   projectId,
@@ -54,18 +54,24 @@ export function useProject({
   const presignedImageQuery = useQuery({
     queryKey: [queryKey, 'presigned-image'],
     queryFn: async () => {
-      if (!query.data?.image) return null;
+      if (!query.data?.image) {
+        return null;
+      }
 
       // Check if we already have a prefetched presigned URL
       const cachedUrl = queryClient.getQueryData<string>([
         queryKey,
         'presigned-image',
       ]);
-      if (cachedUrl) return cachedUrl;
+      if (cachedUrl) {
+        return cachedUrl;
+      }
 
       // Otherwise fetch from API
       const res = await fetch(`/api/projects/${projectId}/image`);
-      if (!res.ok) return null;
+      if (!res.ok) {
+        return null;
+      }
       const data = await res.json();
       return data.signedUrl as string;
     },
@@ -142,11 +148,15 @@ export function useProject({
       fd.set('name', validated.name);
       fd.set('projectId', validated.projectId);
       fd.set('fileKey', validated.fileKey);
-      if (validated.fileSize != null)
+      if (validated.fileSize != null) {
         fd.set('fileSize', String(validated.fileSize));
-      if (validated.mimeType) fd.set('mimeType', validated.mimeType);
-      if (validated.duration != null)
+      }
+      if (validated.mimeType) {
+        fd.set('mimeType', validated.mimeType);
+      }
+      if (validated.duration != null) {
         fd.set('duration', String(validated.duration));
+      }
 
       const response = await fetch('/api/tracks', {
         method: 'POST',
@@ -186,9 +196,7 @@ export function useProject({
             key,
           });
           queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(key) });
-        } catch (err) {
-          console.warn('Failed to persist real waveform for upload:', err);
-        }
+        } catch (_err) {}
       })();
 
       return response.json();
@@ -265,7 +273,9 @@ export function useProject({
         const serverTrack = data?.track;
         if (context?.previousProject && serverTrack) {
           queryClient.setQueryData<ProjectWithTracks>(queryKey, (old) => {
-            if (!old) return old;
+            if (!old) {
+              return old;
+            }
             const withoutTemps = (old.tracks ?? []).filter(
               (t) => !t.id.startsWith('temp-')
             );
@@ -278,7 +288,7 @@ export function useProject({
         queryClient.invalidateQueries({ queryKey });
       }
     },
-    onSettled: (data, error, variables, context) => {
+    onSettled: (_data, _error, _variables, context) => {
       // Clean up optimistic blob URL from track upload
       if (context?.tempBlobUrl) {
         URL.revokeObjectURL(context.tempBlobUrl);
@@ -338,7 +348,9 @@ export function useProject({
 
       // Optimistically update project cache
       queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
-        if (!oldData) return oldData;
+        if (!oldData) {
+          return oldData;
+        }
         return {
           ...oldData,
           image: optimisticImageUrl,
@@ -354,7 +366,9 @@ export function useProject({
             query.queryKey.length === 3, // Individual folder: ['vault', 'folders', folderId]
         },
         (oldData: unknown) => {
-          if (!oldData || typeof oldData !== 'object') return oldData;
+          if (!oldData || typeof oldData !== 'object') {
+            return oldData;
+          }
 
           const folderData = oldData as {
             projects?: ProjectWithTracks[];
@@ -390,7 +404,9 @@ export function useProject({
       queryClient.setQueryData<ProjectWithTracks[]>(
         vaultKeys.projects(),
         (oldProjects) => {
-          if (!oldProjects) return oldProjects;
+          if (!oldProjects) {
+            return oldProjects;
+          }
           return oldProjects.map((p) =>
             p.id === projectId ? { ...p, image: optimisticImageUrl } : p
           );
@@ -419,8 +435,9 @@ export function useProject({
             !oldData ||
             typeof oldData !== 'object' ||
             !context?.previousProject
-          )
+          ) {
             return oldData;
+          }
 
           const folderData = oldData as {
             projects?: ProjectWithTracks[];
@@ -459,7 +476,9 @@ export function useProject({
         queryClient.setQueryData<ProjectWithTracks[]>(
           vaultKeys.projects(),
           (oldProjects) => {
-            if (!oldProjects) return oldProjects;
+            if (!oldProjects) {
+              return oldProjects;
+            }
             return oldProjects.map((p) =>
               p.id === projectId
                 ? { ...p, image: context.previousProject?.image || null }
@@ -471,7 +490,7 @@ export function useProject({
 
       toast.error(`Failed to upload image: ${error.message}`);
     },
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, _variables, _context) => {
       if (data.success && data.resourceKey) {
         // First, fetch the presigned URL for the new image
         try {
@@ -485,7 +504,9 @@ export function useProject({
             // Now that we have the presigned URL, update all caches with the S3 key
             // The components will use the cached presigned URL
             queryClient.setQueryData<ProjectWithTracks>(queryKey, (oldData) => {
-              if (!oldData) return oldData;
+              if (!oldData) {
+                return oldData;
+              }
               return {
                 ...oldData,
                 image: data.resourceKey || null,
@@ -501,7 +522,9 @@ export function useProject({
                   query.queryKey.length === 3, // Individual folder: ['vault', 'folders', folderId]
               },
               (oldData: unknown) => {
-                if (!oldData || typeof oldData !== 'object') return oldData;
+                if (!oldData || typeof oldData !== 'object') {
+                  return oldData;
+                }
 
                 const folderData = oldData as {
                   projects?: ProjectWithTracks[];
@@ -539,7 +562,9 @@ export function useProject({
             queryClient.setQueryData<ProjectWithTracks[]>(
               vaultKeys.projects(),
               (oldProjects) => {
-                if (!oldProjects) return oldProjects;
+                if (!oldProjects) {
+                  return oldProjects;
+                }
                 return oldProjects.map((p) =>
                   p.id === projectId
                     ? { ...p, image: data.resourceKey || null }
@@ -548,17 +573,13 @@ export function useProject({
               }
             );
           } else {
-            // If we couldn't get presigned URL, still update but keep blob URL temporarily
-            console.error('Failed to get presigned URL, keeping blob URL');
           }
-        } catch (error) {
-          console.error('Failed to fetch presigned URL after upload:', error);
-        }
+        } catch (_error) {}
 
         toast.success('Project image updated successfully');
       }
     },
-    onSettled: (data, error, variables, context) => {
+    onSettled: (_data, _error, _variables, context) => {
       // Always clean up the optimistic blob URL after mutation completes
       if (context?.optimisticImageUrl) {
         URL.revokeObjectURL(context.optimisticImageUrl);
@@ -590,14 +611,16 @@ export function useRootProjects() {
   });
   const treeData = treeEntry?.[1];
   const fromTree = Array.isArray(treeData?.rootProjects)
-    ? treeData!.rootProjects.map((p) => ({ ...p, tracks: [] }))
+    ? treeData?.rootProjects.map((p) => ({ ...p, tracks: [] }))
     : undefined;
 
   return useQuery({
     queryKey: vaultKeys.projects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
       const response = await fetch('/api/projects');
-      if (!response.ok) throw new Error('Failed to fetch vault projects');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vault projects');
+      }
       const json = await response.json();
       return ProjectsListResponseSchema.parse(json);
     },

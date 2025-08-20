@@ -7,7 +7,6 @@ import {
   createFolder,
   createProject,
   deleteProject,
-  getProjectWithTracks,
   handleDuplicateProjectName,
   moveProject,
   renameProject,

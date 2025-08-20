@@ -1,13 +1,13 @@
 'use server';
 
 import { z } from 'zod';
-import { getElevenLabsClient } from '@/lib/gen-ai/elevenlabs';
 import {
   ELEVENLABS_TTS_MODEL,
   PRESIGNED_URL_EXPIRY_HOURS,
   TITLE_TRUNCATE_LENGTH,
   TTS_TEXT_MAX_LENGTH,
 } from '@/lib/constants/generation';
+import { getElevenLabsClient } from '@/lib/gen-ai/elevenlabs';
 import { actionClient } from '@/lib/safe-action';
 import { getServerSession } from '@/lib/server/auth';
 import { addGeneratedSound } from '@/lib/server/vault/generations';
@@ -23,7 +23,10 @@ const ttsInputSchema = z.object({
   text: z
     .string()
     .min(1, 'Text is required')
-    .max(TTS_TEXT_MAX_LENGTH, `Text is too long (max ${TTS_TEXT_MAX_LENGTH} characters)`),
+    .max(
+      TTS_TEXT_MAX_LENGTH,
+      `Text is too long (max ${TTS_TEXT_MAX_LENGTH} characters)`
+    ),
   voiceId: z.string().optional(),
 });
 
@@ -58,12 +61,18 @@ export const generateTextToSpeech = actionClient
       );
 
       const generationTime = Date.now() - startTime;
-      const presignedUrl = await getPresignedUrl(key, undefined, PRESIGNED_URL_EXPIRY_HOURS * 60 * 60);
+      const presignedUrl = await getPresignedUrl(
+        key,
+        undefined,
+        PRESIGNED_URL_EXPIRY_HOURS * 60 * 60
+      );
 
       const generatedSound: GeneratedSound = {
         id: key,
         key,
-        title: text.substring(0, TITLE_TRUNCATE_LENGTH) + (text.length > TITLE_TRUNCATE_LENGTH ? '...' : ''),
+        title:
+          text.substring(0, TITLE_TRUNCATE_LENGTH) +
+          (text.length > TITLE_TRUNCATE_LENGTH ? '...' : ''),
         url: presignedUrl,
         createdAt: new Date(),
         type: 'generated',

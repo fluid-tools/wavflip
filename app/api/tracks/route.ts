@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
       TrackCreateResponseSchema.parse({ success: true, track: fullTrack })
     );
   } catch (error) {
-    console.error('Failed to create track:', error);
     return NextResponse.json(
       {
         error:
@@ -118,7 +117,6 @@ export async function DELETE(request: NextRequest) {
       TrackDeleteResponseSchema.parse({ success: true })
     );
   } catch (error) {
-    console.error('Failed to delete track:', error);
     return NextResponse.json(
       {
         error:
@@ -144,7 +142,6 @@ export async function PATCH(request: NextRequest) {
       TrackRenameResponseSchema.parse({ success: true })
     );
   } catch (error) {
-    console.error('Failed to rename track:', error);
     return NextResponse.json(
       {
         error:

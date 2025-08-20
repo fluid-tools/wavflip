@@ -32,7 +32,9 @@ const getTrackById = async (trackId: string) => {
 const getActiveVersionForTrack = async (trackRecord: {
   activeVersionId: string | null;
 }) => {
-  if (!trackRecord.activeVersionId) return null;
+  if (!trackRecord.activeVersionId) {
+    return null;
+  }
   const [version] = await db
     .select()
     .from(trackVersion)
@@ -64,10 +66,16 @@ export const getPresignedUrlForTrack = async (
 ): Promise<string | null> => {
   const { requireOwnerUserId, expiresInSeconds = 60 * 60 } = options;
   const record = await getTrackById(trackId);
-  if (!record) return null;
-  if (requireOwnerUserId) requireTrackOwnership(record, requireOwnerUserId);
+  if (!record) {
+    return null;
+  }
+  if (requireOwnerUserId) {
+    requireTrackOwnership(record, requireOwnerUserId);
+  }
   const version = await getActiveVersionForTrack(record);
-  if (!(version && version.fileKey)) return null;
+  if (!version?.fileKey) {
+    return null;
+  }
   const cacheKey = REDIS_KEYS.presignedTrack(trackId);
   return getPresignedUrl(version.fileKey, cacheKey, expiresInSeconds);
 };

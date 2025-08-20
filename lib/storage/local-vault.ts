@@ -67,8 +67,7 @@ export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  } catch (error) {
-    console.error('Failed to get vault tracks:', error);
+  } catch (_error) {
     return [];
   }
 }
@@ -101,8 +100,7 @@ export async function addTrackToVault(
       trackIds.push(vaultId);
       await set(VAULT_INDEX_KEY, trackIds);
     }
-  } catch (error) {
-    console.error('Failed to add track to vault:', error);
+  } catch (_error) {
     throw new Error('Failed to save track to vault');
   }
 }
@@ -130,8 +128,7 @@ export async function removeTrackFromVault(trackId: string): Promise<void> {
     const trackIds = (await get(VAULT_INDEX_KEY)) || [];
     const updatedIds = trackIds.filter((id: string) => id !== trackId);
     await set(VAULT_INDEX_KEY, updatedIds);
-  } catch (error) {
-    console.error('Failed to remove track from vault:', error);
+  } catch (_error) {
     throw new Error('Failed to remove track from vault');
   }
 }
@@ -144,12 +141,13 @@ export async function getTrackFromVault(
     const t = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as
       | LocalVaultTrack
       | undefined;
-    if (!t) return null;
+    if (!t) {
+      return null;
+    }
     t.blobUrl = await resolvePlaybackUrl(t);
     const id = (t as unknown as { key?: string; id: string }).key || t.id;
     return { ...t, id };
-  } catch (error) {
-    console.error('Failed to get track from vault:', error);
+  } catch (_error) {
     return null;
   }
 }
@@ -184,8 +182,7 @@ export async function downloadAndStoreAudio(
 
     await addTrackToVault(vaultTrack, undefined, contentType, true);
     return vaultTrack;
-  } catch (error) {
-    console.error('Failed to download and store audio:', error);
+  } catch (_error) {
     throw new Error('Failed to download audio for offline storage');
   }
 }

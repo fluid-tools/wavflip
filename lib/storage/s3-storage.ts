@@ -12,30 +12,30 @@ import { nanoid } from 'nanoid';
 import { REDIS_KEYS, REDIS_TTL, redis } from '@/lib/redis';
 import type { AudioTrack } from '@/types/audio';
 
-export interface UploadAudioOptions {
+export type UploadAudioOptions = {
   filename?: string;
   contentType?: string;
   addRandomSuffix?: boolean;
-}
+};
 
-export interface UploadImageOptions {
+export type UploadImageOptions = {
   projectId: string;
   file?: File;
   contentType?: string;
-}
+};
 
-export interface TrackUploadConfig {
+export type TrackUploadConfig = {
   userId: string;
   projectId: string;
   filename: string;
   contentType: string;
-}
+};
 
-export interface GenerationUploadConfig {
+export type GenerationUploadConfig = {
   userId: string;
   filename: string;
   contentType: string;
-}
+};
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 const BUCKET = process.env.AWS_BUCKET_NAME!;
@@ -148,7 +148,9 @@ export async function uploadGeneratedAudioToS3(
     filename
   );
   const res = await fetch(presigned.url, { method: 'POST', body: formData });
-  if (!res.ok) throw new Error('S3 upload failed');
+  if (!res.ok) {
+    throw new Error('S3 upload failed');
+  }
 
   return { key };
 }
@@ -167,7 +169,7 @@ export async function listAudioFilesS3(
     Contents?.map((obj) => ({
       id: obj.Key!,
       key: obj.Key!,
-      title: obj.Key!.split('/').pop()!,
+      title: obj.Key?.split('/').pop()!,
       url: `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${obj.Key}`,
       createdAt: obj.LastModified ?? new Date(),
       type: 'generated' as const,
@@ -187,11 +189,9 @@ export async function getPresignedUrl(
       const cached = await redis.get<string>(cacheKey);
 
       if (cached) {
-        console.log(`Cache hit for presigned URL: ${cacheKey}`);
         return cached;
       }
-    } catch (error) {
-      console.error('Redis cache read error:', error);
+    } catch (_error) {
       // Continue to generate new URL if cache fails
     }
   }
@@ -204,9 +204,7 @@ export async function getPresignedUrl(
   if (cacheKey) {
     try {
       await redis.set(cacheKey, presignedUrl, { ex: expiresIn - 60 }); // Cache for slightly less than expiry
-      console.log(`Cached presigned URL for: ${cacheKey}`);
-    } catch (error) {
-      console.error('Redis cache write error:', error);
+    } catch (_error) {
       // Continue even if caching fails
     }
   }
@@ -226,11 +224,9 @@ export async function getPresignedImageUrl(
       const cached = await redis.get<string>(cacheKey);
 
       if (cached) {
-        console.log(`Cache hit for presigned URL: ${projectId}`);
         return cached;
       }
-    } catch (error) {
-      console.error('Redis cache read error:', error);
+    } catch (_error) {
       // Continue to generate new URL if cache fails
     }
   }
@@ -244,9 +240,7 @@ export async function getPresignedImageUrl(
     try {
       const cacheKey = REDIS_KEYS.presignedImage(projectId);
       await redis.set(cacheKey, presignedUrl, { ex: REDIS_TTL.presignedUrl });
-      console.log(`Cached presigned URL for: ${projectId}`);
-    } catch (error) {
-      console.error('Redis cache write error:', error);
+    } catch (_error) {
       // Continue even if caching fails
     }
   }
@@ -257,10 +251,7 @@ export async function getPresignedImageUrl(
 export async function bustPresignedCache(cacheKey: string): Promise<void> {
   try {
     await redis.del(cacheKey);
-    console.log(`Busted cache for key: ${cacheKey}`);
-  } catch (error) {
-    console.error('Redis cache bust error:', error);
-  }
+  } catch (_error) {}
 }
 
 export async function bustPresignedImageCache(
@@ -309,8 +300,7 @@ export async function uploadProjectImage(
     }
 
     return { success: true, filename };
-  } catch (error) {
-    console.error('S3 upload error:', error);
+  } catch (_error) {
     return { success: false, error: 'Failed to upload image' };
   }
 }
@@ -320,7 +310,9 @@ export async function uploadProjectImage(
  * Returns null if not found or error
  */
 export async function getS3AudioStream(key: string, range?: string) {
-  if (!key) return null;
+  if (!key) {
+    return null;
+  }
   try {
     const command = new GetObjectCommand({
       Bucket: BUCKET,
@@ -336,9 +328,12 @@ export async function getS3AudioStream(key: string, range?: string) {
       $metadata?: { httpStatusCode?: number };
       name?: string;
     };
-    if (error?.$metadata?.httpStatusCode === 404 || error?.name === 'NoSuchKey')
+    if (
+      error?.$metadata?.httpStatusCode === 404 ||
+      error?.name === 'NoSuchKey'
+    ) {
       return null;
-    console.error('getS3AudioStream error:', err);
+    }
     return null;
   }
 }

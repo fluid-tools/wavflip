@@ -70,47 +70,57 @@ export const combineProjectsSchema = z.object({
 });
 
 // Response types inferred from return types
-export type FolderActionResult = {
-  success: true;
-  folder: {
-    id: string;
-    name: string;
-    parentFolderId: string | null;
-  };
-} | {
-  success: false;
-  error: string;
-};
+export type FolderActionResult =
+  | {
+      success: true;
+      folder: {
+        id: string;
+        name: string;
+        parentFolderId: string | null;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
-export type ProjectActionResult = {
-  success: true;
-  project: {
-    id: string;
-    name: string;
-    folderId: string | null;
-  };
-} | {
-  success: false;
-  error: string;
-};
+export type ProjectActionResult =
+  | {
+      success: true;
+      project: {
+        id: string;
+        name: string;
+        folderId: string | null;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
-export type DeleteActionResult = {
-  success: true;
-} | {
-  success: false;
-  error: string;
-};
+export type DeleteActionResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
-export type RenameActionResult = {
-  success: true;
-} | {
-  success: false;
-  error: string;
-};
+export type RenameActionResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
-export type MoveActionResult = {
-  success: true;
-} | {
-  success: false;
-  error: string;
-};
+export type MoveActionResult =
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error: string;
+    };

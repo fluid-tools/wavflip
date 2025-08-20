@@ -45,9 +45,9 @@ import { currentTrackAtom, playerStateAtom } from '@/state/audio-atoms';
 import type { GeneratedSound } from '@/types/generations';
 import { StorageIndicator } from './storage-indicator';
 
-interface RecentSheetProps {
+type RecentSheetProps = {
   onPlaySound: (sound: GeneratedSound) => void;
-}
+};
 
 // Memoized waveform component to prevent re-renders
 const MemoizedWaveform = memo(function MemoizedWaveform({
@@ -73,7 +73,9 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
   const [savingOffline, setSavingOffline] = useState<string | null>(null);
   const [removingOffline, setRemovingOffline] = useState<string | null>(null);
 
-  if (generations.length === 0 && !isLoading) return null;
+  if (generations.length === 0 && !isLoading) {
+    return null;
+  }
 
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -92,8 +94,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
     try {
       await saveOfflineAsync(sound);
       toast.success('Saved for offline access');
-    } catch (error) {
-      console.error('Failed to save offline:', error);
+    } catch (_error) {
       toast.error('Failed to save offline');
     } finally {
       setSavingOffline(null);
@@ -107,8 +108,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
     try {
       await removeOfflineAsync(sound);
       toast.success('Removed from offline storage');
-    } catch (error) {
-      console.error('Failed to remove offline:', error);
+    } catch (_error) {
       toast.error('Failed to remove offline');
     } finally {
       setRemovingOffline(null);
@@ -130,7 +130,9 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
               className="group cursor-pointer rounded-xl border border-neutral-800 bg-neutral-900/50 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-800/80 hover:shadow-md"
               onClick={(e) => {
                 const target = e.target as HTMLElement;
-                if (target.closest('[data-no-play]')) return;
+                if (target.closest('[data-no-play]')) {
+                  return;
+                }
                 onPlaySound(sound);
               }}
             >
@@ -183,7 +185,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
                               onSelect={(e) => {
                                 stopSelect(e);
                                 navigator.clipboard.writeText(
-                                  sound.metadata!.prompt!
+                                  sound.metadata?.prompt!
                                 );
                                 toast.success('Prompt copied to clipboard');
                               }}
@@ -330,7 +332,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
               <ContextMenuItem
                 className="text-neutral-100 hover:bg-neutral-800 focus:bg-neutral-800"
                 onClick={() => {
-                  navigator.clipboard.writeText(sound.metadata!.prompt!);
+                  navigator.clipboard.writeText(sound.metadata?.prompt!);
                   toast.success('Prompt copied to clipboard');
                 }}
               >

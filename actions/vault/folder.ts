@@ -90,7 +90,7 @@ export const renameFolderAction = actionClient
     revalidatePath('/vault');
     revalidatePath(`/vault/folders/${folderId}`);
     revalidatePath('/api/vault/tree');
-    
+
     return { success: true as const };
   });
 

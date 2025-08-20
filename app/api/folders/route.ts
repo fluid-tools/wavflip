@@ -20,7 +20,6 @@ export async function GET() {
     // Validate API response
     return NextResponse.json(FoldersListResponseSchema.parse(folders));
   } catch (error) {
-    console.error('Failed to fetch folders:', error);
     return NextResponse.json(
       {
         error:
@@ -56,7 +55,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, folder });
   } catch (error) {
-    console.error('Failed to create folder:', error);
     return NextResponse.json(
       {
         error:
@@ -79,7 +77,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, parentFolderId });
   } catch (error) {
-    console.error('Failed to delete folder:', error);
     return NextResponse.json(
       {
         error:

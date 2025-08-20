@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useVaultTree } from '@/hooks/data/use-vault';
 import { cn } from '@/lib/utils';
 
-interface HierarchicalFolder {
+type HierarchicalFolder = {
   id: string;
   name: string;
   parentFolderId: string | null;
@@ -20,19 +20,19 @@ interface HierarchicalFolder {
   projectCount: number;
   subFolderCount: number;
   level: number;
-}
+};
 
 interface FolderNode extends HierarchicalFolder {
   isExpanded?: boolean;
 }
 
-interface FolderPickerProps {
+type FolderPickerProps = {
   selectedFolderId: string | null;
   onFolderSelect: (folderId: string | null) => void;
   excludeFolderId?: string; // Folder to exclude from selection (e.g., the item being moved)
   allowVaultSelection?: boolean; // Whether to allow selecting vault (root) as destination
   className?: string;
-}
+};
 
 export function FolderPicker({
   selectedFolderId,

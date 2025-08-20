@@ -16,13 +16,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-interface CreateProjectDialogProps {
+type CreateProjectDialogProps = {
   folderId?: string | null;
   triggerText?: string;
   onSuccess?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-}
+};
 
 export function CreateProjectDialog({
   folderId = null,

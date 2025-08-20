@@ -10,7 +10,7 @@ import {
  * IDB is reserved strictly for lightweight metadata (handled by local-vault).
  */
 
-export interface MediaStore {
+export type MediaStore = {
   writeFile(key: string, data: ArrayBuffer, mimeType?: string): Promise<void>;
   readFile(key: string): Promise<ArrayBuffer | null>;
   getUrlForPlayback(key: string): Promise<string | null>;
@@ -18,7 +18,7 @@ export interface MediaStore {
   size(): Promise<number>; // bytes
   sizeByKeys(keys: string[]): Promise<number>; // bytes
   isOPFSEnabled(): boolean;
-}
+};
 
 type NavigatorWithOPFS = Navigator & {
   storage: StorageManager & {
@@ -27,7 +27,9 @@ type NavigatorWithOPFS = Navigator & {
 };
 
 function supportsOPFS(): boolean {
-  if (typeof navigator === 'undefined') return false;
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
   const n = navigator as NavigatorWithOPFS;
   return !!n.storage && typeof n.storage.getDirectory === 'function';
 }
@@ -44,7 +46,7 @@ async function opfsWriteFile(
   data: ArrayBuffer,
   mimeType?: string
 ): Promise<void> {
-  const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!();
+  const root = await (navigator as NavigatorWithOPFS).storage.getDirectory?.();
   const filename = sanitizeKey(key);
   const handle = await root.getFileHandle(filename, { create: true });
   // Chrome/Edge path
@@ -66,8 +68,11 @@ async function opfsWriteFile(
     worker.onmessage = (e: MessageEvent) => {
       const { ok, error } = e.data || {};
       worker.terminate();
-      if (ok) resolve();
-      else reject(new Error(error || 'Failed to write via worker'));
+      if (ok) {
+        resolve();
+      } else {
+        reject(new Error(error || 'Failed to write via worker'));
+      }
     };
     // Transfer the ArrayBuffer to avoid copy
     worker.postMessage({ type: 'write', key: filename, data }, [data]);
@@ -76,7 +81,7 @@ async function opfsWriteFile(
 
 // Main-thread size by keys for non-WebKit
 async function opfsSizeByKeys(keys: string[]): Promise<number> {
-  const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!();
+  const root = await (navigator as NavigatorWithOPFS).storage.getDirectory?.();
   let total = 0;
   for (const raw of keys) {
     try {
@@ -91,7 +96,9 @@ async function opfsSizeByKeys(keys: string[]): Promise<number> {
 
 async function opfsReadFile(key: string): Promise<Blob | null> {
   try {
-    const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!();
+    const root = await (
+      navigator as NavigatorWithOPFS
+    ).storage.getDirectory?.();
     const filename = sanitizeKey(key);
     const handle = await root.getFileHandle(filename);
     const file = await handle.getFile();
@@ -103,7 +110,9 @@ async function opfsReadFile(key: string): Promise<Blob | null> {
 
 async function opfsDeleteFile(key: string): Promise<void> {
   try {
-    const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!();
+    const root = await (
+      navigator as NavigatorWithOPFS
+    ).storage.getDirectory?.();
     const filename = sanitizeKey(key);
     await root.removeEntry(filename, { recursive: false });
   } catch {}
@@ -111,7 +120,9 @@ async function opfsDeleteFile(key: string): Promise<void> {
 
 async function opfsSize(): Promise<number> {
   try {
-    const root = await (navigator as NavigatorWithOPFS).storage.getDirectory!();
+    const root = await (
+      navigator as NavigatorWithOPFS
+    ).storage.getDirectory?.();
     let total = 0;
     // Prefer spec entries() which yields [name, handle]
     const dir = root as unknown as {
@@ -165,7 +176,9 @@ export const mediaStore: MediaStore = {
   async readFile(key) {
     if (supportsOPFS()) {
       const file = await opfsReadFile(key);
-      if (!file) return null;
+      if (!file) {
+        return null;
+      }
       const buf = await file.arrayBuffer();
       return buf;
     }
@@ -174,28 +187,39 @@ export const mediaStore: MediaStore = {
   async getUrlForPlayback(key) {
     if (supportsOPFS()) {
       const file = await opfsReadFile(key);
-      if (!file) return null;
+      if (!file) {
+        return null;
+      }
       return URL.createObjectURL(file);
     }
     return null;
   },
   async deleteFile(key) {
-    if (supportsOPFS()) await opfsDeleteFile(key);
+    if (supportsOPFS()) {
+      await opfsDeleteFile(key);
+    }
   },
   async size() {
-    if (supportsOPFS()) return opfsSize();
+    if (supportsOPFS()) {
+      return opfsSize();
+    }
     return 0;
   },
   async sizeByKeys(keys: string[]) {
-    if (!supportsOPFS()) return 0;
+    if (!supportsOPFS()) {
+      return 0;
+    }
     return await new Promise<number>((resolve, reject) => {
       if (isWebKit()) {
         const worker = createSafariInlineWorker();
         worker.onmessage = (e: MessageEvent) => {
           const { ok, total, error } = e.data || {};
           worker.terminate();
-          if (ok) resolve(total || 0);
-          else reject(new Error(error || 'Failed to size keys'));
+          if (ok) {
+            resolve(total || 0);
+          } else {
+            reject(new Error(error || 'Failed to size keys'));
+          }
         };
         worker.postMessage({ type: 'sizeByKeys', keys });
       } else {

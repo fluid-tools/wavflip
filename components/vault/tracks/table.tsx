@@ -47,11 +47,11 @@ import { ProjectPicker } from '../projects/picker';
 import { MobileTracksList } from './mobile-list';
 import { createTracksTableColumns } from './table-columns';
 
-interface TracksTableProps {
+type TracksTableProps = {
   tracks: TrackFromProject[];
   projectId: string;
   availableProjects?: ProjectWithTracks[];
-}
+};
 
 export function TracksTable({
   tracks,
@@ -137,7 +137,9 @@ export function TracksTable({
   };
 
   const handleRename = async () => {
-    if (!(selectedTrack && newName.trim())) return;
+    if (!(selectedTrack && newName.trim())) {
+      return;
+    }
 
     await renameTrack(selectedTrack.id, newName.trim());
     setShowRenameDialog(false);
@@ -146,7 +148,9 @@ export function TracksTable({
   };
 
   const handleDelete = async () => {
-    if (!selectedTrack) return;
+    if (!selectedTrack) {
+      return;
+    }
 
     await deleteTrack(selectedTrack.id);
     setShowDeleteDialog(false);
@@ -154,7 +158,9 @@ export function TracksTable({
   };
 
   const handleMove = async () => {
-    if (!(selectedTrack && selectedDestinationProjectId)) return;
+    if (!(selectedTrack && selectedDestinationProjectId)) {
+      return;
+    }
 
     await moveTrack(selectedTrack.id, selectedDestinationProjectId);
     setShowMoveDialog(false);
@@ -184,9 +190,7 @@ export function TracksTable({
   });
 
   // Debug: Log when tracks prop changes
-  useEffect(() => {
-    console.log('📊 TracksTable tracks updated:', tracks.length, 'tracks');
-  }, [tracks]);
+  useEffect(() => {}, []);
 
   if (tracks.length === 0) {
     return (
@@ -260,7 +264,9 @@ export function TracksTable({
               }}
               itemContent={(index) => {
                 const row = table.getRowModel().rows[index];
-                if (!row) return null;
+                if (!row) {
+                  return null;
+                }
 
                 return (
                   <>

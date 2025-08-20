@@ -11,7 +11,7 @@ export default function FolderLoading() {
 
       {/* Grid loading - matches your actual layout */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {[...Array(8)].map((_, i) => (
+        {[...new Array(8)].map((_, i) => (
           <div
             className="aspect-[4/5] w-full max-w-40 overflow-hidden rounded-lg border bg-muted p-0"
             key={i}

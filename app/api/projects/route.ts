@@ -13,7 +13,7 @@ import {
 } from '@/lib/server/vault';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await requireAuth();
 
@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
     const projects = await getVaultProjects(session.user.id);
     return NextResponse.json(ProjectsListResponseSchema.parse(projects));
   } catch (error) {
-    console.error('Failed to fetch vault projects:', error);
     return NextResponse.json(
       {
         error:
@@ -60,7 +59,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, project });
   } catch (error) {
-    console.error('Failed to create project:', error);
     return NextResponse.json(
       {
         error:
@@ -83,7 +81,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete project:', error);
     return NextResponse.json(
       {
         error:

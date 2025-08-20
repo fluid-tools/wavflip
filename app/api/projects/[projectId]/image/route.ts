@@ -24,7 +24,7 @@ export async function POST(
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
-    if (!(file && file.type.startsWith('image/'))) {
+    if (!file?.type.startsWith('image/')) {
       return Response.json(
         { success: false, error: 'Invalid image file' },
         { status: 400 }
@@ -53,8 +53,7 @@ export async function POST(
       success: true,
       resourceKey: uploadResult.filename,
     });
-  } catch (error) {
-    console.error('Project image upload error:', error);
+  } catch (_error) {
     return Response.json(
       {
         success: false,
@@ -66,7 +65,7 @@ export async function POST(
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
@@ -84,8 +83,7 @@ export async function GET(
       );
     }
     return Response.json({ success: true, signedUrl });
-  } catch (error) {
-    console.error('Project image get error:', error);
+  } catch (_error) {
     return Response.json(
       { success: false, error: 'Failed to get presigned URL' },
       { status: 500 }

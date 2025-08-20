@@ -37,14 +37,14 @@ import { cn } from '@/lib/utils';
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms';
 import { FolderPicker } from './picker';
 
-interface FolderCardProps {
+type FolderCardProps = {
   folder: FolderWithProjects;
   showProjectCount?: boolean;
   parentFolderId?: string | null;
   isDragAndDropEnabled?: boolean;
   isSelected?: boolean;
   onSelectionClick?: (event: React.MouseEvent) => void;
-}
+};
 
 export function FolderCard({
   folder,
@@ -67,20 +67,22 @@ export function FolderCard({
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom);
   const { shouldShowContextMenu } = useContextMenuHandler();
 
-  const [, deleteAction, isDeleting] = useDeleteFolderAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false);
-    },
-  });
+  const { execute: deleteExecute, isPending: isDeleting } =
+    useDeleteFolderAction({
+      onSuccess: () => {
+        setShowDeleteDialog(false);
+      },
+    });
 
-  const [, renameAction, isRenaming] = useRenameFolderAction({
-    onSuccess: () => {
-      setShowRenameDialog(false);
-      setNewName(folder.name);
-    },
-  });
+  const { execute: renameExecute, isPending: isRenaming } =
+    useRenameFolderAction({
+      onSuccess: () => {
+        setShowRenameDialog(false);
+        setNewName(folder.name);
+      },
+    });
 
-  const [, moveAction, isMoving] = useMoveFolderAction({
+  const { execute: moveExecute, isPending: isMoving } = useMoveFolderAction({
     onSuccess: () => {
       setShowMoveDialog(false);
       setSelectedDestinationId(null);
@@ -88,20 +90,25 @@ export function FolderCard({
   });
 
   const handleRename = async (formData: FormData) => {
-    formData.append('folderId', folder.id);
-    renameAction(formData);
+    const name = formData.get('name') as string;
+    renameExecute({
+      folderId: folder.id,
+      name,
+    });
   };
 
-  const handleDelete = async (formData: FormData) => {
-    formData.append('folderId', folder.id);
-    deleteAction(formData);
+  const handleDelete = async (_formData: FormData) => {
+    deleteExecute({
+      folderId: folder.id,
+    });
   };
 
-  const handleMove = async (formData: FormData) => {
-    formData.append('folderId', folder.id);
-    formData.append('parentFolderId', selectedDestinationId || '');
-    formData.append('sourceParentFolderId', parentFolderId || '');
-    moveAction(formData);
+  const handleMove = async (_formData: FormData) => {
+    moveExecute({
+      folderId: folder.id,
+      parentFolderId: selectedDestinationId || null,
+      sourceParentFolderId: parentFolderId || null,
+    });
   };
 
   // State management is now handled by the custom hooks automatically

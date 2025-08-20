@@ -13,10 +13,10 @@ import {
   Text,
 } from '@react-email/components';
 
-interface VerificationEmailProps {
+type VerificationEmailProps = {
   username?: string;
   verificationLink?: string;
-}
+};
 
 export const VerificationEmail = ({
   username,

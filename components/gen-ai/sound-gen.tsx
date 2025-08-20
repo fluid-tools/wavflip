@@ -23,11 +23,11 @@ import type { GeneratedSound } from '@/types/generations';
 import { ChatMessages } from './chat-messages';
 import { InputArea } from './input-area';
 
-interface SoundGeneratorProps {
+type SoundGeneratorProps = {
   className?: string;
-}
+};
 
-interface ChatMessage {
+type ChatMessage = {
   id: string;
   type: 'user' | 'assistant' | 'system';
   content?: string;
@@ -35,7 +35,7 @@ interface ChatMessage {
   timestamp: Date;
   isGenerating?: boolean;
   etaSeconds?: number;
-}
+};
 
 export function SoundGenerator({ className }: SoundGeneratorProps) {
   const queryClient = useQueryClient();
@@ -153,7 +153,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
         );
         toast.error(res?.serverError || 'Failed to generate');
       }
-    } catch (error) {
+    } catch (_error) {
       dispatchPlayerAction({ type: 'ERROR' });
       setMessages((prev) =>
         prev.map((msg) =>
@@ -168,7 +168,6 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
         )
       );
       toast.error('An unexpected error occurred');
-      console.error('Generation error:', error);
     }
   };
 

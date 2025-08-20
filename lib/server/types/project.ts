@@ -4,8 +4,8 @@ export type ProjectImageUpload = {
   projectId: string;
 };
 
-export interface ProjectImageResponse {
+export type ProjectImageResponse = {
   success: boolean;
   resourceKey?: string;
   error?: string;
-}
+};

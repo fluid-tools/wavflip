@@ -13,9 +13,9 @@ import { CreateFolderDialog } from './folders/create-dialog';
 import { CreateProjectDialog } from './projects/create-dialog';
 import { SelectionModeToggle } from './selection-mode-toggle';
 
-interface VaultActionsProps {
+type VaultActionsProps = {
   folderId?: string | null;
-}
+};
 
 export function VaultActions({ folderId }: VaultActionsProps) {
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);

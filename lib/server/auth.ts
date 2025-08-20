@@ -48,7 +48,9 @@ export async function getCachedSession() {
     async () => {
       try {
         const h = new Headers();
-        if (cookieHeader) h.set('cookie', cookieHeader);
+        if (cookieHeader) {
+          h.set('cookie', cookieHeader);
+        }
         const session = await auth.api.getSession({ headers: h });
         return session;
       } catch {
@@ -59,7 +61,9 @@ export async function getCachedSession() {
     { tags: ['session'], revalidate: 30 }
   );
   const cached = await fetchSession();
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
   // Fallback to a direct, uncached read to avoid false negatives
   return getServerSession();
 }

@@ -18,7 +18,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to move folder:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Failed to move folder',
