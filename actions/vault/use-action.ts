@@ -31,9 +31,10 @@ export function useVaultAction(
         toast.success(successMessage);
       }
 
-      // Simple: just invalidate everything vault-related
-      // React Query is smart enough to only refetch what's actually being used
-      invalidate.invalidateAll();
+      // Invalidate precise keys to avoid races
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
 
       // Call custom success handler
       onSuccess?.(result);

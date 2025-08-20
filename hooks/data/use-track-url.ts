@@ -36,8 +36,8 @@ export function useProjectTrackUrls(tracks: TrackWithVersions[] | undefined) {
     const isTempId = t.id.startsWith('temp-');
     const isBlob = typeof fileKey === 'string' && fileKey.startsWith('blob:');
     if (isTempId || isBlob) {
-      const maybeBlob =
-        (t.activeVersion?.metadata as any)?.tempBlobUrl || fileKey;
+      const meta = t.activeVersion?.metadata as { tempBlobUrl?: string } | undefined;
+      const maybeBlob = meta?.tempBlobUrl || fileKey;
       if (typeof maybeBlob === 'string') {
         urlMap.set(t.id, maybeBlob);
       }

@@ -362,19 +362,23 @@ export function useProject({
           };
 
           // Helper function to update projects recursively
-          const updateProjectsRecursively = (data: any): any => {
-            const updated = { ...data };
+          type FolderLike = {
+            projects?: ProjectWithTracks[];
+            subFolders?: FolderLike[];
+          };
+          const updateProjectsRecursively = (data: FolderLike): FolderLike => {
+            const updated: FolderLike = { ...data };
 
             // Update direct projects
             if (updated.projects) {
-              updated.projects = updated.projects.map((p: any) =>
+              updated.projects = updated.projects.map((p: ProjectWithTracks) =>
                 p.id === projectId ? { ...p, image: optimisticImageUrl } : p
               );
             }
 
             // Update projects in subfolders
             if (updated.subFolders) {
-              updated.subFolders = updated.subFolders.map((subfolder: any) =>
+              updated.subFolders = updated.subFolders.map((subfolder: FolderLike) =>
                 updateProjectsRecursively(subfolder)
               );
             }
@@ -428,12 +432,16 @@ export function useProject({
           };
 
           // Helper function to rollback projects recursively
-          const rollbackProjectsRecursively = (data: any): any => {
-            const updated = { ...data };
+          type FolderLike = {
+            projects?: ProjectWithTracks[];
+            subFolders?: FolderLike[];
+          };
+          const rollbackProjectsRecursively = (data: FolderLike): FolderLike => {
+            const updated: FolderLike = { ...data };
 
             // Rollback direct projects
             if (updated.projects) {
-              updated.projects = updated.projects.map((p: any) =>
+              updated.projects = updated.projects.map((p: ProjectWithTracks) =>
                 p.id === projectId
                   ? { ...p, image: context.previousProject?.image || null }
                   : p
@@ -442,7 +450,7 @@ export function useProject({
 
             // Rollback projects in subfolders
             if (updated.subFolders) {
-              updated.subFolders = updated.subFolders.map((subfolder: any) =>
+              updated.subFolders = updated.subFolders.map((subfolder: FolderLike) =>
                 rollbackProjectsRecursively(subfolder)
               );
             }
@@ -509,12 +517,16 @@ export function useProject({
                 };
 
                 // Helper function to update projects recursively
-                const updateProjectsRecursively = (folderData: any): any => {
-                  const updated = { ...folderData };
+                type FolderLike = {
+                  projects?: ProjectWithTracks[];
+                  subFolders?: FolderLike[];
+                };
+                const updateProjectsRecursively = (folderData: FolderLike): FolderLike => {
+                  const updated: FolderLike = { ...folderData };
 
                   // Update direct projects
                   if (updated.projects) {
-                    updated.projects = updated.projects.map((p: any) =>
+                    updated.projects = updated.projects.map((p: ProjectWithTracks) =>
                       p.id === projectId
                         ? { ...p, image: data.resourceKey || null }
                         : p
@@ -524,7 +536,7 @@ export function useProject({
                   // Update projects in subfolders
                   if (updated.subFolders) {
                     updated.subFolders = updated.subFolders.map(
-                      (subfolder: any) => updateProjectsRecursively(subfolder)
+                      (subfolder: FolderLike) => updateProjectsRecursively(subfolder)
                     );
                   }
 
@@ -583,25 +595,23 @@ export function useProject({
 
 export function useRootProjects() {
   const queryClient = useQueryClient();
+  const [treeEntry] = queryClient.getQueriesData<VaultData>({
+    queryKey: vaultKeys.tree(),
+  });
+  const treeData = treeEntry?.[1];
+  const fromTree = Array.isArray(treeData?.rootProjects)
+    ? (treeData!.rootProjects as unknown as ProjectWithTracks[])
+    : undefined;
 
   return useQuery({
     queryKey: vaultKeys.projects(),
     queryFn: async (): Promise<ProjectWithTracks[]> => {
-      // Prefer hydrated tree cache
-      const [treeEntry] = queryClient.getQueriesData<VaultData>({
-        queryKey: vaultKeys.tree(),
-      });
-      const treeData = treeEntry?.[1];
-      if (Array.isArray(treeData?.rootProjects)) {
-        // Root projects in tree already include trackCount and basic fields
-        return treeData.rootProjects as ProjectWithTracks[];
-      }
-
       const response = await fetch('/api/projects');
       if (!response.ok) throw new Error('Failed to fetch vault projects');
       const json = await response.json();
       return ProjectsListResponseSchema.parse(json);
     },
+    placeholderData: fromTree,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
