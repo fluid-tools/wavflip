@@ -287,3 +287,49 @@ export function useGenerations() {
     isOnline: navigator.onLine,
   };
 }
+
+export function useGenerationActions() {
+  const queryClient = useQueryClient();
+  // next-safe-action hooks
+  const { executeAsync: execSFX, isPending: isSFXPending } = require('next-safe-action/hooks').useAction(
+    require('@/actions/generate/sound').generateSoundEffect
+  );
+  const { executeAsync: execTTS, isPending: isTTSPending } = require('next-safe-action/hooks').useAction(
+    require('@/actions/generate/speech').generateTextToSpeech
+  );
+
+  // Reuse addToSession mutation from this module
+  const { addToSession } = useGenerations();
+
+  const generateSfx = async (args: {
+    prompt: string;
+    options?: { durationSeconds?: number; promptInfluence?: number };
+  }) => {
+    const res = await execSFX(args);
+    if (res?.data) {
+      addToSession(res.data);
+      // Ensure vault sidebar/tree reflects new count quickly
+      queryClient.invalidateQueries({ queryKey: vaultKeys.base });
+      return res.data;
+    }
+    throw new Error(res?.serverError || 'Failed to generate');
+  };
+
+  const generateTts = async (args: { text: string; voiceId?: string }) => {
+    const res = await execTTS(args);
+    if (res?.data) {
+      addToSession(res.data);
+      queryClient.invalidateQueries({ queryKey: vaultKeys.base });
+      return res.data;
+    }
+    throw new Error(res?.serverError || 'Failed to generate');
+  };
+
+  return {
+    generateSfx,
+    generateTts,
+    isSFXPending,
+    isTTSPending,
+    isPending: isSFXPending || isTTSPending,
+  };
+}

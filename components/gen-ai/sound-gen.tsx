@@ -1,16 +1,11 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { useAtom } from 'jotai';
 import { Clock, Sparkles } from 'lucide-react';
-import { useAction } from 'next-safe-action/hooks';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { generateSoundEffect } from '@/actions/generate/sound';
-import { generateTextToSpeech } from '@/actions/generate/speech';
 import { Slider } from '@/components/ui/slider';
-import { vaultKeys } from '@/hooks/data/keys';
-import { useGenerations } from '@/hooks/data/use-generations';
+import { useGenerationActions } from '@/hooks/data/use-generations';
 import { WELCOME_MESSAGE } from '@/lib/constants/prompts';
 import { cn } from '@/lib/utils';
 import {
@@ -38,7 +33,6 @@ interface ChatMessage {
 }
 
 export function SoundGenerator({ className }: SoundGeneratorProps) {
-  const queryClient = useQueryClient();
   const [prompt, setPrompt] = useState('');
   const [isTTSMode, setIsTTSMode] = useState(false);
   const [durationSeconds, setDurationSeconds] = useState<number>(10);
@@ -51,17 +45,13 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
       timestamp: new Date(),
     },
   ]);
-  const { executeAsync: executeTTS, isPending: isTTSPending } =
-    useAction(generateTextToSpeech);
-  const { executeAsync: executeSFX, isPending: isSFXPending } =
-    useAction(generateSoundEffect);
+  const { generateSfx, generateTts, isPending } = useGenerationActions();
 
   const [isGenerating] = useAtom(isGeneratingAtom);
   // generationProgress is not used in the new deterministic UI
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom);
   const [currentTrack] = useAtom(currentTrackAtom);
   const [playerState] = useAtom(playerStateAtom);
-  const { addToSession } = useGenerations();
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -97,29 +87,23 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
     dispatchPlayerAction({ type: 'START_GENERATION' });
 
     try {
-      const res = isTTSMode
-        ? await executeTTS({ text: currentPrompt })
-        : await executeSFX({
+      const data = isTTSMode
+        ? await generateTts({ text: currentPrompt })
+        : await generateSfx({
             prompt: currentPrompt,
             options: { durationSeconds, promptInfluence },
           });
 
-      if (res?.data) {
+      if (data) {
         dispatchPlayerAction({
           type: 'FINISH_GENERATION',
-          payload: res.data,
+          payload: data,
         });
 
         dispatchPlayerAction({
           type: 'PLAY_TRACK',
-          payload: res.data,
+          payload: data,
         });
-
-        // Add to session for offline access
-        addToSession(res.data);
-
-        // Invalidate vault tree and related caches so sidebar counts update
-        queryClient.invalidateQueries({ queryKey: vaultKeys.base });
 
         // Replace loading message with result
         setMessages((prev) =>
@@ -128,7 +112,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
               ? {
                   ...msg,
                   content: undefined,
-                  sound: res.data,
+                  sound: data,
                   isGenerating: false,
                 }
               : msg
@@ -151,7 +135,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
               : msg
           )
         );
-        toast.error(res?.serverError || 'Failed to generate');
+        toast.error('Failed to generate');
       }
     } catch (error) {
       dispatchPlayerAction({ type: 'ERROR' });
@@ -197,7 +181,7 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
     toast.success('URL copied to clipboard');
   };
 
-  const isLoading = isGenerating || isTTSPending || isSFXPending;
+  const isLoading = isGenerating || isPending;
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
