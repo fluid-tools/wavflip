@@ -2,7 +2,7 @@
 
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useCreateProjectAction } from '@/actions/vault/use-action';
+import { useCreateProjectAction } from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,19 +38,24 @@ export function CreateProjectDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
-  const [, formAction] = useCreateProjectAction({
-    onSuccess: () => {
-      setOpen(false);
-      setName('');
-      onSuccess?.();
-    },
-  });
+  const { executeAsync: createProjectExecuteAsync } = useCreateProjectAction();
+
+  const handleCreateProject = async (name: string) => {
+    await createProjectExecuteAsync({
+      name,
+      folderId,
+    });
+
+    setOpen(false);
+    setName('');
+    onSuccess?.();
+  };
 
   const handleSubmit = async (formData: FormData) => {
-    if (folderId) {
-      formData.append('folderId', folderId);
+    const name = formData.get('name') as string;
+    if (name?.trim()) {
+      await handleCreateProject(name.trim());
     }
-    formAction(formData);
   };
 
   return (

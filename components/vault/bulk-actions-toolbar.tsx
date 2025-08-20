@@ -7,7 +7,7 @@ import {
   useDeleteProjectAction,
   useMoveFolderAction,
   useMoveProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -40,26 +40,10 @@ export function BulkActionsToolbar({
   >(null);
   const [hasSelectedDestination, setHasSelectedDestination] = useState(false);
 
-  const [, deleteFolderAction] = useDeleteFolderAction({
-    onSuccess: () => {
-      // Individual success handling if needed
-    },
-  });
-  const [, deleteProjectAction] = useDeleteProjectAction({
-    onSuccess: () => {
-      // Individual success handling if needed
-    },
-  });
-  const [, moveFolderAction] = useMoveFolderAction({
-    onSuccess: () => {
-      // Individual success handling if needed
-    },
-  });
-  const [, moveProjectAction] = useMoveProjectAction({
-    onSuccess: () => {
-      // Individual success handling if needed
-    },
-  });
+  const { execute: deleteFolderExecute } = useDeleteFolderAction();
+  const { execute: deleteProjectExecute } = useDeleteProjectAction();
+  const { execute: moveFolderExecute } = useMoveFolderAction();
+  const { execute: moveProjectExecute } = useMoveProjectAction();
 
   // Only show toolbar when we have selected items
   if (selectedCount === 0) {
@@ -93,15 +77,16 @@ export function BulkActionsToolbar({
   const confirmBulkDelete = () => {
     // Process items using the proper action hooks with startTransition
     startTransition(() => {
-      selectedItemsData.forEach((item) => {
-        const formData = new FormData();
-
+      selectedItemsData.forEach(async (item) => {
         if (item.type === 'folder') {
-          formData.append('folderId', item.id);
-          deleteFolderAction(formData);
+          await deleteFolderExecute({
+            folderId: item.id,
+          });
         } else {
-          formData.append('projectId', item.id);
-          deleteProjectAction(formData);
+          await deleteProjectExecute({
+            projectId: item.id,
+            folderId: parentFolderId,
+          });
         }
       });
     });
@@ -116,19 +101,19 @@ export function BulkActionsToolbar({
 
     // Process items using the proper action hooks with startTransition
     startTransition(() => {
-      selectedItemsData.forEach((item) => {
-        const formData = new FormData();
-
+      selectedItemsData.forEach(async (item) => {
         if (item.type === 'folder') {
-          formData.append('folderId', item.id);
-          formData.append('parentFolderId', selectedDestinationId || ''); // null becomes empty string for root
-          formData.append('sourceParentFolderId', parentFolderId || '');
-          moveFolderAction(formData);
+          await moveFolderExecute({
+            folderId: item.id,
+            parentFolderId: selectedDestinationId,
+            sourceParentFolderId: parentFolderId,
+          });
         } else {
-          formData.append('projectId', item.id);
-          formData.append('folderId', selectedDestinationId || ''); // null becomes empty string for root
-          formData.append('sourceFolderId', parentFolderId || '');
-          moveProjectAction(formData);
+          await moveProjectExecute({
+            projectId: item.id,
+            folderId: selectedDestinationId,
+            sourceFolderId: parentFolderId,
+          });
         }
       });
     });

@@ -13,7 +13,7 @@ import {
   useCombineProjectsAction,
   useMoveFolderAction,
   useMoveProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Card, CardContent } from '@/components/ui/card';
 import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar';
 import { DndLayout } from '@/components/vault/dnd-layout';
@@ -40,9 +40,9 @@ type FolderItem =
 
 export function FolderView({ folderId }: FolderViewProps) {
   const isTablet = useIsTablet();
-  const [, moveFolderAction] = useMoveFolderAction();
-  const [, moveProjectAction] = useMoveProjectAction();
-  const [, combineProjectsAction] = useCombineProjectsAction();
+  const { execute: moveFolderExecute } = useMoveFolderAction();
+  const { execute: moveProjectExecute } = useMoveProjectAction();
+  const { execute: combineProjectsExecute } = useCombineProjectsAction();
 
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
@@ -121,13 +121,12 @@ export function FolderView({ folderId }: FolderViewProps) {
     parentFolderId: string | null,
     sourceParentFolderId: string | null
   ) => {
-    const formData = new FormData();
-    formData.append('folderId', folderId);
-    formData.append('parentFolderId', parentFolderId || '');
-    formData.append('sourceParentFolderId', sourceParentFolderId || '');
-
     startTransition(() => {
-      moveFolderAction(formData);
+      moveFolderExecute({
+        folderId,
+        parentFolderId,
+        sourceParentFolderId,
+      });
     });
   };
 
@@ -136,13 +135,12 @@ export function FolderView({ folderId }: FolderViewProps) {
     folderId: string | null,
     sourceFolderId: string | null
   ) => {
-    const formData = new FormData();
-    formData.append('projectId', projectId);
-    formData.append('folderId', folderId || '');
-    formData.append('sourceFolderId', sourceFolderId || '');
-
     startTransition(() => {
-      moveProjectAction(formData);
+      moveProjectExecute({
+        projectId,
+        folderId,
+        sourceFolderId,
+      });
     });
   };
 
@@ -150,13 +148,12 @@ export function FolderView({ folderId }: FolderViewProps) {
     sourceProjectId: string,
     targetProjectId: string
   ) => {
-    const formData = new FormData();
-    formData.append('sourceProjectId', sourceProjectId);
-    formData.append('targetProjectId', targetProjectId);
-    formData.append('parentFolderId', folderData.id);
-
     startTransition(() => {
-      combineProjectsAction(formData);
+      combineProjectsExecute({
+        sourceProjectId,
+        targetProjectId,
+        parentFolderId: folderData.id,
+      });
     });
   };
 

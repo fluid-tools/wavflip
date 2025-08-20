@@ -14,7 +14,7 @@ import {
   useCombineProjectsAction,
   useMoveFolderAction,
   useMoveProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Card, CardContent } from '@/components/ui/card';
 import { BulkActionsToolbar } from '@/components/vault/bulk-actions-toolbar';
 import { DndLayout } from '@/components/vault/dnd-layout';
@@ -37,9 +37,9 @@ type VaultItem =
 
 export default function VaultPage() {
   const isTablet = useIsTablet();
-  const [, moveFolderAction] = useMoveFolderAction();
-  const [, moveProjectAction] = useMoveProjectAction();
-  const [, combineProjectsAction] = useCombineProjectsAction();
+  const { execute: moveFolderExecute } = useMoveFolderAction();
+  const { execute: moveProjectExecute } = useMoveProjectAction();
+  const { execute: combineProjectsExecute } = useCombineProjectsAction();
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
 
@@ -59,13 +59,12 @@ export default function VaultPage() {
     parentFolderId: string | null,
     sourceParentFolderId: string | null
   ) => {
-    const formData = new FormData();
-    formData.append('folderId', folderId);
-    formData.append('parentFolderId', parentFolderId || '');
-    formData.append('sourceParentFolderId', sourceParentFolderId || '');
-
     startTransition(() => {
-      moveFolderAction(formData);
+      moveFolderExecute({
+        folderId,
+        parentFolderId,
+        sourceParentFolderId,
+      });
     });
   };
 
@@ -74,13 +73,12 @@ export default function VaultPage() {
     folderId: string | null,
     sourceFolderId: string | null
   ) => {
-    const formData = new FormData();
-    formData.append('projectId', projectId);
-    formData.append('folderId', folderId || '');
-    formData.append('sourceFolderId', sourceFolderId || '');
-
     startTransition(() => {
-      moveProjectAction(formData);
+      moveProjectExecute({
+        projectId,
+        folderId,
+        sourceFolderId,
+      });
     });
   };
 
@@ -88,14 +86,12 @@ export default function VaultPage() {
     sourceProjectId: string,
     targetProjectId: string
   ) => {
-    const formData = new FormData();
-    formData.append('sourceProjectId', sourceProjectId);
-    formData.append('targetProjectId', targetProjectId);
-    // For vault view, combined projects should be created at root level (null parent)
-    formData.append('parentFolderId', '');
-
     startTransition(() => {
-      combineProjectsAction(formData);
+      combineProjectsExecute({
+        sourceProjectId,
+        targetProjectId,
+        parentFolderId: null, // For vault view, combined projects should be created at root level
+      });
     });
   };
 

@@ -16,7 +16,7 @@ import {
   useDeleteProjectAction,
   useMoveProjectAction,
   useRenameProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -101,41 +101,39 @@ export function ProjectCard({
           } as ProjectWithTracks),
   });
 
-  const [, deleteAction, isDeleting] = useDeleteProjectAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false);
-    },
-  });
-
-  const [, renameAction, isRenaming] = useRenameProjectAction({
-    onSuccess: () => {
-      setShowRenameDialog(false);
-      setNewName(project.name);
-    },
-  });
-
-  const [, moveAction, isMoving] = useMoveProjectAction({
-    onSuccess: () => {
-      setShowMoveDialog(false);
-      setSelectedDestinationId(folderId ?? null);
-    },
-  });
+  const { execute: deleteExecute, isPending: isDeleting } = useDeleteProjectAction();
+  const { execute: renameExecute, isPending: isRenaming } = useRenameProjectAction();
+  const { execute: moveExecute, isPending: isMoving } = useMoveProjectAction();
 
   const handleRename = async (formData: FormData) => {
-    formData.append('projectId', project.id);
-    renameAction(formData);
+    const name = formData.get('name') as string;
+    if (name?.trim()) {
+      await renameExecute({
+        projectId: project.id,
+        name: name.trim(),
+        folderId,
+      });
+      setShowRenameDialog(false);
+      setNewName(project.name);
+    }
   };
 
   const handleDelete = async (formData: FormData) => {
-    formData.append('projectId', project.id);
-    deleteAction(formData);
+    await deleteExecute({
+      projectId: project.id,
+      folderId,
+    });
+    setShowDeleteDialog(false);
   };
 
   const handleMove = async (formData: FormData) => {
-    formData.append('projectId', project.id);
-    formData.append('folderId', selectedDestinationId || '');
-    formData.append('sourceFolderId', folderId || '');
-    moveAction(formData);
+    await moveExecute({
+      projectId: project.id,
+      folderId: selectedDestinationId,
+      sourceFolderId: folderId,
+    });
+    setShowMoveDialog(false);
+    setSelectedDestinationId(folderId ?? null);
   };
 
   const triggerImageUpload = () => {

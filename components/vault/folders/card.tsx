@@ -8,7 +8,7 @@ import {
   useDeleteFolderAction,
   useMoveFolderAction,
   useRenameFolderAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -67,41 +67,37 @@ export function FolderCard({
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom);
   const { shouldShowContextMenu } = useContextMenuHandler();
 
-  const [, deleteAction, isDeleting] = useDeleteFolderAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false);
-    },
-  });
-
-  const [, renameAction, isRenaming] = useRenameFolderAction({
-    onSuccess: () => {
-      setShowRenameDialog(false);
-      setNewName(folder.name);
-    },
-  });
-
-  const [, moveAction, isMoving] = useMoveFolderAction({
-    onSuccess: () => {
-      setShowMoveDialog(false);
-      setSelectedDestinationId(null);
-    },
-  });
+  const { execute: deleteExecute, isPending: isDeleting } = useDeleteFolderAction();
+  const { execute: renameExecute, isPending: isRenaming } = useRenameFolderAction();
+  const { execute: moveExecute, isPending: isMoving } = useMoveFolderAction();
 
   const handleRename = async (formData: FormData) => {
-    formData.append('folderId', folder.id);
-    renameAction(formData);
+    const name = formData.get('name') as string;
+    if (name?.trim()) {
+      await renameExecute({
+        folderId: folder.id,
+        name: name.trim(),
+      });
+      setShowRenameDialog(false);
+      setNewName(folder.name);
+    }
   };
 
   const handleDelete = async (formData: FormData) => {
-    formData.append('folderId', folder.id);
-    deleteAction(formData);
+    await deleteExecute({
+      folderId: folder.id,
+    });
+    setShowDeleteDialog(false);
   };
 
   const handleMove = async (formData: FormData) => {
-    formData.append('folderId', folder.id);
-    formData.append('parentFolderId', selectedDestinationId || '');
-    formData.append('sourceParentFolderId', parentFolderId || '');
-    moveAction(formData);
+    await moveExecute({
+      folderId: folder.id,
+      parentFolderId: selectedDestinationId,
+      sourceParentFolderId: parentFolderId,
+    });
+    setShowMoveDialog(false);
+    setSelectedDestinationId(null);
   };
 
   // State management is now handled by the custom hooks automatically
