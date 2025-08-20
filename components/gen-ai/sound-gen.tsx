@@ -9,6 +9,8 @@ import { generateSoundEffect } from '@/actions/generate/sound';
 import { generateTextToSpeech } from '@/actions/generate/speech';
 import { Slider } from '@/components/ui/slider';
 import { useGenerations } from '@/hooks/data/use-generations';
+import { useQueryClient } from '@tanstack/react-query';
+import { vaultKeys } from '@/hooks/data/keys';
 import { WELCOME_MESSAGE } from '@/lib/constants/prompts';
 import { cn } from '@/lib/utils';
 import {
@@ -36,6 +38,7 @@ interface ChatMessage {
 }
 
 export function SoundGenerator({ className }: SoundGeneratorProps) {
+  const queryClient = useQueryClient();
   const [prompt, setPrompt] = useState('');
   const [isTTSMode, setIsTTSMode] = useState(false);
   const [durationSeconds, setDurationSeconds] = useState<number>(10);
@@ -114,6 +117,9 @@ export function SoundGenerator({ className }: SoundGeneratorProps) {
 
         // Add to session for offline access
         addToSession(res.data);
+
+        // Invalidate vault tree and related caches so sidebar counts update
+        queryClient.invalidateQueries({ queryKey: vaultKeys.base });
 
         // Replace loading message with result
         setMessages((prev) =>

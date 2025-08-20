@@ -19,11 +19,7 @@ export function useVaultTree(opts?: {
 }) {
   const { levels = false, excludeId, stats = false } = opts ?? {};
   return useQuery({
-    queryKey: [
-      'vault',
-      'tree',
-      { levels, excludeId: excludeId ?? null, stats },
-    ],
+    queryKey: [...vaultKeys.tree(), { levels, excludeId: excludeId ?? null, stats }],
     queryFn: async (): Promise<VaultData> => {
       const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL);
       url.searchParams.set('levels', String(!!levels));
@@ -64,10 +60,10 @@ export function useFolder(folderId: string) {
 export function useRootFolders() {
   // Read tree cache directly to avoid using any types
   const queryClient = useQueryClient();
-  const treeData = queryClient.getQueryData<VaultData>(vaultKeys.tree());
-  if (treeData && treeData.folders.length > 0) {
-    console.log('treeData cache hit');
-  }
+  const [treeEntry] = queryClient.getQueriesData<VaultData>({
+    queryKey: vaultKeys.tree(),
+  });
+  const treeData = treeEntry?.[1];
   const fromTree = Array.isArray(treeData?.folders)
     ? treeData!.folders.map((f) => ({ ...f, tracks: [] }))
     : undefined;
@@ -92,7 +88,10 @@ export function useRootFolders() {
 
 export function useVaultProjects() {
   const queryClient = useQueryClient();
-  const treeData = queryClient.getQueryData<VaultData>(vaultKeys.tree());
+  const [treeEntry] = queryClient.getQueriesData<VaultData>({
+    queryKey: vaultKeys.tree(),
+  });
+  const treeData = treeEntry?.[1];
   const fromTree = Array.isArray(treeData?.rootProjects)
     ? treeData!.rootProjects.map((p) => ({ ...p, tracks: [] }))
     : undefined;
