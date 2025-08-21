@@ -1,0 +1,22 @@
+---
+description: Data Access Layer (DAL) rules to keep server-only logic isolated and secure
+globs:
+  - "lib/server/**"
+  - "db/**"
+  - "app/api/**/route.ts"
+  - "actions/**"
+alwaysApply: false
+---
+
+- Create and enforce a dedicated DAL in `lib/server/**` and `db/**`. Import database clients, env variables, and private services only from these server-only modules.
+- Mark DAL entry modules with `import 'server-only'` where appropriate to prevent client imports.
+- Client components/hooks must never import `lib/server/**`, `db/**`, or env-bearing modules. Access data via:
+  - GET: API routes under `app/api/**/route.ts` consumed by React Query
+  - Mutations: next-safe-action actions under `actions/**`
+- Server Actions: Always re-verify auth in the action itself. Treat actions as public endpoints per Next.js guidance.
+- API Routes: Validate all inputs (URL params, search params, body) in the route handler using Zod or server-side schema validators. Do not trust client input.
+- Avoid side-effects during rendering (Client or Server Components). Move to route handlers or server actions.
+- Allowed origins/CSRF: If needed for complex proxy setups, configure `serverActions.allowedOrigins` in `next.config.ts`.
+
+References
+- Next.js Data Security – Data Access Layer: `https://nextjs.org/docs/app/guides/data-security#data-access-layer`

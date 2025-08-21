@@ -1,0 +1,142 @@
+# State Management Patterns
+
+This document outlines the state management patterns and architectural decisions used in the wavflip codebase.
+
+## Server Actions vs Client Hooks Pattern
+
+### Current Architecture
+
+We use a **hybrid approach** based on the complexity and requirements of each operation:
+
+#### 1. Server Actions with next-safe-action + `useActionState` (Preferred)
+**Used for**: Vault operations (folders, projects, basic CRUD), AI generations
+- ✅ End-to-end type safety via `next-safe-action` (`actionClient`) and input schemas (Zod)
+- ✅ Server-side validation and structured error handling
+- ✅ Client wrapper handles toasts and React Query invalidation via `useVaultInvalidation()`
+- ✅ Seamless form integration with `useActionState`
+
+#### 2. Client-side React Query Hooks
+**Used for**: Track operations and complex state scenarios
+- ✅ Optimistic updates
+- ✅ Complex client-side state management
+- ✅ Real-time UI feedback
+- ⚠️ More complex but necessary for tracks
+
+### Tracks Page Exception
+
+**Current Status**: Tracks page uses **client-side hooks only** (React Query + mutations)
+
+**Reasoning**: 
+- Previous attempts to use server actions caused state management issues
+- Tracks require complex optimistic updates and real-time feedback
+- File uploads need client-side blob handling
+- **TODO**: Revisit this later to potentially unify the approach
+
+## `startTransition` Usage Patterns
+
+### Rule: Context Determines Usage
+
+The usage of `startTransition` with `useActionState` depends on **how the action is called**:
+
+#### ✅ **Form Submissions** - NO `startTransition` needed
+```typescript
+// Dialog forms, create/rename operations
+<form action={handleRename}>
+  <button type="submit">Rename</button>
+</form>
+
+const [, renameAction] = useRenameProjectAction()
+const handleRename = (formData: FormData) => {
+  formData.append('projectId', project.id)
+  renameAction(formData) // ← No startTransition needed
+}
+```
+
+#### ✅ **Programmatic Calls** - `startTransition` REQUIRED
+```typescript
+// Drag and drop operations, direct function calls
+const handleMoveProject = (projectId: string, folderId: string) => {
+  const formData = new FormData()
+  formData.append('projectId', projectId)
+  formData.append('folderId', folderId)
+  
+  startTransition(() => {
+    moveProjectAction(formData) // ← startTransition required
+  })
+}
+```
+
+### Why This Difference?
+
+React's `useActionState` automatically handles transitions for **form submissions**, but requires manual `startTransition` for **programmatic calls** to properly manage:
+- `isPending` state updates
+- Error boundaries
+- Suspense integration
+- Concurrent rendering
+
+## Implementation Locations
+
+### Server Actions (with next-safe-action + `useActionState`)
+- **Folder operations**: `actions/vault/folder.ts` (server) + `actions/vault/use-action.ts` (client wrapper)
+- **Project operations**: `actions/vault/project.ts` (server) + `actions/vault/use-action.ts` (client wrapper)
+- **AI generation**: `actions/generate/*` using `lib/safe-action.ts` `actionClient`
+- **Invalidation helpers**: `hooks/data/use-vault.ts` (`useVaultInvalidation`)
+
+### Client Hooks (React Query)
+- **Track operations**: `hooks/use-project.ts`, `hooks/use-tracks.ts`
+- **File uploads**: Vercel Blob client upload
+- **Player state**: `state/audio-atoms.ts` (Jotai)
+
+## Best Practices
+
+### When to Use Server Actions
+- Simple CRUD operations
+- Operations that need server-side validation
+- Operations that primarily affect navigation/structure
+- When form-based UX is appropriate
+
+### When to Use Client Hooks
+- Complex optimistic updates needed
+- File upload operations
+- Real-time feedback required
+- Complex client-side state interdependencies
+
+### React Query Invalidation
+All server actions use wrapped client hooks (`actions/vault/use-action.ts`) that show toast messages and call our invalidation helpers. Prefer invalidating via `useVaultInvalidation()` on the client rather than `revalidatePath` in server code.
+
+Available helpers:
+- `invalidateAll()` – broad vault refresh
+- `invalidateTree()` – tree only
+- `invalidateFolder(id)` / `invalidateProject(id)` – targeted refresh
+
+## Future Considerations
+
+1. **Adopt Next.js "use cache" for server readers**
+   - Wrap `getVaultData`, `getUserFolders`, `getRootProjects`, `getFolderWithContents`, `getProjectWithTracks` with `"use cache"` and attach tags.
+   - Continue SSR + Hydration; RSCs call cached readers directly, cutting boilerplate.
+   - Mutations: keep client invalidation; add `revalidateTag` on server actions.
+2. **Tracks Unification**: Consider partial server actions (e.g., rename/move) while keeping uploads as client mutations.
+3. **Player Integration**: Keep audio player (Jotai) separate from data fetching.
+4. **Performance**: Monitor cache size and invalidation fan-out; promote per-entity tags to avoid broad invalidations.
+5. **Consistency**: Maintain contract separation (tree vs folders/projects vs project detail) to avoid coercion.
+
+## Memory References
+
+- Prefer React Query for GET operations and next-safe-action server actions for non-GET operations
+- Prefer client-side invalidation via `useVaultInvalidation()` instead of `revalidatePath` where possible
+- Keep audio player state separate from data fetching logic
+- Use client-side uploads for large files (audio)
+
+## RSC + "use cache" Tag Map
+
+- `vault:tree` → `/api/vault/tree`, sidebar/picker
+- `vault:folders:root` → `/api/folders`, vault grid root folders
+- `vault:folder:${folderId}` → `/api/folders/[folderId]`, folder page
+- `vault:projects:root` → `/api/projects`, vault grid root projects
+- `vault:project:${projectId}` → `/api/projects/[projectId]`, project page
+- `waveform:${fileKey}` → `/api/waveform/[key]`, waveform data
+
+## Reference: next-safe-action
+
+- Docs: `http://next-safe-action.dev/`
+- Our client: `lib/safe-action.ts` (`actionClient`)

@@ -1,25 +1,25 @@
-"use client"
+'use client';
 
-import * as React from "react";
-import { Moon, Sun, Monitor } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Monitor, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import * as React from 'react';
 
-import { Button } from "@/components/ui/button"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button size="icon" variant="outline">
           {theme === 'light' && <Sun className="h-[1.2rem] w-[1.2rem]" />}
           {theme === 'dark' && <Moon className="h-[1.2rem] w-[1.2rem]" />}
           {theme === 'system' && <Monitor className="h-[1.2rem] w-[1.2rem]" />}
@@ -27,41 +27,41 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
+        <DropdownMenuItem onClick={() => setTheme('light')}>
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <DropdownMenuItem onClick={() => setTheme('dark')}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
+        <DropdownMenuItem onClick={() => setTheme('system')}>
           System
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
 
 export function ThemeToggleGroup() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
 
   return (
     <ToggleGroup
+      className="w-full"
+      onValueChange={(value) => value && setTheme(value)}
+      size="sm"
       type="single"
       value={theme}
-      onValueChange={(value) => value && setTheme(value)}
-      className="w-full"
       variant="default"
-      size="sm"
     >
-      <ToggleGroupItem value="light" aria-label="Light theme" >
+      <ToggleGroupItem aria-label="Light theme" value="light">
         <Sun />
       </ToggleGroupItem>
-      <ToggleGroupItem value="dark" aria-label="Dark theme">
+      <ToggleGroupItem aria-label="Dark theme" value="dark">
         <Moon />
       </ToggleGroupItem>
-      <ToggleGroupItem value="system" aria-label="System theme">
+      <ToggleGroupItem aria-label="System theme" value="system">
         <Monitor />
       </ToggleGroupItem>
     </ToggleGroup>
-  )
+  );
 }

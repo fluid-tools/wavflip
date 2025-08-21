@@ -1,20 +1,25 @@
-"use client"
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Plus, FolderPlus, Music } from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { CreateProjectDialog } from './projects/create-dialog'
-import { CreateFolderDialog } from './folders/create-dialog'
-import { SelectionModeToggle } from './selection-mode-toggle'
+import { FolderPlus, Music, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { CreateFolderDialog } from './folders/create-dialog';
+import { CreateProjectDialog } from './projects/create-dialog';
+import { SelectionModeToggle } from './selection-mode-toggle';
 
 interface VaultActionsProps {
-  folderId?: string | null
+  folderId?: string | null;
 }
 
 export function VaultActions({ folderId }: VaultActionsProps) {
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
-  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
 
   return (
     <>
@@ -23,17 +28,17 @@ export function VaultActions({ folderId }: VaultActionsProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm" variant="outline">
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="mr-1 h-4 w-4" />
               New
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setShowCreateFolderDialog(true)}>
-              <FolderPlus className="h-4 w-4 mr-2" />
+              <FolderPlus className="mr-2 h-4 w-4" />
               Create Folder
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowCreateProjectDialog(true)}>
-              <Music className="h-4 w-4 mr-2" />
+              <Music className="mr-2 h-4 w-4" />
               Create Project
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -41,18 +46,18 @@ export function VaultActions({ folderId }: VaultActionsProps) {
       </div>
 
       {/* Dialogs */}
-      <CreateFolderDialog 
-        parentFolderId={folderId}
-        open={showCreateFolderDialog}
+      <CreateFolderDialog
         onOpenChange={setShowCreateFolderDialog}
         onSuccess={() => setShowCreateFolderDialog(false)}
+        open={showCreateFolderDialog}
+        parentFolderId={folderId}
       />
-      <CreateProjectDialog 
+      <CreateProjectDialog
         folderId={folderId}
-        open={showCreateProjectDialog}
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
+        open={showCreateProjectDialog}
       />
     </>
-  )
+  );
 }

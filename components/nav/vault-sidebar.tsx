@@ -1,216 +1,219 @@
-"use client"
+'use client';
 
-import { usePathname } from 'next/navigation'
-import React from 'react'
-import { useVaultSidebar } from '@/hooks/data/use-vault'
-import Link from "next/link"
-import { 
-  FolderOpen, 
-  Folder, 
-  Music, 
-  ChevronDown, 
+import {
+  ChevronDown,
   ChevronRight,
-  Plus,
-  FolderPlus,
   Edit2,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  Move,
+  Music,
+  Plus,
   Trash2,
-  Move
-} from 'lucide-react'
-import { useState, startTransition } from 'react'
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import React, { startTransition, useState } from 'react';
 import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarGroupAction,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
-  SidebarMenuAction,
-} from "@/components/ui/sidebar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  useDeleteFolderAction,
+  useDeleteProjectAction,
+  useMoveFolderAction,
+  useMoveProjectAction,
+  useRenameFolderAction,
+  useRenameProjectAction,
+} from '@/actions/vault/hooks';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
-} from '@/components/ui/context-menu'
-import { CreateFolderDialog } from '@/components/vault/folders/create-dialog'
-import { CreateProjectDialog } from '@/components/vault/projects/create-dialog'
-import { RenameDialog } from '@/components/vault/dialogs/rename-dialog'
-import { DeleteDialog } from '@/components/vault/dialogs/delete-dialog'
-import { MoveDialog } from '@/components/vault/dialogs/move-dialog'
-import { useDeleteFolderAction, useRenameFolderAction, useMoveFolderAction, useDeleteProjectAction, useRenameProjectAction, useMoveProjectAction } from '@/actions/use-vault-action'
-import { useContextMenuHandler } from '@/hooks/use-context-menu-handler'
+} from '@/components/ui/context-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from '@/components/ui/sidebar';
+import { DeleteDialog } from '@/components/vault/dialogs/delete-dialog';
+import { MoveDialog } from '@/components/vault/dialogs/move-dialog';
+import { RenameDialog } from '@/components/vault/dialogs/rename-dialog';
+import { CreateFolderDialog } from '@/components/vault/folders/create-dialog';
+import { CreateProjectDialog } from '@/components/vault/projects/create-dialog';
+import { useVaultTree } from '@/hooks/data/use-vault';
+import { useContextMenuHandler } from '@/hooks/use-context-menu-handler';
 
 interface SidebarFolder {
-  id: string
-  name: string
-  parentFolderId: string | null
+  id: string;
+  name: string;
+  parentFolderId: string | null;
   projects: Array<{
-    id: string
-    name: string
-    trackCount: number
-  }>
-  subfolders: SidebarFolder[]
-  projectCount: number
-  subFolderCount: number
+    id: string;
+    name: string;
+    trackCount: number;
+  }>;
+  subfolders: SidebarFolder[];
+  projectCount: number;
+  subFolderCount: number;
 }
 
-
-
 export function VaultSidebarNavigation() {
-  const pathname = usePathname()
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
-  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false)
+  const pathname = usePathname();
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set()
+  );
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
 
   // Context menu dialogs state
-  const [showRenameDialog, setShowRenameDialog] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [showMoveDialog, setShowMoveDialog] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<{ id: string; name: string; type: 'folder' | 'project'; parentId?: string | null } | null>(null)
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{
+    id: string;
+    name: string;
+    type: 'folder' | 'project';
+    parentId?: string | null;
+  } | null>(null);
 
   // Use the new vault hooks
-  const { data: vaultData, isLoading } = useVaultSidebar()
-  const { shouldShowContextMenu } = useContextMenuHandler()
+  const { data: vaultData, isLoading } = useVaultTree({ levels: false });
+  const { shouldShowContextMenu } = useContextMenuHandler();
 
   // Action hooks
-  const [, deleteFolderAction, isDeletingFolder] = useDeleteFolderAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false)
-      setSelectedItem(null)
-    }
-  })
-  const [, renameFolderAction, isRenamingFolder] = useRenameFolderAction({
-    onSuccess: () => {
-      setShowRenameDialog(false)
-      setSelectedItem(null)
-    }
-  })
-  const [, moveFolderAction, isMovingFolder] = useMoveFolderAction({
-    onSuccess: () => {
-      setShowMoveDialog(false)
-      setSelectedItem(null)
-    }
-  })
-  const [, deleteProjectAction, isDeletingProject] = useDeleteProjectAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false)
-      setSelectedItem(null)
-    }
-  })
-  const [, renameProjectAction, isRenamingProject] = useRenameProjectAction({
-    onSuccess: () => {
-      setShowRenameDialog(false)
-      setSelectedItem(null)
-    }
-  })
-  const [, moveProjectAction, isMovingProject] = useMoveProjectAction({
-    onSuccess: () => {
-      setShowMoveDialog(false)
-      setSelectedItem(null)
-    }
-  })
+  const { execute: deleteFolderExecute, isPending: isDeletingFolder } = useDeleteFolderAction();
+  const { execute: renameFolderExecute, isPending: isRenamingFolder } = useRenameFolderAction();
+  const { execute: moveFolderExecute, isPending: isMovingFolder } = useMoveFolderAction();
+  const { execute: deleteProjectExecute, isPending: isDeletingProject } = useDeleteProjectAction();
+  const { execute: renameProjectExecute, isPending: isRenamingProject } = useRenameProjectAction();
+  const { execute: moveProjectExecute, isPending: isMovingProject } = useMoveProjectAction();
 
   // Context menu handlers
-  const handleRename = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
-    setSelectedItem(item)
-    setShowRenameDialog(true)
-  }
+  const handleRename = (item: {
+    id: string;
+    name: string;
+    type: 'folder' | 'project';
+    parentId?: string | null;
+  }) => {
+    setSelectedItem(item);
+    setShowRenameDialog(true);
+  };
 
-  const handleDelete = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
-    setSelectedItem(item)
-    setShowDeleteDialog(true)
-  }
+  const handleDelete = (item: {
+    id: string;
+    name: string;
+    type: 'folder' | 'project';
+    parentId?: string | null;
+  }) => {
+    setSelectedItem(item);
+    setShowDeleteDialog(true);
+  };
 
-  const handleMove = (item: { id: string; name: string; type: 'folder' | 'project'; parentId?: string | null }) => {
-    setSelectedItem(item)
-    setShowMoveDialog(true)
-  }
+  const handleMove = (item: {
+    id: string;
+    name: string;
+    type: 'folder' | 'project';
+    parentId?: string | null;
+  }) => {
+    setSelectedItem(item);
+    setShowMoveDialog(true);
+  };
 
   // Dialog handlers
-  const handleRenameSubmit = (newName: string) => {
-    if (!selectedItem) return
-    
-    const formData = new FormData()
-    formData.append('name', newName)
-    
-    startTransition(() => {
-      if (selectedItem.type === 'folder') {
-        formData.append('folderId', selectedItem.id)
-        renameFolderAction(formData)
-      } else {
-        formData.append('projectId', selectedItem.id)
-        renameProjectAction(formData)
-      }
-    })
-  }
+  const handleRenameSubmit = async (newName: string) => {
+    if (!selectedItem) return;
 
-  const handleDeleteConfirm = () => {
-    if (!selectedItem) return
-    
-    const formData = new FormData()
-    
-    startTransition(() => {
+    startTransition(async () => {
       if (selectedItem.type === 'folder') {
-        formData.append('folderId', selectedItem.id)
-        deleteFolderAction(formData)
+        await renameFolderExecute({
+          folderId: selectedItem.id,
+          name: newName,
+        });
       } else {
-        formData.append('projectId', selectedItem.id)
-        deleteProjectAction(formData)
+        await renameProjectExecute({
+          projectId: selectedItem.id,
+          name: newName,
+          folderId: selectedItem.parentId,
+        });
       }
-    })
-  }
+      setShowRenameDialog(false);
+      setSelectedItem(null);
+    });
+  };
 
-  const handleMoveSubmit = (destinationFolderId: string | null) => {
-    if (!selectedItem) return
-    
-    const formData = new FormData()
-    
-    startTransition(() => {
+  const handleDeleteConfirm = async () => {
+    if (!selectedItem) return;
+
+    startTransition(async () => {
       if (selectedItem.type === 'folder') {
-        formData.append('folderId', selectedItem.id)
-        formData.append('parentFolderId', destinationFolderId || '')
-        formData.append('sourceParentFolderId', selectedItem.parentId || '')
-        moveFolderAction(formData)
+        await deleteFolderExecute({
+          folderId: selectedItem.id,
+        });
       } else {
-        formData.append('projectId', selectedItem.id)
-        formData.append('folderId', destinationFolderId || '')
-        formData.append('sourceFolderId', selectedItem.parentId || '')
-        moveProjectAction(formData)
+        await deleteProjectExecute({
+          projectId: selectedItem.id,
+          folderId: selectedItem.parentId,
+        });
       }
-    })
-  }
+      setShowDeleteDialog(false);
+      setSelectedItem(null);
+    });
+  };
+
+  const handleMoveSubmit = async (destinationFolderId: string | null) => {
+    if (!selectedItem) return;
+
+    startTransition(async () => {
+      if (selectedItem.type === 'folder') {
+        await moveFolderExecute({
+          folderId: selectedItem.id,
+          parentFolderId: destinationFolderId,
+          sourceParentFolderId: selectedItem.parentId,
+        });
+      } else {
+        await moveProjectExecute({
+          projectId: selectedItem.id,
+          folderId: destinationFolderId,
+          sourceFolderId: selectedItem.parentId,
+        });
+      }
+      setShowMoveDialog(false);
+      setSelectedItem(null);
+    });
+  };
 
   const toggleFolder = (folderId: string) => {
-    const newExpanded = new Set(expandedFolders)
+    const newExpanded = new Set(expandedFolders);
     if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId)
+      newExpanded.delete(folderId);
     } else {
-      newExpanded.add(folderId)
+      newExpanded.add(folderId);
     }
-    setExpandedFolders(newExpanded)
-  }
-
-
-
-
+    setExpandedFolders(newExpanded);
+  };
 
   const renderFolder = (folder: SidebarFolder, level = 0) => {
-    const isExpanded = expandedFolders.has(folder.id)
-    const isActive = pathname === `/vault/folders/${folder.id}`
-    const hasSubItems = (folder.subfolders && folder.subfolders.length > 0) || folder.projects.length > 0
+    const isExpanded = expandedFolders.has(folder.id);
+    const isActive = pathname === `/vault/folders/${folder.id}`;
+    const hasSubItems =
+      (folder.subfolders && folder.subfolders.length > 0) ||
+      folder.projects.length > 0;
 
-    const shouldShowSubItems = hasSubItems
+    const shouldShowSubItems = hasSubItems;
 
     const folderContextMenu = shouldShowContextMenu() ? (
       <ContextMenu>
@@ -225,8 +228,13 @@ export function VaultSidebarNavigation() {
         <ContextMenuContent className="w-48">
           <ContextMenuItem
             onClick={(e) => {
-              e.preventDefault()
-              handleRename({ id: folder.id, name: folder.name, type: 'folder', parentId: folder.parentFolderId })
+              e.preventDefault();
+              handleRename({
+                id: folder.id,
+                name: folder.name,
+                type: 'folder',
+                parentId: folder.parentFolderId,
+              });
             }}
           >
             <Edit2 className="h-4 w-4" />
@@ -234,8 +242,13 @@ export function VaultSidebarNavigation() {
           </ContextMenuItem>
           <ContextMenuItem
             onClick={(e) => {
-              e.preventDefault()
-              handleMove({ id: folder.id, name: folder.name, type: 'folder', parentId: folder.parentFolderId })
+              e.preventDefault();
+              handleMove({
+                id: folder.id,
+                name: folder.name,
+                type: 'folder',
+                parentId: folder.parentFolderId,
+              });
             }}
           >
             <Move className="h-4 w-4" />
@@ -245,8 +258,13 @@ export function VaultSidebarNavigation() {
           <ContextMenuItem
             className="text-destructive"
             onClick={(e) => {
-              e.preventDefault()
-              handleDelete({ id: folder.id, name: folder.name, type: 'folder', parentId: folder.parentFolderId })
+              e.preventDefault();
+              handleDelete({
+                id: folder.id,
+                name: folder.name,
+                type: 'folder',
+                parentId: folder.parentFolderId,
+              });
             }}
           >
             <Trash2 className="h-4 w-4" />
@@ -261,13 +279,13 @@ export function VaultSidebarNavigation() {
           <span>{folder.name}</span>
         </Link>
       </SidebarMenuButton>
-    )
+    );
 
     return (
       <div key={folder.id}>
         <SidebarMenuItem>
           {folderContextMenu}
-          
+
           {shouldShowSubItems && (
             <SidebarMenuAction onClick={() => toggleFolder(folder.id)}>
               {isExpanded ? (
@@ -278,7 +296,7 @@ export function VaultSidebarNavigation() {
             </SidebarMenuAction>
           )}
         </SidebarMenuItem>
-        
+
         {shouldShowSubItems && isExpanded && (
           <SidebarMenuSub>
             {/* Render real projects in this folder */}
@@ -286,14 +304,14 @@ export function VaultSidebarNavigation() {
               const projectContextMenu = shouldShowContextMenu() ? (
                 <ContextMenu>
                   <ContextMenuTrigger asChild>
-                    <SidebarMenuSubButton 
-                      asChild 
+                    <SidebarMenuSubButton
+                      asChild
                       isActive={pathname === `/vault/projects/${project.id}`}
                     >
                       <Link href={`/vault/projects/${project.id}`}>
                         <Music className="h-4 w-4" />
                         <span>{project.name}</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
+                        <span className="ml-auto text-muted-foreground text-xs">
                           {project.trackCount}
                         </span>
                       </Link>
@@ -302,8 +320,13 @@ export function VaultSidebarNavigation() {
                   <ContextMenuContent className="w-48">
                     <ContextMenuItem
                       onClick={(e) => {
-                        e.preventDefault()
-                        handleRename({ id: project.id, name: project.name, type: 'project', parentId: folder.id })
+                        e.preventDefault();
+                        handleRename({
+                          id: project.id,
+                          name: project.name,
+                          type: 'project',
+                          parentId: folder.id,
+                        });
                       }}
                     >
                       <Edit2 className="h-4 w-4" />
@@ -311,8 +334,13 @@ export function VaultSidebarNavigation() {
                     </ContextMenuItem>
                     <ContextMenuItem
                       onClick={(e) => {
-                        e.preventDefault()
-                        handleMove({ id: project.id, name: project.name, type: 'project', parentId: folder.id })
+                        e.preventDefault();
+                        handleMove({
+                          id: project.id,
+                          name: project.name,
+                          type: 'project',
+                          parentId: folder.id,
+                        });
                       }}
                     >
                       <Move className="h-4 w-4" />
@@ -322,8 +350,13 @@ export function VaultSidebarNavigation() {
                     <ContextMenuItem
                       className="text-destructive"
                       onClick={(e) => {
-                        e.preventDefault()
-                        handleDelete({ id: project.id, name: project.name, type: 'project', parentId: folder.id })
+                        e.preventDefault();
+                        handleDelete({
+                          id: project.id,
+                          name: project.name,
+                          type: 'project',
+                          parentId: folder.id,
+                        });
                       }}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -332,41 +365,43 @@ export function VaultSidebarNavigation() {
                   </ContextMenuContent>
                 </ContextMenu>
               ) : (
-                <SidebarMenuSubButton 
-                  asChild 
+                <SidebarMenuSubButton
+                  asChild
                   isActive={pathname === `/vault/projects/${project.id}`}
                 >
                   <Link href={`/vault/projects/${project.id}`}>
                     <Music className="h-4 w-4" />
                     <span>{project.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
+                    <span className="ml-auto text-muted-foreground text-xs">
                       {project.trackCount}
                     </span>
                   </Link>
                 </SidebarMenuSubButton>
-              )
+              );
 
               return (
                 <SidebarMenuSubItem key={project.id}>
                   {projectContextMenu}
                 </SidebarMenuSubItem>
-              )
+              );
             })}
-            
+
             {/* Render real subfolders recursively */}
-            {folder.subfolders.map((subfolder) => 
+            {folder.subfolders.map((subfolder) =>
               renderFolder(subfolder, level + 1)
             )}
           </SidebarMenuSub>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   if (isLoading) {
     return (
       <SidebarGroup>
-        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Vault</SidebarGroupLabel>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+          Vault
+        </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -378,13 +413,15 @@ export function VaultSidebarNavigation() {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-    )
+    );
   }
 
   if (!vaultData) {
     return (
       <SidebarGroup>
-        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Vault</SidebarGroupLabel>
+        <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+          Vault
+        </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -396,17 +433,17 @@ export function VaultSidebarNavigation() {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-    )
+    );
   }
 
-  const { folders = [], rootProjects = [] } = vaultData
+  const { folders = [], rootProjects = [] } = vaultData;
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
         Vault
       </SidebarGroupLabel>
-      
+
       {/* Quick create action - proper sidebar style */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -415,18 +452,18 @@ export function VaultSidebarNavigation() {
             <span className="sr-only">Add Folder or Project</span>
           </SidebarGroupAction>
         </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start">
+        <DropdownMenuContent align="start" side="right">
           <DropdownMenuItem onClick={() => setShowCreateFolderDialog(true)}>
-            <FolderPlus className="h-4 w-4 mr-2" />
+            <FolderPlus className="mr-2 h-4 w-4" />
             Create Folder
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowCreateProjectDialog(true)}>
-            <Music className="h-4 w-4 mr-2" />
+            <Music className="mr-2 h-4 w-4" />
             Create Project
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      
+
       <SidebarGroupContent>
         <SidebarMenu>
           {/* Root level projects */}
@@ -434,14 +471,14 @@ export function VaultSidebarNavigation() {
             const rootProjectContextMenu = shouldShowContextMenu() ? (
               <ContextMenu>
                 <ContextMenuTrigger asChild>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === `/vault/projects/${project.id}`}
                   >
                     <Link href={`/vault/projects/${project.id}`}>
                       <Music className="h-4 w-4" />
                       <span>{project.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">
+                      <span className="ml-auto text-muted-foreground text-xs">
                         {project.trackCount}
                       </span>
                     </Link>
@@ -450,8 +487,13 @@ export function VaultSidebarNavigation() {
                 <ContextMenuContent className="w-48">
                   <ContextMenuItem
                     onClick={(e) => {
-                      e.preventDefault()
-                      handleRename({ id: project.id, name: project.name, type: 'project', parentId: null })
+                      e.preventDefault();
+                      handleRename({
+                        id: project.id,
+                        name: project.name,
+                        type: 'project',
+                        parentId: null,
+                      });
                     }}
                   >
                     <Edit2 className="h-4 w-4" />
@@ -459,8 +501,13 @@ export function VaultSidebarNavigation() {
                   </ContextMenuItem>
                   <ContextMenuItem
                     onClick={(e) => {
-                      e.preventDefault()
-                      handleMove({ id: project.id, name: project.name, type: 'project', parentId: null })
+                      e.preventDefault();
+                      handleMove({
+                        id: project.id,
+                        name: project.name,
+                        type: 'project',
+                        parentId: null,
+                      });
                     }}
                   >
                     <Move className="h-4 w-4" />
@@ -470,8 +517,13 @@ export function VaultSidebarNavigation() {
                   <ContextMenuItem
                     className="text-destructive"
                     onClick={(e) => {
-                      e.preventDefault()
-                      handleDelete({ id: project.id, name: project.name, type: 'project', parentId: null })
+                      e.preventDefault();
+                      handleDelete({
+                        id: project.id,
+                        name: project.name,
+                        type: 'project',
+                        parentId: null,
+                      });
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -480,30 +532,30 @@ export function VaultSidebarNavigation() {
                 </ContextMenuContent>
               </ContextMenu>
             ) : (
-              <SidebarMenuButton 
-                asChild 
+              <SidebarMenuButton
+                asChild
                 isActive={pathname === `/vault/projects/${project.id}`}
               >
                 <Link href={`/vault/projects/${project.id}`}>
                   <Music className="h-4 w-4" />
                   <span>{project.name}</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
+                  <span className="ml-auto text-muted-foreground text-xs">
                     {project.trackCount}
                   </span>
                 </Link>
               </SidebarMenuButton>
-            )
+            );
 
             return (
               <SidebarMenuItem key={project.id}>
                 {rootProjectContextMenu}
               </SidebarMenuItem>
-            )
+            );
           })}
-          
+
           {/* Root level folders */}
           {folders.map((folder: SidebarFolder) => renderFolder(folder))}
-          
+
           {/* Empty state */}
           {folders.length === 0 && rootProjects.length === 0 && (
             <SidebarMenuItem>
@@ -517,46 +569,48 @@ export function VaultSidebarNavigation() {
       </SidebarGroupContent>
 
       {/* Dialogs triggered by dropdown */}
-      <CreateFolderDialog 
-        open={showCreateFolderDialog}
+      <CreateFolderDialog
         onOpenChange={setShowCreateFolderDialog}
         onSuccess={() => setShowCreateFolderDialog(false)}
+        open={showCreateFolderDialog}
       />
-      <CreateProjectDialog 
-        open={showCreateProjectDialog}
+      <CreateProjectDialog
         onOpenChange={setShowCreateProjectDialog}
         onSuccess={() => setShowCreateProjectDialog(false)}
+        open={showCreateProjectDialog}
       />
 
       {/* Consolidated Context Menu Dialogs */}
       <RenameDialog
-        open={showRenameDialog}
-        onOpenChange={setShowRenameDialog}
+        isLoading={isRenamingFolder || isRenamingProject}
         itemName={selectedItem?.name || ''}
         itemType={selectedItem?.type || 'folder'}
+        onOpenChange={setShowRenameDialog}
         onSubmit={handleRenameSubmit}
-        isLoading={isRenamingFolder || isRenamingProject}
+        open={showRenameDialog}
       />
 
       <DeleteDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
+        isLoading={isDeletingFolder || isDeletingProject}
         itemName={selectedItem?.name || ''}
         itemType={selectedItem?.type || 'folder'}
         onConfirm={handleDeleteConfirm}
-        isLoading={isDeletingFolder || isDeletingProject}
+        onOpenChange={setShowDeleteDialog}
+        open={showDeleteDialog}
       />
 
       <MoveDialog
-        open={showMoveDialog}
-        onOpenChange={setShowMoveDialog}
+        currentFolderId={selectedItem?.parentId}
+        excludeFolderId={
+          selectedItem?.type === 'folder' ? selectedItem.id : undefined
+        }
+        isLoading={isMovingFolder || isMovingProject}
         itemName={selectedItem?.name || ''}
         itemType={selectedItem?.type || 'folder'}
-        currentFolderId={selectedItem?.parentId}
-        excludeFolderId={selectedItem?.type === 'folder' ? selectedItem.id : undefined}
+        onOpenChange={setShowMoveDialog}
         onSubmit={handleMoveSubmit}
-        isLoading={isMovingFolder || isMovingProject}
+        open={showMoveDialog}
       />
     </SidebarGroup>
-  )
-} 
+  );
+}

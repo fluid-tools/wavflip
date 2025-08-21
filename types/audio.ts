@@ -1,36 +1,26 @@
-export interface AudioTrack {
-  id: string
+export type AudioTrack = {
+  id: string;
   // S3 object key for streaming and caching
-  key: string
-  title: string
-  url: string
-  duration?: number
-  waveform?: number[][]
-  createdAt: Date
-  type: 'generated' | 'uploaded'
+  key: string;
+  title: string;
+  url: string;
+  duration?: number;
+  waveform?: number[][];
+  createdAt: Date;
+  type: 'generated' | 'uploaded';
   metadata?: {
-    prompt?: string
-    model?: string
-    voice?: string
-  }
-}
+    prompt?: string;
+    model?: string;
+    voice?: string;
+  };
+};
 
-export interface GeneratedSound extends AudioTrack {
-  type: 'generated'
-  metadata: {
-    prompt: string
-    model: string
-    generationTime?: number
-  }
-  isOffline?: boolean // Added to track offline availability
-}
+export type PlayerState = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
-export type PlayerState = 'idle' | 'loading' | 'playing' | 'paused' | 'error'
-
-export interface PlayerControls {
-  play: () => void
-  pause: () => void
-  stop: () => void
-  seekTo: (progress: number) => void
-  setVolume: (volume: number) => void
-}
+export type PlayerControls = {
+  play: () => void;
+  pause: () => void;
+  stop: () => void;
+  seekTo: (progress: number) => void;
+  setVolume: (volume: number) => void;
+};

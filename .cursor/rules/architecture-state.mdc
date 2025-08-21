@@ -1,0 +1,23 @@
+---
+description: State management and server action patterns for wavflip (next-safe-action + React Query)
+globs:
+  - "actions/**"
+  - "components/**"
+  - "app/**"
+  - "hooks/**"
+alwaysApply: false
+---
+
+- Prefer next-safe-action for all mutations (folders, projects, generations, etc.). Define actions with `actionClient` and `.inputSchema(...)` for input validation. Return typed values or throw errors; do not return ambiguous shapes.
+- On the client, wrap actions with `useActionState` using our project wrapper. Show toasts and invalidate React Query via `useVaultInvalidation()` helpers. Do not rely on `revalidatePath` for client UI sync.
+- Validation and auth: Validate all inputs (Zod schemas) and re-authorize the user inside every server action before performing work.
+- Treat Server Actions like public endpoints: never assume implicit auth; consider them externally invokable and secure accordingly.
+- Transitions: Forms calling actions do not need `startTransition`. Programmatic calls (e.g., DnD, context menu) must be wrapped in `startTransition` to keep UI responsive.
+- No side-effects during render: never mutate data (cookies, DB, revalidation) from rendering paths. Use actions or API routes instead.
+- Keep GET vs mutate separation: use React Query for reads; use next-safe-action for writes (unless the feature requires client-only mutations such as track-level complex operations).
+- Centralized invalidation: Prefer `useVaultInvalidation()` and query keys over manual fetch cache logic.
+- Error handling: Surface user-facing errors through typed results or thrown errors that the client wrapper translates to toasts.
+
+References
+- next-safe-action docs: `http://next-safe-action.dev/`
+- Next.js Data Security guide: Data Access Layer and Server Actions security `https://nextjs.org/docs/app/guides/data-security#data-access-layer`

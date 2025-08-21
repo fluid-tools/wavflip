@@ -1,10 +1,10 @@
-import { put, del, list } from '@vercel/blob'
-import type { AudioTrack } from '@/types/audio'
+import { del, list, put } from '@vercel/blob';
+import type { AudioTrack } from '@/types/audio';
 
 export interface UploadAudioOptions {
-  filename?: string
-  contentType?: string
-  addRandomSuffix?: boolean
+  filename?: string;
+  contentType?: string;
+  addRandomSuffix?: boolean;
 }
 
 export async function uploadAudioToBlob(
@@ -14,39 +14,43 @@ export async function uploadAudioToBlob(
   const {
     filename = 'generated-audio',
     contentType = 'audio/mpeg',
-    addRandomSuffix = true
-  } = options
+    addRandomSuffix = true,
+  } = options;
 
   // Create a unique filename with timestamp
-  const timestamp = Date.now()
-  const extension = getExtensionFromContentType(contentType)
-  const finalFilename = addRandomSuffix 
+  const timestamp = Date.now();
+  const extension = getExtensionFromContentType(contentType);
+  const finalFilename = addRandomSuffix
     ? `${filename}-${timestamp}.${extension}`
-    : `${filename}.${extension}`
+    : `${filename}.${extension}`;
 
   try {
     const blob = await put(finalFilename, audioBuffer, {
       access: 'public',
       contentType,
-      addRandomSuffix: false // We're handling uniqueness ourselves
-    })
+      addRandomSuffix: false, // We're handling uniqueness ourselves
+    });
 
     return {
       url: blob.url,
-      pathname: blob.pathname
-    }
+      pathname: blob.pathname,
+    };
   } catch (error) {
-    console.error('Failed to upload audio to blob:', error)
-    throw new Error(`Failed to upload audio: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    console.error('Failed to upload audio to blob:', error);
+    throw new Error(
+      `Failed to upload audio: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 export async function deleteAudioFromBlob(url: string): Promise<void> {
   try {
-    await del(url)
+    await del(url);
   } catch (error) {
-    console.error('Failed to delete audio from blob:', error)
-    throw new Error(`Failed to delete audio: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    console.error('Failed to delete audio from blob:', error);
+    throw new Error(
+      `Failed to delete audio: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -54,10 +58,10 @@ export async function listAudioFiles(prefix?: string): Promise<AudioTrack[]> {
   try {
     const { blobs } = await list({
       prefix: prefix || 'generated-audio',
-      limit: 100
-    })
+      limit: 100,
+    });
 
-    return blobs.map(blob => ({
+    return blobs.map((blob) => ({
       id: blob.pathname,
       key: blob.pathname,
       title: extractTitleFromPathname(blob.pathname),
@@ -66,12 +70,12 @@ export async function listAudioFiles(prefix?: string): Promise<AudioTrack[]> {
       type: 'generated' as const,
       metadata: {
         prompt: 'Unknown',
-        model: 'elevenlabs'
-      }
-    }))
+        model: 'elevenlabs',
+      },
+    }));
   } catch (error) {
-    console.error('Failed to list audio files:', error)
-    return []
+    console.error('Failed to list audio files:', error);
+    return [];
   }
 }
 
@@ -81,33 +85,25 @@ function getExtensionFromContentType(contentType: string): string {
     'audio/wav': 'wav',
     'audio/ogg': 'ogg',
     'audio/mp4': 'm4a',
-    'audio/webm': 'webm'
-  }
-  
-  return typeMap[contentType] || 'mp3'
+    'audio/webm': 'webm',
+  };
+
+  return typeMap[contentType] || 'mp3';
 }
 
 function extractTitleFromPathname(pathname: string): string {
   // Extract filename without extension and timestamp
-  const filename = pathname.split('/').pop() || pathname
-  const nameWithoutExt = filename.split('.')[0]
-  
-  // Remove timestamp suffix if present
-  const parts = nameWithoutExt.split('-')
-  if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
-    parts.pop() // Remove timestamp
-  }
-  
-  return parts.join('-').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-}
+  const filename = pathname.split('/').pop() || pathname;
+  const nameWithoutExt = filename.split('.')[0];
 
-export function generateAudioFilename(prompt: string): string {
-  // Create a safe filename from the prompt
-  const safePrompt = prompt
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, '-')
-    .substring(0, 50) // Limit length
-  
-  return `sound-${safePrompt}`
+  // Remove timestamp suffix if present
+  const parts = nameWithoutExt.split('-');
+  if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+    parts.pop(); // Remove timestamp
+  }
+
+  return parts
+    .join('-')
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 }

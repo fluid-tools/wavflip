@@ -1,0 +1,24 @@
+---
+description: API route contracts and Zod schemas for request/response validation (server and client)
+globs:
+  - "app/api/**/route.ts"
+  - "hooks/**"
+  - "lib/**"
+alwaysApply: false
+---
+
+- Every API route must:
+  - Define Zod schemas for request params/body and for response payloads.
+  - Export the TypeScript response type, e.g., `export type GetFooResponse = z.infer<typeof GetFooResponseSchema>`.
+  - Validate inputs with Zod (or equivalent) in the handler; return typed, predictable shapes with proper HTTP status codes.
+  - Never leak internal errors; map to safe messages and log server-side.
+- Client consumption:
+  - Use React Query for GETs. After fetch, parse the JSON via the same Zod response schema on the client to ensure runtime safety before using data.
+  - Do not assume server correctness; client must parse and narrow the result with Zod.
+- Prefer small, composable schemas. Reuse shared schemas in `lib/schemas` (create if missing) to avoid drift.
+- Keep response shapes stable; add fields in a backward-compatible way and version if necessary.
+- For binary or streaming endpoints, provide a minimal Zod-validated JSON companion (e.g., metadata) when appropriate.
+
+References
+- Next.js Server Actions security: `https://nextjs.org/docs/app/guides/data-security#data-access-layer`
+- Zod: `https://zod.dev/`

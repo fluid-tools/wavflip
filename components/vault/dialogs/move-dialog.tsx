@@ -1,6 +1,7 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,19 +9,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { FolderPicker } from '@/components/vault/folders/picker'
+} from '@/components/ui/dialog';
+import { FolderPicker } from '@/components/vault/folders/picker';
 
 interface MoveDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  itemName: string
-  itemType: 'folder' | 'project'
-  currentFolderId?: string | null
-  excludeFolderId?: string // For folders, exclude self from picker
-  onSubmit: (destinationFolderId: string | null) => void
-  isLoading?: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  itemName: string;
+  itemType: 'folder' | 'project';
+  currentFolderId?: string | null;
+  excludeFolderId?: string; // For folders, exclude self from picker
+  onSubmit: (destinationFolderId: string | null) => void;
+  isLoading?: boolean;
 }
 
 export function MoveDialog({
@@ -31,55 +31,59 @@ export function MoveDialog({
   currentFolderId = null,
   excludeFolderId,
   onSubmit,
-  isLoading = false
+  isLoading = false,
 }: MoveDialogProps) {
-  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(currentFolderId)
+  const [selectedDestinationId, setSelectedDestinationId] = useState<
+    string | null
+  >(currentFolderId);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(selectedDestinationId)
-  }
+    e.preventDefault();
+    onSubmit(selectedDestinationId);
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
-      setSelectedDestinationId(currentFolderId) // Reset to current folder when opening
+      setSelectedDestinationId(currentFolderId); // Reset to current folder when opening
     }
-    onOpenChange(newOpen)
-  }
+    onOpenChange(newOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Move {itemType === 'folder' ? 'Folder' : 'Project'}</DialogTitle>
+            <DialogTitle>
+              Move {itemType === 'folder' ? 'Folder' : 'Project'}
+            </DialogTitle>
             <DialogDescription>
               Choose where to move &quot;{itemName}&quot;.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <FolderPicker
-              selectedFolderId={selectedDestinationId}
-              onFolderSelect={setSelectedDestinationId}
-              excludeFolderId={excludeFolderId}
               allowVaultSelection={true}
+              excludeFolderId={excludeFolderId}
+              onFolderSelect={setSelectedDestinationId}
+              selectedFolderId={selectedDestinationId}
             />
           </div>
           <DialogFooter>
             <Button
+              disabled={isLoading}
+              onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button disabled={isLoading} type="submit">
               {isLoading ? 'Moving...' : 'Move'}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
