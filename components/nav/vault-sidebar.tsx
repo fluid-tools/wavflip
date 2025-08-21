@@ -22,7 +22,7 @@ import {
   useMoveProjectAction,
   useRenameFolderAction,
   useRenameProjectAction,
-} from '@/actions/vault/use-action';
+} from '@/actions/vault/hooks';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -95,42 +95,12 @@ export function VaultSidebarNavigation() {
   const { shouldShowContextMenu } = useContextMenuHandler();
 
   // Action hooks
-  const [, deleteFolderAction, isDeletingFolder] = useDeleteFolderAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false);
-      setSelectedItem(null);
-    },
-  });
-  const [, renameFolderAction, isRenamingFolder] = useRenameFolderAction({
-    onSuccess: () => {
-      setShowRenameDialog(false);
-      setSelectedItem(null);
-    },
-  });
-  const [, moveFolderAction, isMovingFolder] = useMoveFolderAction({
-    onSuccess: () => {
-      setShowMoveDialog(false);
-      setSelectedItem(null);
-    },
-  });
-  const [, deleteProjectAction, isDeletingProject] = useDeleteProjectAction({
-    onSuccess: () => {
-      setShowDeleteDialog(false);
-      setSelectedItem(null);
-    },
-  });
-  const [, renameProjectAction, isRenamingProject] = useRenameProjectAction({
-    onSuccess: () => {
-      setShowRenameDialog(false);
-      setSelectedItem(null);
-    },
-  });
-  const [, moveProjectAction, isMovingProject] = useMoveProjectAction({
-    onSuccess: () => {
-      setShowMoveDialog(false);
-      setSelectedItem(null);
-    },
-  });
+  const { execute: deleteFolderExecute, isPending: isDeletingFolder } = useDeleteFolderAction();
+  const { execute: renameFolderExecute, isPending: isRenamingFolder } = useRenameFolderAction();
+  const { execute: moveFolderExecute, isPending: isMovingFolder } = useMoveFolderAction();
+  const { execute: deleteProjectExecute, isPending: isDeletingProject } = useDeleteProjectAction();
+  const { execute: renameProjectExecute, isPending: isRenamingProject } = useRenameProjectAction();
+  const { execute: moveProjectExecute, isPending: isMovingProject } = useMoveProjectAction();
 
   // Context menu handlers
   const handleRename = (item: {
@@ -164,56 +134,65 @@ export function VaultSidebarNavigation() {
   };
 
   // Dialog handlers
-  const handleRenameSubmit = (newName: string) => {
+  const handleRenameSubmit = async (newName: string) => {
     if (!selectedItem) return;
 
-    const formData = new FormData();
-    formData.append('name', newName);
-
-    startTransition(() => {
+    startTransition(async () => {
       if (selectedItem.type === 'folder') {
-        formData.append('folderId', selectedItem.id);
-        renameFolderAction(formData);
+        await renameFolderExecute({
+          folderId: selectedItem.id,
+          name: newName,
+        });
       } else {
-        formData.append('projectId', selectedItem.id);
-        renameProjectAction(formData);
+        await renameProjectExecute({
+          projectId: selectedItem.id,
+          name: newName,
+          folderId: selectedItem.parentId,
+        });
       }
+      setShowRenameDialog(false);
+      setSelectedItem(null);
     });
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!selectedItem) return;
 
-    const formData = new FormData();
-
-    startTransition(() => {
+    startTransition(async () => {
       if (selectedItem.type === 'folder') {
-        formData.append('folderId', selectedItem.id);
-        deleteFolderAction(formData);
+        await deleteFolderExecute({
+          folderId: selectedItem.id,
+        });
       } else {
-        formData.append('projectId', selectedItem.id);
-        deleteProjectAction(formData);
+        await deleteProjectExecute({
+          projectId: selectedItem.id,
+          folderId: selectedItem.parentId,
+        });
       }
+      setShowDeleteDialog(false);
+      setSelectedItem(null);
     });
   };
 
-  const handleMoveSubmit = (destinationFolderId: string | null) => {
+  const handleMoveSubmit = async (destinationFolderId: string | null) => {
     if (!selectedItem) return;
 
-    const formData = new FormData();
-
-    startTransition(() => {
+    startTransition(async () => {
       if (selectedItem.type === 'folder') {
-        formData.append('folderId', selectedItem.id);
-        formData.append('parentFolderId', destinationFolderId || '');
-        formData.append('sourceParentFolderId', selectedItem.parentId || '');
-        moveFolderAction(formData);
+        await moveFolderExecute({
+          folderId: selectedItem.id,
+          parentFolderId: destinationFolderId,
+          sourceParentFolderId: selectedItem.parentId,
+        });
       } else {
-        formData.append('projectId', selectedItem.id);
-        formData.append('folderId', destinationFolderId || '');
-        formData.append('sourceFolderId', selectedItem.parentId || '');
-        moveProjectAction(formData);
+        await moveProjectExecute({
+          projectId: selectedItem.id,
+          folderId: destinationFolderId,
+          sourceFolderId: selectedItem.parentId,
+        });
       }
+      setShowMoveDialog(false);
+      setSelectedItem(null);
     });
   };
 

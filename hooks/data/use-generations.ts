@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAction } from 'next-safe-action/hooks';
 import { generateWaveformData } from '@/lib/audio/waveform-generator';
 import type { LocalVaultTrack } from '@/lib/storage/local-vault';
 import {
@@ -12,6 +13,8 @@ import {
 import { currentTrackAtom } from '@/state/audio-atoms';
 import { jotaiStore } from '@/state/jotai-store';
 import type { GeneratedSound, GenerationsResponse } from '@/types/generations';
+import { generateSoundEffect } from '@/actions/generate/sound';
+import { generateTextToSpeech } from '@/actions/generate/speech';
 import { vaultKeys, waveformKeys } from './keys';
 
 // Query keys
@@ -291,11 +294,11 @@ export function useGenerations() {
 export function useGenerationActions() {
   const queryClient = useQueryClient();
   // next-safe-action hooks
-  const { executeAsync: execSFX, isPending: isSFXPending } = require('next-safe-action/hooks').useAction(
-    require('@/actions/generate/sound').generateSoundEffect
+  const { executeAsync: execSFX, isPending: isSFXPending } = useAction(
+    generateSoundEffect
   );
-  const { executeAsync: execTTS, isPending: isTTSPending } = require('next-safe-action/hooks').useAction(
-    require('@/actions/generate/speech').generateTextToSpeech
+  const { executeAsync: execTTS, isPending: isTTSPending } = useAction(
+    generateTextToSpeech
   );
 
   // Reuse addToSession mutation from this module

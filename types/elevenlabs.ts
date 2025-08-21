@@ -31,7 +31,7 @@ export interface TextToSpeechRequest {
 export interface GenerationError {
   message: string;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface GenerateSoundResult {
