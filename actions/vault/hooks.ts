@@ -18,10 +18,8 @@ import {
 } from './project';
 
 // Custom hook wrapper that adds success/error handling and invalidation
-function useVaultActionWrapper<TInput, TOutput>(
-  action: unknown,
-  successMessage: string
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function useVaultActionWrapper(action: any, successMessage: string) {
   const invalidate = useVaultInvalidation();
   
   const { execute, executeAsync, isPending, result } = useAction(action, {
