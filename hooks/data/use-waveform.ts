@@ -1,66 +1,62 @@
-"use client"
+'use client';
 
-import { useMemo } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
-export const waveformKeys = {
-  all: ['waveform'] as const,
-  byKey: (key: string) => [...waveformKeys.all, key] as const,
-}
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { waveformKeys } from './keys';
 
 type WaveformData = {
-  peaks: number[]
-  duration: number
-  sampleRate: number
-  channels: number
-  bits: number
-}
+  peaks: number[];
+  duration: number;
+  sampleRate: number;
+  channels: number;
+  bits: number;
+};
 
 type WaveformResponse = {
-  data: WaveformData
-  isPlaceholder: boolean
-  generatedAt: string
-  key: string
-}
+  data: WaveformData;
+  isPlaceholder: boolean;
+  generatedAt: string;
+  key: string;
+};
 
 async function getWaveform(key: string): Promise<WaveformResponse> {
-  const res = await fetch(`/api/waveform/${encodeURIComponent(key)}`)
-  if (!res.ok) throw new Error('Failed to fetch waveform')
-  return res.json()
+  const res = await fetch(`/api/waveform/${encodeURIComponent(key)}`);
+  if (!res.ok) throw new Error('Failed to fetch waveform');
+  return res.json();
 }
 
 export function useWaveform(trackKey?: string) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: trackKey ? waveformKeys.byKey(trackKey) : ['waveform:none'],
     enabled: !!trackKey,
     queryFn: () => getWaveform(trackKey!),
     staleTime: 60_000,
-  })
+  });
 
   const persist = useMutation({
     mutationFn: async (payload: WaveformData) => {
-      if (!trackKey) throw new Error('Missing trackKey')
+      if (!trackKey) throw new Error('Missing trackKey');
       await fetch(`/api/waveform/${encodeURIComponent(trackKey)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      })
-      return payload
+      });
+      return payload;
     },
-    onSuccess: (payload) => {
-      if (!trackKey) return
+    onSuccess: (payload: WaveformData) => {
+      if (!trackKey) return;
       const optimistic: WaveformResponse = {
         data: payload,
         isPlaceholder: false,
         generatedAt: new Date().toISOString(),
         key: trackKey,
-      }
-      queryClient.setQueryData(waveformKeys.byKey(trackKey), optimistic)
-      queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(trackKey) })
+      };
+      queryClient.setQueryData(waveformKeys.byKey(trackKey), optimistic);
+      queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(trackKey) });
     },
-  })
+  });
 
   return useMemo(
     () => ({
@@ -71,7 +67,5 @@ export function useWaveform(trackKey?: string) {
       persist,
     }),
     [query.data, query.isLoading, query.refetch, persist]
-  )
+  );
 }
-
-

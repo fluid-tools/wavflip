@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import { Music } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
-import type { ProjectWithTracks } from '@/db/schema/vault'
+import { Music } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import type { ProjectWithTracks } from '@/lib/contracts/project';
+import { cn } from '@/lib/utils';
 
 interface ProjectPickerProps {
-  projects: ProjectWithTracks[]
-  selectedProjectId: string | null
-  onProjectSelect: (projectId: string) => void
-  excludeProjectId?: string // Project to exclude from selection (e.g., current project)
-  className?: string
+  projects: ProjectWithTracks[];
+  selectedProjectId: string | null;
+  onProjectSelect: (projectId: string) => void;
+  excludeProjectId?: string; // Project to exclude from selection (e.g., current project)
+  className?: string;
 }
 
 export function ProjectPicker({
@@ -21,38 +21,43 @@ export function ProjectPicker({
   excludeProjectId,
   className,
 }: ProjectPickerProps) {
-  const filteredProjects = projects.filter(project => project.id !== excludeProjectId)
+  const filteredProjects = projects.filter(
+    (project) => project.id !== excludeProjectId
+  );
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <ScrollArea className="h-64 border rounded-md">
-        <div className="p-2 space-y-1">
+    <div className={cn('space-y-2', className)}>
+      <ScrollArea className="h-64 rounded-md border">
+        <div className="space-y-1 p-2">
           {filteredProjects.map((project) => (
             <Button
+              className="h-auto w-full justify-start p-3"
               key={project.id}
-              variant={selectedProjectId === project.id ? "default" : "ghost"}
-              className="w-full justify-start h-auto p-3"
               onClick={() => onProjectSelect(project.id)}
+              variant={selectedProjectId === project.id ? 'default' : 'ghost'}
             >
-              <div className="flex items-center gap-2 w-full">
-                <Music className="h-4 w-4 text-green-500 flex-shrink-0" />
-                <span className="truncate text-left flex-1">{project.name}</span>
-                
+              <div className="flex w-full items-center gap-2">
+                <Music className="h-4 w-4 flex-shrink-0 text-green-500" />
+                <span className="flex-1 truncate text-left">
+                  {project.name}
+                </span>
+
                 {/* Track count indicator */}
-                <span className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 flex-shrink-0">
-                  {project.trackCount || 0} {(project.trackCount || 0) === 1 ? 'track' : 'tracks'}
+                <span className="flex-shrink-0 rounded bg-muted px-1.5 py-0.5 text-muted-foreground text-xs">
+                  {project.trackCount || 0}{' '}
+                  {(project.trackCount || 0) === 1 ? 'track' : 'tracks'}
                 </span>
               </div>
             </Button>
           ))}
-          
+
           {filteredProjects.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
+            <div className="py-8 text-center text-muted-foreground">
               No other projects available
             </div>
           )}
         </div>
       </ScrollArea>
     </div>
-  )
-} 
+  );
+}

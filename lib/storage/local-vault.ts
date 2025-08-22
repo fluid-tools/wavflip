@@ -1,6 +1,6 @@
-import { get, set, del } from 'idb-keyval'
-import type { AudioTrack } from '@/types/audio'
-import { mediaStore } from '@/lib/storage/media-store'
+import { del, get, set } from 'idb-keyval';
+import { mediaStore } from '@/lib/storage/media-store';
+import type { AudioTrack } from '@/types/audio';
 
 /**
  * Local vault responsibilities (concise):
@@ -9,78 +9,101 @@ import { mediaStore } from '@/lib/storage/media-store'
  * - Never persist blobUrl; always regenerate at runtime from OPFS/IDB.
  */
 
-const VAULT_KEY_PREFIX = 'wavflip-track-'
-const VAULT_INDEX_KEY = 'wavflip-vault-index'
+const VAULT_KEY_PREFIX = 'wavflip-track-';
+const VAULT_INDEX_KEY = 'wavflip-vault-index';
 
 export interface LocalVaultTrack extends AudioTrack {
-  audioData?: ArrayBuffer // Store audio data locally
-  blobUrl?: string // Temporary blob URL for playback
-  mimeType?: string // Original content type
-  persistedInOPFS?: boolean // Stored bytes in OPFS
+  audioData?: ArrayBuffer; // Store audio data locally
+  blobUrl?: string; // Temporary blob URL for playback
+  mimeType?: string; // Original content type
+  persistedInOPFS?: boolean; // Stored bytes in OPFS
 }
 
-async function resolvePlaybackUrl(track: LocalVaultTrack): Promise<string | undefined> {
+async function resolvePlaybackUrl(
+  track: LocalVaultTrack
+): Promise<string | undefined> {
   if (track.audioData) {
     try {
-      return createBlobUrlFromAudioData(track.audioData, track.mimeType || 'audio/mpeg')
+      return createBlobUrlFromAudioData(
+        track.audioData,
+        track.mimeType || 'audio/mpeg'
+      );
     } catch {
-      return undefined
+      return;
     }
   }
   if (track.persistedInOPFS) {
     try {
-      return (await mediaStore.getUrlForPlayback(track.id)) ?? undefined
+      return (await mediaStore.getUrlForPlayback(track.id)) ?? undefined;
     } catch {
-      return undefined
+      return;
     }
   }
-  return undefined
+  return;
 }
 
 // Get all tracks from vault
 export async function getVaultTracks(): Promise<LocalVaultTrack[]> {
   try {
-    const trackIds = await get(VAULT_INDEX_KEY) || []
-    const tracks: LocalVaultTrack[] = []
-    
+    const trackIds = (await get(VAULT_INDEX_KEY)) || [];
+    const tracks: LocalVaultTrack[] = [];
+
     for (const trackId of trackIds) {
-      const track = await get(`${VAULT_KEY_PREFIX}${trackId}`) as LocalVaultTrack | undefined
+      const track = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as
+        | LocalVaultTrack
+        | undefined;
       if (track) {
         // Blob URLs are ephemeral; regenerate from OPFS/IDB as-needed
-        track.blobUrl = await resolvePlaybackUrl(track)
+        track.blobUrl = await resolvePlaybackUrl(track);
         // Normalize id to stored key to keep consistent
-        const id = (track as unknown as { key?: string; id: string }).key || track.id
-        tracks.push({ ...track, id })
+        const id =
+          (track as unknown as { key?: string; id: string }).key || track.id;
+        tracks.push({ ...track, id });
       }
     }
-    
+
     // Sort by creation date (newest first)
-    return tracks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    return tracks.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   } catch (error) {
-    console.error('Failed to get vault tracks:', error)
-    return []
+    console.error('Failed to get vault tracks:', error);
+    return [];
   }
 }
 
 // Add track to vault
-export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer, mimeType?: string, persistedInOPFS?: boolean): Promise<void> {
+export async function addTrackToVault(
+  track: AudioTrack,
+  audioData?: ArrayBuffer,
+  mimeType?: string,
+  persistedInOPFS?: boolean
+): Promise<void> {
   try {
     // Persist audioData; do NOT persist blobUrl (ephemeral)
-    const vaultTrack: LocalVaultTrack = { ...track, audioData, blobUrl: undefined, mimeType, persistedInOPFS }
-    const vaultId = (track as unknown as { key?: string; id: string }).key ?? track.id
-    
+    const vaultTrack: LocalVaultTrack = {
+      ...track,
+      audioData,
+      blobUrl: undefined,
+      mimeType,
+      persistedInOPFS,
+    };
+    const vaultId =
+      (track as unknown as { key?: string; id: string }).key ?? track.id;
+
     // Store the track
-    await set(`${VAULT_KEY_PREFIX}${vaultId}`, vaultTrack)
-    
+    await set(`${VAULT_KEY_PREFIX}${vaultId}`, vaultTrack);
+
     // Update the index
-    const trackIds = await get(VAULT_INDEX_KEY) || []
+    const trackIds = (await get(VAULT_INDEX_KEY)) || [];
     if (!trackIds.includes(vaultId)) {
-      trackIds.push(vaultId)
-      await set(VAULT_INDEX_KEY, trackIds)
+      trackIds.push(vaultId);
+      await set(VAULT_INDEX_KEY, trackIds);
     }
   } catch (error) {
-    console.error('Failed to add track to vault:', error)
-    throw new Error('Failed to save track to vault')
+    console.error('Failed to add track to vault:', error);
+    throw new Error('Failed to save track to vault');
   }
 }
 
@@ -88,73 +111,95 @@ export async function addTrackToVault(track: AudioTrack, audioData?: ArrayBuffer
 export async function removeTrackFromVault(trackId: string): Promise<void> {
   try {
     // Revoke blob URL if present (best-effort)
-    const existing = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as LocalVaultTrack | undefined
+    const existing = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as
+      | LocalVaultTrack
+      | undefined;
     if (existing?.blobUrl) {
-      try { revokeBlobUrl(existing.blobUrl) } catch {}
+      try {
+        revokeBlobUrl(existing.blobUrl);
+      } catch {}
     }
     // Remove OPFS bytes (best-effort)
-    try { await mediaStore.deleteFile(trackId) } catch {}
+    try {
+      await mediaStore.deleteFile(trackId);
+    } catch {}
     // Remove the track data
-    await del(`${VAULT_KEY_PREFIX}${trackId}`)
-    
+    await del(`${VAULT_KEY_PREFIX}${trackId}`);
+
     // Update the index
-    const trackIds = await get(VAULT_INDEX_KEY) || []
-    const updatedIds = trackIds.filter((id: string) => id !== trackId)
-    await set(VAULT_INDEX_KEY, updatedIds)
+    const trackIds = (await get(VAULT_INDEX_KEY)) || [];
+    const updatedIds = trackIds.filter((id: string) => id !== trackId);
+    await set(VAULT_INDEX_KEY, updatedIds);
   } catch (error) {
-    console.error('Failed to remove track from vault:', error)
-    throw new Error('Failed to remove track from vault')
+    console.error('Failed to remove track from vault:', error);
+    throw new Error('Failed to remove track from vault');
   }
 }
 
 // Get a specific track from vault
-export async function getTrackFromVault(trackId: string): Promise<LocalVaultTrack | null> {
+export async function getTrackFromVault(
+  trackId: string
+): Promise<LocalVaultTrack | null> {
   try {
-    const t = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as LocalVaultTrack | undefined
-    if (!t) return null
-    t.blobUrl = await resolvePlaybackUrl(t)
-    const id = (t as unknown as { key?: string; id: string }).key || t.id
-    return { ...t, id }
+    const t = (await get(`${VAULT_KEY_PREFIX}${trackId}`)) as
+      | LocalVaultTrack
+      | undefined;
+    if (!t) return null;
+    t.blobUrl = await resolvePlaybackUrl(t);
+    const id = (t as unknown as { key?: string; id: string }).key || t.id;
+    return { ...t, id };
   } catch (error) {
-    console.error('Failed to get track from vault:', error)
-    return null
+    console.error('Failed to get track from vault:', error);
+    return null;
   }
 }
 
-
 // Download audio data from URL and store locally
-export async function downloadAndStoreAudio(track: AudioTrack): Promise<LocalVaultTrack> {
+export async function downloadAndStoreAudio(
+  track: AudioTrack
+): Promise<LocalVaultTrack> {
   try {
-    const response = await fetch(track.url)
+    const response = await fetch(track.url);
     if (!response.ok) {
-      throw new Error(`Failed to download audio: ${response.statusText}`)
+      throw new Error(`Failed to download audio: ${response.statusText}`);
     }
-    
-    const audioData = await response.arrayBuffer()
-    const contentType = response.headers.get('Content-Type') || 'audio/mpeg'
+
+    const audioData = await response.arrayBuffer();
+    const contentType = response.headers.get('Content-Type') || 'audio/mpeg';
     // Store bytes in OPFS only. If OPFS is unavailable, throw.
     if (!mediaStore.isOPFSEnabled()) {
-      throw new Error('OPFS is not available; cannot save offline on this browser')
+      throw new Error(
+        'OPFS is not available; cannot save offline on this browser'
+      );
     }
-    await mediaStore.writeFile(track.id, audioData, contentType)
-    const blobUrl = (await mediaStore.getUrlForPlayback(track.id)) || undefined
-    const vaultTrack: LocalVaultTrack = { ...track, audioData: undefined, blobUrl, mimeType: contentType, persistedInOPFS: true }
+    await mediaStore.writeFile(track.id, audioData, contentType);
+    const blobUrl = (await mediaStore.getUrlForPlayback(track.id)) || undefined;
+    const vaultTrack: LocalVaultTrack = {
+      ...track,
+      audioData: undefined,
+      blobUrl,
+      mimeType: contentType,
+      persistedInOPFS: true,
+    };
 
-    await addTrackToVault(vaultTrack, undefined, contentType, true)
-    return vaultTrack
+    await addTrackToVault(vaultTrack, undefined, contentType, true);
+    return vaultTrack;
   } catch (error) {
-    console.error('Failed to download and store audio:', error)
-    throw new Error('Failed to download audio for offline storage')
+    console.error('Failed to download and store audio:', error);
+    throw new Error('Failed to download audio for offline storage');
   }
 }
 
 // Create blob URL from stored audio data
-export function createBlobUrlFromAudioData(audioData: ArrayBuffer, contentType = 'audio/mpeg'): string {
-  const blob = new Blob([audioData], { type: contentType })
-  return URL.createObjectURL(blob)
+export function createBlobUrlFromAudioData(
+  audioData: ArrayBuffer,
+  contentType = 'audio/mpeg'
+): string {
+  const blob = new Blob([audioData], { type: contentType });
+  return URL.createObjectURL(blob);
 }
 
 // Revoke blob URL to free memory
 export function revokeBlobUrl(url: string): void {
-  URL.revokeObjectURL(url)
+  URL.revokeObjectURL(url);
 }

@@ -1,11 +1,12 @@
 // Worker code is created as a Blob URL. Keep this file typed and simple.
 
 export function isWebKit(): boolean {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent
-  const isSafari = /Safari\//.test(ua) && !/Chrome\//.test(ua) && !/Chromium\//.test(ua)
-  const isIOS = /iPhone|iPad|iPod/.test(ua)
-  return isSafari || isIOS
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  const isSafari =
+    /Safari\//.test(ua) && !/Chrome\//.test(ua) && !/Chromium\//.test(ua);
+  const isIOS = /iPhone|iPad|iPod/.test(ua);
+  return isSafari || isIOS;
 }
 
 export function createSafariInlineWorker(): Worker {
@@ -89,14 +90,14 @@ self.onmessage = async (e) => {
     self.postMessage({ error: String(err) });
   }
 };
-`
-  const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }))
-  const w = new Worker(url)
-  const cleanup = () => URL.revokeObjectURL(url)
+`;
+  const url = URL.createObjectURL(
+    new Blob([code], { type: 'text/javascript' })
+  );
+  const w = new Worker(url);
+  const cleanup = () => URL.revokeObjectURL(url);
   // @ts-expect-error best-effort cleanup
-  w.onclose = cleanup
-  w.onerror = cleanup
-  return w
+  w.onclose = cleanup;
+  w.onerror = cleanup;
+  return w;
 }
-
-

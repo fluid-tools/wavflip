@@ -1,118 +1,106 @@
-'use server'
+'use server';
 
-import { getElevenLabsClient } from "@/lib/gen-ai/elevenlabs"
-import { getServerSession } from "@/lib/server/auth"
-import { addGeneratedSound } from "@/lib/server/vault/generations"
-import { generateFilename } from "@/lib/utils"
-import { uploadGeneratedAudioToS3, getPresignedUrl } from "@/lib/storage/s3-storage"
-import type { GeneratedSound } from "@/types/audio"
-import type { GenerationError, GenerateSoundResult } from "@/types/elevenlabs"
+import { z } from 'zod';
+import { getElevenLabsClient } from '@/lib/gen-ai/elevenlabs';
+import { actionClient } from '@/lib/safe-action';
+import { getServerSession } from '@/lib/server/auth';
+import { addGeneratedSound } from '@/lib/server/vault/generations';
+import {
+  getPresignedUrl,
+  uploadGeneratedAudioToS3,
+} from '@/lib/storage/s3-storage';
+import { generateFilename } from '@/lib/utils';
+import {
+  TTS_TEXT_MAX_LENGTH,
+  TITLE_PREVIEW_LENGTH,
+  PRESIGNED_URL_DURATION,
+} from '@/lib/constants/generation';
+import type { GenerationError } from '@/types/elevenlabs';
+import type { GeneratedSound } from '@/types/generations';
 
-export async function generateTextToSpeech(
-    text: string,
-    voiceId?: string
-): Promise<GenerateSoundResult> {
-    if (!text || text.trim().length === 0) {
-        return {
-            success: false,
-            error: 'Text is required'
-        }
+const ttsInputSchema = z.object({
+  text: z
+    .string()
+    .min(1, 'Text is required')
+    .max(TTS_TEXT_MAX_LENGTH, `Text is too long (max ${TTS_TEXT_MAX_LENGTH} characters)`),
+  voiceId: z.string().optional(),
+});
+
+export const generateTextToSpeech = actionClient
+  .schema(ttsInputSchema)
+  .action(async ({ parsedInput }) => {
+    const { text, voiceId } = parsedInput;
+    const startTime = Date.now();
+
+    const session = await getServerSession();
+    if (!session?.user?.id) {
+      throw new Error('You must be logged in to generate speech');
     }
-
-    if (text.length > 2500) {
-        return {
-            success: false,
-            error: 'Text is too long (max 2500 characters)'
-        }
-    }
-
-    const startTime = Date.now()
 
     try {
-        // Get session first
-        const session = await getServerSession()
-        if (!session?.user?.id) {
-            return {
-                success: false,
-                error: 'You must be logged in to generate speech'
-            }
+      const elevenLabs = getElevenLabsClient();
+      const speechResponse = await elevenLabs.generateTextToSpeech({
+        text: text.trim(),
+        voice_id: voiceId,
+        model_id: 'eleven_monolingual_v1',
+      });
+
+      const filename = generateFilename(text, 'speech');
+      const { key } = await uploadGeneratedAudioToS3(
+        speechResponse.audio,
+        session.user.id,
+        {
+          filename: `speech-${filename}`,
+          contentType: speechResponse.contentType,
+          addRandomSuffix: true,
         }
+      );
 
-        // Generate speech using ElevenLabs
-        const elevenLabs = getElevenLabsClient()
-        const speechResponse = await elevenLabs.generateTextToSpeech({
-            text: text.trim(),
-            voice_id: voiceId,
-            model_id: 'eleven_monolingual_v1'
-        })
+      const generationTime = Date.now() - startTime;
+      const presignedUrl = await getPresignedUrl(key, undefined, PRESIGNED_URL_DURATION);
 
-        // Upload to S3
-        const filename = generateFilename(text, 'speech')
-        const { key } = await uploadGeneratedAudioToS3(
-            speechResponse.audio,
-            session.user.id,
-            {
-                filename: `speech-${filename}`,
-                contentType: speechResponse.contentType,
-                addRandomSuffix: true
-            }
-        )
+      const generatedSound: GeneratedSound = {
+        id: key,
+        key,
+        title: text.substring(0, TITLE_PREVIEW_LENGTH) + (text.length > TITLE_PREVIEW_LENGTH ? '...' : ''),
+        url: presignedUrl,
+        createdAt: new Date(),
+        type: 'generated',
+        metadata: {
+          prompt: text.trim(),
+          model: 'elevenlabs-tts',
+          generationTime,
+        },
+      };
 
-        const generationTime = Date.now() - startTime
+      await addGeneratedSound(session.user.id, {
+        name: generatedSound.title,
+        fileKey: key,
+        duration: 0,
+        size: speechResponse.audio.byteLength,
+        mimeType: speechResponse.contentType,
+        prompt: text.trim(),
+        model: 'elevenlabs-tts',
+      });
 
-        // Generate presigned URL for immediate playback
-        const presignedUrl = await getPresignedUrl(key, undefined, 60 * 60) // 1 hour
-
-        // Create the generated sound object with presigned URL
-        const generatedSound: GeneratedSound = {
-            id: key,
-            key,
-            title: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
-            url: presignedUrl, // Return presigned URL for immediate playback
-            createdAt: new Date(),
-            type: 'generated',
-            metadata: {
-                prompt: text.trim(),
-                model: 'elevenlabs-tts',
-                generationTime
-            }
-        }
-
-        // Save to Generations project
-        await addGeneratedSound(session.user.id, {
-            name: generatedSound.title,
-            fileKey: key, // Store S3 key
-            duration: 0,
-            size: speechResponse.audio.byteLength,
-            mimeType: speechResponse.contentType,
-            prompt: text.trim(),
-            model: 'elevenlabs-tts'
-        })
-
-        return {
-            success: true,
-            data: generatedSound
-        }
-
+      return generatedSound;
     } catch (error) {
-        console.error('Text-to-speech generation failed:', error)
+      const generationError = error as GenerationError;
 
-        const generationError = error as GenerationError
+      if (
+        generationError.code === 'system_busy' ||
+        generationError.code === '503' ||
+        generationError.code === '429' ||
+        generationError.message?.toLowerCase().includes('rate limit')
+      ) {
+        throw new Error(
+          'Please try again in a few moments. We are experiencing heavy traffic right now.'
+        );
+      }
 
-        // Handle rate limiting with user-friendly message
-        if (generationError.code === 'system_busy' ||
-            generationError.code === '503' ||
-            generationError.code === '429' ||
-            generationError.message?.toLowerCase().includes('rate limit')) {
-            return {
-                success: false,
-                error: 'Please try again in a few moments. We are experiencing heavy traffic right now.'
-            }
-        }
-
-        return {
-            success: false,
-            error: generationError.message || 'Failed to generate speech. Please try again.'
-        }
+      throw new Error(
+        generationError.message ||
+          'Failed to generate speech. Please try again.'
+      );
     }
-}
+  });

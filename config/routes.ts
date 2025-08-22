@@ -1,86 +1,82 @@
 interface RouteConfig {
-    path: string;
-    pattern?: RegExp;
-    requiresAuth?: boolean;
-    requiresCsrf?: boolean;
-  }
-  
-  // Configure routes with explicit protection requirements
-  const ROUTE_CONFIG: RouteConfig[] = [
-    // Fully exempt routes
-    {
-      path: '/_next',
-      pattern: /^\/_next/,
-      requiresAuth: false,
-      requiresCsrf: false,
-    },
-    {
-      path: '/static',
-      pattern: /^\/static/,
-      requiresAuth: false,
-      requiresCsrf: false,
-    },
-    {
-      path: '/images',
-      pattern: /^\/images/,
-      requiresAuth: false,
-      requiresCsrf: false,
-    },
-    // PostHog analytics proxy (exempt)
-    {
-      path: '/ingest',
-      pattern: /^\/ingest/,
-      requiresAuth: false,
-      requiresCsrf: false,
-    },
-    // sentry
-    {
-      path: '/monitoring',
-      requiresAuth: false,
-      requiresCsrf: false,
-    },
-    { path: '/favicon.ico', requiresAuth: false, requiresCsrf: false },
-    { path: '/opengraph-image', requiresAuth: false, requiresCsrf: false },
-    { path: '/twitter-image', requiresAuth: false, requiresCsrf: false },
-    { path: '/api/audio', requiresAuth: false, requiresCsrf: false },
-    // Public API routes (catch-all for /api/auth/*, no CSRF)
-    {
-      path: '/api/auth',
-      pattern: /^\/api\/auth(\/|$)/,
-      requiresAuth: false,
-      requiresCsrf: false,
-    },
-    { path: '/api/cookies', requiresAuth: false, requiresCsrf: false },
-    { path: '/api/ip', requiresAuth: false, requiresCsrf: false },
-  
-    // Public pages
-    { path: '/login', requiresAuth: false, requiresCsrf: false },
-    { path: '/register', requiresAuth: false, requiresCsrf: false },
-    { path: '/docs', requiresAuth: false, requiresCsrf: false },
-    { path: '/privacy', requiresAuth: false, requiresCsrf: false },
-    { path: '/tos', requiresAuth: false, requiresCsrf: false },
-    { path: '/refunds', requiresAuth: false, requiresCsrf: false },
-    { path: '/', requiresAuth: false, requiresCsrf: false },
-  ];
-  
-  export const getRouteConfig = (pathname: string): RouteConfig => {
-    const route = ROUTE_CONFIG.find((route) =>
-      route.pattern ? route.pattern.test(pathname) : pathname === route.path,
-    );
-    return (
-      route || {
-        path: pathname,
-        requiresAuth: true,
-        requiresCsrf: true,
-      }
-    );
-  };
+  path: string;
+  pattern?: RegExp;
+  requiresAuth?: boolean;
+  requiresCsrf?: boolean;
+}
 
+// Configure routes with explicit protection requirements
+const ROUTE_CONFIG: RouteConfig[] = [
+  // Fully exempt routes
+  {
+    path: '/_next',
+    pattern: /^\/_next/,
+    requiresAuth: false,
+    requiresCsrf: false,
+  },
+  {
+    path: '/static',
+    pattern: /^\/static/,
+    requiresAuth: false,
+    requiresCsrf: false,
+  },
+  {
+    path: '/images',
+    pattern: /^\/images/,
+    requiresAuth: false,
+    requiresCsrf: false,
+  },
+  // PostHog analytics proxy (exempt)
+  {
+    path: '/ingest',
+    pattern: /^\/ingest/,
+    requiresAuth: false,
+    requiresCsrf: false,
+  },
+  // sentry
+  {
+    path: '/monitoring',
+    requiresAuth: false,
+    requiresCsrf: false,
+  },
+  { path: '/favicon.ico', requiresAuth: false, requiresCsrf: false },
+  { path: '/opengraph-image', requiresAuth: false, requiresCsrf: false },
+  { path: '/twitter-image', requiresAuth: false, requiresCsrf: false },
+  { path: '/api/audio', requiresAuth: false, requiresCsrf: false },
+  // Public API routes (catch-all for /api/auth/*, no CSRF)
+  {
+    path: '/api/auth',
+    pattern: /^\/api\/auth(\/|$)/,
+    requiresAuth: false,
+    requiresCsrf: false,
+  },
+  { path: '/api/cookies', requiresAuth: false, requiresCsrf: false },
+  { path: '/api/ip', requiresAuth: false, requiresCsrf: false },
 
-  // todo: modify this correctly
+  // Public pages
+  { path: '/login', requiresAuth: false, requiresCsrf: false },
+  { path: '/register', requiresAuth: false, requiresCsrf: false },
+  { path: '/docs', requiresAuth: false, requiresCsrf: false },
+  { path: '/privacy', requiresAuth: false, requiresCsrf: false },
+  { path: '/tos', requiresAuth: false, requiresCsrf: false },
+  { path: '/refunds', requiresAuth: false, requiresCsrf: false },
+  { path: '/', requiresAuth: false, requiresCsrf: false },
+];
 
+export const getRouteConfig = (pathname: string): RouteConfig => {
+  const route = ROUTE_CONFIG.find((route) =>
+    route.pattern ? route.pattern.test(pathname) : pathname === route.path
+  );
+  return (
+    route || {
+      path: pathname,
+      requiresAuth: true,
+      requiresCsrf: true,
+    }
+  );
+};
 
-
+// todo: modify this correctly
 
 // const handleSessionAuth = async (request: NextRequest) => {
 //   const sessionCookie = (await getSessionCookie(request, {

@@ -1,6 +1,7 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,18 +9,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface RenameDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  itemName: string
-  itemType: 'folder' | 'project' | 'track'
-  onSubmit: (newName: string) => void
-  isLoading?: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  itemName: string;
+  itemType: 'folder' | 'project' | 'track';
+  onSubmit: (newName: string) => void;
+  isLoading?: boolean;
 }
 
 export function RenameDialog({
@@ -28,64 +28,71 @@ export function RenameDialog({
   itemName,
   itemType,
   onSubmit,
-  isLoading = false
+  isLoading = false,
 }: RenameDialogProps) {
-  const [newName, setNewName] = useState(itemName)
+  const [newName, setNewName] = useState(itemName);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (newName.trim()) {
-      onSubmit(newName.trim())
+      onSubmit(newName.trim());
     }
-  }
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (newOpen) {
-      setNewName(itemName) // Reset to original name when opening
+      setNewName(itemName); // Reset to original name when opening
     }
-    onOpenChange(newOpen)
-  }
+    onOpenChange(newOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Rename {itemType === 'folder' ? 'Folder' : itemType === 'project' ? 'Project' : 'Track'}</DialogTitle>
+            <DialogTitle>
+              Rename{' '}
+              {itemType === 'folder'
+                ? 'Folder'
+                : itemType === 'project'
+                  ? 'Project'
+                  : 'Track'}
+            </DialogTitle>
             <DialogDescription>
               Enter a new name for this {itemType}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+              <Label className="text-right" htmlFor="name">
                 Name
               </Label>
               <Input
-                id="name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="col-span-3"
                 autoFocus
+                className="col-span-3"
+                id="name"
+                onChange={(e) => setNewName(e.target.value)}
                 required
+                value={newName}
               />
             </div>
           </div>
           <DialogFooter>
             <Button
+              disabled={isLoading}
+              onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !newName.trim()}>
+            <Button disabled={isLoading || !newName.trim()} type="submit">
               {isLoading ? 'Renaming...' : 'Rename'}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

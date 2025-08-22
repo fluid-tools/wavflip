@@ -1,7 +1,10 @@
-"use client";
+'use client';
 
-import { useSession, signOut } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
+import { LogOut, Settings, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,12 +12,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Settings } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import SettingsDialog from "./settings-dialog";
+} from '@/components/ui/dropdown-menu';
+import { signOut, useSession } from '@/lib/auth-client';
+import SettingsDialog from './settings-dialog';
 
 export function UserProfile() {
   const { data: session } = useSession();
@@ -27,36 +27,41 @@ export function UserProfile() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast.success("Signed out successfully");
-      router.push("/sign-in");
+      toast.success('Signed out successfully');
+      router.push('/sign-in');
     } catch {
-      toast.error("Failed to sign out");
+      toast.error('Failed to sign out');
     }
   };
 
   const initials = session.user.name
     ? session.user.name
-        .split(" ")
+        .split(' ')
         .map((n) => n[0])
-        .join("")
+        .join('')
         .toUpperCase()
     : session.user.email[0].toUpperCase();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button className="relative h-8 w-8 rounded-full" variant="ghost">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
+            <AvatarImage
+              alt={session.user.name || ''}
+              src={session.user.image || ''}
+            />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent align="end" className="w-56" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{session.user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">
+            <p className="font-medium text-sm leading-none">
+              {session.user.name}
+            </p>
+            <p className="text-muted-foreground text-xs leading-none">
               {session.user.email}
             </p>
           </div>

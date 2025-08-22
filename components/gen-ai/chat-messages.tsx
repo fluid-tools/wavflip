@@ -1,28 +1,28 @@
-'use client'
+'use client';
 
-import { useRef, useEffect } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { ChatMessage } from './chat-message'
-import { cn } from '@/lib/utils'
-import { MUSIC_PROMPTS } from '@/lib/constants/prompts'
-import type { GeneratedSound } from '@/types/audio'
+import { useEffect, useRef } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { MUSIC_PROMPTS } from '@/lib/constants/prompts';
+import { cn } from '@/lib/utils';
+import type { GeneratedSound } from '@/types/generations';
+import { ChatMessage } from './chat-message';
 
 interface ChatMessage {
-  id: string
-  type: 'user' | 'assistant' | 'system'
-  content?: string
-  sound?: GeneratedSound
-  timestamp: Date
-  isGenerating?: boolean
-  etaSeconds?: number
+  id: string;
+  type: 'user' | 'assistant' | 'system';
+  content?: string;
+  sound?: GeneratedSound;
+  timestamp: Date;
+  isGenerating?: boolean;
+  etaSeconds?: number;
 }
 
 interface ChatMessagesProps {
-  messages: ChatMessage[]
-  onPlaySound: (sound: GeneratedSound) => void
-  onDeleteSound: (soundId: string) => void
-  onCopyUrl: (url: string) => void
-  className?: string
+  messages: ChatMessage[];
+  onPlaySound: (sound: GeneratedSound) => void;
+  onDeleteSound: (soundId: string) => void;
+  onCopyUrl: (url: string) => void;
+  className?: string;
 }
 
 export function ChatMessages({
@@ -30,31 +30,31 @@ export function ChatMessages({
   onPlaySound,
   onDeleteSound,
   onCopyUrl,
-  className
+  className,
 }: ChatMessagesProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   return (
-    <div className={cn("flex-1 min-h-0 relative", className)}>
+    <div className={cn('relative min-h-0 flex-1', className)}>
       {/* Floating Background Prompts */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         {MUSIC_PROMPTS.map((promptText, index) => (
           <div
+            className="absolute select-none font-medium text-muted-foreground/8 text-sm"
             key={index}
-            className="absolute text-muted-foreground/8 text-sm font-medium select-none"
             style={{
-              top: `${15 + (index * 37) % 70}%`,
-              left: `${10 + (index * 43) % 80}%`,
-              transform: `rotate(${-20 + (index * 15) % 40}deg)`,
-              fontSize: `${12 + (index % 4) * 2}px`
+              top: `${15 + ((index * 37) % 70)}%`,
+              left: `${10 + ((index * 43) % 80)}%`,
+              transform: `rotate(${-20 + ((index * 15) % 40)}deg)`,
+              fontSize: `${12 + (index % 4) * 2}px`,
             }}
           >
             {promptText}
@@ -65,19 +65,19 @@ export function ChatMessages({
       {/* Chat Messages - Scrollable area */}
       <div className="relative z-10 h-full">
         <ScrollArea className="h-full">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-8 sm:space-y-10">
+          <div className="mx-auto max-w-4xl space-y-8 px-4 py-6 sm:space-y-10">
             {messages.map((message) => (
               <ChatMessage
-                key={message.id}
-                type={message.type}
                 content={message.content}
-                sound={message.sound}
-                isGenerating={message.isGenerating}
                 etaSeconds={message.etaSeconds}
-                startedAt={message.timestamp}
-                onPlaySound={onPlaySound}
-                onDeleteSound={onDeleteSound}
+                isGenerating={message.isGenerating}
+                key={message.id}
                 onCopyUrl={onCopyUrl}
+                onDeleteSound={onDeleteSound}
+                onPlaySound={onPlaySound}
+                sound={message.sound}
+                startedAt={message.timestamp}
+                type={message.type}
               />
             ))}
             <div ref={messagesEndRef} />
@@ -85,5 +85,5 @@ export function ChatMessages({
         </ScrollArea>
       </div>
     </div>
-  )
-} 
+  );
+}

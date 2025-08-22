@@ -1,0 +1,22 @@
+---
+description: UI development patterns and constraints (shadcn/ui, Radix, Tailwind v4)
+globs:
+  - "components/**"
+  - "app/**"
+  - "public/**"
+  - "app/globals.css"
+alwaysApply: false
+---
+
+- Do not edit `components/ui/**` (shadcn/ui). Extend via wrapper components in `components/**` and compose primitives rather than forking them.
+- Use Radix UI primitives for accessible interactions (dialogs, popovers, menus). Ensure keyboard and screen reader support by default.
+- Styling: Tailwind CSS v4 utilities with `cn()` from `@/lib/utils`. Prefer utility classes over custom CSS; only use inline styles for dynamic values that cannot be expressed with utilities.
+- Layout: Use flex/grid, avoid layout shift, and ensure responsive behavior with Tailwind breakpoints. Target a clean Apple Music/Spotify-like aesthetic reimagined with a modern aesthetic. Think clean, rounded corner, minimal, sleek, ui.
+- Theming: Respect theme provider and dark mode. Use semantic Tailwind colors and avoid hard-coded color hexes where possible.
+- Forms: Prefer `react-hook-form` + Zod for validation and next-safe-action for submission. For form submissions, call the action directly (no `startTransition`). For programmatic calls (e.g., drag & drop), wrap in `startTransition`.
+- Data access: UI must consume data via hooks (React Query for GET, server actions for mutations). Never import server/DAL modules into components.
+- Loading/Empty/Error states: Provide skeleton UIs (`components/ui/skeleton`) or small placeholders instead of spinner-only states. Keep layout stable.
+- Accessibility: Include labels and `aria-*` attributes. Ensure focus-visible states are preserved. Verify color contrast in both light and dark themes.
+- Icons: Use the existing icon set (Lucide/house icons) and keep sizes/strokes consistent. Avoid ad-hoc SVGs unless added to `components/icons`.
+- Reusability: Co-locate small component-specific styles and keep component APIs typed and minimal. Prefer composition over prop bloating.
+- Performance: Avoid unnecessary re-renders; pass stable callbacks/values to heavy child components. Defer expensive work when offscreen.

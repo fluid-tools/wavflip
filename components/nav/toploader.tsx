@@ -1,7 +1,7 @@
 'use client';
 import { useTheme } from 'next-themes';
 import NextTopLoader from 'nextjs-toploader';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function TopLoader() {
   const { theme } = useTheme();
@@ -9,7 +9,11 @@ export default function TopLoader() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setIsDark(theme === 'dark' || theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    setIsDark(
+      theme === 'dark' ||
+        (theme === 'system' &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
+    );
   }, [theme]);
 
   return (
@@ -19,4 +23,4 @@ export default function TopLoader() {
       showSpinner={true}
     />
   );
-} 
+}

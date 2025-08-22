@@ -1,9 +1,9 @@
 'use server';
 
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
-import { reactVerificationEmail } from '@/emails/verification-email';
+import { Resend } from 'resend';
 import { reactPasswordResetEmail } from '@/emails/password-reset-email';
+import { reactVerificationEmail } from '@/emails/verification-email';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -16,7 +16,7 @@ export async function sendVerificationEmail({
 }) {
   try {
     console.log('Attempting to send verification email to:', user.email);
-    
+
     const emailHtml = await render(
       reactVerificationEmail({
         username: user.name || user.email,
@@ -30,7 +30,7 @@ export async function sendVerificationEmail({
       subject: 'Verify your email address',
       html: emailHtml,
     });
-    
+
     console.log('Verification email sent successfully:', result);
     return result;
   } catch (error) {
@@ -48,7 +48,7 @@ export async function sendPasswordResetEmail({
 }) {
   try {
     console.log('Attempting to send password reset email to:', user.email);
-    
+
     const emailHtml = await render(
       reactPasswordResetEmail({
         username: user.name || user.email,
@@ -62,7 +62,7 @@ export async function sendPasswordResetEmail({
       subject: 'Reset your password',
       html: emailHtml,
     });
-    
+
     console.log('Password reset email sent successfully:', result);
     return result;
   } catch (error) {

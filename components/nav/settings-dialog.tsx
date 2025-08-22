@@ -1,106 +1,137 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useSession, signOut, sendVerificationEmail, requestPasswordReset } from "@/lib/auth-client"
-import { User, Mail, Shield, AlertTriangle, LogOut, Camera } from "lucide-react"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import {
+  AlertTriangle,
+  Camera,
+  LogOut,
+  Mail,
+  Shield,
+  User,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import * as React from 'react';
+import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  requestPasswordReset,
+  sendVerificationEmail,
+  signOut,
+  useSession,
+} from '@/lib/auth-client';
 
 interface SettingsDialogProps {
-  children?: React.ReactNode
+  children?: React.ReactNode;
 }
 
 export default function SettingsDialog({ children }: SettingsDialogProps) {
-  const { data: session } = useSession()
-  const router = useRouter()
-  const [open, setOpen] = React.useState(false)
-  const [isResending, setIsResending] = React.useState(false)
-  const [isRequestingPasswordReset, setIsRequestingPasswordReset] = React.useState(false)
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [isResending, setIsResending] = React.useState(false);
+  const [isRequestingPasswordReset, setIsRequestingPasswordReset] =
+    React.useState(false);
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      toast.success("Signed out successfully")
-      setOpen(false)
-      router.push("/sign-in")
+      await signOut();
+      toast.success('Signed out successfully');
+      setOpen(false);
+      router.push('/sign-in');
     } catch {
-      toast.error("Failed to sign out")
+      toast.error('Failed to sign out');
     }
-  }
+  };
 
   const handleResendVerification = async () => {
-    if (!session?.user.email) return
-    
-    setIsResending(true)
+    if (!session?.user.email) return;
+
+    setIsResending(true);
     try {
       await sendVerificationEmail({
         email: session.user.email,
-        callbackURL: process.env.NEXT_PUBLIC_BASE_URL + "/vault"
-      })
-      toast.success("Verification email sent! Check your inbox.")
+        callbackURL: process.env.NEXT_PUBLIC_BASE_URL + '/vault',
+      });
+      toast.success('Verification email sent! Check your inbox.');
     } catch (error) {
-      console.error("Failed to send verification email:", error)
-      toast.error("Failed to send verification email. Please try again.")
+      console.error('Failed to send verification email:', error);
+      toast.error('Failed to send verification email. Please try again.');
     } finally {
-      setIsResending(false)
+      setIsResending(false);
     }
-  }
+  };
 
   const handleChangePassword = async () => {
-    if (!session?.user.email) return
-    
-    setIsRequestingPasswordReset(true)
+    if (!session?.user.email) return;
+
+    setIsRequestingPasswordReset(true);
     try {
       await requestPasswordReset({
         email: session.user.email,
-        redirectTo: process.env.NEXT_PUBLIC_BASE_URL + "/reset-password"
-      })
-      toast.success("Password reset email sent! Check your inbox to change your password.")
+        redirectTo: process.env.NEXT_PUBLIC_BASE_URL + '/reset-password',
+      });
+      toast.success(
+        'Password reset email sent! Check your inbox to change your password.'
+      );
     } catch (error) {
-      console.error("Failed to send password reset email:", error)
-      toast.error("Failed to send password reset email. Please try again.")
+      console.error('Failed to send password reset email:', error);
+      toast.error('Failed to send password reset email. Please try again.');
     } finally {
-      setIsRequestingPasswordReset(false)
+      setIsRequestingPasswordReset(false);
     }
-  }
+  };
 
   const initials = session?.user.name
     ? session.user.name
-        .split(" ")
+        .split(' ')
         .map((n) => n[0])
-        .join("")
+        .join('')
         .toUpperCase()
-    : session?.user.email[0].toUpperCase() || "U"
+    : session?.user.email[0].toUpperCase() || 'U';
 
-  const isEmailVerified = session?.user.emailVerified
+  const isEmailVerified = session?.user.emailVerified;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        {children || <Button variant="outline" size="sm">Settings</Button>}
+        {children || (
+          <Button size="sm" variant="outline">
+            Settings
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>User Settings</DialogTitle>
         </DialogHeader>
-        
-        <Tabs defaultValue="profile" className="w-full">
+
+        <Tabs className="w-full" defaultValue="profile">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="profile" className="space-y-4">
+
+          <TabsContent className="space-y-4" value="profile">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -115,55 +146,67 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <Avatar className="h-20 w-20">
-                      <AvatarImage src={session?.user.image || ""} alt={session?.user.name || ""} />
-                      <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                      <AvatarImage
+                        alt={session?.user.name || ''}
+                        src={session?.user.image || ''}
+                      />
+                      <AvatarFallback className="text-lg">
+                        {initials}
+                      </AvatarFallback>
                     </Avatar>
                     <Button
+                      className="-bottom-2 -right-2 absolute h-8 w-8 rounded-full p-0"
                       size="sm"
                       variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
                     >
                       <Camera className="h-4 w-4" />
                     </Button>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold">{session?.user.name || "Anonymous User"}</h3>
-                    <p className="text-sm text-muted-foreground">{session?.user.email}</p>
-                    <div className="flex items-center gap-2 mt-2">
+                    <h3 className="font-semibold">
+                      {session?.user.name || 'Anonymous User'}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {session?.user.email}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
                       {isEmailVerified ? (
-                        <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-950">
-                          <Shield className="h-3 w-3 mr-1" />
+                        <Badge
+                          className="bg-green-50 text-green-600 dark:bg-green-950"
+                          variant="secondary"
+                        >
+                          <Shield className="mr-1 h-3 w-3" />
                           Verified
                         </Badge>
                       ) : (
                         <Badge variant="destructive">
-                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          <AlertTriangle className="mr-1 h-3 w-3" />
                           Unverified
                         </Badge>
                       )}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="grid gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">Display Name</Label>
                     <Input
+                      defaultValue={session?.user.name || ''}
                       id="name"
-                      defaultValue={session?.user.name || ""}
                       placeholder="Enter your display name"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input
+                      className="bg-muted"
+                      defaultValue={session?.user.email || ''}
+                      disabled
                       id="email"
                       type="email"
-                      defaultValue={session?.user.email || ""}
-                      disabled
-                      className="bg-muted"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       Email cannot be changed. Contact support if needed.
                     </p>
                   </div>
@@ -171,26 +214,27 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="account" className="space-y-4">
+
+          <TabsContent className="space-y-4" value="account">
             {!isEmailVerified && (
               <Alert variant="warning">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Email Verification Required</AlertTitle>
                 <AlertDescription>
-                  Your email address is not verified. Some features may be limited until you verify your email.
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto font-normal text-yellow-600 dark:text-yellow-400"
-                    onClick={handleResendVerification}
+                  Your email address is not verified. Some features may be
+                  limited until you verify your email.
+                  <Button
+                    className="h-auto p-0 font-normal text-yellow-600 dark:text-yellow-400"
                     disabled={isResending}
+                    onClick={handleResendVerification}
+                    variant="link"
                   >
-                    {isResending ? "Sending..." : "Resend verification email"}
+                    {isResending ? 'Sending...' : 'Resend verification email'}
                   </Button>
                 </AlertDescription>
               </Alert>
             )}
-            
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -206,42 +250,50 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Email Verification</p>
-                      <p className="text-sm text-muted-foreground">
-                        {isEmailVerified ? "Your email is verified" : "Email verification pending"}
+                      <p className="text-muted-foreground text-sm">
+                        {isEmailVerified
+                          ? 'Your email is verified'
+                          : 'Email verification pending'}
                       </p>
                       {!isEmailVerified && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
                           className="mt-2"
-                          onClick={handleResendVerification}
                           disabled={isResending}
+                          onClick={handleResendVerification}
+                          size="sm"
+                          variant="outline"
                         >
-                          {isResending ? "Sending..." : "Send Verification Email"}
+                          {isResending
+                            ? 'Sending...'
+                            : 'Send Verification Email'}
                         </Button>
                       )}
                     </div>
                     {isEmailVerified ? (
-                      <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-950">
-                        <Shield className="h-3 w-3 mr-1" />
+                      <Badge
+                        className="bg-green-50 text-green-600 dark:bg-green-950"
+                        variant="secondary"
+                      >
+                        <Shield className="mr-1 h-3 w-3" />
                         Verified
                       </Badge>
                     ) : (
                       <Badge variant="destructive">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        <AlertTriangle className="mr-1 h-3 w-3" />
                         Unverified
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Account Created</p>
-                      <p className="text-sm text-muted-foreground">
-                        {session?.user.createdAt 
-                          ? new Date(session.user.createdAt).toLocaleDateString()
-                          : "Unknown"
-                        }
+                      <p className="text-muted-foreground text-sm">
+                        {session?.user.createdAt
+                          ? new Date(
+                              session.user.createdAt
+                            ).toLocaleDateString()
+                          : 'Unknown'}
                       </p>
                     </div>
                   </div>
@@ -249,8 +301,8 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="security" className="space-y-4">
+
+          <TabsContent className="space-y-4" value="security">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -264,27 +316,33 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-2">Password</h4>
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <h4 className="mb-2 font-medium">Password</h4>
+                    <p className="mb-2 text-muted-foreground text-sm">
                       Change your account password by requesting a reset email.
                     </p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleChangePassword}
+                    <Button
                       disabled={isRequestingPasswordReset}
+                      onClick={handleChangePassword}
+                      size="sm"
+                      variant="outline"
                     >
-                      {isRequestingPasswordReset ? "Sending..." : "Change Password"}
+                      {isRequestingPasswordReset
+                        ? 'Sending...'
+                        : 'Change Password'}
                     </Button>
                   </div>
-                  
+
                   <div>
-                    <h4 className="font-medium mb-2">Sign Out</h4>
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <h4 className="mb-2 font-medium">Sign Out</h4>
+                    <p className="mb-2 text-muted-foreground text-sm">
                       Sign out of your account on this device.
                     </p>
-                    <Button variant="destructive" size="sm" onClick={handleSignOut}>
-                      <LogOut className="h-4 w-4 mr-2" />
+                    <Button
+                      onClick={handleSignOut}
+                      size="sm"
+                      variant="destructive"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </Button>
                   </div>
@@ -295,5 +353,5 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
         </Tabs>
       </DialogContent>
     </Dialog>
-  )
-} 
+  );
+}

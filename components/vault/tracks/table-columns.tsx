@@ -1,57 +1,66 @@
-'use client'
+'use client';
 
-import { ColumnDef } from '@tanstack/react-table'
-import { ArrowUpDown, Play, Pause, MoreHorizontal, Edit2, Trash2, Upload, FolderOpen } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import type { ColumnDef } from '@tanstack/react-table';
+import {
+  ArrowUpDown,
+  Edit2,
+  FolderOpen,
+  MoreHorizontal,
+  Pause,
+  Play,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import type { AudioTrack } from '@/types/audio'
-import type { PlayerAction } from '@/state/audio-atoms'
-import type { TrackFromProject } from '../../../hooks/data/use-tracks'
+} from '@/components/ui/dropdown-menu';
+import type { PlayerAction } from '@/state/audio-atoms';
+import type { AudioTrack } from '@/types/audio';
+import type { TrackFromProject } from '../../../hooks/data/use-tracks';
 
 interface ColumnActionsProps {
-  track: TrackFromProject
-  currentTrack: AudioTrack | null
-  isPlaying: boolean
-  onPlayTrack: (track: TrackFromProject) => void
-  onRenameTrack: (track: TrackFromProject) => void
-  onDeleteTrack: (track: TrackFromProject) => void
-  onMoveTrack: (track: TrackFromProject) => void
-  dispatchPlayerAction: (action: PlayerAction) => void
+  track: TrackFromProject;
+  currentTrack: AudioTrack | null;
+  isPlaying: boolean;
+  onPlayTrack: (track: TrackFromProject) => void;
+  onRenameTrack: (track: TrackFromProject) => void;
+  onDeleteTrack: (track: TrackFromProject) => void;
+  onMoveTrack: (track: TrackFromProject) => void;
+  dispatchPlayerAction: (action: PlayerAction) => void;
 }
 
 const formatDuration = (seconds: number) => {
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 const formatDate = (date: Date | string | null | undefined) => {
-  if (!date) return '--'
-  
-  const dateObj = date instanceof Date ? date : new Date(date)
-  
+  if (!date) return '--';
+
+  const dateObj = date instanceof Date ? date : new Date(date);
+
   if (isNaN(dateObj.getTime())) {
-    return '--'
+    return '--';
   }
-  
-  return new Intl.DateTimeFormat('en-US', { 
-    month: 'short', 
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
     day: 'numeric',
-    year: 'numeric'
-  }).format(dateObj)
-}
+    year: 'numeric',
+  }).format(dateObj);
+};
 
 const getFileTypeDisplay = (mimeType: string): string => {
   const typeMap: Record<string, string> = {
     'audio/mpeg': 'MP3',
-    'audio/wav': 'WAV', 
+    'audio/wav': 'WAV',
     'audio/wave': 'WAV',
     'audio/x-wav': 'WAV',
     'audio/flac': 'FLAC',
@@ -62,11 +71,11 @@ const getFileTypeDisplay = (mimeType: string): string => {
     'audio/ogg': 'OGG',
     'audio/webm': 'WEBM',
     'audio/3gpp': '3GP',
-    'audio/amr': 'AMR'
-  }
-  
-  return typeMap[mimeType] || 'Audio'
-}
+    'audio/amr': 'AMR',
+  };
+
+  return typeMap[mimeType] || 'Audio';
+};
 
 export function createTracksTableColumns({
   currentTrack,
@@ -82,29 +91,31 @@ export function createTracksTableColumns({
       id: 'play',
       header: '#',
       cell: ({ row, table }) => {
-        const track = row.original
-        const index = table.getSortedRowModel().rows.findIndex(r => r.id === row.id)
-        const isCurrentTrack = currentTrack?.id === track.id
-        const isTrackPlaying = isCurrentTrack && isPlaying
+        const track = row.original;
+        const index = table
+          .getSortedRowModel()
+          .rows.findIndex((r) => r.id === row.id);
+        const isCurrentTrack = currentTrack?.id === track.id;
+        const isTrackPlaying = isCurrentTrack && isPlaying;
 
         return (
-          <div className="flex items-center justify-center w-8 h-8 group">
-            <span className="text-sm text-muted-foreground group-hover:hidden">
+          <div className="group flex h-8 w-8 items-center justify-center">
+            <span className="text-muted-foreground text-sm group-hover:hidden">
               {index + 1}
             </span>
             <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 hidden group-hover:flex opacity-0 group-hover:opacity-100 transition-opacity"
+              className="hidden h-8 w-8 p-0 opacity-0 transition-opacity group-hover:flex group-hover:opacity-100"
               onClick={() => {
                 if (isTrackPlaying) {
-                  dispatchPlayerAction({ type: 'PAUSE' })
+                  dispatchPlayerAction({ type: 'PAUSE' });
                 } else if (isCurrentTrack) {
-                  dispatchPlayerAction({ type: 'PLAY' })
+                  dispatchPlayerAction({ type: 'PLAY' });
                 } else {
-                  onPlayTrack(track)
+                  onPlayTrack(track);
                 }
               }}
+              size="sm"
+              variant="ghost"
             >
               {isTrackPlaying ? (
                 <Pause className="h-4 w-4" />
@@ -113,7 +124,7 @@ export function createTracksTableColumns({
               )}
             </Button>
           </div>
-        )
+        );
       },
       enableSorting: false,
       size: 80,
@@ -123,45 +134,47 @@ export function createTracksTableColumns({
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="-ml-4"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            variant="ghost"
           >
             Title
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const track = row.original
-        const isCurrentTrack = currentTrack?.id === track.id
-        
+        const track = row.original;
+        const isCurrentTrack = currentTrack?.id === track.id;
+
         return (
           <div className="flex items-center gap-2">
             <div>
-              <p className={`font-medium ${isCurrentTrack ? 'text-primary' : ''}`}>
+              <p
+                className={`font-medium ${isCurrentTrack ? 'text-primary' : ''}`}
+              >
                 {track.name}
               </p>
               {track.versions.length > 1 && (
-                <Badge variant="outline" className="text-xs mt-1">
+                <Badge className="mt-1 text-xs" variant="outline">
                   v{track.activeVersion?.version || 1}
                 </Badge>
               )}
             </div>
           </div>
-        )
+        );
       },
     },
     {
       accessorKey: 'activeVersion.mimeType',
       header: 'Type',
       cell: ({ row }) => {
-        const mimeType = row.original.activeVersion?.mimeType
+        const mimeType = row.original.activeVersion?.mimeType;
         return (
-          <Badge variant="secondary" className="text-xs">
+          <Badge className="text-xs" variant="secondary">
             {mimeType ? getFileTypeDisplay(mimeType) : 'Unknown'}
           </Badge>
-        )
+        );
       },
       size: 80,
     },
@@ -170,21 +183,21 @@ export function createTracksTableColumns({
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="-ml-4"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            variant="ghost"
           >
             Date Added
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
         return (
-          <div className="text-sm text-muted-foreground">
+          <div className="text-muted-foreground text-sm">
             {formatDate(row.getValue('createdAt'))}
           </div>
-        )
+        );
       },
       size: 120,
     },
@@ -194,23 +207,25 @@ export function createTracksTableColumns({
         return (
           <div className="text-right">
             <Button
-              variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="-mr-4"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === 'asc')
+              }
+              variant="ghost"
             >
               Duration
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           </div>
-        )
+        );
       },
       cell: ({ row }) => {
-        const duration = row.original.activeVersion?.duration
+        const duration = row.original.activeVersion?.duration;
         return (
-          <div className="text-right text-sm text-muted-foreground">
+          <div className="text-right text-muted-foreground text-sm">
             {duration ? formatDuration(duration) : '--:--'}
           </div>
-        )
+        );
       },
       size: 100,
     },
@@ -218,43 +233,43 @@ export function createTracksTableColumns({
       id: 'actions',
       header: '',
       cell: ({ row }) => {
-        const track = row.original
+        const track = row.original;
 
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button className="h-8 w-8 p-0" variant="ghost">
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onRenameTrack(track)}>
-                <Edit2 className="h-4 w-4 mr-2" />
+                <Edit2 className="mr-2 h-4 w-4" />
                 Rename
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onMoveTrack(track)}>
-                <FolderOpen className="h-4 w-4 mr-2" />
+                <FolderOpen className="mr-2 h-4 w-4" />
                 Move to Project
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="mr-2 h-4 w-4" />
                 Upload New Version
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => onDeleteTrack(track)}
                 className="text-destructive"
+                onClick={() => onDeleteTrack(track)}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
       enableSorting: false,
       size: 50,
     },
-  ]
-} 
+  ];
+}

@@ -1,8 +1,6 @@
-"use client"
+'use client';
 
-import { createStore } from 'jotai'
+import { createStore } from 'jotai';
 
 // Single global Jotai store so atoms are readable outside React components
-export const jotaiStore = createStore()
-
-
+export const jotaiStore = createStore();
