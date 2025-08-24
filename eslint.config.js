@@ -1,19 +1,18 @@
 import { FlatCompat } from '@eslint/eslintrc';
-import nextPlugin from '@next/eslint-plugin-next';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
 });
 
 const eslintConfig = [
-  // Ensure Next.js plugin is explicitly loaded and rootDir is set for detection
-  {
-    plugins: {
-      '@next/next': nextPlugin,
-    },
-  },
+  // Per Next.js docs: extend from the Next.js plugin directly
   ...compat.config({
-    extends: ['next/core-web-vitals', 'next/typescript'],
+    extends: ['plugin:@next/next/recommended', 'next/typescript', 'next/core-web-vitals'],
+    settings: {
+      next: {
+        rootDir: '.',
+      },
+    },
   }),
   {
     ignores: [

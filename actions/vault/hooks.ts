@@ -18,8 +18,8 @@ import {
 } from './project';
 
 // Custom hook wrapper that adds success/error handling and invalidation
-function useVaultActionWrapper<TInput, TOutput>(
-  action: (input: TInput) => Promise<{ data?: TOutput; serverError?: string }>,
+function useVaultActionWrapper(
+  action: Parameters<typeof useAction>[0],
   successMessage: string
 ) {
   const invalidate = useVaultInvalidation();
@@ -41,12 +41,7 @@ function useVaultActionWrapper<TInput, TOutput>(
     },
   });
 
-  return {
-    execute,
-    executeAsync,
-    isPending,
-    result,
-  };
+  return { execute, executeAsync, isPending, result };
 }
 
 // Folder action hooks
