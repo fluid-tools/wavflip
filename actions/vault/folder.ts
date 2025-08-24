@@ -18,7 +18,7 @@ import {
 } from './schemas';
 
 export const createFolderAction = actionClient
-  .schema(createFolderSchema)
+  .inputSchema(createFolderSchema)
   .action(async ({ parsedInput }) => {
     const { name, parentFolderId } = parsedInput;
 
@@ -52,7 +52,7 @@ export const createFolderAction = actionClient
   });
 
 export const deleteFolderAction = actionClient
-  .schema(deleteFolderSchema)
+  .inputSchema(deleteFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId } = parsedInput;
 
@@ -73,7 +73,7 @@ export const deleteFolderAction = actionClient
   });
 
 export const renameFolderAction = actionClient
-  .schema(renameFolderSchema)
+  .inputSchema(renameFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId, name } = parsedInput;
 
@@ -89,7 +89,7 @@ export const renameFolderAction = actionClient
   });
 
 export const moveFolderAction = actionClient
-  .schema(moveFolderSchema)
+  .inputSchema(moveFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId, parentFolderId, sourceParentFolderId } = parsedInput;
 

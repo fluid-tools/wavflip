@@ -17,88 +17,157 @@ import {
   renameProjectAction,
 } from './project';
 
-// Custom hook wrapper that adds success/error handling and invalidation
-function useVaultActionWrapper(
-  action: Parameters<typeof useAction>[0],
-  successMessage: string
-) {
+// Folder action hooks
+export function useCreateFolderAction() {
   const invalidate = useVaultInvalidation();
-
-  const { execute, executeAsync, isPending, result } = useAction(action, {
+  return useAction(createFolderAction, {
     onSuccess: () => {
-      toast.success(successMessage);
-      // Invalidate precise keys to avoid races
+      toast.success('Folder created successfully');
       invalidate.invalidateTree();
       invalidate.invalidateProjects();
       invalidate.invalidateFolders();
     },
     onError: ({ error }) => {
-      const errorMessage =
-        typeof error.serverError === 'string'
-          ? error.serverError
-          : 'An error occurred';
-      toast.error(errorMessage);
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
     },
   });
-
-  return { execute, executeAsync, isPending, result };
-}
-
-// Folder action hooks
-export function useCreateFolderAction() {
-  return useVaultActionWrapper(
-    createFolderAction,
-    'Folder created successfully'
-  );
 }
 
 export function useDeleteFolderAction() {
-  return useVaultActionWrapper(
-    deleteFolderAction,
-    'Folder deleted successfully'
-  );
+  const invalidate = useVaultInvalidation();
+  return useAction(deleteFolderAction, {
+    onSuccess: () => {
+      toast.success('Folder deleted successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }
 
 export function useRenameFolderAction() {
-  return useVaultActionWrapper(
-    renameFolderAction,
-    'Folder renamed successfully'
-  );
+  const invalidate = useVaultInvalidation();
+  return useAction(renameFolderAction, {
+    onSuccess: () => {
+      toast.success('Folder renamed successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }
 
 export function useMoveFolderAction() {
-  return useVaultActionWrapper(moveFolderAction, 'Folder moved successfully');
+  const invalidate = useVaultInvalidation();
+  return useAction(moveFolderAction, {
+    onSuccess: () => {
+      toast.success('Folder moved successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }
 
 // Project action hooks
 export function useCreateProjectAction() {
-  return useVaultActionWrapper(
-    createProjectAction,
-    'Project created successfully'
-  );
+  const invalidate = useVaultInvalidation();
+  return useAction(createProjectAction, {
+    onSuccess: () => {
+      toast.success('Project created successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }
 
 export function useDeleteProjectAction() {
-  return useVaultActionWrapper(
-    deleteProjectAction,
-    'Project deleted successfully'
-  );
+  const invalidate = useVaultInvalidation();
+  return useAction(deleteProjectAction, {
+    onSuccess: () => {
+      toast.success('Project deleted successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }
 
 export function useRenameProjectAction() {
-  return useVaultActionWrapper(
-    renameProjectAction,
-    'Project renamed successfully'
-  );
+  const invalidate = useVaultInvalidation();
+  return useAction(renameProjectAction, {
+    onSuccess: () => {
+      toast.success('Project renamed successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }
 
 export function useMoveProjectAction() {
-  return useVaultActionWrapper(moveProjectAction, 'Project moved successfully');
+  const invalidate = useVaultInvalidation();
+  return useAction(moveProjectAction, {
+    onSuccess: () => {
+      toast.success('Project moved successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }
 
 export function useCombineProjectsAction() {
-  return useVaultActionWrapper(
-    createFolderFromProjectsAction,
-    'Projects combined successfully'
-  );
+  const invalidate = useVaultInvalidation();
+  return useAction(createFolderFromProjectsAction, {
+    onSuccess: () => {
+      toast.success('Projects combined successfully');
+      invalidate.invalidateTree();
+      invalidate.invalidateProjects();
+      invalidate.invalidateFolders();
+    },
+    onError: ({ error }) => {
+      const message =
+        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+      toast.error(message);
+    },
+  });
 }

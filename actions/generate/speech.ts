@@ -30,7 +30,7 @@ const ttsInputSchema = z.object({
 });
 
 export const generateTextToSpeech = actionClient
-  .schema(ttsInputSchema)
+  .inputSchema(ttsInputSchema)
   .action(async ({ parsedInput }) => {
     const { text, voiceId } = parsedInput;
     const startTime = Date.now();

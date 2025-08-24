@@ -43,7 +43,7 @@ const soundInputSchema = z.object({
 });
 
 export const generateSoundEffect = actionClient
-  .schema(soundInputSchema)
+  .inputSchema(soundInputSchema)
   .action(async ({ parsedInput }) => {
     const { prompt, options } = parsedInput;
     const startTime = Date.now();
