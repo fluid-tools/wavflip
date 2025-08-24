@@ -43,7 +43,11 @@ const RecentSheet = dynamic(
     })),
   {
     ssr: false,
-    loading: () => <div className="h-8 w-16 animate-pulse rounded bg-muted" />,
+    loading: () => (
+      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+        <div className="h-4 w-12 animate-pulse rounded bg-muted" />
+      </div>
+    ),
   }
 );
 
@@ -52,13 +56,8 @@ export function Navbar() {
   const [currentTrack] = useAtom(currentTrackAtom);
   const [playerState] = useAtom(playerStateAtom);
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom);
-  const isVaultPage = pathname.includes('/vault');
-  const isStudioPage = pathname.includes('/studio');
 
-  // Extract folderId for vault actions
-  const isFolder =
-    pathname.startsWith('/vault/folders/') && pathname.split('/').length >= 4;
-  const folderId = isFolder ? pathname.split('/')[3] : null;
+  const MIN_PATH_SEGMENTS = 4;
 
   const handlePlaySound = (sound: GeneratedSound) => {
     if (currentTrack?.id === sound.id && playerState === 'playing') {
@@ -68,31 +67,30 @@ export function Navbar() {
     }
   };
 
-  const recentsButton = isStudioPage && (
-    <RecentSheet onPlaySound={handlePlaySound} />
-  );
-
-  if (isVaultPage) {
-    return (
-      <div className="flex flex-1 items-center justify-between">
-        <div className="flex flex-1 items-center gap-4">
-          <VaultBreadcrumbs />
+  switch (pathname) {
+    case '/vault': {
+      const isFolder =
+        pathname.startsWith('/vault/folders/') &&
+        pathname.split('/').length >= MIN_PATH_SEGMENTS;
+      const folderId = isFolder ? pathname.split('/')[3] : null;
+      return (
+        <div className="flex flex-1 items-center justify-between">
+          <div className="flex flex-1 items-center gap-4">
+            <VaultBreadcrumbs />
+          </div>
+          <div className="flex items-center gap-2">
+            <VaultActions folderId={folderId} />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <VaultActions folderId={folderId} />
-          {recentsButton}
+      );
+    }
+    case '/studio':
+      return (
+        <div className={cn('flex flex-1 items-center justify-end')}>
+          <RecentSheet onPlaySound={handlePlaySound} />
         </div>
-      </div>
-    );
+      );
+    default:
+      return null;
   }
-
-  if (isStudioPage) {
-    return (
-      <div className={cn('flex flex-1 items-center justify-end')}>
-        {recentsButton}
-      </div>
-    );
-  }
-
-  return null;
 }
