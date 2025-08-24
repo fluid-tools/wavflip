@@ -10,17 +10,17 @@ import {
   renameFolderAction,
 } from './folder';
 import {
+  createFolderFromProjectsAction,
   createProjectAction,
   deleteProjectAction,
   moveProjectAction,
   renameProjectAction,
-  createFolderFromProjectsAction,
 } from './project';
 
 // Custom hook wrapper that adds success/error handling and invalidation
 function useVaultActionWrapper(action: any, successMessage: string) {
   const invalidate = useVaultInvalidation();
-  
+
   const { execute, executeAsync, isPending, result } = useAction(action, {
     onSuccess: () => {
       toast.success(successMessage);
@@ -30,9 +30,10 @@ function useVaultActionWrapper(action: any, successMessage: string) {
       invalidate.invalidateFolders();
     },
     onError: ({ error }) => {
-      const errorMessage = typeof error.serverError === 'string' 
-        ? error.serverError 
-        : 'An error occurred';
+      const errorMessage =
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(errorMessage);
     },
   });
@@ -68,10 +69,7 @@ export function useRenameFolderAction() {
 }
 
 export function useMoveFolderAction() {
-  return useVaultActionWrapper(
-    moveFolderAction,
-    'Folder moved successfully'
-  );
+  return useVaultActionWrapper(moveFolderAction, 'Folder moved successfully');
 }
 
 // Project action hooks
@@ -97,10 +95,7 @@ export function useRenameProjectAction() {
 }
 
 export function useMoveProjectAction() {
-  return useVaultActionWrapper(
-    moveProjectAction,
-    'Project moved successfully'
-  );
+  return useVaultActionWrapper(moveProjectAction, 'Project moved successfully');
 }
 
 export function useCombineProjectsAction() {

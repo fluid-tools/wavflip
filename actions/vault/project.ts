@@ -24,7 +24,7 @@ export const moveProjectAction = actionClient
   .schema(moveProjectSchema)
   .action(async ({ parsedInput }) => {
     const { projectId, folderId, sourceFolderId } = parsedInput;
-    
+
     const session = await requireAuth();
     await moveProject(projectId, folderId || null, session.user.id);
 
@@ -47,7 +47,7 @@ export const renameProjectAction = actionClient
   .schema(renameProjectSchema)
   .action(async ({ parsedInput }) => {
     const { projectId, name, folderId } = parsedInput;
-    
+
     const session = await requireAuth();
     await renameProject(projectId, name, session.user.id);
 
@@ -66,7 +66,7 @@ export const createProjectAction = actionClient
   .schema(createProjectSchema)
   .action(async ({ parsedInput }) => {
     const { name, folderId } = parsedInput;
-    
+
     const session = await requireAuth();
 
     // Handle duplicate names by adding suffix
@@ -100,7 +100,7 @@ export const deleteProjectAction = actionClient
   .schema(deleteProjectSchema)
   .action(async ({ parsedInput }) => {
     const { projectId, folderId } = parsedInput;
-    
+
     const session = await requireAuth();
     await deleteProject(projectId, session.user.id);
 
@@ -120,7 +120,7 @@ export const createFolderFromProjectsAction = actionClient
   .schema(combineProjectsSchema)
   .action(async ({ parsedInput }) => {
     const { sourceProjectId, targetProjectId, parentFolderId } = parsedInput;
-    
+
     const session = await requireAuth();
 
     // Get project names to create folder name

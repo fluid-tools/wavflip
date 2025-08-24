@@ -101,8 +101,10 @@ export function ProjectCard({
           } as ProjectWithTracks),
   });
 
-  const { execute: deleteExecute, isPending: isDeleting } = useDeleteProjectAction();
-  const { execute: renameExecute, isPending: isRenaming } = useRenameProjectAction();
+  const { execute: deleteExecute, isPending: isDeleting } =
+    useDeleteProjectAction();
+  const { execute: renameExecute, isPending: isRenaming } =
+    useRenameProjectAction();
   const { execute: moveExecute, isPending: isMoving } = useMoveProjectAction();
 
   const handleRename = async (formData: FormData) => {

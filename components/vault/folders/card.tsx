@@ -67,8 +67,10 @@ export function FolderCard({
   const isSelectModeActive = useAtomValue(isSelectModeActiveAtom);
   const { shouldShowContextMenu } = useContextMenuHandler();
 
-  const { execute: deleteExecute, isPending: isDeleting } = useDeleteFolderAction();
-  const { execute: renameExecute, isPending: isRenaming } = useRenameFolderAction();
+  const { execute: deleteExecute, isPending: isDeleting } =
+    useDeleteFolderAction();
+  const { execute: renameExecute, isPending: isRenaming } =
+    useRenameFolderAction();
   const { execute: moveExecute, isPending: isMoving } = useMoveFolderAction();
 
   const handleRename = async (formData: FormData) => {

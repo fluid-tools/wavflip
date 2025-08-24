@@ -1,7 +1,15 @@
 'use client';
 
 import { useAtom } from 'jotai';
-import { LogOut, MessageCircle, Mic, Music, Search, Settings, Vault } from 'lucide-react';
+import {
+  LogOut,
+  MessageCircle,
+  Mic,
+  Music,
+  Search,
+  Settings,
+  Vault,
+} from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';

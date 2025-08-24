@@ -4,7 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 import { generateWaveformData } from '@/lib/audio/waveform-generator';
-import { ProjectGetResponseSchema, ProjectsListResponseSchema } from '@/lib/contracts/api/projects';
+import {
+  ProjectGetResponseSchema,
+  ProjectsListResponseSchema,
+} from '@/lib/contracts/api/projects';
 import { TrackCreateFormSchema } from '@/lib/contracts/api/tracks';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
 import { ProjectWithTracksSchema } from '@/lib/contracts/project';
@@ -45,7 +48,7 @@ export function useProject({
       return ProjectGetResponseSchema.parse(json) as ProjectWithTracks;
     },
     // Use placeholderData instead of initialData to ensure invalidation works
-    initialData: initialData,
+    initialData,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
     enabled: enabled && !!projectId,
@@ -372,8 +375,8 @@ export function useProject({
 
             // Update projects in subfolders
             if (updated.subFolders) {
-              updated.subFolders = updated.subFolders.map((subfolder: FolderLike) =>
-                updateProjectsRecursively(subfolder)
+              updated.subFolders = updated.subFolders.map(
+                (subfolder: FolderLike) => updateProjectsRecursively(subfolder)
               );
             }
 
@@ -430,7 +433,9 @@ export function useProject({
             projects?: ProjectWithTracks[];
             subFolders?: FolderLike[];
           };
-          const rollbackProjectsRecursively = (data: FolderLike): FolderLike => {
+          const rollbackProjectsRecursively = (
+            data: FolderLike
+          ): FolderLike => {
             const updated: FolderLike = { ...data };
 
             // Rollback direct projects
@@ -444,8 +449,9 @@ export function useProject({
 
             // Rollback projects in subfolders
             if (updated.subFolders) {
-              updated.subFolders = updated.subFolders.map((subfolder: FolderLike) =>
-                rollbackProjectsRecursively(subfolder)
+              updated.subFolders = updated.subFolders.map(
+                (subfolder: FolderLike) =>
+                  rollbackProjectsRecursively(subfolder)
               );
             }
 
@@ -515,22 +521,26 @@ export function useProject({
                   projects?: ProjectWithTracks[];
                   subFolders?: FolderLike[];
                 };
-                const updateProjectsRecursively = (folderData: FolderLike): FolderLike => {
+                const updateProjectsRecursively = (
+                  folderData: FolderLike
+                ): FolderLike => {
                   const updated: FolderLike = { ...folderData };
 
                   // Update direct projects
                   if (updated.projects) {
-                    updated.projects = updated.projects.map((p: ProjectWithTracks) =>
-                      p.id === projectId
-                        ? { ...p, image: data.resourceKey || null }
-                        : p
+                    updated.projects = updated.projects.map(
+                      (p: ProjectWithTracks) =>
+                        p.id === projectId
+                          ? { ...p, image: data.resourceKey || null }
+                          : p
                     );
                   }
 
                   // Update projects in subfolders
                   if (updated.subFolders) {
                     updated.subFolders = updated.subFolders.map(
-                      (subfolder: FolderLike) => updateProjectsRecursively(subfolder)
+                      (subfolder: FolderLike) =>
+                        updateProjectsRecursively(subfolder)
                     );
                   }
 

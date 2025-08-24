@@ -1,15 +1,15 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
+import { useVaultTree } from '@/hooks/data/use-vault';
 import {
   FolderGetResponseSchema,
   FoldersListResponseSchema,
 } from '@/lib/contracts/api/folders';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
-import { useVaultTree } from '@/hooks/data/use-vault';
-import { BreadcrumbItemSchema } from '@/lib/contracts/vault';
 import type { BreadcrumbItem, VaultFolder } from '@/lib/contracts/vault';
-import { z } from 'zod';
+import { BreadcrumbItemSchema } from '@/lib/contracts/vault';
 import { vaultKeys } from './keys';
 
 // ================================
@@ -57,7 +57,7 @@ export function useFolderPath(folderId: string | null) {
     // Tie invalidation to the tree cache so this re-computes when tree is invalidated
     queryKey: [...vaultKeys.tree(), 'path', folderId],
     queryFn: async (): Promise<{ path: BreadcrumbItem[] } | null> => {
-      if (!folderId || !vaultData) return null;
+      if (!(folderId && vaultData)) return null;
 
       // DFS to find path to target folder
       const findPath = (

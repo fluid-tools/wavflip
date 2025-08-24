@@ -95,12 +95,18 @@ export function VaultSidebarNavigation() {
   const { shouldShowContextMenu } = useContextMenuHandler();
 
   // Action hooks
-  const { execute: deleteFolderExecute, isPending: isDeletingFolder } = useDeleteFolderAction();
-  const { execute: renameFolderExecute, isPending: isRenamingFolder } = useRenameFolderAction();
-  const { execute: moveFolderExecute, isPending: isMovingFolder } = useMoveFolderAction();
-  const { execute: deleteProjectExecute, isPending: isDeletingProject } = useDeleteProjectAction();
-  const { execute: renameProjectExecute, isPending: isRenamingProject } = useRenameProjectAction();
-  const { execute: moveProjectExecute, isPending: isMovingProject } = useMoveProjectAction();
+  const { execute: deleteFolderExecute, isPending: isDeletingFolder } =
+    useDeleteFolderAction();
+  const { execute: renameFolderExecute, isPending: isRenamingFolder } =
+    useRenameFolderAction();
+  const { execute: moveFolderExecute, isPending: isMovingFolder } =
+    useMoveFolderAction();
+  const { execute: deleteProjectExecute, isPending: isDeletingProject } =
+    useDeleteProjectAction();
+  const { execute: renameProjectExecute, isPending: isRenamingProject } =
+    useRenameProjectAction();
+  const { execute: moveProjectExecute, isPending: isMovingProject } =
+    useMoveProjectAction();
 
   // Context menu handlers
   const handleRename = (item: {

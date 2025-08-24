@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import {
   FolderRowSchema,
-  FolderWithProjectsSchema,
+  type FolderWithProjectsSchema,
   ProjectSummarySchema,
 } from '@/lib/contracts/folder';
 
 // Allow both Date objects (server) and ISO strings (client JSON) and coerce to Date
-const ZDate = z.union([z.date(), z.string()]).transform((v) =>
-  v instanceof Date ? v : new Date(v)
-);
+const ZDate = z
+  .union([z.date(), z.string()])
+  .transform((v) => (v instanceof Date ? v : new Date(v)));
 
 // JSON-friendly variants for API responses
 const FolderRowApiSchema = FolderRowSchema.extend({
@@ -21,14 +21,15 @@ const ProjectSummaryApiSchema = ProjectSummarySchema.extend({
   updatedAt: ZDate,
 });
 
-const FolderWithProjectsApiSchema: z.ZodType<z.infer<typeof FolderWithProjectsSchema>> = z.lazy(
-  () =>
-    FolderRowApiSchema.extend({
-      projects: z.array(ProjectSummaryApiSchema),
-      subFolders: z.array(FolderWithProjectsApiSchema).optional(),
-      subFolderCount: z.number().optional(),
-      projectCount: z.number().optional(),
-    })
+const FolderWithProjectsApiSchema: z.ZodType<
+  z.infer<typeof FolderWithProjectsSchema>
+> = z.lazy(() =>
+  FolderRowApiSchema.extend({
+    projects: z.array(ProjectSummaryApiSchema),
+    subFolders: z.array(FolderWithProjectsApiSchema).optional(),
+    subFolderCount: z.number().optional(),
+    projectCount: z.number().optional(),
+  })
 );
 
 export const FolderMoveFormSchema = z.object({

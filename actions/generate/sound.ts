@@ -1,6 +1,15 @@
 'use server';
 
 import { z } from 'zod';
+import {
+  PRESIGNED_URL_DURATION,
+  PROMPT_INFLUENCE_DEFAULT,
+  SOUND_DURATION_DEFAULT,
+  SOUND_DURATION_MAX,
+  SOUND_DURATION_MIN,
+  SOUND_PROMPT_MAX_LENGTH,
+  TITLE_PREVIEW_LENGTH,
+} from '@/lib/constants/generation';
 import { getElevenLabsClient } from '@/lib/gen-ai/elevenlabs';
 import { actionClient } from '@/lib/safe-action';
 import { getServerSession } from '@/lib/server/auth';
@@ -10,15 +19,6 @@ import {
   uploadGeneratedAudioToS3,
 } from '@/lib/storage/s3-storage';
 import { generateFilename } from '@/lib/utils';
-import {
-  SOUND_PROMPT_MAX_LENGTH,
-  SOUND_DURATION_MIN,
-  SOUND_DURATION_MAX,
-  SOUND_DURATION_DEFAULT,
-  PROMPT_INFLUENCE_DEFAULT,
-  TITLE_PREVIEW_LENGTH,
-  PRESIGNED_URL_DURATION,
-} from '@/lib/constants/generation';
 import type { GenerationError } from '@/types/elevenlabs';
 import type { GeneratedSound } from '@/types/generations';
 
@@ -26,10 +26,17 @@ const soundInputSchema = z.object({
   prompt: z
     .string()
     .min(1, 'Prompt is required')
-    .max(SOUND_PROMPT_MAX_LENGTH, `Prompt is too long (max ${SOUND_PROMPT_MAX_LENGTH} characters)`),
+    .max(
+      SOUND_PROMPT_MAX_LENGTH,
+      `Prompt is too long (max ${SOUND_PROMPT_MAX_LENGTH} characters)`
+    ),
   options: z
     .object({
-      durationSeconds: z.number().min(SOUND_DURATION_MIN).max(SOUND_DURATION_MAX).optional(),
+      durationSeconds: z
+        .number()
+        .min(SOUND_DURATION_MIN)
+        .max(SOUND_DURATION_MAX)
+        .optional(),
       promptInfluence: z.number().min(0).max(1).optional(),
     })
     .optional(),
@@ -53,7 +60,10 @@ export const generateSoundEffect = actionClient
       const rawDuration = options?.durationSeconds;
       const durationSeconds =
         typeof rawDuration === 'number'
-          ? Math.min(SOUND_DURATION_MAX, Math.max(SOUND_DURATION_MIN, rawDuration))
+          ? Math.min(
+              SOUND_DURATION_MAX,
+              Math.max(SOUND_DURATION_MIN, rawDuration)
+            )
           : SOUND_DURATION_DEFAULT;
       const promptInfluence =
         typeof options?.promptInfluence === 'number'
@@ -81,12 +91,18 @@ export const generateSoundEffect = actionClient
       const generationTime = Date.now() - startTime;
 
       // One-hour presigned URL for immediate playback
-      const presignedUrl = await getPresignedUrl(key, undefined, PRESIGNED_URL_DURATION);
+      const presignedUrl = await getPresignedUrl(
+        key,
+        undefined,
+        PRESIGNED_URL_DURATION
+      );
 
       const generatedSound: GeneratedSound = {
         id: key,
         key,
-        title: prompt.substring(0, TITLE_PREVIEW_LENGTH) + (prompt.length > TITLE_PREVIEW_LENGTH ? '...' : ''),
+        title:
+          prompt.substring(0, TITLE_PREVIEW_LENGTH) +
+          (prompt.length > TITLE_PREVIEW_LENGTH ? '...' : ''),
         url: presignedUrl,
         createdAt: new Date(),
         type: 'generated',

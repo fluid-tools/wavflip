@@ -8,7 +8,11 @@ import type { ReactNode } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { vaultKeys } from '@/hooks/data/keys';
 import { getServerSession } from '@/lib/server/auth';
-import { getUserFolders, getVaultData, getRootProjects } from '@/lib/server/vault';
+import {
+  getRootProjects,
+  getUserFolders,
+  getVaultData,
+} from '@/lib/server/vault';
 
 interface VaultLayoutProps {
   children: ReactNode;

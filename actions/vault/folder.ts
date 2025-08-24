@@ -21,7 +21,7 @@ export const createFolderAction = actionClient
   .schema(createFolderSchema)
   .action(async ({ parsedInput }) => {
     const { name, parentFolderId } = parsedInput;
-    
+
     const session = await requireAuth();
 
     // Handle duplicate names by adding suffix
@@ -55,7 +55,7 @@ export const deleteFolderAction = actionClient
   .schema(deleteFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId } = parsedInput;
-    
+
     const session = await requireAuth();
     const { parentFolderId } = await deleteFolder(folderId, session.user.id);
 
@@ -76,7 +76,7 @@ export const renameFolderAction = actionClient
   .schema(renameFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId, name } = parsedInput;
-    
+
     const session = await requireAuth();
     await renameFolder(folderId, name, session.user.id);
 
@@ -84,7 +84,7 @@ export const renameFolderAction = actionClient
     revalidatePath('/vault');
     revalidatePath(`/vault/folders/${folderId}`);
     revalidatePath('/api/vault/tree');
-    
+
     return { success: true };
   });
 
@@ -92,7 +92,7 @@ export const moveFolderAction = actionClient
   .schema(moveFolderSchema)
   .action(async ({ parsedInput }) => {
     const { folderId, parentFolderId, sourceParentFolderId } = parsedInput;
-    
+
     const session = await requireAuth();
     await moveFolder(folderId, parentFolderId || null, session.user.id);
 
