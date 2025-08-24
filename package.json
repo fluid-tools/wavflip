@@ -2,11 +2,12 @@
   "name": "@wavflip/app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "ultracite:lint": "pnpm dlx ultracite lint",
     "ultracite:format": "pnpm dlx ultracite format",
     "ultracite:format-unsafe": "pnpm dlx ultracite format --unsafe",

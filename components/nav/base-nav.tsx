@@ -2,7 +2,7 @@
 
 import { useAtom } from 'jotai';
 import dynamic from 'next/dynamic';
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   currentTrackAtom,
@@ -53,11 +53,10 @@ const RecentSheet = dynamic(
 
 export function Navbar() {
   const pathname = usePathname();
+  const params = useParams();
   const [currentTrack] = useAtom(currentTrackAtom);
   const [playerState] = useAtom(playerStateAtom);
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom);
-
-  const MIN_PATH_SEGMENTS = 4;
 
   const handlePlaySound = (sound: GeneratedSound) => {
     if (currentTrack?.id === sound.id && playerState === 'playing') {
@@ -67,30 +66,31 @@ export function Navbar() {
     }
   };
 
-  switch (pathname) {
-    case '/vault': {
-      const isFolder =
-        pathname.startsWith('/vault/folders/') &&
-        pathname.split('/').length >= MIN_PATH_SEGMENTS;
-      const folderId = isFolder ? pathname.split('/')[3] : null;
-      return (
-        <div className="flex flex-1 items-center justify-between">
-          <div className="flex flex-1 items-center gap-4">
-            <VaultBreadcrumbs />
-          </div>
-          <div className="flex items-center gap-2">
-            <VaultActions folderId={folderId} />
-          </div>
+  // Vault navigation
+  if (pathname.startsWith('/vault')) {
+    const folderId = params.folderId as string | undefined;
+
+    return (
+      <div className="flex flex-1 items-center justify-between">
+        <div className="flex flex-1 items-center gap-4">
+          <VaultBreadcrumbs />
         </div>
-      );
-    }
-    case '/studio':
-      return (
-        <div className={cn('flex flex-1 items-center justify-end')}>
-          <RecentSheet onPlaySound={handlePlaySound} />
+        <div className="flex items-center gap-2">
+          <VaultActions folderId={folderId} />
         </div>
-      );
-    default:
-      return null;
+      </div>
+    );
   }
+
+  // Studio navigation
+  if (pathname === '/studio') {
+    return (
+      <div className={cn('flex flex-1 items-center justify-end')}>
+        <RecentSheet onPlaySound={handlePlaySound} />
+      </div>
+    );
+  }
+
+  // Default case - render nothing
+  return null;
 }

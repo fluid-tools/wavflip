@@ -2,32 +2,23 @@
 
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { useFolderPath } from '@/hooks/data/use-folder';
 import { useProject } from '@/hooks/data/use-project';
-
-type FolderPathItem = {
-  id: string;
-  name: string;
-  parentFolderId: string | null;
-};
+import type { FolderPathItem } from '@/lib/server/vault/types';
 
 export function VaultBreadcrumbs() {
   const pathname = usePathname();
-  const MIN_PATH_SEGMENTS = 4;
+  const params = useParams();
 
   // Parse the current route for vault breadcrumbs
   const isRoot = pathname === '/vault';
-  const isFolder =
-    pathname.startsWith('/vault/folders/') &&
-    pathname.split('/').length >= MIN_PATH_SEGMENTS;
-  const isProject =
-    pathname.startsWith('/vault/projects/') &&
-    pathname.split('/').length >= MIN_PATH_SEGMENTS;
+  const isFolder = pathname.startsWith('/vault/folders/');
+  const isProject = pathname.startsWith('/vault/projects/');
 
-  // Extract IDs from pathname
-  const folderId = isFolder ? pathname.split('/')[3] : null;
-  const projectId = isProject ? pathname.split('/')[3] : null;
+  // Extract IDs from Next.js params
+  const folderId = isFolder ? (params.folderId as string) : null;
+  const projectId = isProject ? (params.projectId as string) : null;
 
   // Only fetch data when actually needed
   const { data: folderPathData } = useFolderPath(folderId);
