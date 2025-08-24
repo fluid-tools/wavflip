@@ -1,7 +1,7 @@
 'use client';
 
 import { useAtom } from 'jotai';
-import { LogOut, Mic, Music, Search, Settings, Vault } from 'lucide-react';
+import { LogOut, MessageCircle, Mic, Music, Search, Settings, Vault } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -114,12 +114,12 @@ function UserDropdownContent({
 const mainNavItems = [
   {
     title: 'Studio',
-    url: '/studio',
+    url: '/studio' as const,
     icon: Music,
   },
   {
     title: 'Vault',
-    url: '/vault',
+    url: '/vault' as const,
     icon: Vault,
   },
 ];
@@ -128,13 +128,18 @@ const mainNavItems = [
 const quickActions = [
   {
     title: 'Generate Sound',
-    url: '/studio',
+    url: '/studio' as const,
     icon: Mic,
   },
   {
     title: 'Browse Samples',
-    url: '/vault',
+    url: '/vault' as const,
     icon: Search,
+  },
+  {
+    title: 'Send Feedback',
+    url: 'mailto:arth@wavflip.com' as const,
+    icon: MessageCircle,
   },
 ];
 

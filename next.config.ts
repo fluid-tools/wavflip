@@ -62,6 +62,7 @@ const nextConfig = withBotId({
     ],
   },
   skipTrailingSlashRedirect: true,
+  typedRoutes: true,
 });
 
 export default nextConfig;
