@@ -10,8 +10,6 @@ import {
 } from '@/lib/contracts/api/projects';
 import { TrackCreateFormSchema } from '@/lib/contracts/api/tracks';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
-import { ProjectWithTracksSchema } from '@/lib/contracts/project';
-import type { VaultData } from '@/lib/contracts/vault';
 import type { ProjectImageResponse } from '@/lib/server/types/project';
 import { vaultKeys, waveformKeys } from './keys';
 
@@ -108,7 +106,7 @@ export function useProject({
         throw new Error('Failed to get upload URL');
       }
 
-      const { presigned, trackId, key } = await presignedResponse.json();
+      const { presigned, key } = await presignedResponse.json();
 
       // Upload directly to S3 using presigned POST
       const formData = new FormData();
@@ -479,7 +477,7 @@ export function useProject({
 
       toast.error(`Failed to upload image: ${error.message}`);
     },
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data) => {
       if (data.success && data.resourceKey) {
         // First, fetch the presigned URL for the new image
         try {

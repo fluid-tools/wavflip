@@ -109,8 +109,7 @@ export function RecentSheet({ onPlaySound }: RecentSheetProps) {
     try {
       await removeOfflineAsync(sound);
       toast.success('Removed from offline storage');
-    } catch (_error) {
-      // console.error('Failed to remove offline:', error);
+    } catch {
       toast.error('Failed to remove offline');
     } finally {
       setRemovingOffline(null);

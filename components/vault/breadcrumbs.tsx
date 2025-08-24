@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { useFolderPath } from '@/hooks/data/use-folder';
 import { useProject } from '@/hooks/data/use-project';
-import type { FolderPathItem } from '@/lib/server/vault/types';
+import type { BreadcrumbItem } from '@/lib/server/vault/types';
 
 export function VaultBreadcrumbs() {
   const pathname = usePathname();
@@ -52,7 +52,7 @@ export function VaultBreadcrumbs() {
         <Link className="hover:text-foreground" href="/vault">
           Vault
         </Link>
-        {folderPath.map((folder: FolderPathItem, index: number) => (
+        {folderPath.map((folder: BreadcrumbItem, index: number) => (
           <div className="flex items-center gap-2" key={folder.id}>
             <ChevronRight className="h-3 w-3" />
             {index === folderPath.length - 1 ? (
@@ -81,14 +81,14 @@ export function VaultBreadcrumbs() {
           Vault
         </Link>
         {/* Show full folder path */}
-        {folderPath.map((folder: FolderPathItem, _index: number) => (
-          <div className="flex items-center gap-2" key={folder.id}>
+        {folderPath.map((_folder: BreadcrumbItem) => (
+          <div className="flex items-center gap-2" key={_folder.id}>
             <ChevronRight className="h-3 w-3" />
             <Link
               className="hover:text-foreground"
-              href={`/vault/folders/${folder.id}`}
+              href={`/vault/folders/${_folder.id}`}
             >
-              {folder.name}
+              {_folder.name}
             </Link>
           </div>
         ))}
