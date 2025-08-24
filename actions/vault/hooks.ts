@@ -29,7 +29,9 @@ export function useCreateFolderAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -46,7 +48,9 @@ export function useDeleteFolderAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -63,7 +67,9 @@ export function useRenameFolderAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -80,7 +86,9 @@ export function useMoveFolderAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -98,7 +106,9 @@ export function useCreateProjectAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -115,7 +125,9 @@ export function useDeleteProjectAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -132,7 +144,9 @@ export function useRenameProjectAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -149,7 +163,9 @@ export function useMoveProjectAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });
@@ -166,7 +182,9 @@ export function useCombineProjectsAction() {
     },
     onError: ({ error }) => {
       const message =
-        typeof error.serverError === 'string' ? error.serverError : 'An error occurred';
+        typeof error.serverError === 'string'
+          ? error.serverError
+          : 'An error occurred';
       toast.error(message);
     },
   });

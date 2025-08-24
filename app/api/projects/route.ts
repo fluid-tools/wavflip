@@ -12,7 +12,6 @@ import {
   handleDuplicateProjectName,
 } from '@/lib/server/vault';
 
-
 export async function GET() {
   try {
     const session = await requireAuth();

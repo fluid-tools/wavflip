@@ -7,7 +7,11 @@ const compat = new FlatCompat({
 const eslintConfig = [
   // Per Next.js docs: extend from the Next.js plugin directly
   ...compat.config({
-    extends: ['plugin:@next/next/recommended', 'next/typescript', 'next/core-web-vitals'],
+    extends: [
+      'plugin:@next/next/recommended',
+      'next/typescript',
+      'next/core-web-vitals',
+    ],
     settings: {
       next: {
         rootDir: '.',
@@ -29,4 +33,3 @@ const eslintConfig = [
 ];
 
 export default eslintConfig;
-
