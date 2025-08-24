@@ -6,7 +6,10 @@ import {
   FoldersListResponseSchema,
 } from '@/lib/contracts/api/folders';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
-import type { VaultData } from '@/lib/contracts/vault';
+import { useVaultTree } from '@/hooks/data/use-vault';
+import { BreadcrumbItemSchema } from '@/lib/contracts/vault';
+import type { BreadcrumbItem, VaultFolder } from '@/lib/contracts/vault';
+import { z } from 'zod';
 import { vaultKeys } from './keys';
 
 // ================================
@@ -47,22 +50,42 @@ export function useRootFolders() {
 // FOLDER PATH HOOK
 // ================================
 
-interface FolderPathItem {
-  id: string;
-  name: string;
-  parentFolderId: string | null;
-}
-
 export function useFolderPath(folderId: string | null) {
+  const { data: vaultData } = useVaultTree({ levels: false });
+
   return useQuery({
-    queryKey: [...vaultKeys.folder(folderId!), 'path'],
-    queryFn: async (): Promise<{ path: FolderPathItem[] } | null> => {
-      if (!folderId) return null;
-      const response = await fetch(`/api/folders/${folderId}/path`);
-      if (!response.ok) throw new Error('Failed to fetch folder path');
-      return response.json();
+    // Tie invalidation to the tree cache so this re-computes when tree is invalidated
+    queryKey: [...vaultKeys.tree(), 'path', folderId],
+    queryFn: async (): Promise<{ path: BreadcrumbItem[] } | null> => {
+      if (!folderId || !vaultData) return null;
+
+      // DFS to find path to target folder
+      const findPath = (
+        folders: VaultFolder[],
+        targetId: string,
+        acc: BreadcrumbItem[] = []
+      ): BreadcrumbItem[] | null => {
+        for (const f of folders) {
+          const current: BreadcrumbItem = {
+            id: f.id,
+            name: f.name,
+            parentFolderId: f.parentFolderId,
+          };
+          if (f.id === targetId) return [...acc, current];
+          if (f.subfolders && f.subfolders.length > 0) {
+            const found = findPath(f.subfolders, targetId, [...acc, current]);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const path = findPath(vaultData.folders, folderId) ?? [];
+      // Validate derived structure for consistency
+      const validated = z.array(BreadcrumbItemSchema).parse(path);
+      return { path: validated };
     },
-    enabled: !!folderId,
+    enabled: !!folderId && !!vaultData,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });

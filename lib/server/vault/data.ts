@@ -236,25 +236,6 @@ async function getFolderPath(
 //   }
 // }
 
-// ================================
-// CONVENIENCE FUNCTIONS
-// ================================
-
-// For folder views with breadcrumbs
-export async function getFolderData(
-  folderId: string,
-  userId: string
-): Promise<VaultData> {
-  return getVaultData(userId, {
-    includeHierarchy: false,
-    includePath: true,
-    specificFolderId: folderId,
-  });
-}
-// ================================
-// DATA FETCHING OPERATIONS
-// ================================
-
 export async function getUserFolders(
   userId: string
 ): Promise<FolderWithProjects[]> {
