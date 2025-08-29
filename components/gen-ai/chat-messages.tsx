@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { GeneratedSound } from '@/types/generations';
 import { ChatMessage } from './chat-message';
 
-interface ChatMessage {
+type ChatMessageT = {
   id: string;
   type: 'user' | 'assistant' | 'system';
   content?: string;
@@ -15,15 +15,15 @@ interface ChatMessage {
   timestamp: Date;
   isGenerating?: boolean;
   etaSeconds?: number;
-}
+};
 
-interface ChatMessagesProps {
-  messages: ChatMessage[];
+type ChatMessagesProps = {
+  messages: ChatMessageT[];
   onPlaySound: (sound: GeneratedSound) => void;
   onDeleteSound: (soundId: string) => void;
   onCopyUrl: (url: string) => void;
   className?: string;
-}
+};
 
 export function ChatMessages({
   messages,
@@ -40,7 +40,7 @@ export function ChatMessages({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [scrollToBottom]);
 
   return (
     <div className={cn('relative min-h-0 flex-1', className)}>
@@ -51,10 +51,10 @@ export function ChatMessages({
             className="absolute select-none font-medium text-muted-foreground/8 text-sm"
             key={index}
             style={{
-              top: `${15 + ((index * 37) % 70)}%`,
-              left: `${10 + ((index * 43) % 80)}%`,
-              transform: `rotate(${-20 + ((index * 15) % 40)}deg)`,
-              fontSize: `${12 + (index % 4) * 2}px`,
+              top: `${15 + ((index * 37) % 70)}%`, // eslint-disable-line
+              left: `${10 + ((index * 43) % 80)}%`, // eslint-disable-line
+              transform: `rotate(${-20 + ((index * 15) % 40)}deg)`, // eslint-disable-line
+              fontSize: `${12 + (index % 4) * 2}px`, // eslint-disable-line
             }}
           >
             {promptText}
