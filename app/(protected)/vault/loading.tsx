@@ -6,8 +6,8 @@ export default function VaultLoading() {
     <div className="w-full space-y-6 p-6">
       {/* Stats cards skeleton */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
+        {[new Array(4)].map((_, i) => (
+          <Card key={i.toString()}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <Skeleton className="h-4 w-16" />
               <Skeleton className="h-4 w-4" />
@@ -27,10 +27,10 @@ export default function VaultLoading() {
 
       {/* Grid skeleton */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {[...Array(12)].map((_, i) => (
+        {[new Array(12)].map((_, i) => (
           <div
             className="aspect-[4/5] w-full max-w-40 overflow-hidden rounded-lg border bg-muted"
-            key={i}
+            key={i.toString()}
           >
             <Skeleton className="h-40 w-full" />
             <div className="px-2 pt-1 pb-2">
