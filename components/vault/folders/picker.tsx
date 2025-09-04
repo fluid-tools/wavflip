@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useVaultTree } from '@/hooks/data/use-vault';
 import { cn } from '@/lib/utils';
 
-interface HierarchicalFolder {
+type HierarchicalFolder = {
   id: string;
   name: string;
   parentFolderId: string | null;
@@ -20,19 +20,19 @@ interface HierarchicalFolder {
   projectCount: number;
   subFolderCount: number;
   level: number;
-}
+};
 
-interface FolderNode extends HierarchicalFolder {
+type FolderNode = HierarchicalFolder & {
   isExpanded?: boolean;
-}
+};
 
-interface FolderPickerProps {
+type FolderPickerProps = {
   selectedFolderId: string | null;
   onFolderSelect: (folderId: string | null) => void;
   excludeFolderId?: string; // Folder to exclude from selection (e.g., the item being moved)
   allowVaultSelection?: boolean; // Whether to allow selecting vault (root) as destination
   className?: string;
-}
+};
 
 export function FolderPicker({
   selectedFolderId,
@@ -41,6 +41,8 @@ export function FolderPicker({
   allowVaultSelection = true,
   className,
 }: FolderPickerProps) {
+  const FOLDER_INDENT_PX = 16;
+
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set()
   );
@@ -122,7 +124,7 @@ export function FolderPicker({
                 <div className="flex w-full items-center">
                   <div
                     className="flex items-center"
-                    style={{ paddingLeft: `${folder.level * 16}px` }}
+                    style={{ paddingLeft: `${folder.level * FOLDER_INDENT_PX}px` }}
                   >
                     {/* Expand/collapse button for folders with subfolders */}
                     {hasSubfolders(folder) ? (

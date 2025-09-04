@@ -4,6 +4,19 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type VaultData, VaultDataSchema } from '@/lib/contracts/vault';
 import { vaultKeys } from './keys';
 
+// Base numeric units
+const SECOND_MS = 1000;
+const MINUTE = 60;
+const FIVE = 5;
+const THIRTY = 30;
+const KIB = 1024;
+
+// Shared constants
+const FIVE_MINUTES_MS = FIVE * MINUTE * SECOND_MS;
+const THIRTY_SECONDS_MS = THIRTY * SECOND_MS;
+const ONE_MB = KIB * KIB;
+const PERCENT_SCALE = 100;
+
 // ================================
 // TREE HOOKS (VAULT)
 // ================================
@@ -20,18 +33,25 @@ export function useVaultTree(opts?: {
       { levels, excludeId: excludeId ?? null, stats },
     ],
     queryFn: async (): Promise<VaultData> => {
-      const url = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL);
-      url.searchParams.set('levels', String(!!levels));
-      if (excludeId) url.searchParams.set('exclude', excludeId);
-      if (stats) url.searchParams.set('stats', 'true');
-      const response = await fetch(url.toString(), {
+      const u = new URL('/api/vault/tree', process.env.NEXT_PUBLIC_BASE_URL);
+      u.searchParams.set('levels', String(!!levels));
+      if (excludeId) {
+        u.searchParams.set('exclude', excludeId);
+      }
+      if (stats) {
+        u.searchParams.set('stats', 'true');
+      }
+
+      const response = await fetch(u.toString(), {
         headers: { Accept: 'application/json' },
       });
-      if (!response.ok) throw new Error('Failed to fetch vault tree');
+      if (!response.ok) {
+        throw new Error('Failed to fetch vault tree');
+      }
       const json = await response.json();
       return VaultDataSchema.parse(json);
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: FIVE_MINUTES_MS,
     refetchOnWindowFocus: false,
   });
 }
@@ -65,7 +85,7 @@ export function useVaultInvalidation() {
 // STORAGE HOOK
 // ================================
 
-interface StorageInfo {
+type StorageInfo = {
   usage: number;
   quota: number;
   usagePercentage: number;
@@ -76,7 +96,7 @@ interface StorageInfo {
     caches?: number;
     serviceWorker?: number;
   };
-}
+};
 
 export function useStorageEstimate() {
   return useQuery({
@@ -94,9 +114,9 @@ export function useStorageEstimate() {
         return {
           usage,
           quota,
-          usagePercentage: quota > 0 ? (usage / quota) * 100 : 0,
-          usageMB: usage / (1024 * 1024),
-          quotaMB: quota / (1024 * 1024),
+          usagePercentage: quota > 0 ? (usage / quota) * PERCENT_SCALE : 0,
+          usageMB: usage / ONE_MB,
+          quotaMB: quota / ONE_MB,
           usageDetails:
             'usageDetails' in estimate
               ? (
@@ -106,13 +126,12 @@ export function useStorageEstimate() {
                 ).usageDetails
               : undefined,
         };
-      } catch (error) {
-        console.error('Failed to estimate storage:', error);
+      } catch {
         return null;
       }
     },
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 30 * 1000, // Auto-refetch every 30 seconds
+    staleTime: THIRTY_SECONDS_MS,
+    refetchInterval: THIRTY_SECONDS_MS,
     refetchOnWindowFocus: true,
   });
 }
