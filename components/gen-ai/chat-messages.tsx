@@ -40,7 +40,7 @@ export function ChatMessages({
 
   useEffect(() => {
     scrollToBottom();
-  }, [scrollToBottom]);
+  });
 
   return (
     <div className={cn('relative min-h-0 flex-1', className)}>
@@ -49,7 +49,7 @@ export function ChatMessages({
         {MUSIC_PROMPTS.map((promptText, index) => (
           <div
             className="absolute select-none font-medium text-muted-foreground/8 text-sm"
-            key={index}
+            key={index.toString()}
             style={{
               top: `${15 + ((index * 37) % 70)}%`, // eslint-disable-line
               left: `${10 + ((index * 43) % 80)}%`, // eslint-disable-line
