@@ -39,9 +39,9 @@ import {
   useSession,
 } from '@/lib/auth-client';
 
-interface SettingsDialogProps {
+type SettingsDialogProps = {
   children?: React.ReactNode;
-}
+};
 
 export default function SettingsDialog({ children }: SettingsDialogProps) {
   const { data: session } = useSession();
@@ -63,17 +63,18 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
   };
 
   const handleResendVerification = async () => {
-    if (!session?.user.email) return;
+    if (!session?.user.email) {
+      return;
+    }
 
     setIsResending(true);
     try {
       await sendVerificationEmail({
         email: session.user.email,
-        callbackURL: process.env.NEXT_PUBLIC_BASE_URL + '/vault',
+        callbackURL: `${process.env.NEXT_PUBLIC_BASE_URL}/vault`,
       });
       toast.success('Verification email sent! Check your inbox.');
-    } catch (error) {
-      console.error('Failed to send verification email:', error);
+    } catch (_error) {
       toast.error('Failed to send verification email. Please try again.');
     } finally {
       setIsResending(false);
@@ -81,19 +82,20 @@ export default function SettingsDialog({ children }: SettingsDialogProps) {
   };
 
   const handleChangePassword = async () => {
-    if (!session?.user.email) return;
+    if (!session?.user.email) {
+      return;
+    }
 
     setIsRequestingPasswordReset(true);
     try {
       await requestPasswordReset({
         email: session.user.email,
-        redirectTo: process.env.NEXT_PUBLIC_BASE_URL + '/reset-password',
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`,
       });
       toast.success(
         'Password reset email sent! Check your inbox to change your password.'
       );
-    } catch (error) {
-      console.error('Failed to send password reset email:', error);
+    } catch (_error) {
       toast.error('Failed to send password reset email. Please try again.');
     } finally {
       setIsRequestingPasswordReset(false);

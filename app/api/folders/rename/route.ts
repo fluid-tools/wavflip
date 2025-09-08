@@ -20,7 +20,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to rename folder:', error);
     return NextResponse.json(
       {
         error:

@@ -163,7 +163,9 @@ export default function VaultPage() {
   const renderItem = useCallback(
     (index: number) => {
       const item = vaultItems[index];
-      if (!item) return null;
+      if (!item) {
+        return null;
+      }
 
       // Use stable atom value for O(1) lookup - no function recreation
       const isSelected = selectedItemsSet.has(item.data.id);

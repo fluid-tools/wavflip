@@ -38,7 +38,11 @@ const MIN_SOUND_DURATION_SECONDS = 2;
 const DEFAULT_SOUND_DURATION_SECONDS = 8;
 
 // Custom hook for managing progress calculation
-function useProgressCalculation(isGenerating: boolean, startedAt?: Date, etaSeconds?: number) {
+function useProgressCalculation(
+  isGenerating: boolean,
+  startedAt?: Date,
+  etaSeconds?: number
+) {
   const PROGRESS_UPDATE_INTERVAL_MS = 200;
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
@@ -46,7 +50,10 @@ function useProgressCalculation(isGenerating: boolean, startedAt?: Date, etaSeco
     if (!isGenerating) {
       return;
     }
-    const id = setInterval(() => setNowMs(Date.now()), PROGRESS_UPDATE_INTERVAL_MS);
+    const id = setInterval(
+      () => setNowMs(Date.now()),
+      PROGRESS_UPDATE_INTERVAL_MS
+    );
     return () => clearInterval(id);
   }, [isGenerating]);
 
@@ -54,9 +61,12 @@ function useProgressCalculation(isGenerating: boolean, startedAt?: Date, etaSeco
   const remaining =
     startedAt && etaSeconds
       ? Math.max(
-        1,
-        Math.ceil(etaSeconds - (nowMs - new Date(startedAt).getTime()) / MILLISECONDS_TO_SECONDS)
-      )
+          1,
+          Math.ceil(
+            etaSeconds -
+              (nowMs - new Date(startedAt).getTime()) / MILLISECONDS_TO_SECONDS
+          )
+        )
       : undefined;
 
   return { percent, remaining };
@@ -73,7 +83,8 @@ function computeDeterministicProgress(
     return 0;
   }
   const now = typeof nowMs === 'number' ? nowMs : Date.now();
-  const elapsed = (now - new Date(startedAt).getTime()) / MILLISECONDS_TO_SECONDS;
+  const elapsed =
+    (now - new Date(startedAt).getTime()) / MILLISECONDS_TO_SECONDS;
   const pct = Math.max(0, Math.min(1, elapsed / etaSeconds));
   return Math.round(pct * PERCENTAGE_MULTIPLIER);
 }
@@ -112,11 +123,17 @@ export function ChatMessage({
   const isMobile = useIsMobile();
   const WAVEFORM_HEIGHT_MOBILE = 32;
   const WAVEFORM_HEIGHT_DESKTOP = 48;
-  const waveformHeight = isMobile ? WAVEFORM_HEIGHT_MOBILE : WAVEFORM_HEIGHT_DESKTOP;
+  const waveformHeight = isMobile
+    ? WAVEFORM_HEIGHT_MOBILE
+    : WAVEFORM_HEIGHT_DESKTOP;
 
-  const { percent, remaining } = useProgressCalculation(isGenerating, startedAt, etaSeconds);
+  const { percent, remaining } = useProgressCalculation(
+    isGenerating,
+    startedAt,
+    etaSeconds
+  );
 
-  const renderMessageContent = () => (
+  const renderMessageContent = () =>
     content && (
       <div
         className={cn(
@@ -152,11 +169,11 @@ export function ChatMessage({
           </div>
         )}
       </div>
-    )
-  );
+    );
 
-  const renderGeneratingSkeleton = () => (
-    isGenerating && !sound && (
+  const renderGeneratingSkeleton = () =>
+    isGenerating &&
+    !sound && (
       <div className="mt-3 flex w-full max-w-md flex-col gap-4 rounded-2xl border border-border bg-card py-3 sm:gap-6">
         <div className="flex items-center justify-between gap-2 px-3">
           <h4 className="truncate font-medium font-mono text-xs tracking-tight opacity-75">
@@ -169,7 +186,9 @@ export function ChatMessage({
         <div className="border border-border bg-muted">
           <WaveformPreview
             approxDuration={
-              typeof etaSeconds === 'number' ? Math.max(MIN_SOUND_DURATION_SECONDS, etaSeconds) : DEFAULT_SOUND_DURATION_SECONDS
+              typeof etaSeconds === 'number'
+                ? Math.max(MIN_SOUND_DURATION_SECONDS, etaSeconds)
+                : DEFAULT_SOUND_DURATION_SECONDS
             }
             height={waveformHeight}
             url={'about:blank'}
@@ -182,8 +201,7 @@ export function ChatMessage({
           </div>
         </div>
       </div>
-    )
-  );
+    );
 
   const renderMenuItems = () => {
     const playPauseItem = (

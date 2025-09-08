@@ -48,9 +48,9 @@ import type { TrackWithVersions } from '@/lib/contracts/track';
 import { playerControlsAtom } from '@/state/audio-atoms';
 import type { AudioTrack } from '@/types/audio';
 
-interface ProjectViewProps {
+type ProjectViewProps = {
   projectId: string;
-}
+};
 
 export function ProjectView({ projectId }: ProjectViewProps) {
   const {
@@ -89,7 +89,9 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   const [, dispatchPlayerAction] = useAtom(playerControlsAtom);
 
   // project will now be reactive to mutations thanks to placeholderData
-  if (!project) return null;
+  if (!project) {
+    return null;
+  }
 
   const totalDuration = (project.tracks || []).reduce(
     (sum: number, track: TrackWithVersions) => {
@@ -110,14 +112,16 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   };
 
   const handlePlayAll = () => {
-    if (!project.tracks || project.tracks.length === 0) return;
+    if (!project.tracks || project.tracks.length === 0) {
+      return;
+    }
 
     // Convert tracks to AudioTrack format with presigned URLs
     const audioTracks: AudioTrack[] = project.tracks
       .filter((track) => track.activeVersion && urlMap.get(track.id))
       .map((track) => ({
         id: track.id,
-        key: track.activeVersion!.fileKey,
+        key: track.activeVersion?.fileKey,
         title: track.name,
         url: urlMap.get(track.id)!,
         duration: track.activeVersion?.duration || undefined,
@@ -153,7 +157,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
       .filter((track) => track.activeVersion && urlMap.get(track.id))
       .map((track) => ({
         id: track.id,
-        key: track.activeVersion!.fileKey,
+        key: track.activeVersion?.fileKey,
         title: track.name,
         url: urlMap.get(track.id)!,
         duration: track.activeVersion?.duration || undefined,
@@ -237,7 +241,9 @@ export function ProjectView({ projectId }: ProjectViewProps) {
       }}
       onDragOver={(e) => {
         e.preventDefault();
-        if (!isUploading) setIsDragOver(true);
+        if (!isUploading) {
+          setIsDragOver(true);
+        }
       }}
       onDrop={handleFileDrop}
       ref={dropZoneRef}

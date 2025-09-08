@@ -16,14 +16,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-interface CreateFolderDialogProps {
+type CreateFolderDialogProps = {
   parentFolderId?: string | null;
   triggerText?: string;
   onSuccess?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   selectedItems?: Array<{ id: string; type: 'folder' | 'project' }>;
-}
+};
 
 export function CreateFolderDialog({
   parentFolderId = null,

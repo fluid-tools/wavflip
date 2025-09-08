@@ -8,11 +8,11 @@ import { FolderView } from '@/app/(protected)/vault/folders/[folderId]/client';
 import { getServerSession } from '@/lib/server/auth';
 import { getFolderWithContents } from '@/lib/server/vault';
 
-interface FolderPageProps {
+type FolderPageProps = {
   params: Promise<{
     folderId: string;
   }>;
-}
+};
 
 export default async function FolderPage({ params }: FolderPageProps) {
   // Parallelize session check and params extraction for better performance
@@ -21,7 +21,9 @@ export default async function FolderPage({ params }: FolderPageProps) {
     params,
   ]);
 
-  if (!(folderId && session?.user?.id)) redirect('/sign-in');
+  if (!(folderId && session?.user?.id)) {
+    redirect('/sign-in');
+  }
 
   const queryClient = new QueryClient();
 
@@ -33,7 +35,9 @@ export default async function FolderPage({ params }: FolderPageProps) {
 
   const folder = queryClient.getQueryData(['vault', 'folders', folderId]);
 
-  if (!folder) notFound();
+  if (!folder) {
+    notFound();
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

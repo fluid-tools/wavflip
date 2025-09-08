@@ -67,7 +67,9 @@ export default function PlayerDock() {
     const container = isMobile
       ? mobileWaveformRef.current
       : desktopWaveformRef.current;
-    if (!(container && currentTrack)) return;
+    if (!(container && currentTrack)) {
+      return;
+    }
 
     // Store current playback state before destroying
     const wasPlaying = wavesurferRef.current?.isPlaying();
@@ -77,9 +79,7 @@ export default function PlayerDock() {
     if (wavesurferRef.current) {
       try {
         wavesurferRef.current.pause();
-      } catch (error) {
-        console.warn('Error pausing previous WaveSurfer instance:', error);
-      }
+      } catch (_error) {}
       wavesurferRef.current.destroy();
       wavesurferRef.current = null;
     }
@@ -170,9 +170,8 @@ export default function PlayerDock() {
             setIsActuallyPlaying(true);
           };
           const handleError = async () => {
-            const err: MediaError | null =
+            const _err: MediaError | null =
               (media && (media as HTMLMediaElement).error) || null;
-            console.error('MediaElement error', err);
             setIsActuallyPlaying(false);
             // Fallback chain:
             // 1) If blob failed and we have a key, load from OPFS again to refresh blob URL
@@ -207,7 +206,7 @@ export default function PlayerDock() {
           media.addEventListener('playing', handlePlaying);
           media.addEventListener('ended', handleEnded);
           media.addEventListener('loadedmetadata', () => {
-            const metaDuration = media!.duration;
+            const metaDuration = media?.duration;
             if (metaDuration && !knownDuration) {
               dispatchPlayerAction({
                 type: 'SET_DURATION',
@@ -299,14 +298,10 @@ export default function PlayerDock() {
           setIsActuallyPlaying(false);
           dispatchPlayerAction({ type: 'STOP' });
         });
-        wavesurfer.on('error', (error: unknown) => {
-          console.error('WaveSurfer error:', error);
-        });
+        wavesurfer.on('error', (_error: unknown) => {});
         // Set initial volume
         wavesurfer.setVolume(muted ? 0 : volume);
-      } catch (e) {
-        console.error('Error initializing WaveSurfer:', e);
-      }
+      } catch (_e) {}
     };
     loadWaveform();
 
@@ -314,9 +309,7 @@ export default function PlayerDock() {
       if (wavesurferRef.current) {
         try {
           wavesurferRef.current.pause();
-        } catch (error) {
-          console.warn('Error pausing WaveSurfer during cleanup:', error);
-        }
+        } catch (_error) {}
         wavesurferRef.current.destroy();
         wavesurferRef.current = null;
       }
@@ -330,12 +323,24 @@ export default function PlayerDock() {
       } catch {}
       setIsBuffering(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTrack, dispatchPlayerAction, isMobile]);
+     
+  }, [
+    currentTrack,
+    dispatchPlayerAction,
+    isMobile,
+    autoPlay,
+    muted,
+    setAutoPlay,
+    setIsBuffering,
+    volume,
+    wf.data,
+  ]);
 
   // Handle auto-play separately to avoid race conditions
   useEffect(() => {
-    if (!(wavesurferRef.current && autoPlay)) return;
+    if (!(wavesurferRef.current && autoPlay)) {
+      return;
+    }
 
     const wavesurfer = wavesurferRef.current;
 
@@ -348,13 +353,17 @@ export default function PlayerDock() {
 
   // Sync volume changes
   useEffect(() => {
-    if (!wavesurferRef.current) return;
+    if (!wavesurferRef.current) {
+      return;
+    }
     wavesurferRef.current.setVolume(muted ? 0 : volume);
   }, [volume, muted]);
 
   // Handle play state changes
   useEffect(() => {
-    if (!(wavesurferRef.current && currentTrack)) return;
+    if (!(wavesurferRef.current && currentTrack)) {
+      return;
+    }
 
     if (playerState === 'playing' && wavesurferRef.current.getDuration() > 0) {
       wavesurferRef.current.play();
@@ -364,12 +373,13 @@ export default function PlayerDock() {
   }, [playerState, currentTrack]);
 
   const handlePlayPause = () => {
-    if (!wavesurferRef.current) return;
+    if (!wavesurferRef.current) {
+      return;
+    }
 
     try {
       wavesurferRef.current.playPause();
-    } catch (error) {
-      console.error('Playback error:', error);
+    } catch (_error) {
       dispatchPlayerAction({ type: 'ERROR' });
     }
   };
@@ -383,7 +393,9 @@ export default function PlayerDock() {
   };
 
   const handleSaveOffline = async () => {
-    if (!currentTrack) return;
+    if (!currentTrack) {
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -391,8 +403,7 @@ export default function PlayerDock() {
       toast.success('Track saved offline!');
       // Refresh storage estimate
       queryClient.invalidateQueries({ queryKey: vaultKeys.storage() });
-    } catch (error) {
-      console.error('Failed to save track:', error);
+    } catch (_error) {
       toast.error('Failed to save track to vault');
     } finally {
       setIsSaving(false);

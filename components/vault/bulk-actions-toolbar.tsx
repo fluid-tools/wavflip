@@ -22,10 +22,10 @@ import { CreateFolderDialog } from '@/components/vault/folders/create-dialog';
 import { FolderPicker } from '@/components/vault/folders/picker';
 import { useVaultSelection } from '@/hooks/vault/use-vault-selection';
 
-interface BulkActionsToolbarProps {
+type BulkActionsToolbarProps = {
   vaultItems: Array<{ id: string; type: 'folder' | 'project'; name: string }>;
   parentFolderId?: string | null;
-}
+};
 
 export function BulkActionsToolbar({
   vaultItems,
@@ -97,7 +97,9 @@ export function BulkActionsToolbar({
 
   const confirmBulkMove = () => {
     // Don't proceed if no destination has been selected yet
-    if (!hasSelectedDestination) return;
+    if (!hasSelectedDestination) {
+      return;
+    }
 
     // Process items using the proper action hooks with startTransition
     startTransition(() => {

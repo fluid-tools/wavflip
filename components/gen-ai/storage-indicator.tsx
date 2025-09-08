@@ -15,25 +15,37 @@ export function StorageIndicator({ className }: { className?: string }) {
     let cancelled = false;
     const compute = async () => {
       try {
-        if (!storageInfo) return;
+        if (!storageInfo) {
+          return;
+        }
         if (!mediaStore.isOPFSEnabled()) {
-          if (!cancelled) setUsedMB(storageInfo.usageMB);
+          if (!cancelled) {
+            setUsedMB(storageInfo.usageMB);
+          }
           return;
         }
         // Try to read our IDB index of offline tracks to estimate OPFS size precisely
         const { get } = await import('idb-keyval');
         const ids: string[] = (await get('wavflip-vault-index')) || [];
         if (ids.length === 0) {
-          if (!cancelled) setUsedMB(0);
+          if (!cancelled) {
+            setUsedMB(0);
+          }
           return;
         }
         const total = await mediaStore.sizeByKeys(ids);
-        if (!cancelled) setUsedMB(total / (1024 * 1024));
+        if (!cancelled) {
+          setUsedMB(total / (1024 * 1024));
+        }
       } catch {
-        if (!cancelled && storageInfo) setUsedMB(storageInfo.usageMB);
+        if (!cancelled && storageInfo) {
+          setUsedMB(storageInfo.usageMB);
+        }
       }
     };
-    if (storageInfo && !isLoading) void compute();
+    if (storageInfo && !isLoading) {
+      void compute();
+    }
     return () => {
       cancelled = true;
     };
@@ -56,9 +68,15 @@ export function StorageIndicator({ className }: { className?: string }) {
 
   // Determine color based on usage
   const getProgressColor = () => {
-    if (usagePercentage > 90) return 'bg-red-500';
-    if (usagePercentage > 70) return 'bg-orange-500';
-    if (usagePercentage > 50) return 'bg-yellow-500';
+    if (usagePercentage > 90) {
+      return 'bg-red-500';
+    }
+    if (usagePercentage > 70) {
+      return 'bg-orange-500';
+    }
+    if (usagePercentage > 50) {
+      return 'bg-yellow-500';
+    }
     return 'bg-green-500';
   };
 

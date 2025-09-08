@@ -26,7 +26,6 @@ export async function GET(
 
     return NextResponse.json(ProjectGetResponseSchema.parse(project));
   } catch (error) {
-    console.error('Failed to fetch project:', error);
     return NextResponse.json(
       {
         error:

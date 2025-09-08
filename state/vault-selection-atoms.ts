@@ -2,11 +2,11 @@
 
 import { atom } from 'jotai';
 
-export interface VaultItem {
+export type VaultItem = {
   id: string;
   type: 'folder' | 'project';
   name: string;
-}
+};
 
 export const selectedItemsAtom = atom<Set<string>>(new Set<string>());
 

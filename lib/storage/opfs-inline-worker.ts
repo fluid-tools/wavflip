@@ -1,7 +1,9 @@
 // Worker code is created as a Blob URL. Keep this file typed and simple.
 
 export function isWebKit(): boolean {
-  if (typeof navigator === 'undefined') return false;
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
   const ua = navigator.userAgent;
   const isSafari =
     /Safari\//.test(ua) && !/Chrome\//.test(ua) && !/Chromium\//.test(ua);

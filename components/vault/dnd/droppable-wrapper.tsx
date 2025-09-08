@@ -5,7 +5,7 @@ import { forwardRef, memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { DropData, ItemType } from './types';
 
-interface DroppableWrapperProps {
+type DroppableWrapperProps = {
   id: string;
   data: DropData;
   children: React.ReactNode;
@@ -14,7 +14,7 @@ interface DroppableWrapperProps {
   accepts?: ItemType[];
   highlightOnHover?: boolean;
   applyRoundedCorners?: boolean;
-}
+};
 
 export const DroppableWrapper = memo(
   forwardRef<HTMLDivElement, DroppableWrapperProps>(function DroppableWrapper(
@@ -53,8 +53,11 @@ export const DroppableWrapper = memo(
         ref={(node) => {
           setNodeRef(node);
           if (ref) {
-            if (typeof ref === 'function') ref(node);
-            else ref.current = node;
+            if (typeof ref === 'function') {
+              ref(node);
+            } else {
+              ref.current = node;
+            }
           }
         }}
       >

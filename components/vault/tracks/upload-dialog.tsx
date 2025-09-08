@@ -18,16 +18,16 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { useProject } from '@/hooks/data/use-project';
 
-interface UploadTrackDialogProps {
+type UploadTrackDialogProps = {
   projectId: string;
   triggerText?: string;
-}
+};
 
-interface UploadProgress {
+type UploadProgress = {
   loaded: number;
   total: number;
   percentage: number;
-}
+};
 
 export function UploadTrackDialog({
   projectId,
@@ -151,8 +151,7 @@ export function UploadTrackDialog({
 
       setOpen(false);
       resetForm();
-    } catch (error) {
-      console.error('Upload failed:', error);
+    } catch (_error) {
       // Error handling is done in the hook
     }
   };
@@ -219,7 +218,9 @@ export function UploadTrackDialog({
                   name="file"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) handleFileSelect(file);
+                    if (file) {
+                      handleFileSelect(file);
+                    }
                   }}
                   ref={fileInputRef}
                   type="file"

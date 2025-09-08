@@ -23,7 +23,7 @@ import { useAutoResizeTextarea } from '@/hooks/use-auto-resize-textarea';
 import { MUSIC_PROMPTS } from '@/lib/constants/prompts';
 import { cn } from '@/lib/utils';
 
-interface InputAreaProps {
+type InputAreaProps = {
   prompt: string;
   setPrompt: (prompt: string) => void;
   isTTSMode: boolean;
@@ -32,7 +32,7 @@ interface InputAreaProps {
   onGenerate: () => void;
   className?: string;
   extraControls?: ReactNode;
-}
+};
 
 export function InputArea({
   prompt,

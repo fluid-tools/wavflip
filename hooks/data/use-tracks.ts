@@ -5,9 +5,9 @@ import { toast } from 'sonner';
 import type { ProjectWithTracks } from '@/lib/contracts/project';
 import { vaultKeys } from './keys';
 
-interface UseTracksProps {
+type UseTracksProps = {
   projectId: string;
-}
+};
 
 export type TrackFromProject = NonNullable<ProjectWithTracks['tracks']>[number];
 

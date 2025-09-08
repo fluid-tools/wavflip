@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 
 // todo: isplaceholder usage missing. display a badge along with the waveform if it is placeholder.
 
-interface WaveformPreviewProps {
+type WaveformPreviewProps = {
   url: string;
   trackKey?: string;
   height?: number;
@@ -22,7 +22,7 @@ interface WaveformPreviewProps {
   onReady?: (wavesurfer: WaveSurfer) => void;
   onTimeUpdate?: (time: number) => void;
   approxDuration?: number;
-}
+};
 
 export function WaveformPreview({
   url,
@@ -39,7 +39,9 @@ export function WaveformPreview({
   const waveform = useWaveform(trackKey);
 
   useEffect(() => {
-    if (!waveformRef.current) return;
+    if (!waveformRef.current) {
+      return;
+    }
 
     // Clean up previous instance
     if (wavesurferRef.current) {
@@ -94,7 +96,9 @@ export function WaveformPreview({
         }
 
         // Abort guard after async
-        if (!waveformRef.current) return;
+        if (!waveformRef.current) {
+          return;
+        }
 
         const wavesurfer = WaveSurfer.create({
           container: waveformRef.current,
@@ -124,14 +128,14 @@ export function WaveformPreview({
         if (onTimeUpdate) {
           wavesurfer.on('timeupdate', onTimeUpdate);
         }
-      } catch (error) {
-        console.error('Error loading waveform:', error);
-      }
+      } catch (_error) {}
     };
 
     let cancelled = false;
     (async () => {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
       await loadWaveform();
     })();
 

@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
     const parsed = VaultDataSchema.parse(vaultData);
     return NextResponse.json(parsed);
   } catch (error) {
-    console.error('Failed to fetch vault tree:', error);
     return NextResponse.json(
       {
         error:

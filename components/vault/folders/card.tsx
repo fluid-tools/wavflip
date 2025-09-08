@@ -37,14 +37,14 @@ import { cn } from '@/lib/utils';
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms';
 import { FolderPicker } from './picker';
 
-interface FolderCardProps {
+type FolderCardProps = {
   folder: FolderWithProjects;
   showProjectCount?: boolean;
   parentFolderId?: string | null;
   isDragAndDropEnabled?: boolean;
   isSelected?: boolean;
   onSelectionClick?: (event: React.MouseEvent) => void;
-}
+};
 
 export function FolderCard({
   folder,

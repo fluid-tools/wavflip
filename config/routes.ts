@@ -1,9 +1,9 @@
-interface RouteConfig {
+type RouteConfig = {
   path: string;
   pattern?: RegExp;
   requiresAuth?: boolean;
   requiresCsrf?: boolean;
-}
+};
 
 // Configure routes with explicit protection requirements
 const ROUTE_CONFIG: RouteConfig[] = [

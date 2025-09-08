@@ -1,11 +1,11 @@
 import { del, list, put } from '@vercel/blob';
 import type { AudioTrack } from '@/types/audio';
 
-export interface UploadAudioOptions {
+export type UploadAudioOptions = {
   filename?: string;
   contentType?: string;
   addRandomSuffix?: boolean;
-}
+};
 
 export async function uploadAudioToBlob(
   audioBuffer: ArrayBuffer,
@@ -36,7 +36,6 @@ export async function uploadAudioToBlob(
       pathname: blob.pathname,
     };
   } catch (error) {
-    console.error('Failed to upload audio to blob:', error);
     throw new Error(
       `Failed to upload audio: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
@@ -47,7 +46,6 @@ export async function deleteAudioFromBlob(url: string): Promise<void> {
   try {
     await del(url);
   } catch (error) {
-    console.error('Failed to delete audio from blob:', error);
     throw new Error(
       `Failed to delete audio: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
@@ -73,8 +71,7 @@ export async function listAudioFiles(prefix?: string): Promise<AudioTrack[]> {
         model: 'elevenlabs',
       },
     }));
-  } catch (error) {
-    console.error('Failed to list audio files:', error);
+  } catch (_error) {
     return [];
   }
 }
@@ -98,7 +95,7 @@ function extractTitleFromPathname(pathname: string): string {
 
   // Remove timestamp suffix if present
   const parts = nameWithoutExt.split('-');
-  if (parts.length > 1 && /^\d+$/.test(parts[parts.length - 1])) {
+  if (parts.length > 1 && /^\d+$/.test(parts.at(-1))) {
     parts.pop(); // Remove timestamp
   }
 

@@ -4,13 +4,13 @@ import 'server-only';
 // UNIFIED VAULT DATA TYPES
 // ================================
 
-interface VaultProject {
+type VaultProject = {
   id: string;
   name: string;
   trackCount: number;
-}
+};
 
-export interface VaultFolder {
+export type VaultFolder = {
   id: string;
   name: string;
   parentFolderId: string | null;
@@ -19,35 +19,35 @@ export interface VaultFolder {
   projectCount: number;
   subFolderCount: number;
   level?: number; // Optional for hierarchy display
-}
+};
 
-export interface VaultData {
+export type VaultData = {
   folders: VaultFolder[];
   rootProjects: VaultProject[];
   path?: BreadcrumbItem[]; // Optional for specific folder views
   stats?: VaultStats;
-}
+};
 
-export interface BreadcrumbItem {
+export type BreadcrumbItem = {
   id: string;
   name: string;
   parentFolderId: string | null;
-}
+};
 
-export interface VaultStats {
+export type VaultStats = {
   totalFolders: number;
   totalProjects: number;
   totalTracks: number;
   totalVersions: number;
   totalSize: number;
   totalDuration: number;
-}
+};
 
 // ================================
 // QUERY OPTIONS
 // ================================
 
-export interface VaultQueryOptions {
+export type VaultQueryOptions = {
   // Which data to include
   includeStats?: boolean;
   includePath?: boolean;
@@ -60,4 +60,4 @@ export interface VaultQueryOptions {
   // Display options
   includeLevels?: boolean;
   maxDepth?: number;
-}
+};

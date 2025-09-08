@@ -14,13 +14,15 @@ import {
   getVaultData,
 } from '@/lib/server/vault';
 
-interface VaultLayoutProps {
+type VaultLayoutProps = {
   children: ReactNode;
-}
+};
 
 export default async function VaultLayout({ children }: VaultLayoutProps) {
   const session = await getServerSession();
-  if (!session) redirect('/sign-in');
+  if (!session) {
+    redirect('/sign-in');
+  }
 
   // Create query client with proper default options
   const queryClient = new QueryClient({

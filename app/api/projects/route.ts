@@ -20,7 +20,6 @@ export async function GET() {
     const projects = await getRootProjects(session.user.id);
     return NextResponse.json(ProjectsListResponseSchema.parse(projects));
   } catch (error) {
-    console.error('Failed to fetch vault projects:', error);
     return NextResponse.json(
       {
         error:
@@ -59,7 +58,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, project });
   } catch (error) {
-    console.error('Failed to create project:', error);
     return NextResponse.json(
       {
         error:
@@ -82,7 +80,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete project:', error);
     return NextResponse.json(
       {
         error:

@@ -7,14 +7,14 @@ import type { GeneratedSound } from '@/types/generations';
 export type RepeatMode = 'none' | 'one' | 'all';
 
 // Queue state interface
-export interface QueueState {
+export type QueueState = {
   tracks: AudioTrack[];
   currentIndex: number;
   shuffleOrder?: number[];
   repeatMode: RepeatMode;
   projectId?: string; // Track which project is playing
   projectName?: string; // For display purposes
-}
+};
 
 // Player action types
 export type PlayerAction =
@@ -120,7 +120,9 @@ function generateShuffleOrder(length: number, currentIndex: number): number[] {
   const hasCurrent = currentIndex >= 0 && currentIndex < length;
 
   // Exclude the current index so it can be placed first later
-  if (hasCurrent) order.splice(currentIndex, 1);
+  if (hasCurrent) {
+    order.splice(currentIndex, 1);
+  }
 
   // Unbiased shuffle of the remaining indices (Fisher–Yates)
   for (let i = order.length - 1; i > 0; i--) {
@@ -129,7 +131,9 @@ function generateShuffleOrder(length: number, currentIndex: number): number[] {
   }
 
   // Put the current track first if it exists
-  if (hasCurrent) order.unshift(currentIndex);
+  if (hasCurrent) {
+    order.unshift(currentIndex);
+  }
   return order;
 }
 
@@ -213,7 +217,9 @@ export const playerControlsAtom = atom(
           shuffleOrder,
         } = queueNext;
 
-        if (tracksNext.length === 0) break;
+        if (tracksNext.length === 0) {
+          break;
+        }
 
         let nextIndex = currentNext;
 
@@ -256,7 +262,9 @@ export const playerControlsAtom = atom(
           shuffleOrder: shufflePrev,
         } = queuePrev;
 
-        if (tracksPrev.length === 0) break;
+        if (tracksPrev.length === 0) {
+          break;
+        }
 
         // If more than 3 seconds into the track, restart it
         if (get(currentTimeAtom) > 3) {
@@ -273,7 +281,7 @@ export const playerControlsAtom = atom(
           if (shufflePos > 0) {
             prevIndex = shufflePrev[shufflePos - 1];
           } else if (queuePrev.repeatMode === 'all') {
-            prevIndex = shufflePrev[shufflePrev.length - 1];
+            prevIndex = shufflePrev.at(-1);
           }
         } else {
           // Normal order
@@ -460,8 +468,12 @@ export const hasNextTrackAtom = atom((get) => {
   const queue = get(queueAtom);
   const { tracks, currentIndex, repeatMode } = queue;
 
-  if (tracks.length === 0) return false;
-  if (repeatMode === 'all' || repeatMode === 'one') return true;
+  if (tracks.length === 0) {
+    return false;
+  }
+  if (repeatMode === 'all' || repeatMode === 'one') {
+    return true;
+  }
 
   return currentIndex < tracks.length - 1;
 });
@@ -470,8 +482,12 @@ export const hasPreviousTrackAtom = atom((get) => {
   const queue = get(queueAtom);
   const { tracks, currentIndex, repeatMode } = queue;
 
-  if (tracks.length === 0) return false;
-  if (repeatMode === 'all') return true;
+  if (tracks.length === 0) {
+    return false;
+  }
+  if (repeatMode === 'all') {
+    return true;
+  }
 
   return currentIndex > 0;
 });

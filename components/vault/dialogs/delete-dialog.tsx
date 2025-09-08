@@ -10,14 +10,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-interface DeleteDialogProps {
+type DeleteDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   itemName: string;
   itemType: 'folder' | 'project' | 'track';
   onConfirm: () => void;
   isLoading?: boolean;
-}
+};
 
 export function DeleteDialog({
   open,

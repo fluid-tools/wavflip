@@ -21,7 +21,9 @@ type WaveformResponse = {
 
 async function getWaveform(key: string): Promise<WaveformResponse> {
   const res = await fetch(`/api/waveform/${encodeURIComponent(key)}`);
-  if (!res.ok) throw new Error('Failed to fetch waveform');
+  if (!res.ok) {
+    throw new Error('Failed to fetch waveform');
+  }
   return res.json();
 }
 
@@ -37,7 +39,9 @@ export function useWaveform(trackKey?: string) {
 
   const persist = useMutation({
     mutationFn: async (payload: WaveformData) => {
-      if (!trackKey) throw new Error('Missing trackKey');
+      if (!trackKey) {
+        throw new Error('Missing trackKey');
+      }
       await fetch(`/api/waveform/${encodeURIComponent(trackKey)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,7 +50,9 @@ export function useWaveform(trackKey?: string) {
       return payload;
     },
     onSuccess: (payload: WaveformData) => {
-      if (!trackKey) return;
+      if (!trackKey) {
+        return;
+      }
       const optimistic: WaveformResponse = {
         data: payload,
         isPlaceholder: false,

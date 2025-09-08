@@ -23,7 +23,9 @@ export function useFolder(folderId: string) {
     queryKey,
     queryFn: async (): Promise<FolderWithProjects> => {
       const response = await fetch(`/api/folders/${folderId}`);
-      if (!response.ok) throw new Error('Failed to fetch folder');
+      if (!response.ok) {
+        throw new Error('Failed to fetch folder');
+      }
       const json = await response.json();
       return FolderGetResponseSchema.parse(json);
     },
@@ -37,7 +39,9 @@ export function useRootFolders() {
     queryKey: vaultKeys.folders(),
     queryFn: async (): Promise<FolderWithProjects[]> => {
       const response = await fetch('/api/folders');
-      if (!response.ok) throw new Error('Failed to fetch folders');
+      if (!response.ok) {
+        throw new Error('Failed to fetch folders');
+      }
       const json = await response.json();
       return FoldersListResponseSchema.parse(json);
     },
@@ -57,7 +61,9 @@ export function useFolderPath(folderId: string | null) {
     // Tie invalidation to the tree cache so this re-computes when tree is invalidated
     queryKey: [...vaultKeys.tree(), 'path', folderId],
     queryFn: async (): Promise<{ path: BreadcrumbItem[] } | null> => {
-      if (!(folderId && vaultData)) return null;
+      if (!(folderId && vaultData)) {
+        return null;
+      }
 
       // DFS to find path to target folder
       const findPath = (
@@ -71,10 +77,14 @@ export function useFolderPath(folderId: string | null) {
             name: f.name,
             parentFolderId: f.parentFolderId,
           };
-          if (f.id === targetId) return [...acc, current];
+          if (f.id === targetId) {
+            return [...acc, current];
+          }
           if (f.subfolders && f.subfolders.length > 0) {
             const found = findPath(f.subfolders, targetId, [...acc, current]);
-            if (found) return found;
+            if (found) {
+              return found;
+            }
           }
         }
         return null;

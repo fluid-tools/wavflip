@@ -37,11 +37,7 @@ export async function GET() {
                 presignedUrl, // Add presigned URL to the response
               },
             };
-          } catch (error) {
-            console.error(
-              `Failed to generate presigned URL for track ${track.id}:`,
-              error
-            );
+          } catch (_error) {
             return track;
           }
         }
@@ -53,8 +49,7 @@ export async function GET() {
       ...generationsProject,
       tracks: tracksWithUrls,
     });
-  } catch (error) {
-    console.error('Failed to fetch generations:', error);
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to fetch generations' },
       { status: 500 }

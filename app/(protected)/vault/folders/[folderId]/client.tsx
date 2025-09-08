@@ -27,9 +27,9 @@ import { useVaultSelection } from '@/hooks/vault/use-vault-selection';
 import type { FolderWithProjects } from '@/lib/contracts/folder';
 import type { VaultItem as SelectionVaultItem } from '@/state/vault-selection-atoms';
 
-interface FolderViewProps {
+type FolderViewProps = {
   folderId: string;
-}
+};
 
 type FolderItem =
   | {
@@ -60,7 +60,9 @@ export function FolderView({ folderId }: FolderViewProps) {
 
   // Combine subfolders and projects into a single array for virtualization
   const folderItems = useMemo((): FolderItem[] => {
-    if (!folderData) return [];
+    if (!folderData) {
+      return [];
+    }
 
     const items: FolderItem[] = [
       ...(folderData.subFolders || []).map((subFolder) => ({
@@ -162,7 +164,9 @@ export function FolderView({ folderId }: FolderViewProps) {
 
   const renderItem = (index: number) => {
     const item = folderItems[index];
-    if (!item) return null;
+    if (!item) {
+      return null;
+    }
 
     const isSelected = isItemSelected(item.data.id);
     const handleClick = (event: React.MouseEvent) => {

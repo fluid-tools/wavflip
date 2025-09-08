@@ -128,7 +128,9 @@ export function useGenerations() {
       void (async () => {
         try {
           const key = sound.key as string | undefined;
-          if (!(key && local?.audioData)) return;
+          if (!(key && local?.audioData)) {
+            return;
+          }
           const wf = await generateWaveformData(local.audioData);
           // DO NOT store placeholder: we have real peaks from blob decode here
           // We still hydrate the query with real peaks immediately
@@ -159,9 +161,7 @@ export function useGenerations() {
               queryKey: waveformKeys.byKey(key),
             });
           }
-        } catch (err) {
-          console.warn('Failed to persist waveform for offline save:', err);
-        }
+        } catch (_err) {}
       })();
       // Invalidate local cache to reflect the new offline track
       queryClient.invalidateQueries({ queryKey: generationsKeys.localCache() });
@@ -200,7 +200,9 @@ export function useGenerations() {
         try {
           const sourceUrl = `/api/audio/${encodeURIComponent(id)}`;
           const res = await fetch(sourceUrl);
-          if (!res.ok) return;
+          if (!res.ok) {
+            return;
+          }
           const buf = await res.arrayBuffer();
           const wf = await generateWaveformData(buf);
           // Optimistically hydrate query so cards show correct waveform immediately
@@ -227,9 +229,7 @@ export function useGenerations() {
             }),
           });
           queryClient.invalidateQueries({ queryKey: waveformKeys.byKey(id) });
-        } catch (e) {
-          console.warn('Background waveform persist failed:', e);
-        }
+        } catch (_e) {}
       })();
 
       await queryClient.invalidateQueries({

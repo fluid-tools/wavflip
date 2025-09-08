@@ -1,22 +1,22 @@
 import type { GeneratedSound } from './generations';
 
-export interface ElevenLabsConfig {
+export type ElevenLabsConfig = {
   apiKey: string;
   baseUrl?: string;
-}
+};
 
-export interface SoundEffectRequest {
+export type SoundEffectRequest = {
   text: string;
   duration_seconds?: number;
   prompt_influence?: number;
-}
+};
 
-export interface SoundEffectResponse {
+export type SoundEffectResponse = {
   audio: ArrayBuffer;
   contentType: string;
-}
+};
 
-export interface TextToSpeechRequest {
+export type TextToSpeechRequest = {
   text: string;
   voice_id?: string;
   model_id?: string;
@@ -26,16 +26,16 @@ export interface TextToSpeechRequest {
     style?: number;
     use_speaker_boost?: boolean;
   };
-}
+};
 
-export interface GenerationError {
+export type GenerationError = {
   message: string;
   code?: string;
   details?: unknown;
-}
+};
 
-export interface GenerateSoundResult {
+export type GenerateSoundResult = {
   success: boolean;
   data?: GeneratedSound;
   error?: string;
-}
+};

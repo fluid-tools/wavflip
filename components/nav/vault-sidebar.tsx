@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React, { startTransition, useState } from 'react';
+import { startTransition, useState } from 'react';
 import {
   useDeleteFolderAction,
   useDeleteProjectAction,
@@ -57,7 +57,7 @@ import { CreateProjectDialog } from '@/components/vault/projects/create-dialog';
 import { useVaultTree } from '@/hooks/data/use-vault';
 import { useContextMenuHandler } from '@/hooks/use-context-menu-handler';
 
-interface SidebarFolder {
+type SidebarFolder = {
   id: string;
   name: string;
   parentFolderId: string | null;
@@ -69,7 +69,7 @@ interface SidebarFolder {
   subfolders: SidebarFolder[];
   projectCount: number;
   subFolderCount: number;
-}
+};
 
 export function VaultSidebarNavigation() {
   const pathname = usePathname();
@@ -141,7 +141,9 @@ export function VaultSidebarNavigation() {
 
   // Dialog handlers
   const handleRenameSubmit = async (newName: string) => {
-    if (!selectedItem) return;
+    if (!selectedItem) {
+      return;
+    }
 
     startTransition(async () => {
       if (selectedItem.type === 'folder') {
@@ -162,7 +164,9 @@ export function VaultSidebarNavigation() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedItem) return;
+    if (!selectedItem) {
+      return;
+    }
 
     startTransition(async () => {
       if (selectedItem.type === 'folder') {
@@ -181,7 +185,9 @@ export function VaultSidebarNavigation() {
   };
 
   const handleMoveSubmit = async (destinationFolderId: string | null) => {
-    if (!selectedItem) return;
+    if (!selectedItem) {
+      return;
+    }
 
     startTransition(async () => {
       if (selectedItem.type === 'folder') {

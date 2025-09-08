@@ -12,11 +12,11 @@ import { ProjectView } from './client';
 
 // Remove client-only import
 
-interface ProjectPageProps {
+type ProjectPageProps = {
   params: Promise<{
     projectId: string;
   }>;
-}
+};
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   // Parallelize session check and params extraction for better performance
@@ -25,7 +25,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     params,
   ]);
 
-  if (!(projectId && session?.user?.id)) redirect('/sign-in');
+  if (!(projectId && session?.user?.id)) {
+    redirect('/sign-in');
+  }
 
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -48,7 +50,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     projectId,
   ]);
 
-  if (!project) notFound();
+  if (!project) {
+    notFound();
+  }
 
   // Prefetch presigned image URL if project has an image
   if (project.image) {

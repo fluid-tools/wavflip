@@ -23,7 +23,9 @@ export default async function ProtectedLayout({
 }) {
   // Server-side auth check using cached session; redirect if not authenticated
   const session = await getServerSession();
-  if (!session) redirect('/sign-in');
+  if (!session) {
+    redirect('/sign-in');
+  }
 
   // Get sidebar state from cookie for persistence
   const cookieStore = await cookies();

@@ -6,7 +6,7 @@ import { forwardRef, memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { DragData } from './types';
 
-interface DraggableWrapperProps {
+type DraggableWrapperProps = {
   id: string;
   data: DragData;
   children: React.ReactNode;
@@ -16,7 +16,7 @@ interface DraggableWrapperProps {
   isDragHandle?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
-}
+};
 
 export const DraggableWrapper = memo(
   forwardRef<HTMLDivElement, DraggableWrapperProps>(function DraggableWrapper(
@@ -69,8 +69,11 @@ export const DraggableWrapper = memo(
         ref={(node) => {
           setNodeRef(node);
           if (ref) {
-            if (typeof ref === 'function') ref(node);
-            else ref.current = node;
+            if (typeof ref === 'function') {
+              ref(node);
+            } else {
+              ref.current = node;
+            }
           }
         }}
         style={style}

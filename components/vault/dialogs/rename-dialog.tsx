@@ -13,14 +13,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-interface RenameDialogProps {
+type RenameDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   itemName: string;
   itemType: 'folder' | 'project' | 'track';
   onSubmit: (newName: string) => void;
   isLoading?: boolean;
-}
+};
 
 export function RenameDialog({
   open,

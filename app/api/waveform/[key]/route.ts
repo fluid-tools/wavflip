@@ -10,7 +10,7 @@ import { getS3AudioStream } from '@/lib/storage/s3-storage';
 const MAX_WAVEFORM_PEAKS = 4000;
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ key: string }> }
 ) {
   try {
@@ -26,7 +26,6 @@ export async function GET(
     const cacheKey = REDIS_KEYS.waveform(key);
     const cached = await redis.get(cacheKey);
     if (cached) {
-      console.log('cache hit', cacheKey);
       return NextResponse.json(cached);
     }
 
@@ -62,8 +61,7 @@ export async function GET(
       generatedAt: new Date().toISOString(),
       key,
     });
-  } catch (error) {
-    console.error('Waveform generation error:', error);
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -113,7 +111,9 @@ export async function POST(
       .slice(0, MAX_WAVEFORM_PEAKS)
       .map((v) => {
         const n = Number(v);
-        if (!Number.isFinite(n)) return 0;
+        if (!Number.isFinite(n)) {
+          return 0;
+        }
         return Math.max(0, Math.min(1, n));
       });
 
@@ -142,14 +142,11 @@ export async function POST(
           .update(trackVersion)
           .set({ duration: numericDuration })
           .where(eq(trackVersion.fileKey, key));
-      } catch (e) {
-        console.warn('Failed to update track duration for key', key, e);
-      }
+      } catch (_e) {}
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Waveform POST error:', error);
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

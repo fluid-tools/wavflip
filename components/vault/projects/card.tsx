@@ -45,14 +45,14 @@ import type { Project, ProjectWithTracks } from '@/lib/contracts/project';
 import { cn } from '@/lib/utils';
 import { isSelectModeActiveAtom } from '@/state/vault-selection-atoms';
 
-interface ProjectCardProps {
+type ProjectCardProps = {
   project: Project | ProjectWithTracks;
   folderId?: string | null;
   trackCount?: number;
   isDragAndDropEnabled?: boolean;
   isSelected?: boolean;
   onSelectionClick?: (event: React.MouseEvent) => void;
-}
+};
 
 export function ProjectCard({
   project,

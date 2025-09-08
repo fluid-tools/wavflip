@@ -4,13 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { vaultKeys } from '@/hooks/data/keys';
 
-interface FolderPreviewImageProps {
+type FolderPreviewImageProps = {
   projectId: string;
   projectName: string;
   imageKey: string | null | undefined;
   sizes?: string;
   className?: string;
-}
+};
 
 // Component for displaying project images in folder preview grids
 export function FolderPreviewImage({
@@ -25,7 +25,9 @@ export function FolderPreviewImage({
     queryKey: [...vaultKeys.project(projectId), 'presigned-image'],
     queryFn: async () => {
       const res = await fetch(`/api/projects/${projectId}/image`);
-      if (!res.ok) return null;
+      if (!res.ok) {
+        return null;
+      }
       const data = await res.json();
       return (data?.signedUrl as string) ?? null;
     },

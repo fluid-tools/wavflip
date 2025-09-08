@@ -14,9 +14,13 @@ export function VaultStats() {
     totalDuration: 1_000_000,
   };
 
-  if (!stats) return null;
+  if (!stats) {
+    return null;
+  }
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {
+      return '0 B';
+    }
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

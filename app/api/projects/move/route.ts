@@ -17,7 +17,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to move project:', error);
     return NextResponse.json(
       {
         error:

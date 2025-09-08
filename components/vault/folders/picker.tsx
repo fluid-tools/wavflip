@@ -124,7 +124,9 @@ export function FolderPicker({
                 <div className="flex w-full items-center">
                   <div
                     className="flex items-center"
-                    style={{ paddingLeft: `${folder.level * FOLDER_INDENT_PX}px` }}
+                    style={{
+                      paddingLeft: `${folder.level * FOLDER_INDENT_PX}px`,
+                    }}
                   >
                     {/* Expand/collapse button for folders with subfolders */}
                     {hasSubfolders(folder) ? (
