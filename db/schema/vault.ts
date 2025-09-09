@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   bigint,
   integer,
   json,
@@ -22,7 +23,10 @@ export const accessTypeEnum = pgEnum('access_type', [
 export const folder = pgTable('folder', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  parentFolderId: text('parent_folder_id').references((): any => folder.id), // nullable - null means root level folder
+  parentFolderId: text('parent_folder_id').references(
+    (): AnyPgColumn => folder.id
+  ),
+  // nullable - null means root level folder
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
