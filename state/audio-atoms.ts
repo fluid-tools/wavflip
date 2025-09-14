@@ -281,7 +281,7 @@ export const playerControlsAtom = atom(
           if (shufflePos > 0) {
             prevIndex = shufflePrev[shufflePos - 1];
           } else if (queuePrev.repeatMode === 'all') {
-            prevIndex = shufflePrev.at(-1);
+            prevIndex = shufflePrev.at(-1) ?? currentPrev;
           }
         } else {
           // Normal order

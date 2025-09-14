@@ -118,12 +118,14 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
     // Convert tracks to AudioTrack format with presigned URLs
     const audioTracks: AudioTrack[] = project.tracks
-      .filter((track) => track.activeVersion && urlMap.get(track.id))
+      .filter(
+        (track) => Boolean(track.activeVersion?.fileKey) && urlMap.get(track.id)
+      )
       .map((track) => ({
         id: track.id,
-        key: track.activeVersion?.fileKey,
+        key: track.activeVersion ? track.activeVersion.fileKey : '',
         title: track.name,
-        url: urlMap.get(track.id)!,
+        url: urlMap.get(track.id) || '',
         duration: track.activeVersion?.duration || undefined,
         createdAt: track.createdAt,
         type: 'uploaded' as const,
@@ -154,12 +156,14 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
     // Convert tracks to AudioTrack format with presigned URLs
     const audioTracks: AudioTrack[] = project.tracks
-      .filter((track) => track.activeVersion && urlMap.get(track.id))
+      .filter(
+        (track) => Boolean(track.activeVersion?.fileKey) && urlMap.get(track.id)
+      )
       .map((track) => ({
         id: track.id,
-        key: track.activeVersion?.fileKey,
+        key: track.activeVersion ? track.activeVersion.fileKey : '',
         title: track.name,
-        url: urlMap.get(track.id)!,
+        url: urlMap.get(track.id) || '',
         duration: track.activeVersion?.duration || undefined,
         createdAt: track.createdAt,
         type: 'uploaded' as const,
@@ -222,17 +226,23 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     await uploadTracks(files);
   };
 
-  const imageSrc = project.image?.startsWith('blob:')
-    ? project.image
-    : project.image && presignedImageUrl
-      ? presignedImageUrl
-      : null;
+  const getImageSrc = () => {
+    if (project.image?.startsWith('blob:')) {
+      return project.image;
+    }
+    if (project.image && presignedImageUrl) {
+      return presignedImageUrl;
+    }
+    return null;
+  };
+
+  const imageSrc = getImageSrc();
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-b from-background to-muted/20 transition-colors ${
-        isDragOver ? 'border-primary bg-primary/5' : ''
-      } ${isUploading ? 'pointer-events-none' : ''}`}
+      aria-label="Audio file drop zone"
+      className={`min-h-screen bg-gradient-to-b from-background to-muted/20 transition-colors ${isDragOver ? 'border-primary bg-primary/5' : ''
+        } ${isUploading ? 'pointer-events-none' : ''}`}
       onDragLeave={(e) => {
         // Only hide drag over if we're leaving the main container
         if (!dropZoneRef.current?.contains(e.relatedTarget as Node)) {
@@ -247,6 +257,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
       }}
       onDrop={handleFileDrop}
       ref={dropZoneRef}
+      role="application"
     >
       {/* Drag Overlay */}
       {(isDragOver || isUploading) && (

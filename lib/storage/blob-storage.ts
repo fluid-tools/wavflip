@@ -95,7 +95,8 @@ function extractTitleFromPathname(pathname: string): string {
 
   // Remove timestamp suffix if present
   const parts = nameWithoutExt.split('-');
-  if (parts.length > 1 && /^\d+$/.test(parts.at(-1))) {
+  const lastPart = parts.at(-1) ?? '';
+  if (parts.length > 1 && /^\d+$/.test(lastPart)) {
     parts.pop(); // Remove timestamp
   }
 
